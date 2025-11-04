@@ -14,6 +14,16 @@ way to update this template, but currently, we follow a pattern:
 
 ## Upcoming version 2025-XX-XX
 
+- [fix] Added missing getAriaLabel to various components used in Styleguide
+  [#687](https://github.com/sharetribe/web-template/pull/687)
+- [add] Add noindex metadata to closed listings.
+  [#688](https://github.com/sharetribe/web-template/pull/688)
+- [fix] coordinate parsing: "-0" was not parsed correctly to Number.
+  [#686](https://github.com/sharetribe/web-template/pull/686)
+- [fix] showPaymentDetailsForUser: handle case when currentUser is null.
+  [#684](https://github.com/sharetribe/web-template/pull/684)
+- [add] Add currently available translations for DE, ES, FR.
+  [#683](https://github.com/sharetribe/web-template/pull/683)
 - [fix] Only set TransactionPage pageHeading if processName resolves
   [#681](https://github.com/sharetribe/web-template/pull/681)
 
