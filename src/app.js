@@ -148,7 +148,6 @@ const applyLocaleSpecificFallbacks = (hostedTranslations, localeMessages) => {
     // If Console has a localized version, use it (priority 1)
     if (hostedTranslations[localizedKey]) {
       processedMessages[key] = hostedTranslations[localizedKey];
-      console.debug(`Using Console translation: ${key} ← ${localizedKey}`);
     }
     // Otherwise, keep the JSON file value (priority 2 - already in processedMessages)
   });
