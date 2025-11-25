@@ -55,9 +55,15 @@ const TRANSLATION_FILES = {
 /**
  * Get current locale from localStorage (default: it-IT)
  * Falls back to DEFAULT_LOCALE (it-IT) if not set
+ * Safe for server-side rendering: checks if localStorage is available
  */
 const getCurrentLocale = () => {
-  return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+  // Check if we're in a browser environment (localStorage is not available in Node.js)
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+  }
+  // Server-side rendering: return default locale
+  return DEFAULT_LOCALE;
 };
 
 /**
