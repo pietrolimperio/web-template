@@ -203,24 +203,32 @@ const ListingConfigurationPage = ({
 
   // Exception Handlers
   const handleAddException = exceptionDates => {
+    let updatedExceptions;
     if (editingException) {
       // Update existing exception
-      setExceptions(
-        exceptions.map(exc =>
-          exc.id === editingException.id ? { ...exc, dates: exceptionDates } : exc
-        )
+      updatedExceptions = exceptions.map(exc =>
+        exc.id === editingException.id ? { ...exc, dates: exceptionDates } : exc
       );
       setEditingException(null);
     } else {
       // Add new exception
-      setExceptions([
+      updatedExceptions = [
         ...exceptions,
         {
           id: Date.now().toString(),
           dates: exceptionDates,
         },
-      ]);
+      ];
     }
+    
+    // Sort exceptions by start date (first date in the exception)
+    const sortedExceptions = updatedExceptions.sort((a, b) => {
+      const dateA = a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
+      const dateB = b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
+      return dateA - dateB;
+    });
+    
+    setExceptions(sortedExceptions);
     setShowExceptionCalendar(false);
   };
 
@@ -418,6 +426,16 @@ const ListingConfigurationPage = ({
       return;
     }
 
+    // Calculate availableFrom and availableUntil from selectedDates
+    let availableFrom = null;
+    let availableUntil = null;
+    if (selectedDates && selectedDates.length > 0) {
+      // Sort dates to get the first and last
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      availableFrom = sortedDates[0];
+      availableUntil = sortedDates[sortedDates.length - 1];
+    }
+
     // Build availability plan
     const availabilityPlan = {
       type: 'availability-plan/time',
@@ -562,6 +580,8 @@ const ListingConfigurationPage = ({
       availability: {
         availabilityPlan,
         availabilityExceptions,
+        availableFrom: availableFrom ? availableFrom.toISOString() : null,
+        availableUntil: availableUntil ? availableUntil.toISOString() : null,
       },
       pricing: pricingData,
       location: locationData,
@@ -585,30 +605,43 @@ const ListingConfigurationPage = ({
   };
 
   // Availability Tab
-  const renderAvailabilityTab = () => (
-    <section className={css.section}>
-      <div className={css.sectionHeader}>
-        <h2 className={css.sectionTitle}>
-          <FormattedMessage
-            id="ListingConfiguration.availabilityTitle"
-            defaultMessage="Calendar Availability"
-          />
-        </h2>
-        <p className={css.sectionDescription}>
-          <FormattedMessage
-            id="ListingConfiguration.availabilityDescription"
-            defaultMessage="Select the dates when your item will be available for rent. All dates from today onwards are selected by default."
-          />
-        </p>
-      </div>
+  const renderAvailabilityTab = () => {
+    // Calculate availableFrom and availableUntil from selectedDates
+    let availableFrom = null;
+    let availableUntil = null;
+    if (selectedDates && selectedDates.length > 0) {
+      // Sort dates to get the first and last
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      availableFrom = sortedDates[0].toISOString();
+      availableUntil = sortedDates[sortedDates.length - 1].toISOString();
+    }
 
-      <div className={css.calendarWrapper}>
-        <AvailabilityCalendar
-          selectedDates={selectedDates}
-          onDatesChange={setSelectedDates}
-          marketplaceColor={marketplaceColor}
-        />
-      </div>
+    return (
+      <section className={css.section}>
+        <div className={css.sectionHeader}>
+          <h2 className={css.sectionTitle}>
+            <FormattedMessage
+              id="ListingConfiguration.availabilityTitle"
+              defaultMessage="Calendar Availability"
+            />
+          </h2>
+          <p className={css.sectionDescription}>
+            <FormattedMessage
+              id="ListingConfiguration.availabilityDescription"
+              defaultMessage="Select the dates when your item will be available for rent. All dates from today onwards are selected by default."
+            />
+          </p>
+        </div>
+
+        <div className={css.calendarWrapper}>
+          <AvailabilityCalendar
+            selectedDates={selectedDates}
+            onDatesChange={setSelectedDates}
+            marketplaceColor={marketplaceColor}
+            availableFrom={availableFrom}
+            availableUntil={availableUntil}
+          />
+        </div>
 
       {/* Exceptions */}
       <div className={css.exceptionsSection}>
@@ -668,6 +701,8 @@ const ListingConfigurationPage = ({
               onDatesChange={dates => setNewVariant({ ...newVariant, dates })}
               selectMode="exception"
               marketplaceColor={marketplaceColor}
+              availableFrom={availableFrom}
+              availableUntil={availableUntil}
             />
             <div className={css.exceptionActions}>
               <button
@@ -743,7 +778,8 @@ const ListingConfigurationPage = ({
         )}
       </div>
     </section>
-  );
+    );
+  };
 
   // Price Tab
   const renderPriceTab = () => (
@@ -1156,6 +1192,22 @@ const ListingConfigurationPage = ({
                     selectMode="exception"
                     marketplaceColor={marketplaceColor}
                     disabledDates={exceptions.flatMap(exc => exc.dates)}
+                    availableFrom={(() => {
+                      // Calculate availableFrom from selectedDates in availability tab
+                      if (selectedDates && selectedDates.length > 0) {
+                        const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                        return sortedDates[0].toISOString();
+                      }
+                      return null;
+                    })()}
+                    availableUntil={(() => {
+                      // Calculate availableUntil from selectedDates in availability tab
+                      if (selectedDates && selectedDates.length > 0) {
+                        const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                        return sortedDates[sortedDates.length - 1].toISOString();
+                      }
+                      return null;
+                    })()}
                   />
                 </div>
               )}

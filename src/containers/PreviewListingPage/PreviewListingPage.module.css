@@ -1299,10 +1299,6 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
-.availabilityModalHeader {
-  margin-bottom: 2rem;
-}
-
 /* Calendar Section */
 .calendarWrapper {
   margin-bottom: 2rem;
@@ -1311,7 +1307,6 @@
 .exceptionsSection {
   border-top: 1px solid var(--matterColorNegative);
   padding-top: 1.5rem;
-  margin-top: 1.5rem;
 }
 
 .exceptionsHeader {
@@ -1695,7 +1690,59 @@
 }
 
 .addressSection {
+  position: relative;
   margin-bottom: 24px;
+}
+
+/* Remove wrapper div from LocationAutocompleteInput, keep only the input */
+/* The wrapper div is the first direct child */
+.addressSection > div {
+  display: contents;
+}
+
+/* Hide the icon in LocationAutocompleteInput */
+.addressSection .locationIcon {
+  display: none;
+}
+
+/* Location autocomplete input styling */
+.locationAutocompleteInput {
+  padding-left: 1rem !important;
+}
+
+/* Predictions list styling - consistent with listing configuration step 3 */
+.predictionsRoot {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 100%;
+  background-color: var(--colorWhite);
+  border: 1px solid var(--marketplaceColor);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.predictionsRoot ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.predictionsRoot ul li {
+  color: var(--colorGrey700) !important;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.predictionsRoot ul li:hover {
+  color: var(--colorWhite) !important;
+  background-color: var(--marketplaceColor) !important;
+  border-left-color: var(--marketplaceColor) !important;
 }
 
 .chipCard {

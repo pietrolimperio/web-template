@@ -323,6 +323,14 @@ export const AIListingCreationPageComponent = ({
         listingData.availabilityPlan = data.availability.availabilityPlan;
       }
 
+      // Add availability date range to publicData
+      if (data.availability?.availableFrom) {
+        listingData.publicData.availableFrom = data.availability.availableFrom;
+      }
+      if (data.availability?.availableUntil) {
+        listingData.publicData.availableUntil = data.availability.availableUntil;
+      }
+
       // Create draft listing
       console.log('🚀 Creating draft listing...');
       const result = await onCreateListingDraft(listingData, config);
@@ -465,6 +473,14 @@ export const AIListingCreationPageComponent = ({
       // Add availability plan
       if (availabilityData?.availabilityPlan) {
         listingData.availabilityPlan = availabilityData.availabilityPlan;
+      }
+
+      // Add availability date range to publicData
+      if (availabilityData?.availableFrom) {
+        listingData.publicData.availableFrom = availabilityData.availableFrom;
+      }
+      if (availabilityData?.availableUntil) {
+        listingData.publicData.availableUntil = availabilityData.availableUntil;
       }
 
       // Create draft listing

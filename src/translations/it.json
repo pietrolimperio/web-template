@@ -1455,7 +1455,7 @@
   "ListingConfiguration.maxLength": "Durata massima (giorni, opzionale)",
   "ListingConfiguration.seasonalityInstructions": "Seleziona le date o un intervallo per questo prezzo stagionale",
   "ListingConfiguration.save": "Salva",
-  "ListingConfiguration.locationTitle": "3. Posizione",
+  "ListingConfiguration.locationTitle": "Posizione",
   "ListingConfiguration.locationDescription": "Specifica dove si trova l'oggetto",
   "ListingConfiguration.makeLocationVisible": "Rendi la posizione visibile agli altri utenti",
   "ListingConfiguration.handByHand": "Disponibile per scambio di persona",

@@ -319,6 +319,17 @@ export const PreviewListingPageComponent = props => {
     currentListing.attributes?.publicData?.handByHandAvailable || false
   );
 
+  // Update location visibility state when listing data changes
+  useEffect(() => {
+    if (currentListing.attributes?.publicData) {
+      const newLocationVisible = currentListing.attributes.publicData.locationVisible || false;
+      const newHandByHandAvailable = currentListing.attributes.publicData.handByHandAvailable || false;
+      
+      setLocationVisible(newLocationVisible);
+      setHandByHandAvailable(newHandByHandAvailable);
+    }
+  }, [currentListing.attributes?.publicData?.locationVisible, currentListing.attributes?.publicData?.handByHandAvailable, currentListing.id]);
+
   // Availability exceptions state
   const [availabilityExceptions, setAvailabilityExceptions] = useState([]);
   const [availableDates, setAvailableDates] = useState([]);
@@ -394,10 +405,33 @@ export const PreviewListingPageComponent = props => {
         });
         setDisabledDates(exceptionDateObjects);
 
-        // Calculate available dates (all future dates minus exceptions) as Date objects
+        // Calculate available dates (respecting availableFrom/availableUntil if set, minus exceptions) as Date objects
         const available = [];
-        const currentDate = new Date(today);
-        while (currentDate <= oneYearFromNow) {
+        
+        // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
+        let rangeStart = today;
+        let rangeEnd = oneYearFromNow;
+        
+        if (currentListing.attributes?.publicData?.availableFrom) {
+          const fromDate = new Date(currentListing.attributes.publicData.availableFrom);
+          fromDate.setHours(0, 0, 0, 0);
+          // Use the later of today or availableFrom
+          if (fromDate > rangeStart) {
+            rangeStart = fromDate;
+          }
+        }
+        
+        if (currentListing.attributes?.publicData?.availableUntil) {
+          const untilDate = new Date(currentListing.attributes.publicData.availableUntil);
+          untilDate.setHours(23, 59, 59, 999);
+          // Use the earlier of oneYearFromNow or availableUntil
+          if (untilDate < rangeEnd) {
+            rangeEnd = untilDate;
+          }
+        }
+        
+        const currentDate = new Date(rangeStart);
+        while (currentDate <= rangeEnd) {
           const dateObj = new Date(currentDate);
           dateObj.setHours(0, 0, 0, 0);
           // Check if date is not in exceptions
@@ -412,14 +446,38 @@ export const PreviewListingPageComponent = props => {
         setAvailableDates(available);
       } catch (error) {
         console.error('Failed to fetch availability exceptions:', error);
-        // If fetch fails, assume all dates are available
+        // If fetch fails, calculate available dates respecting availableFrom/availableUntil if set
         const todayFallback = new Date();
         todayFallback.setHours(0, 0, 0, 0);
         const oneYearFromNowFallback = new Date();
         oneYearFromNowFallback.setFullYear(oneYearFromNowFallback.getFullYear() + 1);
+        oneYearFromNowFallback.setHours(23, 59, 59, 999);
+        
+        // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
+        let rangeStart = todayFallback;
+        let rangeEnd = oneYearFromNowFallback;
+        
+        if (currentListing.attributes?.publicData?.availableFrom) {
+          const fromDate = new Date(currentListing.attributes.publicData.availableFrom);
+          fromDate.setHours(0, 0, 0, 0);
+          // Use the later of today or availableFrom
+          if (fromDate > rangeStart) {
+            rangeStart = fromDate;
+          }
+        }
+        
+        if (currentListing.attributes?.publicData?.availableUntil) {
+          const untilDate = new Date(currentListing.attributes.publicData.availableUntil);
+          untilDate.setHours(23, 59, 59, 999);
+          // Use the earlier of oneYearFromNow or availableUntil
+          if (untilDate < rangeEnd) {
+            rangeEnd = untilDate;
+          }
+        }
+        
         const available = [];
-        const currentDate = new Date(todayFallback);
-        while (currentDate <= oneYearFromNowFallback) {
+        const currentDate = new Date(rangeStart);
+        while (currentDate <= rangeEnd) {
           const dateObj = new Date(currentDate);
           dateObj.setHours(0, 0, 0, 0);
           available.push(dateObj);
@@ -431,7 +489,7 @@ export const PreviewListingPageComponent = props => {
     };
 
     fetchAvailabilityExceptions();
-  }, [currentListing.id, listingFetched, config]);
+  }, [currentListing.id, listingFetched, config, currentListing.attributes?.publicData?.availableFrom, currentListing.attributes?.publicData?.availableUntil]);
 
   // Initialize field values when listing is loaded
   useEffect(() => {
@@ -960,10 +1018,23 @@ export const PreviewListingPageComponent = props => {
       const defaultPrice = currentListing.attributes.price.amount;
       setModalDefaultPrice(defaultPrice);
       const priceVariants = currentListing.attributes.publicData?.priceVariants || [];
-      setModalPriceVariants(priceVariants.map(v => ({
-        ...v,
-        id: v.id || Date.now().toString() + Math.random(),
-      })));
+      setModalPriceVariants(priceVariants.map(v => {
+        // Determine type from variant data if not present
+        let variantType = v.type;
+        if (!variantType) {
+          // Infer type from fields
+          if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
+            variantType = 'period';
+          } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
+            variantType = 'duration';
+          }
+        }
+        return {
+          ...v,
+          type: variantType || 'duration', // Default to duration if cannot determine
+          id: v.id || Date.now().toString() + Math.random(),
+        };
+      }));
       setShowAddPriceVariant(false);
       setEditingPriceVariant(null);
       setNewPriceVariant({
@@ -1086,22 +1157,30 @@ export const PreviewListingPageComponent = props => {
 
   // Exception handlers for modal
   const handleAddException = exceptionDates => {
+    let updatedExceptions;
     if (editingException) {
-      setModalExceptions(
-        modalExceptions.map(exc =>
-          exc.id === editingException.id ? { ...exc, dates: exceptionDates } : exc
-        )
+      updatedExceptions = modalExceptions.map(exc =>
+        exc.id === editingException.id ? { ...exc, dates: exceptionDates } : exc
       );
       setEditingException(null);
     } else {
-      setModalExceptions([
+      updatedExceptions = [
         ...modalExceptions,
         {
           id: Date.now().toString(),
           dates: exceptionDates,
         },
-      ]);
+      ];
     }
+    
+    // Sort exceptions by start date (first date in the exception)
+    const sortedExceptions = updatedExceptions.sort((a, b) => {
+      const dateA = a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
+      const dateB = b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
+      return dateA - dateB;
+    });
+    
+    setModalExceptions(sortedExceptions);
     setShowExceptionCalendar(false);
     setNewVariant({ dates: [] });
   };
@@ -1160,9 +1239,12 @@ export const PreviewListingPageComponent = props => {
       return;
     }
 
+    // Map UI type to API type: 'length' -> 'duration', 'seasonality' -> 'period'
+    const apiType = priceVariantType === 'length' ? 'duration' : priceVariantType === 'seasonality' ? 'period' : priceVariantType;
+    
     const variant = {
       id: editingPriceVariant?.id || Date.now().toString() + Math.random(),
-      type: priceVariantType,
+      type: apiType, // Always use API type format
       priceInSubunits: newPriceVariant.price,
       ...(priceVariantType === 'length' && {
         minDuration: newPriceVariant.minLength,
@@ -1194,9 +1276,11 @@ export const PreviewListingPageComponent = props => {
 
   const handleEditPriceVariant = variant => {
     setEditingPriceVariant(variant);
-    setPriceVariantType(variant.type);
+    // Map API type to UI type: 'duration' -> 'length', 'period' -> 'seasonality'
+    const uiType = variant.type === 'duration' ? 'length' : variant.type === 'period' ? 'seasonality' : variant.type || 'length';
+    setPriceVariantType(uiType);
     setNewPriceVariant({
-      type: variant.type,
+      type: variant.type || uiType, // Keep API type format
       price: variant.priceInSubunits,
       minLength: variant.minDuration || 0,
       maxLength: variant.maxDuration || '',
@@ -1217,10 +1301,23 @@ export const PreviewListingPageComponent = props => {
       const defaultPrice = currentListing.attributes.price.amount;
       setModalDefaultPrice(defaultPrice);
       const priceVariants = currentListing.attributes.publicData?.priceVariants || [];
-      setModalPriceVariants(priceVariants.map(v => ({
-        ...v,
-        id: v.id || Date.now().toString() + Math.random(),
-      })));
+      setModalPriceVariants(priceVariants.map(v => {
+        // Determine type from variant data if not present
+        let variantType = v.type;
+        if (!variantType) {
+          // Infer type from fields
+          if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
+            variantType = 'period';
+          } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
+            variantType = 'duration';
+          }
+        }
+        return {
+          ...v,
+          type: variantType || 'duration', // Default to duration if cannot determine
+          id: v.id || Date.now().toString() + Math.random(),
+        };
+      }));
     }
     setShowAddPriceVariant(false);
     setEditingPriceVariant(null);
@@ -1234,9 +1331,23 @@ export const PreviewListingPageComponent = props => {
       const formattedPriceVariants = modalPriceVariants
         .filter(v => v.priceInSubunits || v.price) // Only include variants with a price
         .map((v, index) => {
+          // Determine type from variant data if not present
+          let variantType = v.type;
+          if (!variantType) {
+            // Infer type from fields
+            if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
+              variantType = 'period';
+            } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
+              variantType = 'duration';
+            } else {
+              variantType = 'duration'; // Default
+            }
+          }
+          
           const variant = {
             name: v.name || `variant_${v.id || index}`,
             priceInSubunits: v.priceInSubunits || (v.price ? Math.round(v.price * 100) : 0),
+            type: variantType, // Always include type
           };
           
           // Add duration fields for length-based variants
@@ -1244,7 +1355,7 @@ export const PreviewListingPageComponent = props => {
           const minDuration = v.minDuration || v.minLength;
           const maxDuration = v.maxDuration || v.maxLength;
           
-          if (v.type === 'length' || v.type === 'duration' || minDuration) {
+          if (variantType === 'length' || variantType === 'duration' || minDuration) {
             if (minDuration) {
               variant.minLength = minDuration;
             }
@@ -1253,11 +1364,11 @@ export const PreviewListingPageComponent = props => {
             }
           }
           
-          // Add period for seasonality-based variants
+          // Add period for seasonality/period-based variants
           // Check if period exists (from API) or dates (from modal)
           if (v.period) {
             variant.period = v.period;
-          } else if (v.type === 'seasonality' && v.dates && v.dates.length > 0) {
+          } else if ((variantType === 'seasonality' || variantType === 'period') && v.dates && v.dates.length > 0) {
             variant.period = v.dates
               .map(d => {
                 const date = d instanceof Date ? d : new Date(d);
@@ -1266,12 +1377,17 @@ export const PreviewListingPageComponent = props => {
               .join(',');
           }
           
-          // Remove undefined/null values
+          // Remove undefined/null values (but keep type even if it's the only field)
           Object.keys(variant).forEach(key => {
             if (variant[key] === undefined || variant[key] === null) {
               delete variant[key];
             }
           });
+          
+          // Ensure type is always present
+          if (!variant.type) {
+            variant.type = variantType;
+          }
           
           return variant;
         });
@@ -1314,25 +1430,60 @@ export const PreviewListingPageComponent = props => {
 
   // Initialize location modal when opened
   useEffect(() => {
-    if (showLocationModal && currentListing.attributes?.publicData?.location) {
-      const location = currentListing.attributes.publicData.location;
+    if (showLocationModal) {
+      const location = currentListing.attributes?.publicData?.location || {};
       const geolocation = location.geolocation || null;
-      const address = location.address || {};
+      let address = location.address || {};
+      
+      // Handle address as string or object
+      if (typeof address === 'string') {
+        // If address is a string, try to parse it or set empty object
+        address = {};
+      }
+      
+      // Ensure address is an object
+      if (!address || typeof address !== 'object') {
+        address = {};
+      }
+      
+      // Also check if address fields are stored directly in location object
+      // (some implementations save address fields directly in location instead of location.address)
+      const streetFromLocation = location.street || location.addressLine1 || '';
+      const cityFromLocation = location.city || '';
+      const regionFromLocation = location.region || location.state || '';
+      const postalCodeFromLocation = location.postalCode || location.postal_code || '';
+      const countryFromLocation = location.country || '';
+      
+      // Parse addressLine1 if it contains both street and number
+      let parsedStreet = '';
+      let parsedStreetNumber = '';
+      const addressLine1Value = address.addressLine1 || streetFromLocation || '';
+      if (addressLine1Value) {
+        // Try to parse "Street Name 123" format
+        const match = addressLine1Value.match(/^(.+?)\s+(\d+)$/);
+        if (match) {
+          parsedStreet = match[1].trim();
+          parsedStreetNumber = match[2].trim();
+        } else {
+          parsedStreet = addressLine1Value;
+        }
+      }
       
       setModalGeolocation(geolocation);
       setManualAddress({
-        street: address.street || '',
-        streetNumber: address.streetNumber || '',
-        addressLine2: address.addressLine2 || '',
-        city: address.city || '',
-        region: address.region || '',
-        postalCode: address.postalCode || '',
-        country: address.country || '',
+        street: address.street || parsedStreet || address.addressLine1 || streetFromLocation || '',
+        streetNumber: address.streetNumber || parsedStreetNumber || location.streetNumber || '',
+        addressLine2: address.addressLine2 || location.addressLine2 || '',
+        city: address.city || cityFromLocation || '',
+        region: address.region || address.state || regionFromLocation || '',
+        postalCode: address.postalCode || address.postal_code || postalCodeFromLocation || '',
+        country: address.country || countryFromLocation || '',
       });
       setModalLocationVisible(locationVisible);
       setModalHandByHandAvailable(handByHandAvailable);
-      setShowAddressSearch(!!geolocation || !!address.street);
-      setShowFullForm(!!address.street);
+      // Always show full form (prefilled if address exists)
+      setShowFullForm(true);
+      setShowAddressSearch(false); // Don't show autocomplete by default, show form directly
     }
   }, [showLocationModal, currentListing.attributes?.publicData?.location, locationVisible, handByHandAvailable]);
 
@@ -1449,13 +1600,34 @@ export const PreviewListingPageComponent = props => {
         ],
       };
 
-      // Update availability plan first
+      // Calculate availableFrom and availableUntil from modalSelectedDates
+      let availableFrom = null;
+      let availableUntil = null;
+      if (modalSelectedDates && modalSelectedDates.length > 0) {
+        // Sort dates to get the first and last
+        const sortedDates = [...modalSelectedDates].sort((a, b) => a.getTime() - b.getTime());
+        availableFrom = sortedDates[0].toISOString();
+        availableUntil = sortedDates[sortedDates.length - 1].toISOString();
+      }
+
+      // Update availability plan and date range
+      const updateData = {
+        id: listingId,
+        availabilityPlan,
+      };
+
+      // Add availableFrom and availableUntil to publicData if dates are selected
+      if (availableFrom && availableUntil) {
+        updateData.publicData = {
+          ...currentListing.attributes?.publicData,
+          availableFrom,
+          availableUntil,
+        };
+      }
+
       await onUpdateListing(
         'details',
-        {
-          id: listingId,
-          availabilityPlan,
-        },
+        updateData,
         config
       );
 
@@ -1617,10 +1789,35 @@ export const PreviewListingPageComponent = props => {
       });
       setDisabledDates(exceptionDateObjects);
 
-      // Calculate available dates (all future dates minus exceptions) as Date objects
+      // Calculate available dates (respecting availableFrom/availableUntil if set, minus exceptions) as Date objects
       const available = [];
-      const currentDateForAvailable = new Date(today);
-      while (currentDateForAvailable <= oneYearFromNow) {
+      
+      // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
+      let rangeStart = today;
+      let rangeEnd = oneYearFromNow;
+      
+      // Get updated listing data (after refresh)
+      const updatedListing = getListing(listingId);
+      if (updatedListing?.attributes?.publicData?.availableFrom) {
+        const fromDate = new Date(updatedListing.attributes.publicData.availableFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        // Use the later of today or availableFrom
+        if (fromDate > rangeStart) {
+          rangeStart = fromDate;
+        }
+      }
+      
+      if (updatedListing?.attributes?.publicData?.availableUntil) {
+        const untilDate = new Date(updatedListing.attributes.publicData.availableUntil);
+        untilDate.setHours(23, 59, 59, 999);
+        // Use the earlier of oneYearFromNow or availableUntil
+        if (untilDate < rangeEnd) {
+          rangeEnd = untilDate;
+        }
+      }
+      
+      const currentDateForAvailable = new Date(rangeStart);
+      while (currentDateForAvailable <= rangeEnd) {
         const dateObj = new Date(currentDateForAvailable);
         dateObj.setHours(0, 0, 0, 0);
         // Check if date is not in disabled dates
@@ -2229,6 +2426,8 @@ export const PreviewListingPageComponent = props => {
                       marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
                       disabledDates={disabledDates}
                       readOnly={true}
+                      availableFrom={currentListing.attributes?.publicData?.availableFrom}
+                      availableUntil={currentListing.attributes?.publicData?.availableUntil}
                     />
                   </div>
 
@@ -2249,6 +2448,12 @@ export const PreviewListingPageComponent = props => {
 
                       // Format price variant label
                       const formatPriceVariantLabel = variant => {
+                        // Determine variant type - prioritize explicit type, then infer from fields
+                        const variantType = variant.type || 
+                          (variant.period || (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) ? 'period' : null) ||
+                          (variant.minLength || variant.minDuration || variant.maxLength || variant.maxDuration || variant.duration ? 'duration' : null) ||
+                          'duration'; // Default fallback
+                        
                         // Handle period-based variants FIRST (more specific than duration)
                         // Check for dates array first (from PreviewListingPage modal)
                         if (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) {
@@ -2333,7 +2538,7 @@ export const PreviewListingPageComponent = props => {
                         }
                         
                         // Handle duration-based variants (type: 'length' or 'duration', or has duration field)
-                        if (variant.type === 'length' || variant.type === 'duration' || variant.duration) {
+                        if (variantType === 'length' || variantType === 'duration' || variant.duration || variant.minLength || variant.minDuration) {
                           // Check for minDuration/maxDuration (from PreviewListingPage modal)
                           const minDuration = variant.minDuration || variant.minLength;
                           const maxDuration = variant.maxDuration || variant.maxLength;
@@ -2464,45 +2669,6 @@ export const PreviewListingPageComponent = props => {
                         </div>
                       );
                     })()}
-
-                  {/* Location Toggles */}
-                  <div className={css.locationToggles}>
-                    <div className={css.toggleRow}>
-                      <div style={{ position: 'relative' }}>
-                        <button
-                          type="button"
-                          className={`${css.toggleButton} ${locationVisible ? css.toggleActive : ''}`}
-                          onClick={handleLocationVisibleToggle}
-                          disabled={handByHandAvailable && locationVisible}
-                        >
-                          <FormattedMessage
-                            id="PreviewListingPage.locationVisible"
-                            defaultMessage="Location visible"
-                          />
-                        </button>
-                        {showLocationTooltip && handByHandAvailable && locationVisible && (
-                          <div className={css.toggleTooltip}>
-                            <FormattedMessage
-                              id="PreviewListingPage.cannotDisableLocation"
-                              defaultMessage="Cannot disable location visibility while hand-by-hand exchange is enabled"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        className={`${css.toggleButton} ${
-                          handByHandAvailable ? css.toggleActive : ''
-                        }`}
-                        onClick={handleHandByHandToggle}
-                      >
-                        <FormattedMessage
-                          id="PreviewListingPage.handByHand"
-                          defaultMessage="Hand-by-hand exchange available"
-                        />
-                      </button>
-                    </div>
-                  </div>
 
                   {/* Map or Address (always visible if location exists) */}
                   {listing.attributes.publicData?.location &&
@@ -2759,11 +2925,98 @@ export const PreviewListingPageComponent = props => {
                       </div>
                       <div className={css.priceCardLabel}>
                         {(() => {
-                          // Handle length-based variants (duration)
-                          const minDuration = variant.minDuration || variant.minLength;
-                          const maxDuration = variant.maxDuration || variant.maxLength;
+                          // Use the same formatPriceVariantLabel logic
+                          // Determine variant type - prioritize explicit type, then infer from fields
+                          const variantType = variant.type || 
+                            (variant.period || (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) ? 'period' : null) ||
+                            (variant.minLength || variant.minDuration || variant.maxLength || variant.maxDuration || variant.duration ? 'duration' : null) ||
+                            'duration'; // Default fallback
                           
-                          if (variant.type === 'length' || variant.type === 'duration' || minDuration) {
+                          // Handle period-based variants FIRST (more specific than duration)
+                          // Check for dates array first (from PreviewListingPage modal)
+                          if (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) {
+                            const start = new Date(variant.dates[0]);
+                            const end = new Date(variant.dates[variant.dates.length - 1]);
+                            const formatDate = date => {
+                              const day = date.getDate();
+                              const monthNames = [
+                                'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
+                                'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                              ];
+                              const month = monthNames[date.getMonth()];
+                              return `${day} ${month}`;
+                            };
+                            return `${formatDate(start)} - ${formatDate(end)}`;
+                          }
+                          
+                          // Check for period string (from ListingConfigurationPage or API)
+                          if (variant.period && typeof variant.period === 'string' && variant.period.trim()) {
+                            const formatPeriodDate = dateStr => {
+                              // Handle format YYYYMMDD
+                              if (dateStr.length === 8) {
+                                const year = parseInt(dateStr.substring(0, 4));
+                                const month = parseInt(dateStr.substring(4, 6)) - 1;
+                                const day = parseInt(dateStr.substring(6, 8));
+                                const date = new Date(year, month, day);
+                                const dayNum = date.getDate();
+                                const monthNames = [
+                                  'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
+                                  'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                                ];
+                                const monthName = monthNames[date.getMonth()];
+                                return `${dayNum} ${monthName}`;
+                              }
+                              // Fallback: try to parse as ISO date string
+                              try {
+                                const date = new Date(dateStr);
+                                if (!isNaN(date.getTime())) {
+                                  const dayNum = date.getDate();
+                                  const monthNames = [
+                                    'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
+                                    'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                                  ];
+                                  const monthName = monthNames[date.getMonth()];
+                                  return `${dayNum} ${monthName}`;
+                                }
+                              } catch (e) {
+                                // Ignore parsing errors
+                              }
+                              return dateStr;
+                            };
+                            
+                            // Parse period string
+                            const periodStr = variant.period.trim();
+                            const periods = periodStr.split(',');
+                            const firstPeriod = periods[0].trim();
+                            
+                            if (firstPeriod.includes('-')) {
+                              // Format 1: start-end range (e.g., "20251012-20251212")
+                              const [startStr, endStr] = firstPeriod.split('-').map(s => s.trim());
+                              if (startStr && endStr) {
+                                const start = formatPeriodDate(startStr);
+                                const end = formatPeriodDate(endStr);
+                                return `${start} - ${end}`;
+                              }
+                            } else if (periods.length > 1) {
+                              // Format 2: multiple dates separated by commas
+                              const startStr = periods[0].trim();
+                              const endStr = periods[periods.length - 1].trim();
+                              if (startStr && endStr && startStr.length === 8 && endStr.length === 8) {
+                                const start = formatPeriodDate(startStr);
+                                const end = formatPeriodDate(endStr);
+                                return `${start} - ${end}`;
+                              }
+                            } else if (firstPeriod.length === 8) {
+                              // Single date in YYYYMMDD format
+                              return formatPeriodDate(firstPeriod);
+                            }
+                          }
+                          
+                          // Handle duration-based variants (type: 'length' or 'duration', or has duration field)
+                          if (variantType === 'length' || variantType === 'duration' || variant.duration || variant.minLength || variant.minDuration) {
+                            const minDuration = variant.minDuration || variant.minLength;
+                            const maxDuration = variant.maxDuration || variant.maxLength;
+                            
                             if (minDuration && maxDuration) {
                               return intl.formatMessage(
                                 { id: 'PreviewListingPage.fromToDays' },
@@ -2782,22 +3035,6 @@ export const PreviewListingPageComponent = props => {
                                 }
                               );
                             }
-                          }
-                          
-                          // Handle seasonality-based variants (dates)
-                          if (variant.type === 'seasonality' && variant.dates && variant.dates.length > 0) {
-                            const start = new Date(variant.dates[0]);
-                            const end = new Date(variant.dates[variant.dates.length - 1]);
-                            const formatDate = date => {
-                              const day = date.getDate();
-                              const monthNames = [
-                                'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-                                'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
-                              ];
-                              const month = monthNames[date.getMonth()];
-                              return `${day} ${month}`;
-                            };
-                            return `${formatDate(start)} - ${formatDate(end)}`;
                           }
                           
                           return '';
@@ -2906,49 +3143,51 @@ export const PreviewListingPageComponent = props => {
                           </span>
                         </div>
                       </div>
-                      <div className={css.fieldGroup}>
-                        <label className={css.fieldLabel}>
-                          <FormattedMessage
-                            id="ListingConfiguration.minLength"
-                            defaultMessage="Minimum length (days)"
+                      <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+                        <div className={css.fieldGroup} style={{ flex: '1 1 50%' }}>
+                          <label className={css.fieldLabel}>
+                            <FormattedMessage
+                              id="ListingConfiguration.minLength"
+                              defaultMessage="Minimum length (days)"
+                            />
+                          </label>
+                          <input
+                            type="number"
+                            value={newPriceVariant.minLength}
+                            onChange={e =>
+                              setNewPriceVariant({
+                                ...newPriceVariant,
+                                minLength: parseInt(e.target.value) || 0,
+                              })
+                            }
+                            className={css.input}
+                            min="1"
                           />
-                        </label>
-                        <input
-                          type="number"
-                          value={newPriceVariant.minLength}
-                          onChange={e =>
-                            setNewPriceVariant({
-                              ...newPriceVariant,
-                              minLength: parseInt(e.target.value) || 0,
-                            })
-                          }
-                          className={css.input}
-                          min="1"
-                        />
-                      </div>
-                      <div className={css.fieldGroup}>
-                        <label className={css.fieldLabel}>
-                          <FormattedMessage
-                            id="ListingConfiguration.maxLength"
-                            defaultMessage="Maximum length (days, optional)"
+                        </div>
+                        <div className={css.fieldGroup} style={{ flex: '1 1 50%' }}>
+                          <label className={css.fieldLabel}>
+                            <FormattedMessage
+                              id="ListingConfiguration.maxLength"
+                              defaultMessage="Maximum length (days, optional)"
+                            />
+                          </label>
+                          <input
+                            type="number"
+                            value={newPriceVariant.maxLength}
+                            onChange={e =>
+                              setNewPriceVariant({
+                                ...newPriceVariant,
+                                maxLength: parseInt(e.target.value) || '',
+                              })
+                            }
+                            className={css.input}
+                            min={newPriceVariant.minLength || 1}
+                            placeholder={intl.formatMessage({
+                              id: 'ListingConfiguration.noLimit',
+                              defaultMessage: 'No limit',
+                            })}
                           />
-                        </label>
-                        <input
-                          type="number"
-                          value={newPriceVariant.maxLength}
-                          onChange={e =>
-                            setNewPriceVariant({
-                              ...newPriceVariant,
-                              maxLength: parseInt(e.target.value) || '',
-                            })
-                          }
-                          className={css.input}
-                          min={newPriceVariant.minLength || 1}
-                          placeholder={intl.formatMessage({
-                            id: 'ListingConfiguration.noLimit',
-                            defaultMessage: 'No limit',
-                          })}
-                        />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -3009,6 +3248,9 @@ export const PreviewListingPageComponent = props => {
                         onDatesChange={dates => setNewPriceVariant({ ...newPriceVariant, dates })}
                         selectMode="exception"
                         marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
+                        disabledDates={disabledDates}
+                        availableFrom={currentListing.attributes?.publicData?.availableFrom}
+                        availableUntil={currentListing.attributes?.publicData?.availableUntil}
                       />
                     </>
                   )}
@@ -3087,6 +3329,8 @@ export const PreviewListingPageComponent = props => {
                 onDatesChange={setModalSelectedDates}
                 marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
                 disabledDates={getExceptionDatesForCalendar()}
+                availableFrom={currentListing.attributes?.publicData?.availableFrom}
+                availableUntil={currentListing.attributes?.publicData?.availableUntil}
               />
             </div>
 
@@ -3148,6 +3392,8 @@ export const PreviewListingPageComponent = props => {
                     onDatesChange={dates => setNewVariant({ ...newVariant, dates })}
                     selectMode="exception"
                     marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
+                    availableFrom={currentListing.attributes?.publicData?.availableFrom}
+                    availableUntil={currentListing.attributes?.publicData?.availableUntil}
                   />
                   <div className={css.exceptionActions}>
                     <button
@@ -3255,33 +3501,42 @@ export const PreviewListingPageComponent = props => {
             </div>
 
             <div className={css.locationModalContent}>
-              {/* Address Search Section */}
-              {!showAddressSearch && (
+              {/* Autocomplete Search */}
+              {showAddressSearch && !showFullForm && (
                 <div className={css.addressSection}>
                   <button
                     type="button"
                     className={css.chipCard}
                     onClick={() => {
-                      setShowAddressSearch(true);
-                      setShowFullForm(false);
+                      setShowFullForm(true);
+                      setManualAddress({
+                        street: '',
+                        streetNumber: '',
+                        addressLine2: '',
+                        city: '',
+                        region: '',
+                        postalCode: '',
+                        country: '',
+                      });
+                      setLocationAutocompleteValue({
+                        search: '',
+                        predictions: [],
+                        selectedPlace: null,
+                      });
+                      setModalGeolocation(null);
                     }}
                     style={{
-                      backgroundColor: config.branding?.marketplaceColor || '#4A90E2',
+                      backgroundColor: 'white',
                       borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                      color: 'white',
+                      color: config.branding?.marketplaceColor || '#4A90E2',
+                      marginBottom: '1rem',
                     }}
                   >
                     <FormattedMessage
-                      id="ListingConfiguration.searchNewAddress"
-                      defaultMessage="Ricerca un nuovo indirizzo"
+                      id="ListingConfiguration.cantFindAddress"
+                      defaultMessage="Non trovi l'indirizzo? Procedi con l'inserimento manualmente"
                     />
                   </button>
-                </div>
-              )}
-
-              {/* Autocomplete Search */}
-              {showAddressSearch && !showFullForm && (
-                <div className={css.addressSection}>
                   <LocationAutocompleteInputImpl
                     className={css.input}
                     iconClassName={css.locationIcon}
@@ -3334,65 +3589,23 @@ export const PreviewListingPageComponent = props => {
                       valid: true,
                     }}
                   />
-                  <button
-                    type="button"
-                    className={css.chipCard}
-                    onClick={() => {
-                      setShowFullForm(true);
-                      setManualAddress({
-                        street: '',
-                        streetNumber: '',
-                        addressLine2: '',
-                        city: '',
-                        region: '',
-                        postalCode: '',
-                        country: '',
-                      });
-                      setLocationAutocompleteValue({
-                        search: '',
-                        predictions: [],
-                        selectedPlace: null,
-                      });
-                      setModalGeolocation(null);
-                    }}
-                    style={{
-                      backgroundColor: 'white',
-                      borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                      color: config.branding?.marketplaceColor || '#4A90E2',
-                      marginTop: '1rem',
-                    }}
-                  >
-                    <FormattedMessage
-                      id="ListingConfiguration.cantFindAddress"
-                      defaultMessage="Non trovi l'indirizzo? Procedi con l'inserimento manualmente"
-                    />
-                  </button>
                 </div>
               )}
 
               {/* Full Address Form */}
-              {showAddressSearch && showFullForm && (
+              {showFullForm && (
                 <div className={css.manualAddressForm}>
                   <button
                     type="button"
                     className={css.chipCard}
                     onClick={() => {
+                      setShowAddressSearch(true);
                       setShowFullForm(false);
-                      setManualAddress({
-                        street: '',
-                        streetNumber: '',
-                        addressLine2: '',
-                        city: '',
-                        region: '',
-                        postalCode: '',
-                        country: '',
-                      });
                       setLocationAutocompleteValue({
                         search: '',
                         predictions: [],
                         selectedPlace: null,
                       });
-                      setModalGeolocation(null);
                     }}
                     style={{
                       backgroundColor: 'white',
@@ -3565,81 +3778,6 @@ export const PreviewListingPageComponent = props => {
                 </div>
               )}
 
-              {/* Location Options */}
-              <div className={css.locationOptionsSection}>
-                <h4 className={css.locationOptionsTitle}>
-                  <FormattedMessage
-                    id="ListingConfiguration.locationOptions"
-                    defaultMessage="Location Options"
-                  />
-                </h4>
-                <div className={css.chipCardsGroup}>
-                  <button
-                    type="button"
-                    className={`${css.chipCard} ${modalLocationVisible ? css.chipCardSelected : ''}`}
-                    onClick={() => {
-                      if (modalHandByHandAvailable) {
-                        setShowLocationTooltip(true);
-                        setTimeout(() => setShowLocationTooltip(false), 3000);
-                      } else {
-                        setModalLocationVisible(!modalLocationVisible);
-                      }
-                    }}
-                    style={
-                      modalLocationVisible
-                        ? {
-                            backgroundColor: config.branding?.marketplaceColor || '#4A90E2',
-                            borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                            color: 'white',
-                          }
-                        : modalHandByHandAvailable
-                        ? {
-                            opacity: 0.6,
-                            cursor: 'not-allowed',
-                          }
-                        : {}
-                    }
-                  >
-                    <FormattedMessage
-                      id="ListingConfiguration.makeLocationVisible"
-                      defaultMessage="Make location visible to other users"
-                    />
-                  </button>
-                  {showLocationTooltip && modalHandByHandAvailable && modalLocationVisible && (
-                    <div className={css.locationTooltip}>
-                      <FormattedMessage
-                        id="ListingConfiguration.cannotDisableLocationTooltip"
-                        defaultMessage="Non puoi disabilitare questa opzione se sei disponibile allo scambio a mano"
-                      />
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className={`${css.chipCard} ${modalHandByHandAvailable ? css.chipCardSelected : ''}`}
-                    onClick={() => {
-                      const newValue = !modalHandByHandAvailable;
-                      setModalHandByHandAvailable(newValue);
-                      if (newValue) {
-                        setModalLocationVisible(true);
-                      }
-                    }}
-                    style={
-                      modalHandByHandAvailable
-                        ? {
-                            backgroundColor: config.branding?.marketplaceColor || '#4A90E2',
-                            borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                            color: 'white',
-                          }
-                        : {}
-                    }
-                  >
-                    <FormattedMessage
-                      id="ListingConfiguration.handByHand"
-                      defaultMessage="Available for hand-by-hand exchange"
-                    />
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Modal Actions */}

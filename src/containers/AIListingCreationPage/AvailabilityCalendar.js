@@ -17,6 +17,8 @@ const AvailabilityCalendar = ({
   marketplaceColor = '#4A90E2',
   disabledDates = [], // Dates that cannot be selected (e.g., availability exceptions)
   readOnly = false, // If true, calendar is read-only (only navigation, no date selection)
+  availableFrom = null, // Start date of availability range
+  availableUntil = null, // End date of availability range
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -32,7 +34,7 @@ const AvailabilityCalendar = ({
 
   // Initialize with all future dates selected for default mode (up to 1 year)
   useEffect(() => {
-    if (selectMode === 'range' && selectedDates.length === 0) {
+    if (selectMode === 'range' && selectedDates.length === 0 && !readOnly) {
       // Auto-select all dates from today for 1 year ahead
       const futureDates = [];
       const endDate = new Date(today);
@@ -47,7 +49,12 @@ const AvailabilityCalendar = ({
     } else {
       setInternalSelectedDates(selectedDates);
     }
-  }, [selectMode]);
+  }, [selectMode, readOnly]); // Removed selectedDates from dependencies to avoid loop
+
+  // Separate useEffect to update internal state when selectedDates prop changes
+  useEffect(() => {
+    setInternalSelectedDates(selectedDates);
+  }, [selectedDates]);
 
   // Detect screen size for showing two months on large screens
   useEffect(() => {
@@ -126,11 +133,62 @@ const AvailabilityCalendar = ({
   };
 
   const isDateDisabled = (date) => {
-    return disabledDates.some(d => 
+    // Check if date is in disabledDates array
+    if (disabledDates.some(d => 
       d.getFullYear() === date.getFullYear() &&
       d.getMonth() === date.getMonth() &&
       d.getDate() === date.getDate()
-    );
+    )) {
+      return true;
+    }
+
+    // Only apply availableFrom/availableUntil restrictions when selecting exceptions
+    // This allows users to modify the main availability range freely
+    if (selectMode === 'exception') {
+      // Check if date is before availableFrom
+      if (availableFrom) {
+        const fromDate = new Date(availableFrom);
+        // Extract only year, month, day for comparison (ignore time and timezone)
+        const fromYear = fromDate.getFullYear();
+        const fromMonth = fromDate.getMonth();
+        const fromDay = fromDate.getDate();
+        
+        const compareDate = new Date(date);
+        const compareYear = compareDate.getFullYear();
+        const compareMonth = compareDate.getMonth();
+        const compareDay = compareDate.getDate();
+        
+        // Compare dates only (year, month, day)
+        if (compareYear < fromYear || 
+            (compareYear === fromYear && compareMonth < fromMonth) ||
+            (compareYear === fromYear && compareMonth === fromMonth && compareDay < fromDay)) {
+          return true;
+        }
+      }
+
+      // Check if date is after availableUntil
+      if (availableUntil) {
+        const untilDate = new Date(availableUntil);
+        // Extract only year, month, day for comparison (ignore time and timezone)
+        const untilYear = untilDate.getFullYear();
+        const untilMonth = untilDate.getMonth();
+        const untilDay = untilDate.getDate();
+        
+        const compareDate = new Date(date);
+        const compareYear = compareDate.getFullYear();
+        const compareMonth = compareDate.getMonth();
+        const compareDay = compareDate.getDate();
+        
+        // Compare dates only (year, month, day)
+        if (compareYear > untilYear || 
+            (compareYear === untilYear && compareMonth > untilMonth) ||
+            (compareYear === untilYear && compareMonth === untilMonth && compareDay > untilDay)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   };
 
   const handleDateClick = (date) => {
