@@ -4,7 +4,7 @@ import classNames from 'classnames';
 
 import { FormattedMessage } from '../../../../../util/reactIntl';
 
-import { ExternalLink, NamedLink } from '../../../../../components';
+import { ExternalLink, IconHelp, NamedLink } from '../../../../../components';
 
 import css from './PriorityLinks.module.css';
 
@@ -29,12 +29,20 @@ export const CreateListingMenuLink = props => {
 /**
  * Link component that can be used on TopbarDesktop.
  *
- * @param {*} props containing linkConfig including resolved 'route' params for NamedLink.
+ * @param {*} props containing linkConfig including resolved 'route' params for NamedLink and isAuthenticated flag.
  * @returns NamedLink or ExternalLink component based on config.
  */
-const PriorityLink = ({ linkConfig }) => {
+const PriorityLink = ({ linkConfig, isAuthenticated }) => {
   const { text, type, href, route, highlight } = linkConfig;
-  const classes = classNames(css.priorityLink, { [css.highlight]: highlight });
+  
+  // Check if this is an "About" link and user is authenticated
+  const isAboutLink = text && (text.toLowerCase().includes('about') || text.toLowerCase().includes('informazioni'));
+  const showAsIcon = isAboutLink && isAuthenticated;
+  
+  const classes = classNames(css.priorityLink, { 
+    [css.highlight]: highlight,
+    [css.iconOnly]: showAsIcon
+  });
 
   // Note: if the config contains 'route' keyword,
   // then in-app linking config has been resolved already.
@@ -43,13 +51,25 @@ const PriorityLink = ({ linkConfig }) => {
     const { name, params, to } = route || {};
     return (
       <NamedLink name={name} params={params} to={to} className={classes}>
-        <span className={css.priorityLinkLabel}>{text}</span>
+        {showAsIcon ? (
+          <span className={css.priorityIconWrapper}>
+            <IconHelp className={css.helpIcon} />
+          </span>
+        ) : (
+          <span className={css.priorityLinkLabel}>{text}</span>
+        )}
       </NamedLink>
     );
   }
   return (
     <ExternalLink href={href} className={classes}>
-      <span className={css.priorityLinkLabel}>{text}</span>
+      {showAsIcon ? (
+        <span className={css.priorityIconWrapper}>
+          <IconHelp className={css.helpIcon} />
+        </span>
+      ) : (
+        <span className={css.priorityLinkLabel}>{text}</span>
+      )}
     </ExternalLink>
   );
 };
@@ -58,7 +78,7 @@ const PriorityLink = ({ linkConfig }) => {
  * Create priority links, which are visible on the desktop layout on the Topbar.
  * If space is limited, this doesn't include anything to the Topbar.
  *
- * @param {*} props contains links array and setLinks function
+ * @param {*} props contains links array, setLinks function, and isAuthenticated flag
  * @returns container div with priority links included.
  */
 const PriorityLinks = props => {
@@ -81,7 +101,7 @@ const PriorityLinks = props => {
     }
   }, [containerRef]);
 
-  const { links, priorityLinks } = props;
+  const { links, priorityLinks, isAuthenticated } = props;
   const isServer = typeof window === 'undefined';
   const isMeasured = links?.[0]?.width && (priorityLinks.length === 0 || priorityLinks?.[0]?.width);
   const styleWrapper = !!isMeasured
@@ -102,14 +122,14 @@ const PriorityLinks = props => {
   return isMeasured || isServer ? (
     <div className={css.priorityLinkWrapper} {...styleWrapper} ref={containerRef}>
       {linkConfigs.map((linkConfig, index) => {
-        return <PriorityLink key={`${linkConfig.text}_${index}`} linkConfig={linkConfig} />;
+        return <PriorityLink key={`${linkConfig.text}_${index}`} linkConfig={linkConfig} isAuthenticated={isAuthenticated} />;
       })}
     </div>
   ) : (
     ReactDOM.createPortal(
       <div className={css.priorityLinkWrapper} {...styleWrapper} ref={containerRef}>
         {linkConfigs.map((linkConfig, index) => {
-          return <PriorityLink key={`${linkConfig.text}_${index}`} linkConfig={linkConfig} />;
+          return <PriorityLink key={`${linkConfig.text}_${index}`} linkConfig={linkConfig} isAuthenticated={isAuthenticated} />;
         })}
       </div>,
       document.body

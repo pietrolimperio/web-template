@@ -101,8 +101,7 @@
   margin: 0;
 
   &:hover {
-    color: var(--colorBlack);
-    border-bottom: 4px solid var(--marketplaceColor);
+    color: var(--marketplaceColor);
     border-radius: 0;
     text-decoration: none;
   }
@@ -121,6 +120,37 @@
   position: relative;
 }
 
+/* Icon links for bell and user icons */
+.iconLink {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 12px;
+  transition: var(--transitionStyleButton);
+  border-bottom: 0px solid;
+  color: var(--colorGrey700);
+
+  &:hover {
+    color: var(--marketplaceColor);
+    border-radius: 0;
+    text-decoration: none;
+  }
+}
+
+.iconLinkWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.bellIcon,
+.userIcon,
+.helpIcon {
+  width: 24px;
+  height: 24px;
+}
+
 .notificationDot {
   /* Dimensions */
   width: 7px;
@@ -129,8 +159,8 @@
 
   /* Position */
   position: absolute;
-  top: 2px;
-  right: -9px;
+  top: -2px;
+  right: -4px;
 
   /* Style: red dot */
   background-color: var(--colorFail);
@@ -306,4 +336,31 @@
       background-color: var(--colorBlack);
     }
   }
+}
+
+/* ============================================ */
+/* SCROLL-TRIGGERED SEARCH BAR ANIMATION */
+/* ============================================ */
+
+/* Smooth slide-in animation for search form */
+.searchLink {
+  animation: slideInFromTop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure search form appears smoothly */
+.searchLink form {
+  transition: all 0.3s ease-in-out;
 }

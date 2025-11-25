@@ -5,8 +5,12 @@ import { FormattedMessage } from '../../../../util/reactIntl';
 import { ACCOUNT_SETTINGS_PAGES } from '../../../../routing/routeConfiguration';
 import {
   Avatar,
+  IconBell,
+  IconHelp,
+  IconUser,
   InlineTextButton,
   LinkedLogo,
+  LocaleSelector,
   Menu,
   MenuLabel,
   MenuContent,
@@ -42,10 +46,35 @@ const LoginLink = () => {
 const InboxLink = ({ notificationCount, inboxTab }) => {
   const notificationDot = notificationCount > 0 ? <div className={css.notificationDot} /> : null;
   return (
-    <NamedLink className={css.topbarLink} name="InboxPage" params={{ tab: inboxTab }}>
-      <span className={css.topbarLinkLabel}>
-        <FormattedMessage id="TopbarDesktop.inbox" />
+    <NamedLink className={css.iconLink} name="InboxPage" params={{ tab: inboxTab }}>
+      <span className={css.iconLinkWrapper}>
+        <IconBell className={css.bellIcon} />
         {notificationDot}
+      </span>
+    </NamedLink>
+  );
+};
+
+const GenericAvatarLink = () => {
+  return (
+    <NamedLink className={css.iconLink} name="LoginPage">
+      <span className={css.iconLinkWrapper}>
+        <IconUser className={css.userIcon} />
+      </span>
+    </NamedLink>
+  );
+};
+
+const AboutLink = ({ intl }) => {
+  return (
+    <NamedLink
+      className={css.iconLink}
+      name="CMSPage"
+      params={{ pageId: 'about' }}
+      title={intl.formatMessage({ id: 'TopbarDesktop.aboutLink' })}
+    >
+      <span className={css.iconLinkWrapper}>
+        <IconHelp className={css.helpIcon} />
       </span>
     </NamedLink>
   );
@@ -142,6 +171,8 @@ const TopbarDesktop = props => {
     showSearchForm,
     showCreateListingsLink,
     inboxTab,
+    currentLocale,
+    onLocaleChange,
   } = props;
   const [mounted, setMounted] = useState(false);
 
@@ -170,8 +201,9 @@ const TopbarDesktop = props => {
     />
   ) : null;
 
-  const signupLinkMaybe = isAuthenticatedOrJustHydrated ? null : <SignupLink />;
-  const loginLinkMaybe = isAuthenticatedOrJustHydrated ? null : <LoginLink />;
+  const genericAvatarMaybe = isAuthenticatedOrJustHydrated ? null : <GenericAvatarLink />;
+  // About link is always visible for all users
+  const aboutLink = <AboutLink intl={intl} />;
 
   const searchFormMaybe = showSearchForm ? (
     <TopbarSearchForm
@@ -208,12 +240,19 @@ const TopbarDesktop = props => {
         intl={intl}
         hasClientSideContentReady={authenticatedOnClientSide || !isAuthenticatedOrJustHydrated}
         showCreateListingsLink={showCreateListingsLink}
+        isAuthenticated={authenticatedOnClientSide}
       />
 
+      {aboutLink}
       {inboxLinkMaybe}
       {profileMenuMaybe}
-      {signupLinkMaybe}
-      {loginLinkMaybe}
+      {genericAvatarMaybe}
+
+      <LocaleSelector
+        className={css.localeSelector}
+        currentLocale={currentLocale}
+        onLocaleChange={onLocaleChange}
+      />
     </nav>
   );
 };

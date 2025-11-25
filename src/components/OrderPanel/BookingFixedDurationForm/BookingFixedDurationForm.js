@@ -134,6 +134,7 @@ export const BookingFixedDurationForm = props => {
           form,
           pristine,
           handleSubmit,
+          isOwnListing,
           listingId,
           startTimeInterval,
           values,
@@ -145,8 +146,6 @@ export const BookingFixedDurationForm = props => {
           fetchLineItemsInProgress,
           fetchLineItemsError,
           payoutDetailsWarning,
-          isOwnListing,
-          finePrintComponent: FinePrint,
         } = formRenderProps;
 
         const startTime = values?.bookingStartTime ? values.bookingStartTime : null;
@@ -266,7 +265,19 @@ export const BookingFixedDurationForm = props => {
               </PrimaryButton>
             </div>
 
-            <FinePrint payoutDetailsWarning={payoutDetailsWarning} isOwnListing={isOwnListing} />
+            <p className={css.finePrint}>
+              {payoutDetailsWarning ? (
+                payoutDetailsWarning
+              ) : (
+                <FormattedMessage
+                  id={
+                    isOwnListing
+                      ? 'BookingFixedDurationForm.ownListing'
+                      : 'BookingFixedDurationForm.youWontBeChargedInfo'
+                  }
+                />
+              )}
+            </p>
           </Form>
         );
       }}

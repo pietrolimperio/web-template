@@ -1,27 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { Form as FinalForm } from 'react-final-form';
 
 import { useConfiguration } from '../../context/configurationContext';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
+import * as validators from '../../util/validators';
 import { propTypes } from '../../util/types';
 import { isPasswordRecoveryEmailNotFoundError } from '../../util/errors';
-import { isScrollingDisabled } from '../../ducks/ui.duck';
 
-import {
-  Heading,
-  Page,
-  InlineTextButton,
-  IconKeys,
-  ResponsiveBackgroundImageContainer,
-  LayoutSingleColumn,
-} from '../../components';
+import { Page, Form, PrimaryButton, FieldTextInput, NamedLink, IconKeys } from '../../components';
 
-import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
-import FooterContainer from '../../containers/FooterContainer/FooterContainer';
-
-import PasswordRecoveryForm from './PasswordRecoveryForm/PasswordRecoveryForm';
+import logoImage from '../../assets/logo.png';
 
 import {
   recoverPassword,
@@ -30,182 +21,252 @@ import {
 } from './PasswordRecoveryPage.duck';
 import css from './PasswordRecoveryPage.module.css';
 
-const PasswordRecovery = props => {
-  const { initialEmail, onChange, onSubmitEmail, recoveryInProgress, recoveryError } = props;
-  return (
-    <div className={css.submitEmailContent}>
-      <IconKeys className={css.modalIcon} />
-      <Heading as="h1" rootClassName={css.modalTitle}>
-        <FormattedMessage id="PasswordRecoveryPage.forgotPasswordTitle" />
-      </Heading>
-      <p className={css.modalMessage}>
-        <FormattedMessage id="PasswordRecoveryPage.forgotPasswordMessage" />
-      </p>
-      <PasswordRecoveryForm
-        inProgress={recoveryInProgress}
-        onChange={onChange}
-        onSubmit={values => onSubmitEmail(values.email)}
-        initialValues={{ email: initialEmail }}
-        recoveryError={recoveryError}
-      />
-    </div>
-  );
-};
-
-const GenericError = () => {
-  return (
-    <div className={css.genericErrorContent}>
-      <IconKeys className={css.modalIcon} />
-      <Heading as="h1" rootClassName={css.modalTitle}>
-        <FormattedMessage id="PasswordRecoveryPage.actionFailedTitle" />
-      </Heading>
-      <p className={css.modalMessage}>
-        <FormattedMessage id="PasswordRecoveryPage.actionFailedMessage" />
-      </p>
-    </div>
-  );
-};
-
-const EmailSubmittedContent = props => {
-  const {
-    passwordRequested,
-    initialEmail,
-    submittedEmail,
-    onRetypeEmail,
-    onSubmitEmail,
-    recoveryInProgress,
-  } = props;
-
-  const submittedEmailText = (
-    <span className={css.email}>{passwordRequested ? initialEmail : submittedEmail}</span>
-  );
-
-  const resendEmailLink = (
-    <InlineTextButton rootClassName={css.helperLink} onClick={() => onSubmitEmail(submittedEmail)}>
-      <FormattedMessage id="PasswordRecoveryPage.resendEmailLinkText" />
-    </InlineTextButton>
-  );
-
-  const fixEmailLink = (
-    <InlineTextButton rootClassName={css.helperLink} onClick={onRetypeEmail}>
-      <FormattedMessage id="PasswordRecoveryPage.fixEmailLinkText" />
-    </InlineTextButton>
-  );
-
-  return (
-    <div className={css.emailSubmittedContent}>
-      <IconKeys className={css.modalIcon} />
-      <Heading as="h1" rootClassName={css.modalTitle}>
-        <FormattedMessage id="PasswordRecoveryPage.emailSubmittedTitle" />
-      </Heading>
-      <p className={css.modalMessage}>
-        <FormattedMessage
-          id="PasswordRecoveryPage.emailSubmittedMessage"
-          values={{ submittedEmailText }}
-        />
-      </p>
-      <div className={css.bottomWrapper}>
-        <p className={css.helperText}>
-          {recoveryInProgress ? (
-            <FormattedMessage id="PasswordRecoveryPage.resendingEmailInfo" />
-          ) : (
-            <FormattedMessage
-              id="PasswordRecoveryPage.resendEmailInfo"
-              values={{ resendEmailLink }}
-            />
-          )}
-        </p>
-        <p className={css.helperText}>
-          <FormattedMessage id="PasswordRecoveryPage.fixEmailInfo" values={{ fixEmailLink }} />
-        </p>
-      </div>
-    </div>
-  );
-};
-
 /**
- * The password recovery page.
- *
- * @param {Object} props
- * @param {boolean} props.scrollingDisabled - Whether the scrolling is disabled
- * @param {string} props.initialEmail - The initial email
- * @param {string} props.submittedEmail - The submitted email
- * @param {propTypes.error} props.recoveryError - The recovery error
- * @param {boolean} props.recoveryInProgress - Whether the recovery is in progress
- * @param {boolean} props.passwordRequested - Whether the password is requested
- * @param {function} props.onChange - The function to change the email
- * @param {function} props.onSubmitEmail - The function to submit the email
- * @param {function} props.onRetypeEmail - The function to retype the email
- * @returns {JSX.Element} Password recovery page component
+ * PasswordRecoveryPage - Modern password recovery page with the same layout as NewLoginPage
  */
 export const PasswordRecoveryPageComponent = props => {
-  const config = useConfiguration();
-  const intl = useIntl();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const emailParam = searchParams.get('email');
-
   const {
-    scrollingDisabled,
     initialEmail,
     submittedEmail,
     recoveryError,
     recoveryInProgress,
     passwordRequested,
+    scrollingDisabled,
     onChange,
     onSubmitEmail,
     onRetypeEmail,
   } = props;
-  const alreadyrequested = submittedEmail || passwordRequested;
+
+  const config = useConfiguration();
+  const intl = useIntl();
+  const location = useLocation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    window.scrollTo(0, 0);
+  }, []);
+
+  const searchParams = new URLSearchParams(location.search);
+  const emailParam = searchParams.get('email');
   const emailToUse = emailParam || initialEmail;
-  const showPasswordRecoveryForm = (
-    <PasswordRecovery
-      initialEmail={emailToUse}
-      onChange={onChange}
-      onSubmitEmail={onSubmitEmail}
-      recoveryInProgress={recoveryInProgress}
-      recoveryError={recoveryError}
-    />
-  );
+  const alreadyRequested = submittedEmail || passwordRequested;
+
+  const marketplaceName = config.marketplaceName;
+  const schemaTitle = intl.formatMessage({ id: 'PasswordRecoveryPage.title' }, { marketplaceName });
+
+  const handleSubmit = values => {
+    onSubmitEmail(values.email);
+  };
+
+  // Email submission form
+  const renderPasswordRecoveryForm = () => {
+    const emailLabel = intl.formatMessage({
+      id: 'PasswordRecoveryForm.emailLabel',
+    });
+    const emailPlaceholder = intl.formatMessage({
+      id: 'PasswordRecoveryForm.emailPlaceholder',
+    });
+    const emailRequiredMessage = intl.formatMessage({
+      id: 'PasswordRecoveryForm.emailRequired',
+    });
+    const emailNotFoundMessage = intl.formatMessage({
+      id: 'PasswordRecoveryForm.emailNotFound',
+    });
+    const emailInvalidMessage = intl.formatMessage({
+      id: 'PasswordRecoveryForm.emailInvalid',
+    });
+
+    const emailRequired = validators.required(emailRequiredMessage);
+    const emailValid = validators.emailFormatValid(emailInvalidMessage);
+
+    // In case a given email is not found, pass a custom error message
+    const customErrorText = isPasswordRecoveryEmailNotFoundError(recoveryError)
+      ? emailNotFoundMessage
+      : null;
+
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeys className={css.iconKeys} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordRecoveryPage.forgotPasswordTitle" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage id="PasswordRecoveryPage.forgotPasswordMessage" />
+        </p>
+
+        {recoveryError && !isPasswordRecoveryEmailNotFoundError(recoveryError) && (
+          <div className={css.error}>
+            <FormattedMessage id="PasswordRecoveryPage.actionFailedMessage" />
+          </div>
+        )}
+
+        <FinalForm
+          onSubmit={handleSubmit}
+          initialValues={{ email: emailToUse }}
+          render={({ handleSubmit, invalid, pristine, values }) => {
+            const submitDisabled = invalid || recoveryInProgress;
+
+            return (
+              <Form className={css.form} onSubmit={handleSubmit}>
+                <FieldTextInput
+                  className={css.field}
+                  type="email"
+                  id="email"
+                  name="email"
+                  autoComplete="email"
+                  label={emailLabel}
+                  placeholder={emailPlaceholder}
+                  validate={validators.composeValidators(emailRequired, emailValid)}
+                  customErrorText={customErrorText}
+                />
+
+                <PrimaryButton
+                  className={css.submitButton}
+                  type="submit"
+                  inProgress={recoveryInProgress}
+                  disabled={submitDisabled}
+                >
+                  <FormattedMessage id="PasswordRecoveryForm.sendInstructions" />
+                </PrimaryButton>
+
+                <div className={css.loginContainer}>
+                  <NamedLink name="LoginPage" className={css.loginLink}>
+                    <FormattedMessage id="PasswordRecoveryForm.loginLinkText" />
+                  </NamedLink>
+                </div>
+              </Form>
+            );
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Email submitted success screen
+  const renderEmailSubmittedContent = () => {
+    const submittedEmailText = (
+      <span className={css.emailHighlight}>
+        {passwordRequested ? initialEmail : submittedEmail}
+      </span>
+    );
+
+    const resendEmailLink = (
+      <button
+        type="button"
+        className={css.helperLink}
+        onClick={() => onSubmitEmail(submittedEmail)}
+        disabled={recoveryInProgress}
+      >
+        <FormattedMessage id="PasswordRecoveryPage.resendEmailLinkText" />
+      </button>
+    );
+
+    const fixEmailLink = (
+      <button type="button" className={css.helperLink} onClick={onRetypeEmail}>
+        <FormattedMessage id="PasswordRecoveryPage.fixEmailLinkText" />
+      </button>
+    );
+
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeys className={css.iconKeys} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordRecoveryPage.emailSubmittedTitle" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage
+            id="PasswordRecoveryPage.emailSubmittedMessage"
+            values={{ submittedEmailText }}
+          />
+        </p>
+
+        <div className={css.helpTextContainer}>
+          <p className={css.helpText}>
+            {recoveryInProgress ? (
+              <FormattedMessage id="PasswordRecoveryPage.resendingEmailInfo" />
+            ) : (
+              <FormattedMessage
+                id="PasswordRecoveryPage.resendEmailInfo"
+                values={{ resendEmailLink }}
+              />
+            )}
+          </p>
+          <p className={css.helpText}>
+            <FormattedMessage id="PasswordRecoveryPage.fixEmailInfo" values={{ fixEmailLink }} />
+          </p>
+        </div>
+
+        <div className={css.loginContainer}>
+          <NamedLink name="LoginPage" className={css.loginLink}>
+            <FormattedMessage id="PasswordRecoveryForm.loginLinkText" />
+          </NamedLink>
+        </div>
+      </div>
+    );
+  };
+
+  // Generic error screen
+  const renderGenericError = () => {
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeys className={css.iconKeys} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordRecoveryPage.actionFailedTitle" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage id="PasswordRecoveryPage.actionFailedMessage" />
+        </p>
+
+        <div className={css.loginContainer}>
+          <NamedLink name="LoginPage" className={css.loginLink}>
+            <FormattedMessage id="PasswordRecoveryForm.loginLinkText" />
+          </NamedLink>
+        </div>
+      </div>
+    );
+  };
+
+  // Determine which content to show
+  let content;
+  if (isPasswordRecoveryEmailNotFoundError(recoveryError)) {
+    content = renderPasswordRecoveryForm();
+  } else if (recoveryError) {
+    content = renderGenericError();
+  } else if (alreadyRequested) {
+    content = renderEmailSubmittedContent();
+  } else {
+    content = renderPasswordRecoveryForm();
+  }
 
   return (
     <Page
-      title={intl.formatMessage({
-        id: 'PasswordRecoveryPage.title',
-      })}
+      title={schemaTitle}
       scrollingDisabled={scrollingDisabled}
+      schema={{
+        '@context': 'http://schema.org',
+        '@type': 'WebPage',
+        name: schemaTitle,
+      }}
     >
-      <LayoutSingleColumn
-        mainColumnClassName={css.layoutWrapperMain}
-        topbar={<TopbarContainer />}
-        footer={<FooterContainer />}
-      >
-        <ResponsiveBackgroundImageContainer
-          className={css.root}
-          childrenWrapperClassName={css.contentContainer}
-          as="section"
-          image={config.branding.brandImage}
-          sizes="100%"
-          useOverlay
-        >
-          {isPasswordRecoveryEmailNotFoundError(recoveryError) ? (
-            showPasswordRecoveryForm
-          ) : recoveryError ? (
-            <GenericError />
-          ) : alreadyrequested ? (
-            <EmailSubmittedContent
-              passwordRequested={passwordRequested}
-              initialEmail={initialEmail}
-              submittedEmail={submittedEmail}
-              onRetypeEmail={onRetypeEmail}
-              onSubmitEmail={onSubmitEmail}
-              recoveryInProgress={recoveryInProgress}
-            />
-          ) : (
-            showPasswordRecoveryForm
-          )}
-        </ResponsiveBackgroundImageContainer>
-      </LayoutSingleColumn>
+      <div className={css.root}>
+        {/* Left side - Background image only */}
+        <div className={css.leftSide}></div>
+
+        {/* Right side - Password recovery content */}
+        <div className={css.rightSide}>
+          <div className={css.formContainer}>
+            <div className={css.formWrapper}>
+              {/* Logo at the top */}
+              <div className={css.logoContainer}>
+                <img src={logoImage} alt={marketplaceName} className={css.logo} />
+              </div>
+
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
     </Page>
   );
 };
@@ -219,26 +280,23 @@ const mapStateToProps = state => {
     passwordRequested,
   } = state.PasswordRecoveryPage;
   return {
-    scrollingDisabled: isScrollingDisabled(state),
     initialEmail,
     submittedEmail,
     recoveryError,
     recoveryInProgress,
     passwordRequested,
+    scrollingDisabled: false,
   };
 };
 
 const mapDispatchToProps = dispatch => ({
   onChange: () => dispatch(clearPasswordRecoveryError()),
-  onSubmitEmail: email => dispatch(recoverPassword({ email })),
+  onSubmitEmail: email => dispatch(recoverPassword(email)),
   onRetypeEmail: () => dispatch(retypePasswordRecoveryEmail()),
 });
 
-const PasswordRecoveryPage = compose(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
-)(PasswordRecoveryPageComponent);
+const PasswordRecoveryPage = compose(connect(mapStateToProps, mapDispatchToProps))(
+  PasswordRecoveryPageComponent
+);
 
 export default PasswordRecoveryPage;

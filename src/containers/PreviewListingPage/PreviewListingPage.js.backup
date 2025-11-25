@@ -1,0 +1,1130 @@
+import React, { useEffect, useState } from 'react';
+import { bool, func, object, shape, string } from 'prop-types';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import { useConfiguration } from '../../context/configurationContext';
+import { FormattedMessage, useIntl, intlShape, injectIntl } from '../../util/reactIntl';
+import { propTypes } from '../../util/types';
+import { ensureCurrentUser, ensureOwnListing } from '../../util/data';
+import { LISTING_STATE_DRAFT } from '../../util/types';
+import { createResourceLocatorString, findRouteByRouteName } from '../../util/routes';
+import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
+import { requirePayoutDetails } from '../../util/configHelpers';
+import { INQUIRY_PROCESS_NAME } from '../../transactions/transaction';
+import { types as sdkTypes, createImageVariantConfig } from '../../util/sdkLoader';
+
+const { UUID } = sdkTypes;
+
+import {
+  Page,
+  LayoutSingleColumn,
+  NamedLink,
+  PrimaryButton,
+  SecondaryButton,
+  Modal,
+  IconSpinner,
+} from '../../components';
+import TopbarContainer from '../TopbarContainer/TopbarContainer';
+import NotFoundPage from '../NotFoundPage/NotFoundPage';
+
+import {
+  requestPublishListingDraft,
+  clearPublishError,
+  requestShowListing,
+  requestUpdateListing,
+} from '../EditListingPage/EditListingPage.duck';
+import { getStripeConnectAccountLink } from '../../ducks/stripeConnectAccount.duck';
+
+import css from './PreviewListingPage.module.css';
+
+const STRIPE_ONBOARDING_RETURN_URL_SUCCESS = 'success';
+const STRIPE_ONBOARDING_RETURN_URL_FAILURE = 'failure';
+
+// Helper function for image variants
+const getImageVariantInfo = listingImageConfig => {
+  const { aspectWidth = 1, aspectHeight = 1, variantPrefix = 'listing-card' } = listingImageConfig;
+  const aspectRatio = aspectHeight / aspectWidth;
+  const fieldsImage = [
+    `variants.${variantPrefix}`,
+    `variants.${variantPrefix}-2x`,
+    `variants.${variantPrefix}-4x`,
+    `variants.${variantPrefix}-6x`,
+  ];
+
+  return {
+    fieldsImage,
+    imageVariants: {
+      ...createImageVariantConfig(`${variantPrefix}`, 400, aspectRatio),
+      ...createImageVariantConfig(`${variantPrefix}-2x`, 800, aspectRatio),
+      ...createImageVariantConfig(`${variantPrefix}-4x`, 1600, aspectRatio),
+      ...createImageVariantConfig(`${variantPrefix}-6x`, 2400, aspectRatio),
+    },
+  };
+};
+
+// Helper functions for Stripe account
+const getStripeAccountData = stripeAccount => stripeAccount?.attributes?.stripeAccountData || null;
+
+const hasRequirements = (stripeAccountData, requirementType) =>
+  stripeAccountData != null &&
+  stripeAccountData.requirements &&
+  Array.isArray(stripeAccountData.requirements[requirementType]) &&
+  stripeAccountData.requirements[requirementType].length > 0;
+
+const getListingTypeConfig = (listing, selectedListingType, config) => {
+  const existingListingType = listing?.attributes?.publicData?.listingType;
+  const validListingTypes = config.listing?.listingTypes;
+  const hasOnlyOneListingType = validListingTypes?.length === 1;
+
+  const listingTypeConfig = existingListingType
+    ? validListingTypes.find(conf => conf.listingType === existingListingType)
+    : selectedListingType
+    ? validListingTypes.find(conf => conf.listingType === selectedListingType.listingType)
+    : hasOnlyOneListingType
+    ? validListingTypes[0]
+    : null;
+  return listingTypeConfig;
+};
+
+export const PreviewListingPageComponent = props => {
+  const config = useConfiguration();
+  const intl = useIntl();
+  const {
+    currentUser,
+    history,
+    getListing,
+    onFetchListing,
+    onUpdateListing,
+    onPublishListingDraft,
+    onUploadImage,
+    onDeleteImage,
+    publishListingError,
+    publishInProgress,
+    scrollingDisabled,
+    stripeAccount,
+    stripeAccountFetched,
+    onGetStripeConnectAccountLink,
+    getAccountLinkInProgress,
+    params,
+  } = props;
+
+  const { id, returnURLType } = params;
+  const listingId = id ? new UUID(id) : null;
+  const currentListing = ensureOwnListing(getListing(listingId));
+  const { state: currentListingState } = currentListing.attributes || {};
+
+  const ensuredCurrentUser = ensureCurrentUser(currentUser);
+  const currentUserLoaded = !!ensuredCurrentUser.id;
+
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [listingFetched, setListingFetched] = useState(false);
+
+  // Editable fields state
+  const [editingField, setEditingField] = useState(null);
+  const [fieldValues, setFieldValues] = useState({});
+  const [regeneratingField, setRegeneratingField] = useState(null);
+  const [updatingListing, setUpdatingListing] = useState(false);
+
+  // Image gallery state
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState(null);
+  
+  // Modals for editing
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  
+  // Price variants display
+  const [showPriceVariants, setShowPriceVariants] = useState(false);
+  
+  // Location visibility
+  const [locationVisible, setLocationVisible] = useState(
+    currentListing.attributes?.publicData?.locationVisible || false
+  );
+  const [handByHandAvailable, setHandByHandAvailable] = useState(
+    currentListing.attributes?.publicData?.handByHandAvailable || false
+  );
+
+  // Fetch listing data on mount
+  useEffect(() => {
+    if (listingId) {
+      onFetchListing({ id: listingId }, config)
+        .then(() => setListingFetched(true))
+        .catch(() => setListingFetched(true));
+    }
+  }, [id]);
+
+  // Initialize field values when listing is loaded
+  useEffect(() => {
+    if (currentListing.id) {
+      setFieldValues({
+        title: currentListing.attributes?.title || '',
+        description: currentListing.attributes?.description || '',
+        price: currentListing.attributes?.price?.amount / 100 || 0,
+      });
+    }
+  }, [currentListing.id]);
+
+  // Handler functions for editing
+  const handleEditField = fieldName => {
+    setEditingField(fieldName);
+  };
+
+  const handleSaveField = async fieldName => {
+    const value = fieldValues[fieldName];
+
+    // Basic validation
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      alert(intl.formatMessage({ id: 'PreviewListingPage.fieldRequired' }));
+      return;
+    }
+
+    setUpdatingListing(true);
+    try {
+      // Prepare update data
+      const updateData = {};
+      if (fieldName === 'title') {
+        updateData.title = value;
+      } else if (fieldName === 'description') {
+        updateData.description = value;
+      } else if (fieldName === 'price') {
+        updateData.price = {
+          amount: Math.round(value * 100),
+          currency: currentListing.attributes?.price?.currency || config.currency || 'EUR',
+        };
+      }
+
+      await onUpdateListing(listingId, updateData, config);
+      setEditingField(null);
+    } catch (error) {
+      console.error('Failed to update listing:', error);
+      alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+    } finally {
+      setUpdatingListing(false);
+    }
+  };
+
+  const handleCancelEdit = fieldName => {
+    // Restore original value
+    if (fieldName === 'title') {
+      setFieldValues({ ...fieldValues, title: currentListing.attributes?.title || '' });
+    } else if (fieldName === 'description') {
+      setFieldValues({ ...fieldValues, description: currentListing.attributes?.description || '' });
+    } else if (fieldName === 'price') {
+      setFieldValues({
+        ...fieldValues,
+        price: currentListing.attributes?.price?.amount / 100 || 0,
+      });
+    }
+    setEditingField(null);
+  };
+
+  const handleChangeField = (fieldName, value) => {
+    setFieldValues({ ...fieldValues, [fieldName]: value });
+  };
+
+  const handleImageClick = index => {
+    setSelectedImageIndex(index);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+  };
+
+  const handleImageUpload = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      alert(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.invalidImageType' },
+          { defaultMessage: 'Only PNG and JPEG images are supported.' }
+        )
+      );
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      console.log('📤 Uploading image:', file.name);
+      await onUploadImage(listingId, file, config);
+      console.log('✅ Image uploaded successfully');
+
+      // Reset the file input so the same file can be uploaded again if needed
+      event.target.value = '';
+    } catch (error) {
+      console.error('❌ Failed to upload image:', error);
+      alert(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.uploadError' },
+          { defaultMessage: 'Failed to upload image. Please try again.' }
+        )
+      );
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageDelete = async (imageId, imageIndex) => {
+    const confirmDelete = window.confirm(
+      intl.formatMessage(
+        { id: 'PreviewListingPage.deleteImageConfirm' },
+        { defaultMessage: 'Are you sure you want to delete this image?' }
+      )
+    );
+
+    if (!confirmDelete) return;
+
+    setDeletingImageId(imageId.uuid);
+    try {
+      console.log('🗑️  Deleting image:', imageId.uuid);
+      await onDeleteImage(listingId, imageId, config);
+      console.log('✅ Image deleted successfully');
+
+      // Adjust selected index if needed
+      if (selectedImageIndex >= listing.images.length - 1) {
+        setSelectedImageIndex(Math.max(0, listing.images.length - 2));
+      }
+    } catch (error) {
+      console.error('❌ Failed to delete image:', error);
+      alert(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.deleteError' },
+          { defaultMessage: 'Failed to delete image. Please try again.' }
+        )
+      );
+    } finally {
+      setDeletingImageId(null);
+    }
+  };
+
+  const handleRegenerateField = async fieldName => {
+    setRegeneratingField(fieldName);
+
+    try {
+      // Import productApi dynamically
+      const productApiInstance = (await import('../../util/productApi')).default;
+
+      // Prepare product data for regeneration
+      const productData = {
+        category: currentListing.attributes?.publicData?.category,
+        subcategory: currentListing.attributes?.publicData?.subcategory,
+        fields: {
+          title: currentListing.attributes?.title,
+          description: currentListing.attributes?.description,
+          price: currentListing.attributes?.price?.amount / 100,
+        },
+      };
+
+      const result = await productApiInstance.regenerate(productData, fieldName);
+
+      if (result && result.newValue) {
+        // For price, the AI will return a numeric value, not in cents
+        const newValue = fieldName === 'price' ? parseFloat(result.newValue) : result.newValue;
+        setFieldValues({ ...fieldValues, [fieldName]: newValue });
+      } else {
+        throw new Error('Failed to regenerate field');
+      }
+    } catch (error) {
+      console.error('Regeneration error:', error);
+      alert(intl.formatMessage({ id: 'PreviewListingPage.regenerateError' }));
+    } finally {
+      setRegeneratingField(null);
+    }
+  };
+
+  // Check Stripe connection status
+  const stripeConnected = currentUserLoaded && !!stripeAccount && !!stripeAccount.id;
+  const stripeAccountData = stripeConnected ? getStripeAccountData(stripeAccount) : null;
+  const stripeRequirementsMissing =
+    stripeAccount &&
+    (hasRequirements(stripeAccountData, 'past_due') ||
+      hasRequirements(stripeAccountData, 'currently_due'));
+
+  // Check if listing exists and is in draft state
+  const isDraft = currentListingState === LISTING_STATE_DRAFT;
+  const listingNotFound = listingFetched && !currentListing.id;
+
+  // Handle successful Stripe return
+  const returnedFromStripe = returnURLType === STRIPE_ONBOARDING_RETURN_URL_SUCCESS;
+
+  useEffect(() => {
+    if (returnedFromStripe && stripeConnected && !stripeRequirementsMissing) {
+      // Auto-publish after successful Stripe onboarding
+      handlePublish();
+    }
+  }, [returnedFromStripe, stripeConnected, stripeRequirementsMissing]);
+
+  const handlePublish = () => {
+    const listingTypeConfig = getListingTypeConfig(currentListing, null, config);
+    const processName = currentListing?.attributes?.publicData?.transactionProcessAlias?.split(
+      '/'
+    )[0];
+    const isInquiryProcess = processName === INQUIRY_PROCESS_NAME;
+    const isPayoutDetailsRequired = requirePayoutDetails(listingTypeConfig);
+
+    if (
+      isInquiryProcess ||
+      !isPayoutDetailsRequired ||
+      (stripeConnected && !stripeRequirementsMissing)
+    ) {
+      onPublishListingDraft(listingId)
+        .then(() => {
+          // Redirect to listing page after successful publish
+          const routes = config.routes;
+          const listingPath = createResourceLocatorString(
+            'ListingPage',
+            routes,
+            { id: listingId.uuid, slug: createSlug(currentListing.attributes.title) },
+            {}
+          );
+          history.push(listingPath);
+        })
+        .catch(e => {
+          console.error('Failed to publish listing:', e);
+        });
+    } else {
+      // Show Stripe onboarding modal
+      setShowPayoutModal(true);
+    }
+  };
+
+  const handlePayoutModalClose = () => {
+    setShowPayoutModal(false);
+  };
+
+  const handleGoToStripe = () => {
+    const rootURL = config.marketplaceRootURL;
+    const routes = config.routes;
+
+    const successURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
+    const failureURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
+
+    onGetStripeConnectAccountLink({
+      accountId: stripeAccount?.id,
+      successURL,
+      failureURL,
+    });
+  };
+
+  const handleEdit = () => {
+    history.push(`/l/create?draft=${listingId.uuid}`);
+  };
+
+  // Show loading while fetching
+  if (!listingFetched) {
+    return (
+      <Page
+        title={intl.formatMessage({ id: 'PreviewListingPage.title' })}
+        scrollingDisabled={scrollingDisabled}
+      >
+        <LayoutSingleColumn topbar={<TopbarContainer />} footer={null}>
+          <div className={css.root}>
+            <div className={css.container}>
+              <div className={css.loadingContainer}>
+                <IconSpinner />
+                <p>
+                  <FormattedMessage
+                    id="PreviewListingPage.loading"
+                    defaultMessage="Loading listing..."
+                  />
+                </p>
+              </div>
+            </div>
+          </div>
+        </LayoutSingleColumn>
+      </Page>
+    );
+  }
+
+  if (listingNotFound) {
+    return <NotFoundPage />;
+  }
+
+  if (!isDraft) {
+    // If listing is not a draft, redirect to listing page
+    const routes = config.routes;
+    const listingPath = createResourceLocatorString(
+      'ListingPage',
+      routes,
+      { id: listingId.uuid, slug: createSlug(currentListing.attributes.title) },
+      {}
+    );
+    history.push(listingPath);
+    return null;
+  }
+
+  const title = intl.formatMessage(
+    { id: 'PreviewListingPage.title' },
+    { marketplaceName: config.marketplaceName }
+  );
+  const listing = currentListing;
+
+  // Debug: Log listing data
+  console.log('📋 Preview listing data:', {
+    listing,
+    images: listing.images,
+    imagesCount: listing.images?.length,
+    firstImage: listing.images?.[0],
+    firstImageVariants: listing.images?.[0]?.attributes?.variants,
+  });
+
+  return (
+    <Page title={title} scrollingDisabled={scrollingDisabled}>
+      <LayoutSingleColumn topbar={<TopbarContainer />} footer={null}>
+        <div className={css.root}>
+          <div className={css.container}>
+            <h1 className={css.title}>
+              <FormattedMessage id="PreviewListingPage.heading" />
+            </h1>
+            <p className={css.description}>
+              <FormattedMessage id="PreviewListingPage.description" />
+            </p>
+
+            {/* Preview Content */}
+            <div className={css.previewCard}>
+              {/* Breadcrumb */}
+              {listing.attributes.publicData?.category && (
+                <div className={css.breadcrumb}>
+                  <span className={css.breadcrumbItem}>
+                    {listing.attributes.publicData.category}
+                  </span>
+                  {listing.attributes.publicData.subcategory && (
+                    <>
+                      <span className={css.breadcrumbSeparator}>›</span>
+                      <span className={css.breadcrumbItem}>
+                        {listing.attributes.publicData.subcategory}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Main Content - Images and Title Side by Side */}
+              <div className={css.mainContent}>
+                {/* Images Gallery */}
+                {listing.images && listing.images.length > 0 && (
+                  <div className={css.imagesSection}>
+                    {/* Main Image */}
+                    <div className={css.mainImageWrapper}>
+                      {(() => {
+                        const mainImage = listing.images[selectedImageIndex];
+                        const variants = mainImage?.attributes?.variants || {};
+                        const imageUrl =
+                          variants['listing-card-6x']?.url ||
+                          variants['listing-card-4x']?.url ||
+                          variants['listing-card-2x']?.url ||
+                          variants['listing-card']?.url ||
+                          variants['scaled-large']?.url ||
+                          variants['scaled-medium']?.url;
+
+                        return (
+                          <img
+                            src={imageUrl}
+                            alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
+                            className={css.mainImage}
+                            onClick={() => handleImageClick(selectedImageIndex)}
+                            style={{ cursor: 'pointer' }}
+                            onError={e => {
+                              console.error('Failed to load image:', imageUrl);
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        );
+                      })()}
+                    </div>
+
+                    {/* Thumbnails */}
+                    <div className={css.thumbnailsContainer}>
+                      <div className={css.thumbnailsScroll}>
+                        {listing.images.map((image, index) => {
+                          const variants = image.attributes?.variants || {};
+                          const imageUrl =
+                            variants['listing-card-2x']?.url ||
+                            variants['listing-card']?.url ||
+                            variants['scaled-medium']?.url;
+                          const isDeleting = deletingImageId === image.id?.uuid;
+
+                          return (
+                            <div
+                              key={image.id?.uuid || index}
+                              className={`${css.thumbnail} ${
+                                index === selectedImageIndex ? css.thumbnailActive : ''
+                              } ${isDeleting ? css.thumbnailDeleting : ''}`}
+                            >
+                              <div onClick={() => setSelectedImageIndex(index)}>
+                                <img
+                                  src={imageUrl}
+                                  alt={`Thumbnail ${index + 1}`}
+                                  className={css.thumbnailImage}
+                                />
+                              </div>
+                              <button
+                                className={css.thumbnailDeleteButton}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleImageDelete(image.id, index);
+                                }}
+                                disabled={isDeleting}
+                                aria-label={intl.formatMessage(
+                                  { id: 'PreviewListingPage.deleteImage' },
+                                  { index: index + 1 }
+                                )}
+                              >
+                                {isDeleting ? (
+                                  '⏳'
+                                ) : (
+                                  <svg
+                                    className={css.trashIcon}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                        {/* Upload New Image Button */}
+                        <div className={css.thumbnail}>
+                          <label className={css.uploadThumbnail}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              style={{ display: 'none' }}
+                              disabled={uploadingImage}
+                            />
+                            <div className={css.uploadIcon}>{uploadingImage ? '⏳' : '+'}</div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Title and Summary Info */}
+                <div className={css.summarySection}>
+                  {/* Editable Title */}
+                  <div className={css.editableField}>
+                    {editingField === 'title' ? (
+                      <>
+                        <input
+                          type="text"
+                          value={fieldValues.title || ''}
+                          onChange={e => handleChangeField('title', e.target.value)}
+                          className={css.titleInput}
+                          autoFocus
+                        />
+                        <div className={css.editButtons}>
+                          <button
+                            onClick={() => handleSaveField('title')}
+                            className={css.saveButton}
+                            disabled={updatingListing}
+                          >
+                            <FormattedMessage id="PreviewListingPage.saveButton" />
+                          </button>
+                          <button
+                            onClick={() => handleCancelEdit('title')}
+                            className={css.cancelButton}
+                            disabled={updatingListing}
+                          >
+                            <FormattedMessage id="PreviewListingPage.cancelButton" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className={css.listingTitle}>
+                          {fieldValues.title || listing.attributes.title}
+                        </h2>
+                        <div className={css.editButtons}>
+                          <button
+                            onClick={() => handleEditField('title')}
+                            className={css.editButton}
+                            title={intl.formatMessage({ id: 'PreviewListingPage.editButton' })}
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleRegenerateField('title')}
+                            className={css.regenerateButton}
+                            disabled={regeneratingField === 'title'}
+                            title={intl.formatMessage({
+                              id: 'PreviewListingPage.regenerateButton',
+                            })}
+                          >
+                            {regeneratingField === 'title' ? '⏳' : '🔄'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Editable Price */}
+                  {listing.attributes.price && (
+                    <div className={css.editableField}>
+                      {editingField === 'price' ? (
+                        <>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            className={css.priceInput}
+                            value={fieldValues.price}
+                            onChange={e => handleChangeField('price', e.target.value)}
+                          />
+                          <div className={css.editButtons}>
+                            <button
+                              onClick={() => handleSaveField('price')}
+                              className={css.saveButton}
+                              disabled={updatingListing || !fieldValues.price}
+                            >
+                              <FormattedMessage
+                                id="PreviewListingPage.saveButton"
+                                defaultMessage="Save"
+                              />
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className={css.cancelButton}
+                              disabled={updatingListing}
+                            >
+                              <FormattedMessage
+                                id="PreviewListingPage.cancelButton"
+                                defaultMessage="Cancel"
+                              />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className={css.priceSummary}>
+                            <span className={css.priceAmount}>
+                              {(fieldValues.price || listing.attributes.price.amount / 100).toFixed(
+                                2
+                              )}{' '}
+                              {listing.attributes.price.currency}
+                            </span>
+                            <span className={css.priceUnit}>
+                              {' '}
+                              /{' '}
+                              <FormattedMessage
+                                id="PreviewListingPage.perDay"
+                                defaultMessage="day"
+                              />
+                            </span>
+                          </div>
+                          <div className={css.editButtons}>
+                            <button
+                              onClick={() => handleEditField('price')}
+                              className={css.editButton}
+                            >
+                              <FormattedMessage
+                                id="PreviewListingPage.editButton"
+                                defaultMessage="Edit"
+                              />
+                            </button>
+                            <button
+                              onClick={() => handleRegenerateField('price')}
+                              className={css.regenerateButton}
+                              disabled={regeneratingField === 'price'}
+                              title={intl.formatMessage({
+                                id: 'PreviewListingPage.regenerateButton',
+                              })}
+                            >
+                              {regeneratingField === 'price' ? '⏳' : '🔄'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Location */}
+                  {listing.attributes.publicData?.location && (
+                    <div className={css.locationSummary}>
+                      <span className={css.locationIcon}>📍</span>
+                      <span>{listing.attributes.publicData.location.address}</span>
+                    </div>
+                  )}
+
+                  {/* Location Options Badges */}
+                  {(listing.attributes.publicData?.locationVisible ||
+                    listing.attributes.publicData?.handByHandAvailable) && (
+                    <div className={css.badges}>
+                      {listing.attributes.publicData.locationVisible && (
+                        <span className={css.badge}>
+                          <FormattedMessage
+                            id="PreviewListingPage.locationVisible"
+                            defaultMessage="Location visible"
+                          />
+                        </span>
+                      )}
+                      {listing.attributes.publicData.handByHandAvailable && (
+                        <span className={css.badge}>
+                          <FormattedMessage
+                            id="PreviewListingPage.handByHand"
+                            defaultMessage="Hand-by-hand exchange available"
+                          />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Price Variants */}
+              {listing.attributes.publicData?.priceVariants &&
+                listing.attributes.publicData.priceVariants.length > 0 && (
+                  <div className={css.variantsSection}>
+                    <h3 className={css.sectionTitle}>
+                      <FormattedMessage
+                        id="PreviewListingPage.priceVariants"
+                        defaultMessage="Price Variants"
+                      />
+                    </h3>
+                    <div className={css.variantsList}>
+                      {listing.attributes.publicData.priceVariants.map((variant, index) => (
+                        <div key={index} className={css.variantItem}>
+                          <span className={css.variantName}>
+                            {variant.name || `Variant ${index + 1}`}
+                          </span>
+                          <span className={css.variantPrice}>
+                            {(variant.priceInSubunits / 100).toFixed(2)}{' '}
+                            {listing.attributes.price.currency}
+                            {variant.type === 'seasonality' && ' / day'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Editable Description */}
+              <div className={css.descriptionSection}>
+                <h3 className={css.sectionTitle}>
+                  <FormattedMessage
+                    id="PreviewListingPage.descriptionLabel"
+                    defaultMessage="Description"
+                  />
+                </h3>
+                <div className={css.editableField}>
+                  {editingField === 'description' ? (
+                    <>
+                      <textarea
+                        className={css.descriptionTextarea}
+                        value={fieldValues.description}
+                        onChange={e => handleChangeField('description', e.target.value)}
+                        rows={8}
+                      />
+                      <div className={css.editButtons}>
+                        <button
+                          onClick={() => handleSaveField('description')}
+                          className={css.saveButton}
+                          disabled={updatingListing || !fieldValues.description}
+                        >
+                          <FormattedMessage
+                            id="PreviewListingPage.saveButton"
+                            defaultMessage="Save"
+                          />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className={css.cancelButton}
+                          disabled={updatingListing}
+                        >
+                          <FormattedMessage
+                            id="PreviewListingPage.cancelButton"
+                            defaultMessage="Cancel"
+                          />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className={css.listingDescription}>
+                        {fieldValues.description || listing.attributes.description}
+                      </p>
+                      <div className={css.editButtons}>
+                        <button
+                          onClick={() => handleEditField('description')}
+                          className={css.editButton}
+                        >
+                          <FormattedMessage
+                            id="PreviewListingPage.editButton"
+                            defaultMessage="Edit"
+                          />
+                        </button>
+                        <button
+                          onClick={() => handleRegenerateField('description')}
+                          className={css.regenerateButton}
+                          disabled={regeneratingField === 'description'}
+                          title={intl.formatMessage({
+                            id: 'PreviewListingPage.regenerateButton',
+                          })}
+                        >
+                          {regeneratingField === 'description' ? '⏳' : '🔄'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              {listing.attributes.publicData && (
+                <div className={css.detailsSection}>
+                  <h3 className={css.sectionTitle}>
+                    <FormattedMessage id="PreviewListingPage.details" defaultMessage="Details" />
+                  </h3>
+                  <div className={css.detailsGrid}>
+                    {Object.entries(listing.attributes.publicData).map(([key, value]) => {
+                      // Skip already displayed fields
+                      if (
+                        [
+                          'category',
+                          'subcategory',
+                          'location',
+                          'priceVariants',
+                          'locationVisible',
+                          'handByHandAvailable',
+                          'listingType',
+                          'unitType',
+                          'transactionProcessAlias',
+                          'priceVariationsEnabled',
+                        ].includes(key)
+                      ) {
+                        return null;
+                      }
+                      return (
+                        <div key={key} className={css.detailItem}>
+                          <span className={css.detailLabel}>{key}:</span>
+                          <span className={css.detailValue}>
+                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Error Message */}
+            {publishListingError && (
+              <div className={css.error}>
+                <FormattedMessage id="PreviewListingPage.publishError" />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className={css.actions}>
+              <SecondaryButton onClick={handleEdit} disabled={publishInProgress}>
+                <FormattedMessage id="PreviewListingPage.editButton" />
+              </SecondaryButton>
+              <PrimaryButton onClick={handlePublish} inProgress={publishInProgress}>
+                {publishInProgress ? (
+                  <FormattedMessage id="PreviewListingPage.publishingButton" />
+                ) : (
+                  <FormattedMessage id="PreviewListingPage.publishButton" />
+                )}
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+
+        {/* Stripe Payout Modal */}
+        <Modal
+          id="PreviewListingPage.payoutModal"
+          isOpen={showPayoutModal}
+          onClose={handlePayoutModalClose}
+          onManageDisableScrolling={() => {}}
+        >
+          <div className={css.modalContent}>
+            <h2 className={css.modalTitle}>
+              <FormattedMessage id="PreviewListingPage.payoutModalTitle" />
+            </h2>
+            <p className={css.modalDescription}>
+              <FormattedMessage id="PreviewListingPage.payoutModalDescription" />
+            </p>
+            <div className={css.modalActions}>
+              <SecondaryButton onClick={handlePayoutModalClose}>
+                <FormattedMessage id="PreviewListingPage.payoutModalCancelButton" />
+              </SecondaryButton>
+              <PrimaryButton onClick={handleGoToStripe} inProgress={getAccountLinkInProgress}>
+                <FormattedMessage id="PreviewListingPage.payoutModalContinueButton" />
+              </PrimaryButton>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Image Lightbox Modal */}
+        {showImageModal && listing.images && listing.images.length > 0 && (
+          <div className={css.imageModalOverlay} onClick={handleCloseImageModal}>
+            <div className={css.imageModalContent} onClick={e => e.stopPropagation()}>
+              <button className={css.imageModalClose} onClick={handleCloseImageModal}>
+                ×
+              </button>
+              {(() => {
+                const mainImage = listing.images[selectedImageIndex];
+                const variants = mainImage?.attributes?.variants || {};
+                const imageUrl =
+                  variants['listing-card-6x']?.url ||
+                  variants['listing-card-4x']?.url ||
+                  variants['listing-card-2x']?.url ||
+                  variants['listing-card']?.url ||
+                  variants['scaled-large']?.url ||
+                  variants['scaled-medium']?.url;
+
+                return (
+                  <img
+                    src={imageUrl}
+                    alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
+                    className={css.imageModalImage}
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        )}
+      </LayoutSingleColumn>
+    </Page>
+  );
+};
+
+PreviewListingPageComponent.propTypes = {
+  currentUser: propTypes.currentUser,
+  getListing: func.isRequired,
+  onFetchListing: func.isRequired,
+  onUpdateListing: func.isRequired,
+  onPublishListingDraft: func.isRequired,
+  onUploadImage: func.isRequired,
+  onDeleteImage: func.isRequired,
+  publishListingError: propTypes.error,
+  publishInProgress: bool,
+  scrollingDisabled: bool.isRequired,
+  stripeAccount: object,
+  stripeAccountFetched: bool,
+  onGetStripeConnectAccountLink: func.isRequired,
+  getAccountLinkInProgress: bool,
+  params: shape({
+    id: string.isRequired,
+    returnURLType: string,
+  }).isRequired,
+  history: shape({
+    push: func.isRequired,
+  }).isRequired,
+  intl: intlShape.isRequired,
+};
+
+const createSlug = title => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-');
+};
+
+const mapStateToProps = state => {
+  const { currentUser } = state.user;
+  const { publishListingError, publishInProgress } = state.EditListingPage;
+  const {
+    getAccountLinkInProgress,
+    getAccountLinkError,
+    stripeAccount,
+    stripeAccountFetched,
+  } = state.stripeConnectAccount;
+
+  const getListing = id => {
+    const ref = { id, type: 'ownListing' };
+    const listings = getMarketplaceEntities(state, [ref]);
+    return listings.length === 1 ? listings[0] : null;
+  };
+
+  return {
+    currentUser,
+    getListing,
+    publishListingError,
+    publishInProgress,
+    scrollingDisabled: isScrollingDisabled(state),
+    stripeAccount,
+    stripeAccountFetched,
+    getAccountLinkInProgress,
+    getAccountLinkError,
+  };
+};
+
+const mapDispatchToProps = dispatch => ({
+  onFetchListing: (params, config) => dispatch(requestShowListing(params, config)),
+  onUpdateListing: (listingId, data, config) =>
+    dispatch(requestUpdateListing(listingId, data, config)),
+  onPublishListingDraft: listingId => dispatch(requestPublishListingDraft(listingId)),
+  onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
+  onUploadImage: (listingId, imageFile, config) =>
+    dispatch((dispatch, getState, sdk) => {
+      const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
+      const queryParams = {
+        expand: true,
+        'fields.image': imageVariantInfo.fieldsImage,
+        ...imageVariantInfo.imageVariants,
+      };
+
+      return sdk.images
+        .upload({ image: imageFile }, queryParams)
+        .then(response => {
+          const imageId = response.data.data.id;
+          return sdk.ownListings.addImage(
+            { id: listingId, imageId },
+            {
+              expand: true,
+              include: ['images'],
+              'fields.image': imageVariantInfo.fieldsImage,
+              ...imageVariantInfo.imageVariants,
+            }
+          );
+        })
+        .then(response => {
+          // Refresh the listing in the store
+          return dispatch(requestShowListing({ id: listingId }, config));
+        });
+    }),
+  onDeleteImage: (listingId, imageId, config) =>
+    dispatch((dispatch, getState, sdk) => {
+      const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
+      const queryParams = {
+        expand: true,
+        include: ['images'],
+        'fields.image': imageVariantInfo.fieldsImage,
+        ...imageVariantInfo.imageVariants,
+      };
+
+      return sdk.ownListings.removeImage({ id: listingId, imageId }, queryParams).then(response => {
+        // Refresh the listing in the store
+        return dispatch(requestShowListing({ id: listingId }, config));
+      });
+    }),
+});
+
+const PreviewListingPage = compose(
+  withRouter,
+  connect(mapStateToProps, mapDispatchToProps),
+  injectIntl
+)(PreviewListingPageComponent);
+
+export default PreviewListingPage;

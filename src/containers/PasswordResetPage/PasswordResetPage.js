@@ -1,28 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
+import { Form as FinalForm } from 'react-final-form';
 
 import { useConfiguration } from '../../context/configurationContext';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
+import * as validators from '../../util/validators';
 import { propTypes } from '../../util/types';
 import { parse } from '../../util/urlHelpers';
-import { isScrollingDisabled } from '../../ducks/ui.duck';
 
-import {
-  Heading,
-  Page,
-  NamedLink,
-  IconKeys,
-  IconKeysSuccess,
-  ResponsiveBackgroundImageContainer,
-  LayoutSingleColumn,
-} from '../../components';
+import { Page, Form, PrimaryButton, FieldTextInput, NamedLink, IconKeys, IconKeysSuccess } from '../../components';
 
-import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
-import FooterContainer from '../../containers/FooterContainer/FooterContainer';
-
-import PasswordResetForm from './PasswordResetForm/PasswordResetForm';
+import logoImage from '../../assets/logo.png';
 
 import { resetPassword } from './PasswordResetPage.duck';
 import css from './PasswordResetPage.module.css';
@@ -33,79 +23,16 @@ const parseUrlParams = location => {
   return { token, email };
 };
 
-const ParamsMissingContent = () => {
-  const recoveryLink = (
-    <NamedLink name="PasswordRecoveryPage">
-      <FormattedMessage id="PasswordResetPage.recoveryLinkText" />
-    </NamedLink>
-  );
-  return (
-    <div className={css.content}>
-      <p>
-        <FormattedMessage id="PasswordResetPage.invalidUrlParams" values={{ recoveryLink }} />
-      </p>
-    </div>
-  );
-};
-
-const ResetFormContent = props => {
-  const { handleSubmit, resetPasswordInProgress, resetPasswordError } = props;
-  return (
-    <div className={css.content}>
-      <IconKeys className={css.modalIcon} />
-      <Heading as="h1" rootClassName={css.modalTitle}>
-        <FormattedMessage id="PasswordResetPage.mainHeading" />
-      </Heading>
-      <p className={css.modalMessage}>
-        <FormattedMessage id="PasswordResetPage.helpText" />
-      </p>
-      {resetPasswordError ? (
-        <p className={css.error}>
-          <FormattedMessage id="PasswordResetPage.resetFailed" />
-        </p>
-      ) : null}
-      <PasswordResetForm
-        className={css.form}
-        onSubmit={handleSubmit}
-        inProgress={resetPasswordInProgress}
-      />
-    </div>
-  );
-};
-
-const ResetDoneContent = () => {
-  return (
-    <div className={css.content}>
-      <IconKeysSuccess className={css.modalIcon} />
-      <Heading as="h1" rootClassName={css.modalTitle}>
-        <FormattedMessage id="PasswordResetPage.passwordChangedHeading" />
-      </Heading>
-      <p className={css.modalMessage}>
-        <FormattedMessage id="PasswordResetPage.passwordChangedHelpText" />
-      </p>
-      <NamedLink name="LoginPage" className={css.submitButton}>
-        <FormattedMessage id="PasswordResetPage.loginButtonText" />
-      </NamedLink>
-    </div>
-  );
-};
-
 /**
- * The reset-password page.
- *
- * @param {Object} props
- * @param {boolean} props.scrollingDisabled - Whether the page is scrolling disabled
- * @param {boolean} props.resetPasswordInProgress - Whether the reset password is in progress
- * @param {propTypes.error} props.resetPasswordError - The reset password error
- * @param {function} props.onSubmitPassword - The function to submit the password
- * @param {Object} props.location - The location object
- * @param {string} props.location.search - The search string
- * @returns {JSX.Element} Password reset page component
+ * PasswordResetPage - Modern password reset page with the same layout as NewLoginPage
  */
 export const PasswordResetPageComponent = props => {
   const [state, setState] = useState({ newPasswordSubmitted: false });
+  const [mounted, setMounted] = useState(false);
+
   const config = useConfiguration();
   const intl = useIntl();
+
   const {
     scrollingDisabled,
     location,
@@ -113,6 +40,11 @@ export const PasswordResetPageComponent = props => {
     resetPasswordError,
     onSubmitPassword,
   } = props;
+
+  useEffect(() => {
+    setMounted(true);
+    window.scrollTo(0, 0);
+  }, []);
 
   const { token, email } = parseUrlParams(location);
   const hasParams = !!(token && email);
@@ -126,40 +58,189 @@ export const PasswordResetPageComponent = props => {
     });
   };
 
+  const marketplaceName = config.marketplaceName;
+  const schemaTitle = intl.formatMessage(
+    { id: 'PasswordResetPage.title' },
+    { marketplaceName }
+  );
+
+  // Invalid URL params content
+  const renderParamsMissingContent = () => {
+    const recoveryLink = (
+      <NamedLink name="PasswordRecoveryPage" className={css.recoveryLink}>
+        <FormattedMessage id="PasswordResetPage.recoveryLinkText" />
+      </NamedLink>
+    );
+
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeys className={css.iconKeys} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordResetPage.invalidUrlTitle" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage id="PasswordResetPage.invalidUrlParams" values={{ recoveryLink }} />
+        </p>
+
+        <div className={css.loginContainer}>
+          <NamedLink name="LoginPage" className={css.loginLink}>
+            <FormattedMessage id="PasswordResetPage.backToLogin" />
+          </NamedLink>
+        </div>
+      </div>
+    );
+  };
+
+  // Password reset form
+  const renderResetFormContent = () => {
+    const passwordLabel = intl.formatMessage({
+      id: 'PasswordResetForm.passwordLabel',
+    });
+    const passwordPlaceholder = intl.formatMessage({
+      id: 'PasswordResetForm.passwordPlaceholder',
+    });
+    const passwordRequiredMessage = intl.formatMessage({
+      id: 'PasswordResetForm.passwordRequired',
+    });
+    const passwordMinLengthMessage = intl.formatMessage(
+      {
+        id: 'PasswordResetForm.passwordTooShort',
+      },
+      {
+        minLength: validators.PASSWORD_MIN_LENGTH,
+      }
+    );
+    const passwordMaxLengthMessage = intl.formatMessage(
+      {
+        id: 'PasswordResetForm.passwordTooLong',
+      },
+      {
+        maxLength: validators.PASSWORD_MAX_LENGTH,
+      }
+    );
+
+    const passwordRequired = validators.requiredStringNoTrim(passwordRequiredMessage);
+    const passwordMinLength = validators.minLength(
+      passwordMinLengthMessage,
+      validators.PASSWORD_MIN_LENGTH
+    );
+    const passwordMaxLength = validators.maxLength(
+      passwordMaxLengthMessage,
+      validators.PASSWORD_MAX_LENGTH
+    );
+
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeys className={css.iconKeys} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordResetPage.mainHeading" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage id="PasswordResetPage.helpText" />
+        </p>
+
+        {resetPasswordError && (
+          <div className={css.error}>
+            <FormattedMessage id="PasswordResetPage.resetFailed" />
+          </div>
+        )}
+
+        <FinalForm
+          onSubmit={handleSubmit}
+          render={({ handleSubmit, invalid }) => {
+            const submitDisabled = invalid || resetPasswordInProgress;
+
+            return (
+              <Form className={css.form} onSubmit={handleSubmit}>
+                <FieldTextInput
+                  className={css.field}
+                  type="password"
+                  id="password"
+                  name="password"
+                  autoComplete="new-password"
+                  label={passwordLabel}
+                  placeholder={passwordPlaceholder}
+                  validate={validators.composeValidators(
+                    passwordRequired,
+                    passwordMinLength,
+                    passwordMaxLength
+                  )}
+                />
+
+                <PrimaryButton
+                  className={css.submitButton}
+                  type="submit"
+                  inProgress={resetPasswordInProgress}
+                  disabled={submitDisabled}
+                >
+                  <FormattedMessage id="PasswordResetForm.submitButtonText" />
+                </PrimaryButton>
+              </Form>
+            );
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Success screen
+  const renderResetDoneContent = () => {
+    return (
+      <div className={css.contentWrapper}>
+        <IconKeysSuccess className={css.iconKeysSuccess} />
+        <h2 className={css.formTitle}>
+          <FormattedMessage id="PasswordResetPage.passwordChangedHeading" />
+        </h2>
+        <p className={css.formSubtitle}>
+          <FormattedMessage id="PasswordResetPage.passwordChangedHelpText" />
+        </p>
+
+        <NamedLink name="LoginPage" className={css.submitButton}>
+          <FormattedMessage id="PasswordResetPage.loginButtonText" />
+        </NamedLink>
+      </div>
+    );
+  };
+
+  // Determine which content to show
+  let content;
+  if (!hasParams) {
+    content = renderParamsMissingContent();
+  } else if (isPasswordSubmitted) {
+    content = renderResetDoneContent();
+  } else {
+    content = renderResetFormContent();
+  }
+
   return (
     <Page
-      title={intl.formatMessage({
-        id: 'PasswordResetPage.title',
-      })}
+      title={schemaTitle}
       scrollingDisabled={scrollingDisabled}
       referrer="origin"
+      schema={{
+        '@context': 'http://schema.org',
+        '@type': 'WebPage',
+        name: schemaTitle,
+      }}
     >
-      <LayoutSingleColumn
-        mainColumnClassName={css.layoutWrapperMain}
-        topbar={<TopbarContainer />}
-        footer={<FooterContainer />}
-      >
-        <ResponsiveBackgroundImageContainer
-          className={css.root}
-          childrenWrapperClassName={css.contentContainer}
-          as="section"
-          image={config.branding.brandImage}
-          sizes="100%"
-          useOverlay
-        >
-          {!hasParams ? (
-            <ParamsMissingContent />
-          ) : isPasswordSubmitted ? (
-            <ResetDoneContent />
-          ) : (
-            <ResetFormContent
-              handleSubmit={handleSubmit}
-              resetPasswordInProgress={resetPasswordInProgress}
-              resetPasswordError={resetPasswordError}
-            />
-          )}
-        </ResponsiveBackgroundImageContainer>
-      </LayoutSingleColumn>
+      <div className={css.root}>
+        {/* Left side - Background image only */}
+        <div className={css.leftSide}></div>
+
+        {/* Right side - Password reset content */}
+        <div className={css.rightSide}>
+          <div className={css.formContainer}>
+            <div className={css.formWrapper}>
+              {/* Logo at the top */}
+              <div className={css.logoContainer}>
+                <img src={logoImage} alt={marketplaceName} className={css.logo} />
+              </div>
+
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
     </Page>
   );
 };
@@ -167,7 +248,7 @@ export const PasswordResetPageComponent = props => {
 const mapStateToProps = state => {
   const { resetPasswordInProgress, resetPasswordError } = state.PasswordResetPage;
   return {
-    scrollingDisabled: isScrollingDisabled(state),
+    scrollingDisabled: false,
     resetPasswordInProgress,
     resetPasswordError,
   };
@@ -177,18 +258,9 @@ const mapDispatchToProps = dispatch => ({
   onSubmitPassword: (email, token, password) => dispatch(resetPassword(email, token, password)),
 });
 
-// Note: it is important that the withRouter HOC is **outside** the
-// connect HOC, otherwise React Router won't rerender any Route
-// components since connect implements a shouldComponentUpdate
-// lifecycle hook.
-//
-// See: https://github.com/ReactTraining/react-router/issues/4671
 const PasswordResetPage = compose(
   withRouter,
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
+  connect(mapStateToProps, mapDispatchToProps)
 )(PasswordResetPageComponent);
 
 export default PasswordResetPage;

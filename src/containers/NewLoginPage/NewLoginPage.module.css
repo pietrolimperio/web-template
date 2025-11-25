@@ -1,0 +1,251 @@
+@import '../../styles/customMediaQueries.css';
+
+/* Root container - full height split screen */
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+  }
+}
+
+/* Left side - Background image only */
+.leftSide {
+  display: none;
+  
+  @media (--viewportMedium) {
+    display: flex;
+    flex: 1;
+    background-image: url('../../assets/premium_vector-1755266249500-ce232aef40f4.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+/* Right side - Form container */
+.rightSide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--colorWhite);
+  padding: 24px;
+
+  @media (--viewportMedium) {
+    padding: 40px;
+  }
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 440px;
+}
+
+.formWrapper {
+  width: 100%;
+}
+
+/* Logo styling */
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  max-width: 200px;
+  height: auto;
+
+  @media (--viewportMedium) {
+    max-width: 250px;
+  }
+}
+
+.formTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--colorGrey700);
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+
+  @media (--viewportMedium) {
+    font-size: 36px;
+  }
+}
+
+.formSubtitle {
+  font-size: 16px;
+  color: var(--colorGrey500);
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+/* Form styles */
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.field {
+  margin-bottom: 24px;
+
+  & input {
+    height: 52px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+}
+
+.forgotPasswordContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+  margin-top: -8px;
+}
+
+.forgotPasswordLink {
+  composes: a from global;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--marketplaceColorDark, var(--marketplaceColor));
+    text-decoration: underline;
+  }
+}
+
+.submitButton {
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: var(--marketplaceColor);
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  margin-bottom: 24px;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background-color: var(--marketplaceColorDark, var(--marketplaceColor));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.signupContainer {
+  text-align: center;
+  padding: 20px 0 10px 0;
+  margin-top: 8px;
+}
+
+.signupText {
+  font-size: 14px;
+  color: var(--colorGrey600);
+  margin-right: 6px;
+}
+
+.signupLink {
+  composes: a from global;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--marketplaceColorDark, var(--marketplaceColor));
+    text-decoration: underline;
+  }
+}
+
+/* Error message */
+.error {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background-color: #fee;
+  border-left: 4px solid #f44;
+  border-radius: 4px;
+  color: #c33;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Spinner container for loading state */
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Back to old login link */
+.backToOldLogin {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.backLink {
+  composes: a from global;
+  font-size: 13px;
+  color: var(--colorGrey500);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--colorGrey700);
+    text-decoration: underline;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .formTitle {
+    font-size: 28px;
+  }
+
+  .field {
+    margin-bottom: 20px;
+
+    & input {
+      height: 48px;
+    }
+  }
+
+  .submitButton {
+    height: 48px;
+  }
+}

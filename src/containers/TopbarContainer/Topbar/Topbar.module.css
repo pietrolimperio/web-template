@@ -277,3 +277,24 @@
     margin: 0;
   }
 }
+
+/* ============================================ */
+/* SCROLL-TRIGGERED SEARCH BAR STYLES */
+/* ============================================ */
+
+/* Add transition to root for smooth appearance */
+.root {
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+/* Enhanced shadow when scrolled */
+.root.scrolled {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Smooth transitions for desktop topbar */
+.desktop {
+  @media (--viewportLarge) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

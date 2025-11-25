@@ -22,7 +22,6 @@ const Offer = props => {
     transaction,
     transactionRole,
     isNegotiationProcess,
-    isRegularNegotiation,
     intl,
   } = props;
 
@@ -65,9 +64,7 @@ const Offer = props => {
   const currentOffer = unitLineItem?.lineTotal ? unitLineItem.lineTotal : null;
   const formattedCurrentOffer = currentOffer ? formatMoney(intl, currentOffer) : '';
 
-  const classes = classNames(rootClassName || css.offerContainer, className, {
-    [css.reducedMargin]: isRegularNegotiation,
-  });
+  const classes = classNames(rootClassName || css.offerContainer, className);
   return formattedCurrentOffer ? (
     <div className={classes}>
       <Heading as="h2" rootClassName={css.sectionHeading}>

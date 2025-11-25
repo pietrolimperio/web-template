@@ -132,6 +132,7 @@ export const BookingTimeForm = props => {
           form,
           pristine,
           handleSubmit,
+          isOwnListing,
           listingId,
           values,
           monthlyTimeSlots,
@@ -142,8 +143,6 @@ export const BookingTimeForm = props => {
           fetchLineItemsInProgress,
           fetchLineItemsError,
           payoutDetailsWarning,
-          isOwnListing,
-          finePrintComponent: FinePrint,
         } = formRenderProps;
 
         const startTime = values?.bookingStartTime ? values.bookingStartTime : null;
@@ -266,7 +265,20 @@ export const BookingTimeForm = props => {
                 <FormattedMessage id="BookingTimeForm.requestToBook" />
               </PrimaryButton>
             </div>
-            <FinePrint payoutDetailsWarning={payoutDetailsWarning} isOwnListing={isOwnListing} />
+
+            <p className={css.finePrint}>
+              {payoutDetailsWarning ? (
+                payoutDetailsWarning
+              ) : (
+                <FormattedMessage
+                  id={
+                    isOwnListing
+                      ? 'BookingTimeForm.ownListing'
+                      : 'BookingTimeForm.youWontBeChargedInfo'
+                  }
+                />
+              )}
+            </p>
           </Form>
         );
       }}

@@ -1,0 +1,147 @@
+@import '../../styles/customMediaQueries.css';
+
+/* ============================================ */
+/* Custom Hero Section */
+/* ============================================ */
+
+.customHero {
+  background: linear-gradient(135deg, var(--marketplaceColor) 0%, var(--marketplaceColorDark) 100%);
+  color: var(--colorWhite);
+  padding: 80px 24px;
+  text-align: center;
+
+  @media (--viewportMedium) {
+    padding: 120px 48px;
+  }
+}
+
+.heroTitle {
+  composes: marketplaceH1FontStyles from global;
+  color: var(--colorWhite);
+  margin: 0 0 16px 0;
+}
+
+.heroSubtitle {
+  composes: h3 from global;
+  color: var(--colorWhite);
+  opacity: 0.9;
+  margin: 0 0 32px 0;
+}
+
+.customSearchBar {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  background: var(--colorWhite);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  @media (--viewportMedium) {
+    padding: 12px;
+  }
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  padding: 12px 16px;
+  font-size: 16px;
+  outline: none;
+  border-radius: 4px;
+}
+
+.searchButton {
+  composes: button buttonFont buttonText buttonBorders buttonColors from global;
+  background-color: var(--marketplaceColor);
+  color: var(--colorWhite);
+  padding: 12px 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: var(--fontWeightSemiBold);
+  white-space: nowrap;
+  
+  &:hover {
+    background-color: var(--marketplaceColorDark);
+  }
+}
+
+/* ============================================ */
+/* Custom CTA Section */
+/* ============================================ */
+
+.customCTA {
+  background-color: var(--matterColorBright);
+  padding: 80px 24px;
+  text-align: center;
+
+  @media (--viewportMedium) {
+    padding: 100px 48px;
+  }
+}
+
+.ctaTitle {
+  composes: marketplaceH2FontStyles from global;
+  margin: 0 0 32px 0;
+}
+
+.ctaButton {
+  composes: button buttonFont buttonText buttonBorders buttonColors from global;
+  composes: buttonColorsPrimary from global;
+  display: inline-block;
+  padding: 16px 48px;
+  font-size: 18px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: var(--fontWeightSemiBold);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* ============================================ */
+/* Custom Stats Section */
+/* ============================================ */
+
+.statsSection {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  padding: 80px 24px;
+  background-color: var(--colorWhite);
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    padding: 100px 48px;
+  }
+}
+
+.stat {
+  text-align: center;
+  padding: 32px;
+  border-radius: 12px;
+  background-color: var(--matterColorBright);
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.statNumber {
+  composes: marketplaceH1FontStyles from global;
+  color: var(--marketplaceColor);
+  margin: 0 0 8px 0;
+}
+
+.statLabel {
+  composes: h4 from global;
+  color: var(--matterColor);
+  margin: 0;
+}

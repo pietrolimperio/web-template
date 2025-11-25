@@ -78,12 +78,27 @@ export const EmailVerificationPageComponent = props => {
     verificationToken: parseVerificationToken(location ? location.search : null),
   };
   const user = ensureCurrentUser(currentUser);
+  const { email, emailVerified, pendingEmail, profile } = user.attributes || {};
+  const name = profile?.firstName;
 
-  // The first attempt to verify email is done when the page is loaded
-  // If the verify API call is successfull and the user has verified email
-  // We can redirect user forward from email verification page.
-  if (isVerified && user.attributes.emailVerified && user.attributes.pendingEmail == null) {
-    return <NamedRedirect name="LandingPage" />;
+  // Determine verification status for notification
+  const getVerificationStatus = () => {
+    const anyPendingEmailHasBeenVerifiedForCurrentUser = emailVerified && !pendingEmail;
+    
+    if (anyPendingEmailHasBeenVerifiedForCurrentUser && verificationError) {
+      return 'no-pending';
+    } else if (anyPendingEmailHasBeenVerifiedForCurrentUser) {
+      return 'success';
+    } else if (verificationError) {
+      return 'error';
+    }
+    return 'success'; // Default to success if verification is in progress
+  };
+
+  // Always redirect to landing page with verification status
+  if (user.id) {
+    const status = getVerificationStatus();
+    return <NamedRedirect name="LandingPage" state={{ emailVerification: status, userName: name, userEmail: email }} />;
   }
 
   return (

@@ -27,7 +27,7 @@ import { confirmCardPayment, retrievePaymentIntent } from '../../ducks/stripe.du
 import { savePaymentMethod } from '../../ducks/paymentMethods.duck';
 
 // Import shared components
-import { NamedRedirect, Page, TopbarSimplified } from '../../components';
+import { NamedRedirect, Page } from '../../components';
 
 // Session helpers file needs to be imported before CheckoutPageWithPayment and CheckoutPageWithInquiryProcess
 import { storeData, clearData, handlePageData } from './CheckoutPageSessionHelpers';
@@ -43,6 +43,7 @@ import {
   initiateInquiryWithoutPayment,
 } from './CheckoutPage.duck';
 
+import CustomTopbar from './CustomTopbar';
 import CheckoutPageWithPayment, {
   loadInitialDataForStripePayments,
 } from './CheckoutPageWithPayment';
@@ -202,7 +203,7 @@ const EnhancedCheckoutPage = props => {
     />
   ) : (
     <Page title={title} scrollingDisabled={scrollingDisabled}>
-      <TopbarSimplified />
+      <CustomTopbar intl={intl} linkToExternalSite={config?.topbar?.logoLink} />
     </Page>
   );
 };

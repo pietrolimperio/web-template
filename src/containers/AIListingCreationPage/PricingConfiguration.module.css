@@ -1,0 +1,255 @@
+.root {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--marketplaceColor);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--matterColorAnti);
+  line-height: 1.5;
+}
+
+.section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: var(--matterColorBright);
+  border-radius: 8px;
+  border: 1px solid var(--matterColorNegative);
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--matterColor);
+}
+
+.sectionHint {
+  font-size: 0.875rem;
+  color: var(--matterColorAnti);
+  margin-bottom: 1rem;
+}
+
+.priceInput {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.currency {
+  font-weight: 600;
+  color: var(--matterColor);
+}
+
+.input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--matterColorNegative);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.perDay {
+  color: var(--matterColorAnti);
+  font-size: 0.875rem;
+}
+
+.variantList {
+  margin-bottom: 1rem;
+}
+
+.variantItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--matterColorLight);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.variantInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.variantLabel {
+  font-size: 0.875rem;
+  color: var(--matterColor);
+}
+
+.variantPrice {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--marketplaceColor);
+}
+
+.removeButton {
+  padding: 0.25rem 0.75rem;
+  background-color: var(--failColor);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.removeButton:hover {
+  background-color: #c0392b;
+}
+
+.addButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: white;
+  color: var(--marketplaceColor);
+  border: 2px dashed var(--marketplaceColor);
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addButton:hover {
+  background-color: var(--marketplaceColorLight);
+}
+
+.newVariantForm {
+  background-color: var(--matterColorLight);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.formRow {
+  margin-bottom: 1rem;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--matterColor);
+}
+
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--matterColorNegative);
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+}
+
+.hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--matterColorAnti);
+  margin-top: 0.25rem;
+}
+
+.variantActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.saveButton {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: var(--marketplaceColor);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.saveButton:hover {
+  background-color: var(--marketplaceColorDark);
+}
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--matterColorNegative);
+  color: var(--matterColor);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton:hover {
+  background-color: var(--matterColorAnti);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--matterColorNegative);
+  color: var(--matterColor);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover:not(:disabled) {
+  background-color: var(--matterColorAnti);
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.continueButton {
+  padding: 0.75rem 2rem;
+  background-color: var(--marketplaceColor);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.continueButton:hover:not(:disabled) {
+  background-color: var(--marketplaceColorDark);
+}
+
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

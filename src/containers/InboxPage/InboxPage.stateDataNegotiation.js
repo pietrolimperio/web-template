@@ -15,9 +15,6 @@ export const getStateDataForNegotiationProcess = (txInfo, processInfo) => {
     .cond([states.INQUIRY, _], () => {
       return { processName, processState, actionNeeded: true };
     })
-    .cond([states.REQUEST_REJECTED, _], () => {
-      return { processName, processState, isFinal: true };
-    })
     .cond([states.OFFER_PENDING, CUSTOMER], () => {
       return { processName, processState, actionNeeded: true };
     })

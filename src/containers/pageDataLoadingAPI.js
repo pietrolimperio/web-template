@@ -1,8 +1,10 @@
 /**
  * Export loadData calls from ducks modules of different containers
  */
+import { loadData as AIListingCreationPageLoader } from './AIListingCreationPage/AIListingCreationPage.duck';
 import { loadData as AuthenticationPageLoader } from './AuthenticationPage/AuthenticationPage.duck';
 import { loadData as LandingPageLoader } from './LandingPage/LandingPage.duck';
+import { loadData as NewLandingPageLoader } from './NewLandingPage/NewLandingPage.duck';
 import { setInitialValues as CheckoutPageInitialValues } from './CheckoutPage/CheckoutPage.duck';
 import { loadData as CMSPageLoader } from './CMSPage/CMSPage.duck';
 import { loadData as ContactDetailsPageLoader } from './ContactDetailsPage/ContactDetailsPage.duck';
@@ -10,12 +12,12 @@ import { loadData as EditListingPageLoader } from './EditListingPage/EditListing
 import { loadData as EmailVerificationPageLoader } from './EmailVerificationPage/EmailVerificationPage.duck';
 import { loadData as InboxPageLoader } from './InboxPage/InboxPage.duck';
 import { loadData as ListingPageLoader } from './ListingPage/ListingPage.duck';
+import { loadData as ProductPageLoader } from './ProductPage/ProductPage.duck';
 import { loadData as MakeOfferPageLoader } from './MakeOfferPage/MakeOfferPage.duck';
 import { loadData as ManageListingsPageLoader } from './ManageListingsPage/ManageListingsPage.duck';
 import { loadData as PaymentMethodsPageLoader } from './PaymentMethodsPage/PaymentMethodsPage.duck';
 import { loadData as PrivacyPolicyPageLoader } from './PrivacyPolicyPage/PrivacyPolicyPage.duck';
 import { loadData as ProfilePageLoader } from './ProfilePage/ProfilePage.duck';
-import { loadData as RequestQuotePageLoader } from './RequestQuotePage/RequestQuotePage.duck';
 import { loadData as SearchPageLoader } from './SearchPage/SearchPage.duck';
 import { loadData as StripePayoutPageLoader } from './StripePayoutPage/StripePayoutPage.duck';
 import { loadData as TermsOfServicePageLoader } from './TermsOfServicePage/TermsOfServicePage.duck';
@@ -26,11 +28,17 @@ import {
 
 const getPageDataLoadingAPI = () => {
   return {
+    AIListingCreationPage: {
+      loadData: AIListingCreationPageLoader,
+    },
     AuthenticationPage: {
       loadData: AuthenticationPageLoader,
     },
     LandingPage: {
       loadData: LandingPageLoader,
+    },
+    NewLandingPage: {
+      loadData: NewLandingPageLoader,
     },
     CheckoutPage: {
       setInitialValues: CheckoutPageInitialValues,
@@ -53,6 +61,9 @@ const getPageDataLoadingAPI = () => {
     ListingPage: {
       loadData: ListingPageLoader,
     },
+    ProductPage: {
+      loadData: ProductPageLoader,
+    },
     MakeOfferPage: {
       loadData: MakeOfferPageLoader,
     },
@@ -67,9 +78,6 @@ const getPageDataLoadingAPI = () => {
     },
     ProfilePage: {
       loadData: ProfilePageLoader,
-    },
-    RequestQuotePage: {
-      loadData: RequestQuotePageLoader,
     },
     SearchPage: {
       loadData: SearchPageLoader,

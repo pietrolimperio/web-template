@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import appSettings from '../../../config/settings';
 import { useConfiguration } from '../../../context/configurationContext';
 import { useRouteConfiguration } from '../../../context/routeConfigurationContext';
+import { useScrollTrigger } from '../../../hooks/useScrollTrigger';
 
 import { FormattedMessage, useIntl } from '../../../util/reactIntl';
 import { isMainSearchTypeKeywords, isOriginInUse } from '../../../util/search';
@@ -60,7 +61,7 @@ const compareGroups = (a, b) => {
 };
 // Returns links in order where primary links are returned first
 const sortCustomLinks = customLinks => {
-  const links = Array.isArray(customLinks) ? [...customLinks] : [];
+  const links = Array.isArray(customLinks) ? customLinks : [];
   return links.sort(compareGroups);
 };
 
@@ -153,6 +154,8 @@ const TopbarComponent = props => {
     showGenericError,
     config,
     routeConfiguration,
+    currentLocale,
+    onLocaleChange,
   } = props;
 
   const handleSubmit = values => {
@@ -277,7 +280,13 @@ const TopbarComponent = props => {
   };
   const initialSearchFormValues = topbarSearcInitialValues();
 
-  const classes = classNames(rootClassName || css.root, className);
+  // Detect scroll position for scroll-triggered search bar
+  // Show search bar in topbar after scrolling 300px (hero section height)
+  const isScrolled = useScrollTrigger(300);
+
+  const classes = classNames(rootClassName || css.root, className, {
+    [css.scrolled]: isScrolled,
+  });
 
   const { display: searchFormDisplay = SEARCH_DISPLAY_ALWAYS } = config?.topbar?.searchBar || {};
 
@@ -290,8 +299,15 @@ const TopbarComponent = props => {
   const showSearchNotOnLandingPage =
     searchFormDisplay === SEARCH_DISPLAY_NOT_LANDING_PAGE && resolvedCurrentPage !== 'LandingPage';
 
-  const showSearchForm =
-    showSearchOnAllPages || showSearchOnSearchPage || showSearchNotOnLandingPage;
+  // SCROLL-TRIGGERED SEARCH BAR LOGIC:
+  // On Landing/CMS pages: hide search initially, show after scrolling
+  // On other pages: follow normal configuration
+  const isLandingOrCMSPage =
+    resolvedCurrentPage === 'LandingPage' || resolvedCurrentPage?.startsWith('CMSPage:');
+
+  const showSearchForm = isLandingOrCMSPage
+    ? isScrolled // Show only when scrolled on landing/CMS pages
+    : showSearchOnAllPages || showSearchOnSearchPage || showSearchNotOnLandingPage;
 
   const mobileSearchButtonMaybe = showSearchForm ? (
     <Button
@@ -354,6 +370,8 @@ const TopbarComponent = props => {
           showSearchForm={showSearchForm}
           showCreateListingsLink={showCreateListingsLink}
           inboxTab={topbarInboxTab}
+          currentLocale={currentLocale}
+          onLocaleChange={onLocaleChange}
         />
       </div>
       <Modal

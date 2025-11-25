@@ -1,0 +1,176 @@
+.root {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--matterColorDark);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--matterColor);
+  margin: 0;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.geoButton {
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--matterColorBright);
+  color: var(--marketplaceColor);
+  border: 2px solid var(--marketplaceColor);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.geoButton:hover:not(:disabled) {
+  background: var(--marketplaceColor);
+  color: var(--matterColorBright);
+}
+
+.geoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  color: var(--matterColorDark);
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.locationIcon {
+  fill: var(--matterColor);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+}
+
+.input:disabled {
+  background: var(--matterColorAnti);
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 8px;
+  padding: 12px;
+  background: #fee;
+  color: var(--failColor);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.helpText {
+  margin: 24px 0;
+  padding: 16px;
+  background: var(--matterColorLight);
+  border-left: 4px solid var(--marketplaceColor);
+  border-radius: 4px;
+}
+
+.helpText p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--matterColor);
+  line-height: 1.6;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--matterColorNegative);
+}
+
+.backButton {
+  padding: 14px 32px;
+  background: var(--matterColorBright);
+  color: var(--matterColor);
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backButton:hover:not(:disabled) {
+  border-color: var(--matterColor);
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.continueButton {
+  flex: 1;
+  padding: 14px 32px;
+  background: var(--marketplaceColor);
+  color: var(--matterColorBright);
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.continueButton:hover:not(:disabled) {
+  background: var(--marketplaceColorDark);
+}
+
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

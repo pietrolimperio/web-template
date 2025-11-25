@@ -1,12 +1,15 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { storableError } from '../../util/errors';
 import { parse, getValidInboxSort } from '../../util/urlHelpers';
 import { getSupportedProcessesInfo } from '../../transactions/transaction';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
-const INBOX_PAGE_SIZE = 10;
+// ================ Action types ================ //
 
-// ================ Helper functions ================ //
+export const FETCH_ORDERS_OR_SALES_REQUEST = 'app/InboxPage/FETCH_ORDERS_OR_SALES_REQUEST';
+export const FETCH_ORDERS_OR_SALES_SUCCESS = 'app/InboxPage/FETCH_ORDERS_OR_SALES_SUCCESS';
+export const FETCH_ORDERS_OR_SALES_ERROR = 'app/InboxPage/FETCH_ORDERS_OR_SALES_ERROR';
+
+// ================ Reducer ================ //
 
 const entityRefs = entities =>
   entities.map(entity => ({
@@ -14,42 +17,54 @@ const entityRefs = entities =>
     type: entity.type,
   }));
 
-// ================ Slice ================ //
+const initialState = {
+  fetchInProgress: false,
+  fetchOrdersOrSalesError: null,
+  pagination: null,
+  transactionRefs: [],
+};
 
-const inboxPageSlice = createSlice({
-  name: 'InboxPage',
-  initialState: {
-    fetchInProgress: false,
-    fetchOrdersOrSalesError: null,
-    pagination: null,
-    transactionRefs: [],
-  },
-  reducers: {},
-  extraReducers: builder => {
-    builder
-      .addCase(loadDataThunk.pending, state => {
-        state.fetchInProgress = true;
-        state.fetchOrdersOrSalesError = null;
-      })
-      .addCase(loadDataThunk.fulfilled, (state, action) => {
-        const transactions = action.payload.data.data;
-        state.fetchInProgress = false;
-        state.transactionRefs = entityRefs(transactions);
-        state.pagination = action.payload.data.meta;
-      })
-      .addCase(loadDataThunk.rejected, (state, action) => {
-        console.error(action.payload || action.error); // eslint-disable-line
-        state.fetchInProgress = false;
-        state.fetchOrdersOrSalesError = action.payload;
-      });
-  },
+export default function inboxPageReducer(state = initialState, action = {}) {
+  const { type, payload } = action;
+  switch (type) {
+    case FETCH_ORDERS_OR_SALES_REQUEST:
+      return { ...state, fetchInProgress: true, fetchOrdersOrSalesError: null };
+    case FETCH_ORDERS_OR_SALES_SUCCESS: {
+      const transactions = payload.data.data;
+      return {
+        ...state,
+        fetchInProgress: false,
+        transactionRefs: entityRefs(transactions),
+        pagination: payload.data.meta,
+      };
+    }
+    case FETCH_ORDERS_OR_SALES_ERROR:
+      console.error(payload); // eslint-disable-line
+      return { ...state, fetchInProgress: false, fetchOrdersOrSalesError: payload };
+
+    default:
+      return state;
+  }
+}
+
+// ================ Action creators ================ //
+
+const fetchOrdersOrSalesRequest = () => ({ type: FETCH_ORDERS_OR_SALES_REQUEST });
+const fetchOrdersOrSalesSuccess = response => ({
+  type: FETCH_ORDERS_OR_SALES_SUCCESS,
+  payload: response,
+});
+const fetchOrdersOrSalesError = e => ({
+  type: FETCH_ORDERS_OR_SALES_ERROR,
+  error: true,
+  payload: e,
 });
 
-export default inboxPageSlice.reducer;
+// ================ Thunks ================ //
 
-// ================ Load data ================ //
+const INBOX_PAGE_SIZE = 10;
 
-const loadDataPayloadCreator = ({ params, search }, { dispatch, rejectWithValue, extra: sdk }) => {
+export const loadData = (params, search) => (dispatch, getState, sdk) => {
   const { tab } = params;
 
   const onlyFilterValues = {
@@ -61,6 +76,8 @@ const loadDataPayloadCreator = ({ params, search }, { dispatch, rejectWithValue,
   if (!onlyFilter) {
     return Promise.reject(new Error(`Invalid tab for InboxPage: ${tab}`));
   }
+
+  dispatch(fetchOrdersOrSalesRequest());
 
   const { page = 1, sort } = parse(search);
   const processNames = getSupportedProcessesInfo().map(p => p.name);
@@ -97,16 +114,11 @@ const loadDataPayloadCreator = ({ params, search }, { dispatch, rejectWithValue,
     .query(apiQueryParams)
     .then(response => {
       dispatch(addMarketplaceEntities(response));
+      dispatch(fetchOrdersOrSalesSuccess(response));
       return response;
     })
     .catch(e => {
-      return rejectWithValue(storableError(e));
+      dispatch(fetchOrdersOrSalesError(storableError(e)));
+      throw e;
     });
-};
-
-export const loadDataThunk = createAsyncThunk('InboxPage/loadData', loadDataPayloadCreator);
-
-// Backward compatible wrapper for the thunk
-export const loadData = (params, search) => (dispatch, getState, sdk) => {
-  return dispatch(loadDataThunk({ params, search }));
 };

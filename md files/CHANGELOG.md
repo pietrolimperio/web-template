@@ -13,52 +13,9 @@ way to update this template, but currently, we follow a pattern:
 ---
 
 ## Upcoming version 2025-XX-XX
-- [add] Add currently available translations for DE, ES, FR.
-  [#695](https://github.com/sharetribe/web-template/pull/695)
 
-## [v10.1.1] 2025-11-06
-
-- [fix] RequestQuotePage: pass authorDisplayName to RequestQuoteForm.
-  [#693](https://github.com/sharetribe/web-template/pull/693)
-
-  [v10.1.1]: https://github.com/sharetribe/web-template/compare/v10.1.0...v10.1.1
-
-## [v10.1.0] 2025-11-06
-
-- [add] Add support for regular negotiation flow where provider creates listings representing offers
-  (e.g. projects) and customer can request for a quote.
-  [#685](https://github.com/sharetribe/web-template/pull/685)
-- [fix] Add line break to TopbarMobileMenu.signupOrLogin translation
-  [#690](https://github.com/sharetribe/web-template/pull/690)
-
-  [v10.1.0]: https://github.com/sharetribe/web-template/compare/v10.0.0...v10.1.0
-
-## [v10.0.0] 2025-11-04
-
-This major release introduces Redux Toolkit for state management. This is a big change and you
-should carefully check the changes before taking update from this repository.
-
-- [change] Start using Redux Toolkit for state management.
-
-  - All the \*.duck.js files have been converted to Redux Toolkit slices.
-  - The signature of 'configureStore' function has been changed.
-
-  [#682](https://github.com/sharetribe/web-template/pull/682)
-
-- [fix] Added missing getAriaLabel to various components used in Styleguide
-  [#687](https://github.com/sharetribe/web-template/pull/687)
-- [add] Add noindex metadata to closed listings.
-  [#688](https://github.com/sharetribe/web-template/pull/688)
-- [fix] coordinate parsing: "-0" was not parsed correctly to Number.
-  [#686](https://github.com/sharetribe/web-template/pull/686)
-- [fix] showPaymentDetailsForUser: handle case when currentUser is null.
-  [#684](https://github.com/sharetribe/web-template/pull/684)
-- [add] Add currently available translations for DE, ES, FR.
-  [#683](https://github.com/sharetribe/web-template/pull/683)
 - [fix] Only set TransactionPage pageHeading if processName resolves
   [#681](https://github.com/sharetribe/web-template/pull/681)
-
-  [v10.0.0]: https://github.com/sharetribe/web-template/compare/v9.1.0...v10.0.0
 
 ## [v9.1.0] 2025-10-23
 

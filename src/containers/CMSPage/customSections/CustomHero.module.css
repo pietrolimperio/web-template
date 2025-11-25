@@ -1,0 +1,169 @@
+@import '../../../styles/customMediaQueries.css';
+
+.root {
+  /* Full viewport height hero */
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  /* Background image */
+  background-image: url('https://sharetribe-assets.imgix.net/69021fef-438d-4e8c-80ef-e371aad534c3/raw/5d/f460351ea62df0838bdccb1625aa70974922ef?auto=format&fit=clip&h=2400&w=2400&s=f8d37dabdb711f6b10f126985e36cbf7');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* Dark overlay for better text readability */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  @media (--viewportMedium) {
+    min-height: 700px;
+  }
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  padding: 24px;
+  margin: 0 auto;
+
+  @media (--viewportMedium) {
+    padding: 48px 36px;
+  }
+}
+
+.heroMain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.heroTitle {
+  composes: marketplaceH1FontStyles from global;
+  color: var(--matterColorLight);
+  text-align: center;
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+  max-width: 800px;
+
+  @media (--viewportMedium) {
+    font-size: 48px;
+  }
+
+  @media (--viewportLarge) {
+    font-size: 56px;
+  }
+}
+
+/* Search Form Wrapper */
+.searchWrapper {
+  width: 100%;
+  max-width: 700px;
+}
+
+.searchForm {
+  & form {
+    background: var(--matterColorLight);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.topbarSearchWithLeftPadding {
+  composes: topbarSearchWithLeftPadding from '../../TopbarContainer/Topbar/TopbarDesktop/TopbarDesktop.module.css';
+}
+
+/* CTA Buttons */
+.ctaButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 700px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    gap: 20px;
+  }
+}
+
+.primaryButton {
+  composes: button buttonFont buttonText buttonBordersSecondary from global;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Primary button: marketplace-color background, white text */
+  background-color: var(--marketplaceColor);
+  color: var(--matterColorLight);
+  border: 2px solid var(--marketplaceColor);
+
+  &:hover {
+    background-color: var(--marketplaceColorDark);
+    border-color: var(--marketplaceColorDark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB), 0.3);
+  }
+}
+
+.secondaryButton {
+  composes: button buttonFont buttonText buttonBordersSecondary from global;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Secondary button: white background, marketplace-color text */
+  background-color: var(--matterColorLight);
+  color: var(--marketplaceColor);
+  border: 2px solid var(--marketplaceColor);
+
+  &:hover {
+    background-color: var(--matterColorBright);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB), 0.3);
+  }
+}

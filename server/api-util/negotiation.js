@@ -2,7 +2,7 @@
 const makeOfferTransitions = [
   'transition/make-offer',
   'transition/make-offer-after-inquiry',
-  'transition/make-offer-from-request',
+  'transition/make-offer-from-quote-requested',
 ];
 
 // default-negotiation process: transitions that make a counter offer

@@ -31,44 +31,55 @@ import Routes from './routing/Routes';
 // Sharetribe Web Template uses English translations as default translations.
 import defaultMessages from './translations/en.json';
 
-// If you want to change the language of default (fallback) translations,
-// change the imports to match the wanted locale:
-//
-//   1) Change the language in the config.js file!
-//   2) Import correct locale rules for Moment library
-//   3) Use the `messagesInLocale` import to add the correct translation file.
-//   4) (optionally) To support older browsers you need add the intl-relativetimeformat npm packages
-//      and take it into use in `util/polyfills.js`
+// Multi-language support: Dynamic translation loading based on user's locale
+import { DEFAULT_LOCALE, TRANSLATION_FILE_MAP } from './config/localeConfig';
 
-// Note that there is also translations in './translations/countryCodes.js' file
-// This file contains ISO 3166-1 alpha-2 country codes, country names and their translations in our default languages
-// This used to collect billing address in StripePaymentAddress on CheckoutPage
+// Import all translation files dynamically
+import itMessages from './translations/it.json';
+import frMessages from './translations/fr.json';
+import esMessages from './translations/es.json';
+import deMessages from './translations/de.json';
+import ptMessages from './translations/pt.json';
+import enMessages from './translations/en.json';
 
-// Step 2:
-// If you are using a non-english locale with moment library,
-// you should also import time specific formatting rules for that locale
-// There are 2 ways to do it:
-// - you can add your preferred locale to MomentLocaleLoader or
-// - stop using MomentLocaleLoader component and directly import the locale here.
-// E.g. for French:
-// import 'moment/locale/fr';
-// const hardCodedLocale = process.env.NODE_ENV === 'test' ? 'en' : 'fr';
+// Translation file registry
+const TRANSLATION_FILES = {
+  it: itMessages,
+  fr: frMessages,
+  es: esMessages,
+  de: deMessages,
+  pt: ptMessages,
+  en: enMessages,
+};
 
-// Step 3:
-// The "./translations/en.json" has generic English translations
-// that should work as a default translation if some translation keys are missing
-// from the hosted translation.json (which can be edited in Console). The other files
-// (e.g. en.json) in that directory has Biketribe themed translations.
-//
-// If you are using a non-english locale, point `messagesInLocale` to correct <lang>.json file.
-// That way the priority order would be:
-//   1. hosted translation.json
-//   2. <lang>.json
-//   3. en.json
-//
-// I.e. remove "const messagesInLocale" and add import for the correct locale:
-// import messagesInLocale from './translations/fr.json';
-const messagesInLocale = {};
+/**
+ * Get current locale from localStorage (default: it-IT)
+ * Falls back to DEFAULT_LOCALE (it-IT) if not set
+ */
+const getCurrentLocale = () => {
+  return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+};
+
+/**
+ * Load appropriate translation file based on current locale
+ * Maps locale codes to translation files: it-IT → it.json, ch-FR → fr.json, etc.
+ */
+const loadTranslations = () => {
+  const currentLocale = getCurrentLocale();
+  const translationFileName = TRANSLATION_FILE_MAP[currentLocale];
+
+  // Get translation file (defaults to English if not found)
+  const messagesInLocale = TRANSLATION_FILES[translationFileName] || TRANSLATION_FILES.en;
+
+  console.info(
+    `Loading translations for locale: ${currentLocale} (file: ${translationFileName}.json)`
+  );
+
+  return messagesInLocale;
+};
+
+// Load translations based on current locale
+const messagesInLocale = loadTranslations();
 
 // If translation key is missing from `messagesInLocale` (e.g. fr.json),
 // corresponding key will be added to messages from `defaultMessages` (en.json)
@@ -89,6 +100,54 @@ const addMissingTranslations = (sourceLangTranslations, targetLangTranslations) 
   });
 
   return missingKeys.reduce(addMissingTranslation, targetLangTranslations);
+};
+
+/**
+ * Apply locale-specific translation fallbacks with proper priority
+ *
+ * NEW APPROACH (per user requirements):
+ * - Console UI (hostedTranslations) contains keys with _{{lang}} suffix: e.g., "TopbarDesktop.createListing_it"
+ * - JSON files (localeMessages) contain keys WITHOUT suffix: e.g., "TopbarDesktop.createListing"
+ *
+ * For a given key like "TopbarDesktop.createListing" and locale "it-IT":
+ * 1. First: Check if "TopbarDesktop.createListing_it" exists in hostedTranslations (Console)
+ * 2. Second fallback: Use "TopbarDesktop.createListing" from localeMessages (JSON file)
+ *
+ * This allows:
+ * - All Italian translations in Console as "key_it"
+ * - Some frequently changed translations in Console for other languages as "key_es", "key_fr", etc.
+ * - Static translations in JSON files without suffix as fallback
+ *
+ * @param {Object} hostedTranslations - Translations from Console UI (with _{{lang}} suffix)
+ * @param {Object} localeMessages - Translations from JSON files (without suffix)
+ * @returns {Object} Final messages object with proper fallbacks
+ */
+const applyLocaleSpecificFallbacks = (hostedTranslations, localeMessages) => {
+  const currentLocale = getCurrentLocale();
+  const languageCode = TRANSLATION_FILE_MAP[currentLocale] || 'en';
+
+  // Start with messages from JSON files
+  const processedMessages = { ...localeMessages };
+
+  // For each key in localeMessages, check if Console has a localized override
+  Object.keys(localeMessages).forEach(key => {
+    // Skip keys that already have a suffix (shouldn't happen in localeMessages, but safety check)
+    if (/_[a-z]{2}$/.test(key)) {
+      return;
+    }
+
+    // Build the localized key (e.g., "TopbarDesktop.createListing_it")
+    const localizedKey = `${key}_${languageCode}`;
+
+    // If Console has a localized version, use it (priority 1)
+    if (hostedTranslations[localizedKey]) {
+      processedMessages[key] = hostedTranslations[localizedKey];
+      console.debug(`Using Console translation: ${key} ← ${localizedKey}`);
+    }
+    // Otherwise, keep the JSON file value (priority 2 - already in processedMessages)
+  });
+
+  return processedMessages;
 };
 
 // Get default messages for a given locale.
@@ -203,14 +262,6 @@ const EnvironmentVariableWarning = props => {
   );
 };
 
-/**
- * Client App
- * @param {Object} props
- * @param {Object} props.store
- * @param {Object} props.hostedTranslations
- * @param {Object} props.hostedConfig
- * @returns {JSX.Element}
- */
 export const ClientApp = props => {
   const { store, hostedTranslations = {}, hostedConfig = {} } = props;
   const appConfig = mergeConfig(hostedConfig, defaultConfig);
@@ -231,10 +282,12 @@ export const ClientApp = props => {
 
   // Show MaintenanceMode if the mandatory configurations are not available
   if (!appConfig.hasMandatoryConfigurations) {
+    const messagesWithFallbacks = applyLocaleSpecificFallbacks(hostedTranslations, localeMessages);
+
     return (
       <MaintenanceModeError
         locale={appConfig.localization.locale}
-        messages={{ ...localeMessages, ...hostedTranslations }}
+        messages={messagesWithFallbacks}
       />
     );
   }
@@ -249,11 +302,14 @@ export const ClientApp = props => {
   // This gives good input for debugging issues on live environments, but with test it's not needed.
   const logLoadDataCalls = appSettings?.env !== 'test';
 
+  // Apply locale-specific fallbacks: Console translations (with _lang suffix) take priority over JSON files
+  const messagesWithFallbacks = applyLocaleSpecificFallbacks(hostedTranslations, localeMessages);
+
   return (
     <Configurations appConfig={appConfig}>
       <IntlProvider
         locale={appConfig.localization.locale}
-        messages={{ ...localeMessages, ...hostedTranslations }}
+        messages={messagesWithFallbacks}
         textComponent="span"
       >
         <Provider store={store}>
@@ -269,17 +325,8 @@ export const ClientApp = props => {
   );
 };
 
-/**
- * Server App
- * @param {Object} props
- * @param {string} props.url
- * @param {Object} props.context
- * @param {Object} props.helmetContext
- * @param {Object} props.store
- * @param {Object} props.hostedTranslations
- * @param {Object} props.hostedConfig
- * @returns {JSX.Element}
- */
+ClientApp.propTypes = { store: any.isRequired };
+
 export const ServerApp = props => {
   const { url, context, helmetContext, store, hostedTranslations = {}, hostedConfig = {} } = props;
   const appConfig = mergeConfig(hostedConfig, defaultConfig);
@@ -287,20 +334,25 @@ export const ServerApp = props => {
 
   // Show MaintenanceMode if the mandatory configurations are not available
   if (!appConfig.hasMandatoryConfigurations) {
+    const messagesWithFallbacks = applyLocaleSpecificFallbacks(hostedTranslations, localeMessages);
+
     return (
       <MaintenanceModeError
         locale={appConfig.localization.locale}
-        messages={{ ...localeMessages, ...hostedTranslations }}
+        messages={messagesWithFallbacks}
         helmetContext={helmetContext}
       />
     );
   }
 
+  // Apply locale-specific fallbacks: Console translations (with _lang suffix) take priority over JSON files
+  const messagesWithFallbacks = applyLocaleSpecificFallbacks(hostedTranslations, localeMessages);
+
   return (
     <Configurations appConfig={appConfig}>
       <IntlProvider
         locale={appConfig.localization.locale}
-        messages={{ ...localeMessages, ...hostedTranslations }}
+        messages={messagesWithFallbacks}
         textComponent="span"
       >
         <Provider store={store}>
@@ -315,6 +367,8 @@ export const ServerApp = props => {
     </Configurations>
   );
 };
+
+ServerApp.propTypes = { url: string.isRequired, context: any.isRequired, store: any.isRequired };
 
 /**
  * Render the given route.
@@ -337,7 +391,7 @@ export const renderApp = (
   // Don't pass an SDK instance since we're only rendering the
   // component tree with the preloaded store state and components
   // shouldn't do any SDK calls in the (server) rendering lifecycle.
-  const store = configureStore({ initialState: preloadedState });
+  const store = configureStore(preloadedState);
 
   const helmetContext = {};
 

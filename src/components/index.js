@@ -16,6 +16,7 @@ export { default as IconAdd } from './IconAdd/IconAdd';
 export { default as IconAlert } from './IconAlert/IconAlert';
 export { default as IconArrowHead } from './IconArrowHead/IconArrowHead';
 export { default as IconBannedUser } from './IconBannedUser/IconBannedUser';
+export { default as IconBell } from './IconBell/IconBell';
 export { default as IconCheckmark } from './IconCheckmark/IconCheckmark';
 export { default as IconClose } from './IconClose/IconClose';
 export { default as IconDate } from './IconDate/IconDate';
@@ -25,6 +26,7 @@ export { default as IconEdit } from './IconEdit/IconEdit';
 export { default as IconEmailAttention } from './IconEmailAttention/IconEmailAttention';
 export { default as IconEmailSent } from './IconEmailSent/IconEmailSent';
 export { default as IconEmailSuccess } from './IconEmailSuccess/IconEmailSuccess';
+export { default as IconHelp } from './IconHelp/IconHelp';
 export { default as IconInquiry } from './IconInquiry/IconInquiry';
 export { default as IconKeys } from './IconKeys/IconKeys';
 export { default as IconKeysSuccess } from './IconKeysSuccess/IconKeysSuccess';
@@ -38,6 +40,7 @@ export { default as IconSocialMediaInstagram } from './IconSocialMediaInstagram/
 export { default as IconSocialMediaTwitter } from './IconSocialMediaTwitter/IconSocialMediaTwitter';
 export { default as IconSpinner } from './IconSpinner/IconSpinner';
 export { default as IconSuccess } from './IconSuccess/IconSuccess';
+export { default as IconUser } from './IconUser/IconUser';
 
 // Typography
 export { Heading, H1, H2, H3, H4, H5, H6  } from './Heading/Heading';
@@ -52,6 +55,7 @@ export { default as Logo } from './Logo/Logo';
 export { default as NamedLink } from './NamedLink/NamedLink';
 export { default as NamedRedirect } from './NamedRedirect/NamedRedirect';
 export { default as NotificationBadge } from './NotificationBadge/NotificationBadge';
+export { default as NotificationBanner } from './NotificationBanner/NotificationBanner';
 export { default as ListingCardThumbnail } from './ListingCardThumbnail/ListingCardThumbnail';
 export { default as OutsideClickHandler } from './OutsideClickHandler/OutsideClickHandler';
 export { default as Promised } from './Promised/Promised';
@@ -73,10 +77,10 @@ export { default as ValidationError } from './ValidationError/ValidationError';
 //////////////////////////////////////////////////////////
 
 export { default as Button, PrimaryButton, PrimaryButtonInline, SecondaryButton, SecondaryButtonInline, InlineTextButton, SocialLoginButton } from './Button/Button';
-export { default as ErrorMessage } from './ErrorMessage/ErrorMessage';
 export { default as ImageFromFile } from './ImageFromFile/ImageFromFile';
 export { default as LinkedLogo } from './Logo/LinkedLogo';
 export { default as ListingLink } from './ListingLink/ListingLink';
+export { default as LocaleSelector } from './LocaleSelector/LocaleSelector';
 export { default as PaginationLinks } from './PaginationLinks/PaginationLinks';
 export { default as ReviewRating } from './ReviewRating/ReviewRating';
 
@@ -132,7 +136,6 @@ export { default as Reviews } from './Reviews/Reviews';
 export { default as SavedCardDetails } from './SavedCardDetails/SavedCardDetails';
 export { default as StripeConnectAccountStatusBox } from './StripeConnectAccountStatusBox/StripeConnectAccountStatusBox';
 export { default as StripePaymentAddress } from './StripePaymentAddress/StripePaymentAddress';
-export { default as TopbarSimplified } from './TopbarSimplified/TopbarSimplified';
 
 // Forms
 export { default as StripeConnectAccountForm } from './StripeConnectAccountForm/StripeConnectAccountForm';

@@ -618,7 +618,6 @@ export const BookingDatesForm = props => {
           fetchLineItemsError,
           onFetchTimeSlots,
           form: formApi,
-          finePrintComponent: FinePrint,
         } = formRenderProps;
         const { startDate, endDate } = values?.bookingDates ? values.bookingDates : {};
         const priceVariantName = values?.priceVariantName || null;
@@ -851,7 +850,19 @@ export const BookingDatesForm = props => {
                 <FormattedMessage id="BookingDatesForm.requestToBook" />
               </PrimaryButton>
             </div>
-            <FinePrint payoutDetailsWarning={payoutDetailsWarning} isOwnListing={isOwnListing} />
+            <p className={css.finePrint}>
+              {payoutDetailsWarning ? (
+                payoutDetailsWarning
+              ) : (
+                <FormattedMessage
+                  id={
+                    isOwnListing
+                      ? 'BookingDatesForm.ownListing'
+                      : 'BookingDatesForm.youWontBeChargedInfo'
+                  }
+                />
+              )}
+            </p>
           </Form>
         );
       }}

@@ -55,10 +55,11 @@ const render = (store, shouldHydrate) => {
 
   info
     .then(() => {
-      // Ensure that Loadable Components is ready
+      // Ensure that Loadable Components is ready (only when hydrating from SSR)
       // and fetch hosted assets in parallel before initializing the ClientApp
+      const loadablePromise = shouldHydrate ? loadableReady() : Promise.resolve();
       return Promise.all([
-        loadableReady(),
+        loadablePromise,
         store.dispatch(fetchAppAssets(defaultConfig.appCdnAssets, cdnAssetsVersion)),
         store.dispatch(fetchCurrentUser()),
       ]);
@@ -144,7 +145,7 @@ if (typeof window !== 'undefined') {
   const googleAnalyticsIdFromSSR = initialState?.hostedAssets?.googleAnalyticsId;
   const googleAnalyticsId = googleAnalyticsIdFromSSR || process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
   const analyticsHandlers = setupAnalyticsHandlers(googleAnalyticsId);
-  const store = configureStore({ initialState, sdk, analyticsHandlers });
+  const store = configureStore(initialState, sdk, analyticsHandlers);
 
   require('./util/polyfills');
   render(store, !!window.__PRELOADED_STATE__);

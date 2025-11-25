@@ -2,7 +2,6 @@ import React from 'react';
 import { withRouter } from 'react-router-dom';
 
 import { stringify, parse } from '../../../util/urlHelpers';
-import { fakeIntl } from '../../../util/testData';
 
 import SeatsFilter from './SeatsFilter';
 
@@ -12,14 +11,6 @@ const handleSubmit = (values, history) => {
   console.log('Submitting values', values);
   const queryParams = values ? `?${stringify(values)}` : '';
   history.push(`${window.location.pathname}${queryParams}`);
-};
-
-const getAriaLabel = (label, values) => {
-  const status = values ? 'active' : 'inactive';
-  return fakeIntl.formatMessage(
-    { id: 'SearchPage.screenreader.openFilterButton' },
-    { label, status, values }
-  );
 };
 
 const SeatsFilterPopup = withRouter(props => {
@@ -35,7 +26,6 @@ const SeatsFilterPopup = withRouter(props => {
       name="seats"
       queryParamNames={[URL_PARAM]}
       label="Seats:"
-      getAriaLabel={getAriaLabel}
       onSubmit={values => handleSubmit(values, history)}
       showAsPopup={true}
       liveEdit={false}
@@ -64,7 +54,6 @@ const SeatsFilterPlain = withRouter(props => {
       name="seats"
       queryParamNames={[URL_PARAM]}
       label="Seats"
-      getAriaLabel={getAriaLabel}
       onSubmit={values => {
         handleSubmit(values, history);
       }}

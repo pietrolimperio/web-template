@@ -1,0 +1,219 @@
+.root {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--marketplaceColor);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--matterColorAnti);
+  line-height: 1.5;
+}
+
+.content {
+  background-color: var(--matterColorBright);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--matterColorNegative);
+  margin-bottom: 2rem;
+}
+
+.currentLocationButton {
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--marketplaceColor);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.currentLocationButton:hover:not(:disabled) {
+  background-color: var(--marketplaceColorDark);
+}
+
+.currentLocationButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  color: var(--matterColorAnti);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--matterColorNegative);
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.autocompleteWrapper {
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.predictions {
+  margin-top: 0.5rem;
+  background-color: white;
+  border: 1px solid var(--matterColorNegative);
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.attribution {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--matterColorAnti);
+  text-align: right;
+}
+
+.valid {
+  border-color: var(--successColor);
+}
+
+.selectedLocation {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--successColorLight);
+  border: 1px solid var(--successColor);
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.selectedIcon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--successColor);
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.selectedText {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--matterColor);
+  line-height: 1.5;
+}
+
+.error {
+  padding: 1rem;
+  background-color: var(--failColorLight);
+  border: 1px solid var(--failColor);
+  border-radius: 4px;
+  color: var(--failColor);
+  margin-top: 1rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--matterColorNegative);
+  color: var(--matterColor);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover:not(:disabled) {
+  background-color: var(--matterColorAnti);
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.continueButton {
+  padding: 0.75rem 2rem;
+  background-color: var(--marketplaceColor);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.continueButton:hover:not(:disabled) {
+  background-color: var(--marketplaceColorDark);
+}
+
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

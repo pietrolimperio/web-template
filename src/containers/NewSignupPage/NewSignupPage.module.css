@@ -1,0 +1,691 @@
+@import '../../styles/customMediaQueries.css';
+
+/* Root container - full height split screen */
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+  }
+}
+
+/* Left side - Form container */
+.leftSide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--colorWhite);
+  padding: 24px;
+  overflow-y: auto;
+
+  @media (--viewportMedium) {
+    padding: 40px 60px 40px 40px;
+  }
+}
+
+/* Right side - Background image only */
+.rightSide {
+  display: none;
+
+  @media (--viewportMedium) {
+    display: flex;
+    flex: 1;
+    background-image: url('../../assets/premium_vector-1755266249500-ce232aef40f4.jpg');
+    background-position: center;
+    background-repeat: repeat-y;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 540px;
+}
+
+.formWrapper {
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* Logo styling */
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  max-width: 180px;
+  height: auto;
+
+  @media (--viewportMedium) {
+    max-width: 220px;
+  }
+}
+
+.formTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--colorGrey700);
+  margin: 0 0 0px 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+
+  @media (--viewportMedium) {
+    font-size: 32px;
+  }
+}
+
+/* Form styles */
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--colorGrey700);
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--marketplaceColor);
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.field {
+  margin-bottom: 20px;
+  position: relative;
+
+  & input,
+  & select {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+/* Name, phone, and address field groups */
+.nameFields,
+.phoneFields,
+.addressFields {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.phoneFields {
+  align-items: flex-end;
+}
+
+.phonePrefixField {
+  flex: 0 0 140px;
+
+  & select {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+.phoneNumberField {
+  flex: 1;
+
+  & input {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+.halfField {
+  flex: 1;
+
+  & input,
+  & select {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+/* Street and street number fields */
+.streetField {
+  flex: 2; /* Takes 2/3 of the space */
+
+  & input {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+.streetNumberField {
+  flex: 1; /* Takes 1/3 of the space */
+
+  & input {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--colorGrey300);
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--marketplaceColor);
+      box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+    }
+  }
+
+  & label {
+    font-weight: 600;
+    color: var(--colorGrey700);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+}
+
+.chipCard {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--marketplaceColor);
+  border-radius: 30px;
+  background: white;
+  color: var(--marketplaceColor);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chipCard:hover {
+  background: var(--marketplaceColor);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chipCard:active {
+  transform: translateY(0);
+}
+
+.termsCheckbox {
+  margin: 24px 0 20px 0;
+
+  & label {
+    font-size: 14px;
+    color: var(--colorGrey700);
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    line-height: 1.5;
+  }
+
+  & input[type='checkbox'] {
+    margin-right: 8px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.termsLabel {
+  & a {
+    color: var(--marketplaceColor);
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Location autocomplete specific styles */
+.locationFieldRoot {
+  position: relative;
+  width: 100%;
+}
+
+.locationAutocompleteInput {
+  height: 48px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--colorGrey300);
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: var(--marketplaceColor);
+    box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+  }
+}
+
+.locationAutocompleteInputIcon {
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.predictionsRoot {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 100%;
+  background-color: var(--colorWhite);
+  border: 1px solid var(--colorGrey300);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  overflow: hidden;
+  z-index: 1000;
+
+  /* Override the default white text color from component */
+  & ul li {
+    color: var(--colorGrey700) !important;
+
+    &:hover {
+      color: var(--marketplaceColor) !important;
+      background-color: rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.05);
+      border-left-color: var(--marketplaceColor) !important;
+    }
+  }
+}
+
+.validLocation {
+  border-color: var(--successColor, #4caf50);
+}
+
+.submitButton {
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: var(--marketplaceColor);
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  margin-top: 8px;
+  margin-bottom: 20px;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background-color: var(--marketplaceColorDark, var(--marketplaceColor));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.loginContainer {
+  text-align: center;
+  padding: 16px 0 10px 0;
+  margin-top: 8px;
+}
+
+.loginContainerTitle {
+  text-align: center;
+  padding: 0px 0 42px 0;
+}
+
+.loginText {
+  font-size: 14px;
+  color: var(--colorGrey600);
+  margin-right: 6px;
+}
+
+.loginLink {
+  composes: a from global;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--marketplaceColorDark, var(--marketplaceColor));
+    text-decoration: underline;
+  }
+}
+
+/* Error message */
+.error {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background-color: #fee;
+  border-left: 4px solid #f44;
+  border-radius: 4px;
+  color: #c33;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.errorLink {
+  color: #c33;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.errorLink:hover {
+  color: #a22;
+  text-decoration: underline;
+}
+
+/* Spinner container for loading state */
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Back to old signup link */
+.backToOldSignup {
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.backLink {
+  composes: a from global;
+  font-size: 13px;
+  color: var(--colorGrey500);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--colorGrey700);
+    text-decoration: underline;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .formTitle {
+    font-size: 24px;
+  }
+
+  .nameFields,
+  .phoneFields,
+  .addressFields {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .halfField,
+  .phonePrefixField,
+  .phoneNumberField {
+    margin-bottom: 20px;
+  }
+
+  .phonePrefixField {
+    flex: 1;
+  }
+
+  .field {
+    margin-bottom: 16px;
+
+    & input,
+    & select {
+      height: 46px;
+    }
+  }
+
+  .locationAutocompleteInput {
+    height: 46px;
+  }
+
+  .submitButton {
+    height: 48px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin: 20px 0 12px 0;
+  }
+}
+
+/* Email verification styles */
+.emailVerificationContent {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.verifyClose {
+  composes: a from global;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  text-decoration: none;
+  color: var(--colorGrey500);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--colorGrey700);
+  }
+}
+
+.closeText {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.closeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.modalIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+}
+
+.modalTitle {
+  composes: h1 from global;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--colorGrey800);
+}
+
+.modalMessage {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--colorGrey700);
+  margin-bottom: 24px;
+}
+
+.bottomWrapper {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--colorGrey300);
+}
+
+.modalHelperText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--colorGrey600);
+  margin-bottom: 12px;
+}
+
+.modalHelperLink {
+  composes: a from global;
+  color: var(--marketplaceColor);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--marketplaceColorDark, var(--marketplaceColor));
+  }
+}
+
+/* Verification Pending Screen */
+.verificationPendingContent {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.verificationIcon {
+  font-size: 80px;
+  margin: 30px 0;
+  line-height: 1;
+}
+
+.verificationTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--matterColor);
+  margin: 0 0 20px 0;
+  line-height: 1.3;
+}
+
+.verificationMessage {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--matterColor);
+  margin: 0 0 16px 0;
+}
+
+.verificationMessage strong {
+  color: var(--marketplaceColor);
+  font-weight: 600;
+}
+
+.verificationInstructions {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--matterColorAnti);
+  margin: 0 0 32px 0;
+}
+
+.verificationHelp {
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  margin-top: 40px;
+}
+
+.verificationHelpText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--matterColorAnti);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .verificationPendingContent {
+    padding: 20px 16px;
+  }
+
+  .verificationIcon {
+    font-size: 60px;
+    margin: 20px 0;
+  }
+
+  .verificationTitle {
+    font-size: 24px;
+  }
+
+  .verificationMessage {
+    font-size: 15px;
+  }
+
+  .verificationInstructions {
+    font-size: 14px;
+  }
+}

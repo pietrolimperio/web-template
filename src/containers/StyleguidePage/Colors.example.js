@@ -20,14 +20,13 @@ const getRgb = selector => {
     : '0,0,0';
 };
 
-const ColorCard = props => {
+const ColorCard = ({ mpColor, name, usage }) => {
   const [hexColor, setHexColor] = useState('#FFFFFF');
 
   useEffect(() => {
-    setHexColor(rgbToHex(getRgb(props.name)));
+    setHexColor(rgbToHex(getRgb(name)));
   }, []);
 
-  const { mpColor, name, usage } = props;
   const colorClasses = mpColor || css.color;
 
   const handleChange = e => {
@@ -61,6 +60,14 @@ const ColorCard = props => {
       </div>
     </div>
   );
+};
+
+const { string } = PropTypes;
+
+ColorCard.propTypes = {
+  mpColor: string,
+  name: string.isRequired,
+  usage: string.isRequired,
 };
 
 const MarketplaceColors = () => {

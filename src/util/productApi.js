@@ -1,0 +1,310 @@
+/**
+ * Product Analysis API Client
+ * Interfaces with AI-powered product analysis backend
+ */
+
+import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE } from '../config/localeConfig';
+
+const PRODUCT_API_BASE_URL =
+  process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api/products';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
+
+/**
+ * Product API Client Class
+ */
+class ProductAPI {
+  constructor() {
+    this.baseURL = PRODUCT_API_BASE_URL;
+    this.model = DEFAULT_MODEL;
+    // Get current locale from localStorage (default: it-IT)
+    this.locale = localStorage.getItem('marketplace_locale') || APP_DEFAULT_LOCALE;
+  }
+
+  /**
+   * Analyze product images and get structured data
+   * @param {File[]} images - Array of image files (1-10)
+   * @param {string} locale - Language locale (it-IT, fr-FR, es-ES, etc.) - defaults to current locale
+   * @returns {Promise<ProductAnalysis>}
+   */
+  async analyze(images, locale = this.locale) {
+    if (!images || images.length === 0) {
+      throw new Error('At least one image is required');
+    }
+
+    if (images.length > 10) {
+      throw new Error('Maximum 10 images allowed');
+    }
+
+    const formData = new FormData();
+    images.forEach(img => {
+      // Validate image
+      if (!this.isValidImage(img)) {
+        throw new Error(
+          `Invalid image: ${img.name}. Must be JPG, PNG, WebP, or HEIF and under 5MB`
+        );
+      }
+      formData.append('images', img);
+    });
+    formData.append('model', this.model);
+    formData.append('locale', locale);
+
+    return await this.call('analyze', formData);
+  }
+
+  /**
+   * Refine product analysis with user answers
+   * @param {Object} params - Refinement parameters
+   * @param {Object} params.previousAnalysis - Previous analysis result
+   * @param {Object} params.answers - User answers to clarification questions
+   * @param {string} params.locale - Language locale (e.g., "en-US")
+   * @param {number} params.totalQuestionsAsked - Total questions asked so far
+   * @param {number} params.roundNumber - Current refinement round
+   * @returns {Promise<ProductAnalysis>}
+   */
+  async refine({ previousAnalysis, answers, locale = this.locale, totalQuestionsAsked, roundNumber }) {
+    return await this.call('refine', {
+      previousAnalysis,
+      answers,
+      locale,
+      model: this.model,
+      totalQuestionsAsked,
+      roundNumber,
+    });
+  }
+
+  /**
+   * Regenerate a specific field
+   * @param {Object} productAnalysis - Current analysis
+   * @param {string} fieldName - Field to regenerate
+   * @returns {Promise<{fieldName: string, newValue: any}>}
+   */
+  async regenerate(productAnalysis, fieldName, locale = this.locale) {
+    return await this.call('regenerate-field', {
+      productAnalysis,
+      fieldName,
+      locale,
+      model: this.model,
+    });
+  }
+
+  /**
+   * Translate product fields to another language
+   * @param {Object} fields - Product fields to translate
+   * @param {string} fromLocale - Source locale
+   * @param {string} toLocale - Target locale
+   * @param {string} category - Product category
+   * @returns {Promise<Object>}
+   */
+  async translate(fields, fromLocale, toLocale, category) {
+    return await this.call('translate-fields', {
+      fields,
+      fromLocale,
+      toLocale,
+      category,
+      model: this.model,
+    });
+  }
+
+  /**
+   * Get similar product recommendation
+   * @param {Object} productAnalysis - Product analysis
+   * @returns {Promise<Object>}
+   */
+  async recommend(productAnalysis) {
+    return await this.call('recommended-product', {
+      productAnalysis,
+      model: this.model,
+    });
+  }
+
+  /**
+   * Internal API call method
+   * @private
+   */
+  async call(endpoint, payload) {
+    const isFormData = payload instanceof FormData;
+    const fullURL = `${this.baseURL}/${endpoint}`;
+
+    // Debug logging
+    console.log('🔍 [Product API] Calling:', fullURL);
+    console.log('📦 [Product API] Payload type:', isFormData ? 'FormData' : 'JSON');
+    console.log('🌐 [Product API] Base URL:', this.baseURL);
+
+    try {
+      const response = await fetch(fullURL, {
+        method: 'POST',
+        headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+        body: isFormData ? payload : JSON.stringify(payload),
+      });
+
+      console.log('📡 [Product API] Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        let errorMessage;
+        try {
+          const error = await response.json();
+          errorMessage =
+            error.error || error.message || `API call failed with status ${response.status}`;
+        } catch {
+          errorMessage = `API call failed with status ${response.status} - ${response.statusText}`;
+        }
+        console.error('❌ [Product API] Error response:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('✅ [Product API] Success:', data);
+      return data;
+    } catch (error) {
+      console.error(`❌ [Product API Error - ${endpoint}]:`, error.message);
+      console.error('Full error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate image file
+   * Note: Sharetribe only accepts PNG and JPEG formats
+   * @private
+   */
+  isValidImage(file) {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }
+}
+
+// Singleton instance
+const productApiInstance = new ProductAPI();
+
+/**
+ * Map Product API response to Sharetribe listing format
+ * @param {Object} productAnalysis - Product analysis from API
+ * @param {Object} config - Marketplace config
+ * @returns {Object} Sharetribe-compatible listing data
+ */
+export const mapProductToListingData = (productAnalysis, config) => {
+  const { fields, category, subcategory, calendarAvailability } = productAnalysis;
+
+  // Map to Sharetribe structure
+  const listingData = {
+    title: fields.title || 'Untitled',
+    description: fields.longDescription || fields.shortDescription || '',
+    publicData: {
+      category: category || 'Other',
+      subcategory: subcategory || '',
+      brand: fields.brand || '',
+      condition: fields.condition || 'Used',
+      // Add all other fields as custom extended data (excluding priceSuggestion)
+      ...Object.keys(fields).reduce((acc, key) => {
+        // Skip core fields that are already mapped and priceSuggestion
+        if (!['title', 'brand', 'condition', 'longDescription', 'priceSuggestion'].includes(key)) {
+          acc[`ai_${key}`] = fields[key];
+        }
+        return acc;
+      }, {}),
+    },
+    privateData: {
+      aiGenerated: true,
+      aiModel: 'gemini-2.5-flash',
+      aiConfidence: productAnalysis.confidence,
+      // Store priceSuggestion in privateData
+      ...(fields.priceSuggestion && { priceSuggestion: fields.priceSuggestion }),
+    },
+  };
+
+  // Parse price suggestion if available and use it to set listingData.price
+  if (fields.priceSuggestion) {
+    const priceMatch = fields.priceSuggestion.match(/\$?(\d+)-?(\d+)?/);
+    if (priceMatch) {
+      const minPrice = parseInt(priceMatch[1], 10);
+      // Sharetribe expects 'price' as a Money object with amount and currency
+      listingData.price = {
+        amount: minPrice * 100, // Convert to cents
+        currency: config?.currency || 'USD', // Get currency from config or default to USD
+      };
+    }
+  }
+
+  // Map calendar availability if present
+  if (calendarAvailability) {
+    listingData.availabilityPlan = {
+      type: 'availability-plan/time',
+      timezone: 'Etc/UTC',
+      entries: [],
+    };
+
+    if (calendarAvailability.startDate) {
+      listingData.publicData.availableFrom = calendarAvailability.startDate;
+    }
+
+    if (calendarAvailability.endDate) {
+      listingData.publicData.availableUntil = calendarAvailability.endDate;
+    }
+
+    if (calendarAvailability.unavailableDates?.length > 0) {
+      listingData.publicData.blockedDates = calendarAvailability.unavailableDates;
+    }
+  }
+
+  return listingData;
+};
+
+/**
+ * Map Sharetribe listing to Product API format (for editing)
+ * @param {Object} listing - Sharetribe listing
+ * @returns {Object} Product API compatible format
+ */
+export const mapListingToProductData = listing => {
+  const { title, description, publicData, privateData } = listing.attributes || {};
+
+  // Extract AI fields
+  const aiFields = {};
+  Object.keys(publicData || {}).forEach(key => {
+    if (key.startsWith('ai_')) {
+      aiFields[key.replace('ai_', '')] = publicData[key];
+    }
+  });
+
+  return {
+    category: publicData?.category || privateData?.aiCategory || '',
+    subcategory: publicData?.subcategory || privateData?.aiSubcategory || '',
+    confidence: privateData?.aiConfidence || 'medium',
+    locale: 'en-US', // Could be dynamic based on user settings
+    fields: {
+      title: title || '',
+      brand: publicData?.brand || '',
+      condition: publicData?.condition || '',
+      shortDescription: description?.substring(0, 200) || '',
+      longDescription: description || '',
+      ...aiFields,
+    },
+  };
+};
+
+/**
+ * Check if Product API is configured and available
+ * @returns {boolean}
+ */
+export const isProductAPIAvailable = () => {
+  return !!PRODUCT_API_BASE_URL;
+};
+
+/**
+ * Validate product analysis response
+ * @param {Object} analysis - Product analysis to validate
+ * @returns {boolean}
+ */
+export const isValidProductAnalysis = analysis => {
+  return (
+    analysis &&
+    typeof analysis === 'object' &&
+    analysis.category &&
+    analysis.fields &&
+    analysis.fields.title
+  );
+};
+
+// Export singleton instance
+export default productApiInstance;

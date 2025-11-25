@@ -27,7 +27,6 @@ import {
   getProcess,
   isBookingProcess,
   NEGOTIATION_PROCESS_NAME,
-  OFFER,
 } from '../../transactions/transaction';
 
 import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -51,7 +50,6 @@ import FooterContainer from '../../containers/FooterContainer/FooterContainer';
 
 import { getStateData } from './TransactionPage.stateData';
 import ActionButtons from './ActionButtons/ActionButtons';
-import RequestQuote from './RequestQuote/RequestQuote';
 import Offer from './Offer/Offer';
 import ActivityFeed from './ActivityFeed/ActivityFeed';
 import DisputeModal from './DisputeModal/DisputeModal';
@@ -553,12 +551,6 @@ export const TransactionPageComponent = props => {
   ) : (
     <UserDisplayName user={customer} intl={intl} />
   );
-  const onMakeOffer = handleNavigateToMakeOfferPage({
-    listing,
-    transaction,
-    history,
-    routes: routeConfiguration,
-  });
 
   const stateData = isDataAvailable
     ? getStateData(
@@ -575,7 +567,6 @@ export const TransactionPageComponent = props => {
           onOpenRequestChangesModal,
           onOpenMakeCounterOfferModal,
           onCheckoutRedirect: handleSubmitOrderRequest,
-          onMakeOfferFromRequest: onMakeOffer,
           intl,
         },
         process
@@ -629,9 +620,13 @@ export const TransactionPageComponent = props => {
     isBookingProcess(stateData.processName) &&
     process?.hasPassedState(process?.states?.ACCEPTED, transaction);
 
+  const onMakeOffer = handleNavigateToMakeOfferPage({
+    listing,
+    transaction,
+    history,
+    routes: routeConfiguration,
+  });
   const isNegotiationProcess = processName === NEGOTIATION_PROCESS_NAME;
-  const isRegularNegotiation =
-    isNegotiationProcess && transaction?.attributes?.protectedData?.unitType === OFFER;
 
   // TransactionPanel is presentational component
   // that currently handles showing everything inside layout's main view area.
@@ -686,20 +681,11 @@ export const TransactionPageComponent = props => {
           fetchMessagesInProgress={fetchMessagesInProgress}
         />
       }
-      requestQuote={
-        <RequestQuote
-          transaction={transaction}
-          isNegotiationProcess={isNegotiationProcess}
-          transactionRole={transactionRole}
-          intl={intl}
-        />
-      }
       offer={
         <Offer
           transaction={transaction}
           isNegotiationProcess={isNegotiationProcess}
           transactionRole={transactionRole}
-          isRegularNegotiation={isRegularNegotiation}
           intl={intl}
         />
       }
@@ -760,17 +746,18 @@ export const TransactionPageComponent = props => {
     (process?.transitions?.CUSTOMER_MAKE_COUNTER_OFFER ||
       process?.transitions?.PROVIDER_MAKE_COUNTER_OFFER);
 
-  const pageHeading = isDataAvailable
-    ? intl.formatMessage(
-        {
-          id: `TransactionPage.${processName}.${transactionRole}.${stateData.processState}.title`,
-        },
-        {
-          customerName: customer?.attributes.profile.displayName,
-          providerName: provider?.attributes.profile.displayName,
-        }
-      )
-    : null;
+  const pageHeading =
+    processName != null
+      ? intl.formatMessage(
+          {
+            id: `TransactionPage.${processName}.${transactionRole}.${stateData.processState}.title`,
+          },
+          {
+            customerName: customer?.attributes.profile.displayName,
+            providerName: provider?.attributes.profile.displayName,
+          }
+        )
+      : null;
 
   return (
     <Page

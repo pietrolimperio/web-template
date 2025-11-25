@@ -30,16 +30,18 @@ import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck.js';
 import { isScrollingDisabled } from '../../ducks/ui.duck.js';
 
 // Import shared components
-import { H3, ErrorMessage, NamedRedirect, Page, TopbarSimplified } from '../../components/index.js';
+import { H3, NamedRedirect, Page } from '../../components/index.js';
 
 // Import modules from this directory
+import CustomTopbar from './CustomTopbar.js';
 import HeadingDetails from './HeadingDetails.js';
 import DetailsSideCard from './DetailsSideCard/DetailsSideCard.js';
+import ErrorMessage from './ErrorMessage/ErrorMessage.js';
 import MobileListingImage from './MobileListingImage/MobileListingImage.js';
 import LocationDetails from './LocationDetails/LocationDetails.js';
 import MakeOfferForm from './MakeOfferForm/MakeOfferForm.js';
 
-import { makeOffer } from './MakeOfferPage.duck.js';
+import { makeOffer, sendMessage } from './MakeOfferPage.duck.js';
 
 import css from './MakeOfferPage.module.css';
 
@@ -159,7 +161,6 @@ const MakeOfferPageComponent = props => {
   const listingTypeConfig = listingTypeConfigs.find(conf => conf.listingType === listingType);
   const showPrice = displayPrice(listingTypeConfig);
   const showListingImage = requireListingImage(listingTypeConfig);
-  const showLocation = publicData?.unitType !== 'offer';
 
   const stripeConnected = currentUser?.attributes?.stripeConnected;
   const stripeAccountData = stripeConnected ? getStripeAccountData(stripeAccount) : null;
@@ -171,7 +172,7 @@ const MakeOfferPageComponent = props => {
 
   return (
     <Page title={pageTitle} scrollingDisabled={scrollingDisabled}>
-      <TopbarSimplified />
+      <CustomTopbar intl={intl} linkToExternalSite={config?.topbar?.logoLink} />
       <div className={css.contentContainer}>
         <MobileListingImage
           listingTitle={listingTitle}
@@ -195,7 +196,7 @@ const MakeOfferPageComponent = props => {
           </div>
 
           <LocationDetails
-            showLocation={showLocation}
+            showLocation={true}
             listingLocation={publicData?.location}
             intl={intl}
             sectionHeadingClassName={css.locationHeading}
@@ -308,7 +309,7 @@ const EnhancedMakeOfferPage = props => {
     />
   ) : (
     <Page title={pageTitle} scrollingDisabled={scrollingDisabled}>
-      <TopbarSimplified />
+      <CustomTopbar intl={intl} linkToExternalSite={config?.topbar?.logoLink} />
     </Page>
   );
 };
@@ -363,8 +364,10 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => ({
-  onMakeOffer: (params, processAlias, transactionId, isPrivileged) =>
-    dispatch(makeOffer(params, processAlias, transactionId, isPrivileged)),
+  dispatch,
+  onMakeOffer: (params, processAlias, transactionId, transitionName, isPrivileged) =>
+    dispatch(makeOffer(params, processAlias, transactionId, transitionName, isPrivileged)),
+  onSendMessage: params => dispatch(sendMessage(params)),
 });
 
 const MakeOfferPage = compose(

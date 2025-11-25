@@ -14,5 +14,4 @@ build
 .env
 npm-debug.log
 yarn-error.log
-
-launch.json
+.vscode

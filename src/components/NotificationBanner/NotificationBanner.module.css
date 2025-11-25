@@ -1,0 +1,88 @@
+/* Notification Banner */
+.root {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 9999;
+  transform: translateY(-200%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.root.visible {
+  transform: translateY(0);
+}
+
+.root.exiting {
+  transform: translateY(-200%);
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  min-height: 45px;
+  border-radius: 50px;
+  border: none;
+}
+
+.textContent {
+  flex: 1;
+  text-align: center;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.message {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: white;
+  opacity: 0.95;
+}
+
+/* Success variant (default) */
+.root.success .content {
+  background-color: var(--marketplaceColor);
+}
+
+/* Info variant */
+.root.info .content {
+  background-color: var(--marketplaceColor);
+}
+
+/* Error variant */
+.root.error .content {
+  background-color: #d32f2f;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .root {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .content {
+    padding: 12px 18px;
+    min-height: 40px;
+    border-radius: 40px;
+  }
+
+  .title {
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+
+  .message {
+    font-size: 13px;
+  }
+}

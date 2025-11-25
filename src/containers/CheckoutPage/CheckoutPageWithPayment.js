@@ -18,7 +18,7 @@ import {
 } from '../../transactions/transaction';
 
 // Import shared components
-import { H3, H4, NamedLink, OrderBreakdown, Page, TopbarSimplified } from '../../components';
+import { H3, H4, NamedLink, OrderBreakdown, Page } from '../../components';
 
 import {
   bookingDatesMaybe,
@@ -34,6 +34,7 @@ import {
 } from './CheckoutPageTransactionHelpers.js';
 import { getErrorMessages } from './ErrorMessages';
 
+import CustomTopbar from './CustomTopbar';
 import StripePaymentForm from './StripePaymentForm/StripePaymentForm';
 import DetailsSideCard from './DetailsSideCard';
 import MobileListingImage from './MobileListingImage';
@@ -547,7 +548,7 @@ export const CheckoutPageWithPayment = props => {
   if (!isStripeCompatibleCurrency) {
     return (
       <Page title={title} scrollingDisabled={scrollingDisabled}>
-        <TopbarSimplified />
+        <CustomTopbar intl={intl} linkToExternalSite={config?.topbar?.logoLink} />
         <div className={css.contentContainer}>
           <section className={css.incompatibleCurrency}>
             <H4 as="h1" className={css.heading}>
@@ -561,7 +562,7 @@ export const CheckoutPageWithPayment = props => {
 
   return (
     <Page title={title} scrollingDisabled={scrollingDisabled}>
-      <TopbarSimplified />
+      <CustomTopbar intl={intl} linkToExternalSite={config?.topbar?.logoLink} />
       <div className={css.contentContainer}>
         <MobileListingImage
           listingTitle={listingTitle}

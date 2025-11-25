@@ -35,7 +35,6 @@ export const Dropdown_DateRangePicker = {
         ? false
         : start.getTime() < disabledDay.getTime() && disabledDay.getTime() < end.getTime();
     },
-    hasFocusOnMount: false,
   },
   group: 'inputs',
 };
@@ -63,7 +62,6 @@ export const Dropdown_SingleDatePicker = {
         ? false
         : start.getTime() < disabledDay.getTime() && disabledDay.getTime() < end.getTime();
     },
-    hasFocusOnMount: false,
   },
   group: 'inputs',
 };
@@ -99,7 +97,6 @@ export const Plain_SingleDate = {
         ? false
         : start.getTime() < disabledDay.getTime() && disabledDay.getTime() < end.getTime();
     },
-    hasFocusOnMount: false,
   },
   group: 'inputs',
 };
@@ -134,7 +131,6 @@ export const Plain_DateRange = {
         ? false
         : start.getTime() < disabledDay.getTime() && disabledDay.getTime() < end.getTime();
     },
-    hasFocusOnMount: false,
   },
   group: 'inputs',
 };

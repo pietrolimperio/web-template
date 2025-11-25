@@ -114,7 +114,6 @@ class PageComponent extends Component {
       twitterHandle,
       twitterImages,
       updated,
-      noIndex,
       config,
       routeConfiguration,
     } = this.props;
@@ -179,7 +178,6 @@ class PageComponent extends Component {
         updated,
         url: canonicalUrl,
         locale: intl.locale,
-        noIndex,
       },
       config
     );

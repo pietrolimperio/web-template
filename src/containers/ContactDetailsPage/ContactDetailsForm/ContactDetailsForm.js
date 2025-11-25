@@ -86,7 +86,6 @@ class ContactDetailsFormComponent extends Component {
     super(props);
     this.state = { showVerificationEmailSentMessage: false, showResetPasswordMessage: false };
     this.emailSentTimeoutId = null;
-    this.restartTimeoutId = null;
     this.handleResendVerificationEmail = this.handleResendVerificationEmail.bind(this);
     this.handleResetPassword = this.handleResetPassword.bind(this);
     this.submittedValues = {};
@@ -94,7 +93,6 @@ class ContactDetailsFormComponent extends Component {
 
   componentWillUnmount() {
     window.clearTimeout(this.emailSentTimeoutId);
-    window.clearTimeout(this.restartTimeoutId);
   }
 
   handleResendVerificationEmail() {
@@ -365,11 +363,7 @@ class ContactDetailsFormComponent extends Component {
               className={classes}
               onSubmit={e => {
                 this.submittedValues = values;
-                handleSubmit(e).then(() => {
-                  this.restartTimeoutId = setTimeout(() => {
-                    fieldRenderProps.form.restart({ email, phoneNumber });
-                  }, 1000);
-                });
+                handleSubmit(e);
               }}
             >
               <div className={css.contactDetailsSection}>

@@ -19,7 +19,7 @@ import {
 
 import CheckoutPageWithPayment from './CheckoutPageWithPayment';
 import CheckoutPageWithInquiryProcess from './CheckoutPageWithInquiryProcess';
-import checkoutPageReducer, { setInitialValues } from './CheckoutPage.duck';
+import checkoutPageReducer, { SET_INITIAL_VALUES, setInitialValues } from './CheckoutPage.duck';
 
 const { Money } = sdkTypes;
 const { screen } = testingLibrary;
@@ -381,7 +381,7 @@ describe('CheckoutPage', () => {
       );
       const orderData = { quantity: 3, deliveryMethod: 'shipping' };
       const expectedAction = {
-        type: 'CheckoutPage/setInitialValues',
+        type: SET_INITIAL_VALUES,
         payload: { listing, orderData },
       };
 
@@ -408,7 +408,7 @@ describe('CheckoutPage', () => {
         expect(checkoutPageReducer(undefined, {})).toEqual(initialValues);
       });
 
-      it('should handle setInitialValues', () => {
+      it('should handle SET_INITIAL_VALUES', () => {
         const listing = createListing(
           '00000000-0000-0000-0000-000000000000',
           {},
@@ -419,9 +419,7 @@ describe('CheckoutPage', () => {
         const orderData = { quantity: 3, deliveryMethod: 'shipping' };
         const payload = { listing, orderData };
         const expected = { ...initialValues, ...payload };
-        expect(checkoutPageReducer({}, { type: 'CheckoutPage/setInitialValues', payload })).toEqual(
-          expected
-        );
+        expect(checkoutPageReducer({}, { type: SET_INITIAL_VALUES, payload })).toEqual(expected);
       });
     });
   });

@@ -12,6 +12,7 @@ import { NamedRedirect } from '../components';
 
 const pageDataLoadingAPI = getPageDataLoadingAPI();
 
+const AIListingCreationPage = loadable(() => import(/* webpackChunkName: "AIListingCreationPage" */ '../containers/AIListingCreationPage/AIListingCreationPage'));
 const AuthenticationPage = loadable(() => import(/* webpackChunkName: "AuthenticationPage" */ '../containers/AuthenticationPage/AuthenticationPage'));
 const CheckoutPage = loadable(() => import(/* webpackChunkName: "CheckoutPage" */ '../containers/CheckoutPage/CheckoutPage'));
 const CMSPage = loadable(() => import(/* webpackChunkName: "CMSPage" */ '../containers/CMSPage/CMSPage'));
@@ -21,17 +22,21 @@ const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailV
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const MakeOfferPage = loadable(() => import(/* webpackChunkName: "MakeOfferPage" */ '../containers/MakeOfferPage/MakeOfferPage'));
 const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
+const NewLandingPage = loadable(() => import(/* webpackChunkName: "NewLandingPage" */ '../containers/NewLandingPage/NewLandingPage'));
+const NewLoginPage = loadable(() => import(/* webpackChunkName: "NewLoginPage" */ '../containers/NewLoginPage/NewLoginPage'));
+const NewSignupPage = loadable(() => import(/* webpackChunkName: "NewSignupPage" */ '../containers/NewSignupPage/NewSignupPage'));
 const ListingPageCoverPhoto = loadable(() => import(/* webpackChunkName: "ListingPageCoverPhoto" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCoverPhoto'));
 const ListingPageCarousel = loadable(() => import(/* webpackChunkName: "ListingPageCarousel" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCarousel'));
+const ProductPage = loadable(() => import(/* webpackChunkName: "ProductPage" */ '../containers/ProductPage/ProductPage'));
 const ManageListingsPage = loadable(() => import(/* webpackChunkName: "ManageListingsPage" */ '../containers/ManageListingsPage/ManageListingsPage'));
 const PasswordChangePage = loadable(() => import(/* webpackChunkName: "PasswordChangePage" */ '../containers/PasswordChangePage/PasswordChangePage'));
 const PasswordRecoveryPage = loadable(() => import(/* webpackChunkName: "PasswordRecoveryPage" */ '../containers/PasswordRecoveryPage/PasswordRecoveryPage'));
 const PasswordResetPage = loadable(() => import(/* webpackChunkName: "PasswordResetPage" */ '../containers/PasswordResetPage/PasswordResetPage'));
 const PaymentMethodsPage = loadable(() => import(/* webpackChunkName: "PaymentMethodsPage" */ '../containers/PaymentMethodsPage/PaymentMethodsPage'));
+const PreviewListingPage = loadable(() => import(/* webpackChunkName: "PreviewListingPage" */ '../containers/PreviewListingPage/PreviewListingPage'));
 const PrivacyPolicyPage = loadable(() => import(/* webpackChunkName: "PrivacyPolicyPage" */ '../containers/PrivacyPolicyPage/PrivacyPolicyPage'));
 const ProfilePage = loadable(() => import(/* webpackChunkName: "ProfilePage" */ '../containers/ProfilePage/ProfilePage'));
 const ProfileSettingsPage = loadable(() => import(/* webpackChunkName: "ProfileSettingsPage" */ '../containers/ProfileSettingsPage/ProfileSettingsPage'));
-const RequestQuotePage = loadable(() => import(/* webpackChunkName: "RequestQuotePage" */ '../containers/RequestQuotePage/RequestQuotePage'));
 const SearchPageWithMap = loadable(() => import(/* webpackChunkName: "SearchPageWithMap" */ /* webpackPrefetch: true */  '../containers/SearchPage/SearchPageWithMap'));
 const SearchPageWithGrid = loadable(() => import(/* webpackChunkName: "SearchPageWithGrid" */ /* webpackPrefetch: true */  '../containers/SearchPage/SearchPageWithGrid'));
 const StripePayoutPage = loadable(() => import(/* webpackChunkName: "StripePayoutPage" */ '../containers/StripePayoutPage/StripePayoutPage'));
@@ -82,6 +87,12 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       loadData: pageDataLoadingAPI.LandingPage.loadData,
     },
     {
+      path: '/new-landing',
+      name: 'NewLandingPage',
+      component: NewLandingPage,
+      loadData: pageDataLoadingAPI.NewLandingPage.loadData,
+    },
+    {
       path: '/p/:pageId',
       name: 'CMSPage',
       component: CMSPage,
@@ -109,6 +120,25 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       component: RedirectToLandingPage,
     },
     {
+      path: '/l/create-preview/:id',
+      name: 'PreviewListingPage',
+      auth: true,
+      component: PreviewListingPage,
+    },
+    {
+      path: '/l/create-preview/:id/:returnURLType',
+      name: 'PreviewListingStripeOnboardingPage',
+      auth: true,
+      component: PreviewListingPage,
+    },
+    {
+      path: '/p/:slug/:id',
+      name: 'ProductPage',
+      ...authForPrivateMarketplace,
+      component: ProductPage,
+      loadData: pageDataLoadingAPI.ProductPage.loadData,
+    },
+    {
       path: '/l/:slug/:id',
       name: 'ListingPage',
       ...authForPrivateMarketplace,
@@ -121,14 +151,6 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       auth: true,
       component: MakeOfferPage,
       loadData: pageDataLoadingAPI.MakeOfferPage.loadData,
-    },
-    {
-      path: '/l/:slug/:id/request-quote',
-      name: 'RequestQuotePage',
-      auth: true,
-      component: RequestQuotePage,
-      extraProps: { mode: 'request-quote' },
-      loadData: pageDataLoadingAPI.RequestQuotePage.loadData,
     },
     {
       path: '/l/:slug/:id/checkout',
@@ -144,6 +166,14 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       authPage: 'LoginPage',
       component: ListingPage,
       loadData: pageDataLoadingAPI.ListingPage.loadData,
+    },
+    {
+      path: '/l/create',
+      name: 'AIListingCreationPage',
+      auth: true,
+      authPage: 'LoginPage',
+      component: AIListingCreationPage,
+      loadData: pageDataLoadingAPI.AIListingCreationPage.loadData,
     },
     {
       path: '/l/new',
@@ -213,12 +243,22 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
     {
       path: '/login',
       name: 'LoginPage',
+      component: NewLoginPage,
+    },
+    {
+      path: '/old-login',
+      name: 'OldLoginPage',
       component: AuthenticationPage,
       extraProps: { tab: 'login' },
     },
     {
       path: '/signup',
       name: 'SignupPage',
+      component: NewSignupPage,
+    },
+    {
+      path: '/old-signup',
+      name: 'OldSignupPage',
       component: AuthenticationPage,
       extraProps: { tab: 'signup' },
       loadData: pageDataLoadingAPI.AuthenticationPage.loadData,

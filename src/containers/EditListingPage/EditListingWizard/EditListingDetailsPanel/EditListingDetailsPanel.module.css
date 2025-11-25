@@ -11,3 +11,90 @@
 .form {
   flex-grow: 1;
 }
+
+/* AI Integration Styles */
+.aiOption {
+  background-color: var(--matterColorLight);
+  border: 2px solid var(--marketplaceColor);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.aiOption p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: var(--matterColor);
+}
+
+.aiButtons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.skipButton {
+  background: transparent;
+  border: none;
+  color: var(--matterColor);
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 8px 16px;
+}
+
+.skipButton:hover {
+  color: var(--matterColorDark);
+}
+
+.skipAISection {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.aiNotice {
+  background-color: #e8f4ff;
+  border: 1px solid var(--marketplaceColor);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.aiNotice p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--matterColor);
+}
+
+.aiNotice p:last-child {
+  margin-bottom: 0;
+}
+
+.aiWarning {
+  color: #856404;
+  font-size: 13px !important;
+}
+
+.aiError {
+  background-color: #ffebee;
+  border: 1px solid #ef5350;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.aiError p {
+  margin: 0;
+  color: #c62828;
+  font-size: 14px;
+}
+
+/* Mobile responsiveness */
+@media (--viewportMedium) {
+  .aiOption {
+    padding: 32px;
+  }
+}

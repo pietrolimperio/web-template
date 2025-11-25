@@ -90,6 +90,8 @@ class GeocoderMapbox {
    * Search places with the given name.
    *
    * @param {String} search query for place names
+   * @param {String} countryLimit ISO country code for limiting results
+   * @param {String} locale language code for results
    *
    * @return {Promise<{ search: String, predictions: Array<Object>}>}
    * results of the geocoding, should have the original search query
@@ -97,22 +99,43 @@ class GeocoderMapbox {
    * only relevant for the `getPlaceDetails` function below.
    */
   getPlacePredictions(search, countryLimit, locale) {
-    const limitCountriesMaybe = countryLimit ? { countries: countryLimit } : {};
+    const client = this.getClient();
 
-    return this.getClient()
-      .geocoding.forwardGeocode({
+    // Build query parameters - country must be ISO 3166-1 alpha-2 code (e.g., 'it', not 'it-IT')
+    const queryParams = {
+      limit: 5,
+      types: 'address',
+      proximity: 'ip',
+    };
+
+    // Add country if provided (e.g., 'IT' -> 'it')
+    if (countryLimit) {
+      queryParams.country = countryLimit.toLowerCase();
+    }
+
+    // Add language if provided (can be full locale like 'it-IT')
+    if (locale) {
+      queryParams.language = locale;
+    }
+
+    // Create custom request to bypass SDK validation for proximity=ip
+    // The SDK's forwardGeocode validates proximity as coordinates, but the REST API supports 'ip'
+    // Note: Don't use encodeURIComponent here - the SDK handles encoding automatically
+    const request = client.createRequest({
+      method: 'GET',
+      path: '/geocoding/v5/mapbox.places/:query.json',
+      params: {
         query: search,
-        limit: 5,
-        ...limitCountriesMaybe,
-        language: [locale],
-      })
-      .send()
-      .then(response => {
-        return {
-          search,
-          predictions: response.body.features,
-        };
-      });
+      },
+      query: queryParams,
+    });
+
+    return request.send().then(response => {
+      return {
+        search,
+        predictions: response.body.features,
+      };
+    });
   }
 
   /**
@@ -156,11 +179,50 @@ class GeocoderMapbox {
       return Promise.resolve(prediction.predictionPlace);
     }
 
-    return Promise.resolve({
+    // Extract detailed address components from Mapbox response
+    const extractAddressComponents = prediction => {
+      const context = prediction.context || [];
+
+      // Extract from context array
+      const postalCode = context.find(c => c.id?.startsWith('postcode.'))?.text || '';
+      const city = context.find(c => c.id?.startsWith('place.'))?.text || '';
+      const region = context.find(c => c.id?.startsWith('region.'));
+      const country = context.find(c => c.id?.startsWith('country.'))?.text || '';
+
+      // Extract state/province code (last 2 characters of short_code, e.g., "IT-MB" -> "MB")
+      const state = region?.short_code ? region.short_code.split('-').pop() : '';
+
+      // Extract street name and number
+      const street = prediction.text || '';
+      const streetNumber = prediction.address || '';
+
+      return {
+        street,
+        streetNumber,
+        postalCode,
+        city,
+        state,
+        country,
+      };
+    };
+
+    const addressComponents = extractAddressComponents(prediction);
+    const origin = placeOrigin(prediction);
+
+    const placeDetails = {
       address: this.getPredictionAddress(prediction),
-      origin: placeOrigin(prediction),
+      origin: origin,
       bounds: placeBounds(prediction),
-    });
+      // Add detailed address components for form pre-filling
+      street: addressComponents.street,
+      streetNumber: addressComponents.streetNumber,
+      postalCode: addressComponents.postalCode,
+      city: addressComponents.city,
+      state: addressComponents.state,
+      country: addressComponents.country,
+    };
+
+    return Promise.resolve(placeDetails);
   }
 }
 

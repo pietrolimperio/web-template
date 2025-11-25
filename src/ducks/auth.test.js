@@ -1,22 +1,61 @@
 import * as log from '../util/log';
 import { storableError } from '../util/errors';
 import { createCurrentUser } from '../util/testData';
-import configureStore from '../store';
-import { clearCurrentUser } from './user.duck';
-import reducer, { authenticationInProgress, login, logout, signup } from './auth.duck';
+import {
+  clearCurrentUser,
+  currentUserShowRequest,
+  currentUserShowSuccess,
+  fetchCurrentUserNotificationsRequest,
+  fetchCurrentUserNotificationsSuccess,
+} from './user.duck';
+import reducer, {
+  authenticationInProgress,
+  authInfoRequest,
+  authInfoSuccess,
+  login,
+  loginRequest,
+  loginSuccess,
+  loginError,
+  logout,
+  logoutRequest,
+  logoutSuccess,
+  logoutError,
+  signup,
+  signupRequest,
+  signupSuccess,
+  signupError,
+  userLogout,
+} from './auth.duck';
 
-const logger = actions => () => {
-  return next => action => {
-    actions.push(action);
-    // Call the next dispatch method in the middleware chain.
-    return next(action);
-  };
+// Create a dispatch function that correctly calls the thunk functions
+// with itself
+const createFakeDispatch = (getState, sdk) => {
+  const dispatch = jest.fn(actionOrFn => {
+    if (typeof actionOrFn === 'function') {
+      return actionOrFn(dispatch, getState, sdk);
+    }
+    return actionOrFn;
+  });
+  return dispatch;
+};
+
+// Get the dispatched actions from the fake dispatch function
+const dispatchedActions = fakeDispatch => {
+  return fakeDispatch.mock.calls.reduce((actions, args) => {
+    if (Array.isArray(args) && args.length === 1) {
+      const action = args[0];
+      return typeof action === 'object' ? actions.concat([action]) : actions;
+    } else {
+      console.error('fake dispatch invalid call args:', args);
+      throw new Error('Fake dispatch function should only be called with a single argument');
+    }
+  }, []);
 };
 
 describe('auth duck', () => {
   describe('reducer', () => {
     it('should be logged out with no errors by default', () => {
-      const state = reducer(undefined, { type: '@@INIT' });
+      const state = reducer();
       expect(state.isAuthenticated).toEqual(false);
       expect(state.authInfoLoaded).toEqual(false);
       expect(state.loginError).toBeNull();
@@ -29,42 +68,29 @@ describe('auth duck', () => {
     });
 
     it('should login successfully', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const loginRequestState = reducer(initialState, {
-        type: 'auth/login/pending',
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      const initialState = reducer();
+      const loginRequestState = reducer(initialState, loginRequest());
       expect(loginRequestState.isAuthenticated).toEqual(false);
       expect(loginRequestState.loginError).toBeNull();
       expect(loginRequestState.loginInProgress).toEqual(true);
       expect(authenticationInProgress({ auth: loginRequestState })).toEqual(true);
 
-      const loginSuccessState = reducer(loginRequestState, {
-        type: 'auth/login/fulfilled',
-        payload: { username: 'test', password: 'test' },
-      });
+      const loginSuccessState = reducer(loginRequestState, loginSuccess());
       expect(loginSuccessState.isAuthenticated).toEqual(true);
       expect(loginSuccessState.loginError).toBeNull();
       expect(loginSuccessState.loginInProgress).toEqual(false);
     });
 
     it('should handle failed login', () => {
-      let state = reducer(undefined, { type: '@@INIT' });
-      state = reducer(state, {
-        type: 'auth/login/pending',
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      let state = reducer();
+      state = reducer(state, loginRequest());
       expect(state.isAuthenticated).toEqual(false);
       expect(state.loginError).toBeNull();
       expect(state.loginInProgress).toEqual(true);
       expect(authenticationInProgress({ auth: state })).toEqual(true);
 
       const error = new Error('test error');
-      state = reducer(state, {
-        type: 'auth/login/rejected',
-        payload: error,
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      state = reducer(state, loginError(error));
       expect(state.isAuthenticated).toEqual(false);
       expect(state.loginError).toEqual(error);
       expect(state.loginInProgress).toEqual(false);
@@ -72,92 +98,67 @@ describe('auth duck', () => {
     });
 
     it('should login and logout properly', () => {
-      let state = reducer(undefined, { type: '@@INIT' });
+      let state = reducer();
       expect(state.isAuthenticated).toEqual(false);
       expect(authenticationInProgress({ auth: state })).toEqual(false);
 
       // request login
-      state = reducer(state, {
-        type: 'auth/login/pending',
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      state = reducer(state, loginRequest());
       expect(authenticationInProgress({ auth: state })).toEqual(true);
 
       // login successful
-      state = reducer(state, {
-        type: 'auth/login/fulfilled',
-        payload: { username: 'test', password: 'test' },
-      });
+      state = reducer(state, loginSuccess());
       expect(state.isAuthenticated).toEqual(true);
       expect(authenticationInProgress({ auth: state })).toEqual(false);
 
       // request logout
-      state = reducer(state, { type: 'auth/logout/pending' });
+      state = reducer(state, logoutRequest());
       expect(state.isAuthenticated).toEqual(true);
       expect(authenticationInProgress({ auth: state })).toEqual(true);
 
       // logout successful
-      state = reducer(state, { type: 'auth/logout/fulfilled', payload: true });
+      state = reducer(state, logoutSuccess());
       expect(state.isAuthenticated).toEqual(false);
       expect(authenticationInProgress({ auth: state })).toEqual(false);
     });
 
     it('should signup successfully', () => {
-      let state = reducer(undefined, { type: '@@INIT' });
+      let state = reducer();
 
       // request signup
-      state = reducer(state, {
-        type: 'auth/signup/pending',
-        meta: { arg: { email: 'test@example.com', password: 'test' } },
-      });
+      state = reducer(state, signupRequest());
       expect(state.signupInProgress).toEqual(true);
       expect(authenticationInProgress({ auth: state })).toEqual(true);
 
       // signup successful
-      state = reducer(state, {
-        type: 'auth/signup/fulfilled',
-        payload: { email: 'test@example.com', password: 'test' },
-      });
+      state = reducer(state, signupSuccess());
       expect(state.signupInProgress).toEqual(false);
       expect(authenticationInProgress({ auth: state })).toEqual(false);
     });
 
     it('should clear signup error when logging in', () => {
-      let state = reducer(undefined, { type: '@@INIT' });
+      let state = reducer();
 
       // request signup
-      state = reducer(state, {
-        type: 'auth/signup/pending',
-        meta: { arg: { email: 'test@example.com', password: 'test' } },
-      });
+      state = reducer(state, signupRequest());
       expect(state.signupInProgress).toEqual(true);
       expect(authenticationInProgress({ auth: state })).toEqual(true);
 
       // signup error
       const error = new Error('test signup error');
-      state = reducer(state, {
-        type: 'auth/signup/rejected',
-        payload: error,
-        meta: { arg: { email: 'test@example.com', password: 'test' } },
-      });
+      state = reducer(state, signupError(error));
       expect(state.signupInProgress).toEqual(false);
       expect(authenticationInProgress({ auth: state })).toEqual(false);
       expect(state.signupError).toEqual(error);
       expect(state.isAuthenticated).toEqual(false);
 
       // login request
-      state = reducer(state, {
-        type: 'auth/login/pending',
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      state = reducer(state, loginRequest());
       expect(authenticationInProgress({ auth: state })).toEqual(true);
       expect(state.isAuthenticated).toEqual(false);
 
       // login successful
-      state = reducer(state, {
-        type: 'auth/login/fulfilled',
-        payload: { username: 'test', password: 'test' },
-      });
+      state = reducer(state, loginSuccess());
       expect(authenticationInProgress({ auth: state })).toEqual(false);
       expect(state.isAuthenticated).toEqual(true);
       expect(state.signupError).toBeNull();
@@ -165,36 +166,27 @@ describe('auth duck', () => {
 
     it('should set initial state for unauthenticated users', () => {
       const authInfoLoggedOut = {};
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const initialState = reducer();
       expect(initialState.authInfoLoaded).toEqual(false);
-      const state = reducer(initialState, {
-        type: 'auth/authInfo/fulfilled',
-        payload: authInfoLoggedOut,
-      });
+      const state = reducer(initialState, authInfoSuccess(authInfoLoggedOut));
       expect(state.authInfoLoaded).toEqual(true);
       expect(state.isAuthenticated).toEqual(false);
     });
 
     it('should set initial state for anonymous users', () => {
       const authInfoAnonymous = { isAnonymous: true };
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const initialState = reducer();
       expect(initialState.authInfoLoaded).toEqual(false);
-      const state = reducer(initialState, {
-        type: 'auth/authInfo/fulfilled',
-        payload: authInfoAnonymous,
-      });
+      const state = reducer(initialState, authInfoSuccess(authInfoAnonymous));
       expect(state.authInfoLoaded).toEqual(true);
       expect(state.isAuthenticated).toEqual(false);
     });
 
     it('should set initial state for authenticated users', () => {
       const authInfoLoggedIn = { isAnonymous: false };
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const initialState = reducer();
       expect(initialState.authInfoLoaded).toEqual(false);
-      const state = reducer(initialState, {
-        type: 'auth/authInfo/fulfilled',
-        payload: authInfoLoggedIn,
-      });
+      const state = reducer(initialState, authInfoSuccess(authInfoLoggedIn));
       expect(state.authInfoLoaded).toEqual(true);
       expect(state.isAuthenticated).toEqual(true);
     });
@@ -202,8 +194,9 @@ describe('auth duck', () => {
 
   describe('login thunk', () => {
     it('should dispatch success and fetch current user', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const fakeCurrentUser = createCurrentUser('test-user');
+      const initialState = reducer();
+      const getState = () => ({ auth: initialState });
+      const fakeCurrentUser = createCurrentUser({ id: 'test-user' });
       const fakeCurrentUserResponse = { data: { data: fakeCurrentUser, include: [] } };
       const fakeTransactionsResponse = { data: { data: [], include: [] } };
       const sdk = {
@@ -212,79 +205,44 @@ describe('auth duck', () => {
         currentUser: { show: jest.fn(() => Promise.resolve(fakeCurrentUserResponse)) },
         transactions: { query: jest.fn(() => Promise.resolve(fakeTransactionsResponse)) },
       };
-      let actions = [];
-      const store = configureStore({
-        initialState: {
-          auth: initialState,
-          user: { currentUserHasListings: true }, // Set to true so fetchCurrentUserHasListings won't be dispatched
-        },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+      const dispatch = createFakeDispatch(getState, sdk);
       const username = 'x.x@example.com';
       const password = 'pass';
 
       return login(username, password)(dispatch, getState, sdk).then(() => {
         expect(sdk.login.mock.calls).toEqual([[{ username, password }]]);
-
-        // Check that the expected action types are present
-        expect(actions[0].type).toBe('auth/login/pending');
-        expect(actions[0].meta.arg).toEqual({ username, password });
-
-        expect(actions[1].type).toEqual('user/fetchCurrentUser/pending');
-        expect(actions[2].type).toEqual('user/fetchCurrentUserNotifications/pending');
-        expect(actions[3].type).toBe('auth/authInfo/pending');
-        expect(actions[4].type).toBe('auth/authInfo/fulfilled');
-        expect(actions[5].type).toEqual('user/fetchCurrentUser/fulfilled');
-        expect(actions[5].payload).toEqual(fakeCurrentUser);
-
-        expect(actions[6].type).toEqual('user/fetchCurrentUserNotifications/fulfilled');
-        expect(actions[7].type).toBe('auth/login/fulfilled');
+        expect(dispatchedActions(dispatch)).toEqual([
+          loginRequest(),
+          currentUserShowRequest(),
+          currentUserShowSuccess(fakeCurrentUser),
+          fetchCurrentUserNotificationsRequest(),
+          authInfoRequest(),
+          authInfoSuccess({}),
+          fetchCurrentUserNotificationsSuccess(0, 0),
+          loginSuccess(),
+        ]);
       });
     });
     it('should dispatch error', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const getState = () => ({ auth: initialState });
       const error = new Error('could not login');
       const sdk = { login: jest.fn(() => Promise.reject(error)) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: initialState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
       const username = 'x.x@example.com';
       const password = 'pass';
 
-      return login(username, password)(dispatch, getState, sdk).catch(() => {
+      return login(username, password)(dispatch, getState, sdk).then(() => {
         expect(sdk.login.mock.calls).toEqual([[{ username, password }]]);
-
-        expect(actions[0].type).toBe('auth/login/pending');
-        expect(actions[0].meta.arg).toEqual({ username, password });
-
-        expect(actions[1].type).toBe('auth/login/rejected');
-        expect(actions[1].payload).toEqual(storableError(error));
-        expect(actions[1].meta.arg).toEqual({ username, password });
+        expect(dispatch.mock.calls).toEqual([[loginRequest()], [loginError(storableError(error))]]);
       });
     });
     it('should reject if another login is in progress', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const loginInProgressState = reducer(initialState, {
-        type: 'auth/login/pending',
-        meta: { arg: { username: 'test', password: 'test' } },
-      });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const loginInProgressState = reducer(initialState, loginRequest());
+      const getState = () => ({ auth: loginInProgressState });
       const sdk = { login: jest.fn(() => Promise.resolve({})) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: loginInProgressState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
       const username = 'x.x@example.com';
       const password = 'pass';
 
@@ -293,24 +251,18 @@ describe('auth duck', () => {
           throw new Error('should not succeed');
         },
         e => {
-          expect(e.message).toEqual('Aborted due to condition callback returning false.');
+          expect(e.message).toEqual('Login or logout already in progress');
           expect(sdk.login.mock.calls.length).toEqual(0);
-          expect(actions.length).toEqual(0);
+          expect(dispatch.mock.calls.length).toEqual(0);
         }
       );
     });
     it('should reject if logout is in progress', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const logoutInProgressState = reducer(initialState, { type: 'auth/logout/pending' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const logoutInProgressState = reducer(initialState, logoutRequest());
+      const getState = () => ({ auth: logoutInProgressState });
       const sdk = { login: jest.fn(() => Promise.resolve({})) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: logoutInProgressState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
       const username = 'x.x@example.com';
       const password = 'pass';
 
@@ -319,9 +271,9 @@ describe('auth duck', () => {
           throw new Error('should not succeed');
         },
         e => {
-          expect(e.message).toEqual('Aborted due to condition callback returning false.');
+          expect(e.message).toEqual('Login or logout already in progress');
           expect(sdk.login.mock.calls.length).toEqual(0);
-          expect(actions.length).toEqual(0);
+          expect(dispatch.mock.calls.length).toEqual(0);
         }
       );
     });
@@ -329,90 +281,69 @@ describe('auth duck', () => {
 
   describe('logout thunk', () => {
     it('should dispatch success', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const getState = () => ({ auth: initialState });
       const sdk = { logout: jest.fn(() => Promise.resolve({})) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: initialState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
 
       return logout()(dispatch, getState, sdk).then(() => {
         expect(sdk.logout.mock.calls.length).toEqual(1);
-
-        expect(actions[0].type).toBe('auth/logout/pending');
-        expect(actions[1]).toEqual(clearCurrentUser());
-        expect(actions[2].type).toBe('auth/logout/fulfilled');
+        expect(dispatch.mock.calls).toEqual([
+          [logoutRequest()],
+          [logoutSuccess()],
+          [clearCurrentUser()],
+          [userLogout()],
+        ]);
       });
     });
     it('should dispatch error', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const getState = () => ({ auth: initialState });
       const error = new Error('could not logout');
       const sdk = { logout: jest.fn(() => Promise.reject(error)) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: initialState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
 
-      return logout()(dispatch, getState, sdk).catch(() => {
+      return logout()(dispatch, getState, sdk).then(() => {
         expect(sdk.logout.mock.calls.length).toEqual(1);
-        expect(actions[0].type).toBe('auth/logout/pending');
-        expect(actions[1].type).toBe('auth/logout/rejected');
-        expect(actions[1].payload).toEqual(storableError(error));
+        expect(dispatch.mock.calls).toEqual([
+          [logoutRequest()],
+          [logoutError(storableError(error))],
+        ]);
       });
     });
     it('should reject if another logout is in progress', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const logoutInProgressState = reducer(initialState, { type: 'auth/logout/pending' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const logoutInProgressState = reducer(initialState, logoutRequest());
+      const getState = () => ({ auth: logoutInProgressState });
       const sdk = { logout: jest.fn(() => Promise.resolve({})) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: logoutInProgressState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
 
       return logout()(dispatch, getState, sdk).then(
         () => {
           throw new Error('should not succeed');
         },
         e => {
-          expect(e.message).toEqual('Aborted due to condition callback returning false.');
+          expect(e.message).toEqual('Login or logout already in progress');
           expect(sdk.logout.mock.calls.length).toEqual(0);
-          expect(actions.length).toEqual(0);
+          expect(dispatch.mock.calls.length).toEqual(0);
         }
       );
     });
     it('should reject if login is in progress', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const loginInProgressState = reducer(initialState, { type: 'auth/login/pending' });
+      const dispatch = jest.fn();
+      const initialState = reducer();
+      const loginInProgressState = reducer(initialState, loginRequest());
+      const getState = () => ({ auth: loginInProgressState });
       const sdk = { logout: jest.fn(() => Promise.resolve({})) };
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: loginInProgressState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
 
       return logout()(dispatch, getState, sdk).then(
         () => {
           throw new Error('should not succeed');
         },
         e => {
-          expect(e.message).toEqual('Aborted due to condition callback returning false.');
+          expect(e.message).toEqual('Login or logout already in progress');
           expect(sdk.logout.mock.calls.length).toEqual(0);
-          expect(actions.length).toEqual(0);
+          expect(dispatch.mock.calls.length).toEqual(0);
         }
       );
     });
@@ -432,16 +363,9 @@ describe('auth duck', () => {
         authInfo: jest.fn(() => Promise.resolve({})),
         transactions: { query: jest.fn(() => Promise.resolve(fakeTransactionsResponse)) },
       };
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: initialState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
-
+      const getState = () => ({ auth: state });
+      const dispatch = createFakeDispatch(getState, sdk);
+      const state = reducer();
       const email = 'pekka@example.com';
       const password = 'some pass';
       const params = {
@@ -455,19 +379,20 @@ describe('auth duck', () => {
       };
 
       return signup(params)(dispatch, getState, sdk).then(() => {
-        // signup > login > fetchCurrentUser
         expect(sdk.currentUser.create.mock.calls).toEqual([[params]]);
-        expect(actions[0].type).toBe('auth/signup/pending');
-        expect(actions[1].type).toBe('auth/login/pending');
-        expect(actions[2].type).toBe('user/fetchCurrentUser/pending');
-        expect(actions[3].type).toBe('user/fetchCurrentUserHasListings/pending');
-        expect(actions[4].type).toBe('user/fetchCurrentUserNotifications/pending');
-        expect(actions[5].type).toBe('auth/authInfo/pending');
-        expect(actions[6].type).toBe('user/fetchCurrentUserHasListings/fulfilled');
-        expect(actions[7].type).toBe('auth/authInfo/fulfilled');
-        expect(actions[8].type).toBe('user/fetchCurrentUser/fulfilled');
-        expect(actions[9].type).toBe('user/fetchCurrentUserNotifications/fulfilled');
-        expect(actions[10].type).toBe('auth/login/fulfilled');
+        expect(sdk.login.mock.calls).toEqual([[{ username: email, password }]]);
+        expect(dispatchedActions(dispatch)).toEqual([
+          signupRequest(),
+          signupSuccess(),
+          loginRequest(),
+          currentUserShowRequest(),
+          currentUserShowSuccess(fakeCurrentUser),
+          fetchCurrentUserNotificationsRequest(),
+          authInfoRequest(),
+          authInfoSuccess({}),
+          fetchCurrentUserNotificationsSuccess(0, 0),
+          loginSuccess(),
+        ]);
       });
     });
     it('should dispatch error', () => {
@@ -477,16 +402,9 @@ describe('auth duck', () => {
           create: jest.fn(() => Promise.reject(error)),
         },
       };
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      let actions = [];
-      const store = configureStore({
-        initialState: { auth: initialState },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
-
+      const getState = () => ({ auth: state });
+      const dispatch = createFakeDispatch(getState, sdk);
+      const state = reducer();
       const email = 'pekka@example.com';
       const password = 'some pass';
       const params = {
@@ -502,11 +420,12 @@ describe('auth duck', () => {
       // disable error logging
       log.error = jest.fn();
 
-      return signup(params)(dispatch, getState, sdk).catch(() => {
+      return signup(params)(dispatch, getState, sdk).then(() => {
         expect(sdk.currentUser.create.mock.calls).toEqual([[params]]);
-        expect(actions[0].type).toBe('auth/signup/pending');
-        expect(actions[1].type).toBe('auth/signup/rejected');
-        expect(actions[1].payload?.message).toEqual(error.message);
+        expect(dispatchedActions(dispatch)).toEqual([
+          signupRequest(),
+          signupError(storableError(error)),
+        ]);
       });
     });
   });

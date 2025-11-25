@@ -19,7 +19,8 @@ import { Button, Form, AspectRatioWrapper } from '../../../../components';
 import ListingImage from './ListingImage';
 import css from './EditListingPhotosForm.module.css';
 
-const ACCEPT_IMAGES = 'image/*';
+// Sharetribe only accepts PNG and JPEG formats
+const ACCEPT_IMAGES = 'image/png, image/jpeg, image/jpg';
 
 const ImageUploadError = props => {
   return props.uploadOverLimit ? (
@@ -142,6 +143,15 @@ export const EditListingPhotosForm = props => {
   const onImageUploadHandler = file => {
     const { listingImageConfig, onImageUpload } = props;
     if (file) {
+      // Validate file type before upload (Sharetribe only accepts PNG and JPEG)
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        // File type validation failed - this should be caught by accept attribute
+        // but we add an extra check for safety
+        console.error(`Invalid file type: ${file.type}. Only PNG and JPEG are supported.`);
+        return;
+      }
+
       setState({ imageUploadRequested: true });
 
       onImageUpload({ id: `${file.name}_${Date.now()}`, file }, listingImageConfig)

@@ -1,7 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 
-import configureStore from '../../store';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import {
   createUser,
@@ -15,6 +14,8 @@ import {
   testingLibrary,
   getRouteConfiguration,
   getHostedConfiguration,
+  createFakeDispatch,
+  dispatchedActions,
 } from '../../util/testHelpers';
 
 import { storableError } from '../../util/errors';
@@ -27,21 +28,23 @@ import {
 
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
-import reducer, { showListing, loadData, setInitialValues } from './ListingPage.duck';
+import {
+  showListingRequest,
+  showListingError,
+  showListing,
+  loadData,
+  setInitialValues,
+  fetchReviewsRequest,
+  fetchReviewsSuccess,
+} from './ListingPage.duck';
 
 import ActionBarMaybe from './ActionBarMaybe';
+import { currentUserShowRequest, currentUserShowSuccess } from '../../ducks/user.duck';
+import { authInfoRequest, authInfoSuccess } from '../../ducks/auth.duck';
 
 const { UUID } = sdkTypes;
 const { screen, waitFor, within } = testingLibrary;
 const noop = () => null;
-
-const logger = actions => () => {
-  return next => action => {
-    actions.push(action);
-    // Call the next dispatch method in the middleware chain.
-    return next(action);
-  };
-};
 
 const listingTypes = [
   {
@@ -342,216 +345,58 @@ describe('Duck', () => {
     accessControl: { marketplace: { private: true } },
   };
 
-  describe('reducer', () => {
-    it('should have correct initial state', () => {
-      const state = reducer(undefined, { type: '@@INIT' });
-      expect(state).toEqual({
-        id: null,
-        showListingError: null,
-        reviews: [],
-        fetchReviewsError: null,
-        monthlyTimeSlots: {},
-        timeSlotsForDate: {},
-        lineItems: null,
-        fetchLineItemsInProgress: false,
-        fetchLineItemsError: null,
-        sendInquiryInProgress: false,
-        sendInquiryError: null,
-        inquiryModalOpenForListingId: null,
-      });
-    });
+  it('showListing() success', () => {
+    const id = new UUID('00000000-0000-0000-0000-000000000000');
+    const dispatch = jest.fn(action => action);
+    const response = { status: 200 };
+    const show = jest.fn(() => Promise.resolve(response));
+    const sdk = { listings: { show }, currentUser: { show } };
 
-    it('should handle setInitialValues action', () => {
-      // First set up a state with some data
-      let state = reducer(undefined, { type: '@@INIT' });
-      state = reducer(state, {
-        type: 'ListingPage/showListing/rejected',
-        payload: new Error('Test error'),
-      });
-      state = reducer(state, {
-        type: 'ListingPage/fetchReviews/rejected',
-        payload: new Error('Reviews error'),
-      });
-      state = reducer(state, {
-        type: 'ListingPage/fetchTimeSlots/rejected',
-        payload: new Error('TimeSlots error'),
-        meta: {
-          arg: {
-            useFetchTimeSlotsForDate: false,
-            start: new Date('2023-01-01'),
-            timeZone: 'UTC',
-          },
-        },
-      });
-      state = reducer(state, {
-        type: 'ListingPage/fetchTransactionLineItems/fulfilled',
-        payload: { test: 'lineItems' },
-      });
-
-      // Now test setInitialValues - it should reset to initial state and apply payload
-      state = reducer(
-        state,
-        setInitialValues({
-          inquiryModalOpenForListingId: 'test-id',
-        })
-      );
-
-      // Should reset all errors and clear lineItems
-      expect(state.showListingError).toBeNull();
-      expect(state.fetchReviewsError).toBeNull();
-      expect(state.fetchLineItemsError).toBeNull();
-      expect(state.sendInquiryError).toBeNull();
-      expect(state.lineItems).toBeNull();
-      expect(state.monthlyTimeSlots).toEqual({});
-      expect(state.timeSlotsForDate).toEqual({});
-
-      // Should apply the payload
-      expect(state.inquiryModalOpenForListingId).toBe('test-id');
-    });
-
-    it('should handle showListingThunk.pending', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const state = reducer(initialState, {
-        type: 'ListingPage/showListing/pending',
-        meta: { arg: { listingId: 'test-listing-id' } },
-      });
-
-      expect(state.id).toBe('test-listing-id');
-      expect(state.showListingError).toBeNull();
-    });
-
-    it('should handle showListingThunk.rejected', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const error = new Error('Test error');
-      const state = reducer(initialState, {
-        type: 'ListingPage/showListing/rejected',
-        payload: error,
-      });
-
-      expect(state.showListingError).toBe(error);
-    });
-
-    it('should handle fetchReviewsThunk.pending', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const state = reducer(initialState, {
-        type: 'ListingPage/fetchReviews/pending',
-      });
-
-      expect(state.fetchReviewsError).toBeNull();
-    });
-
-    it('should handle fetchReviewsThunk.fulfilled', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const reviews = [{ id: 'review1' }, { id: 'review2' }];
-      const state = reducer(initialState, {
-        type: 'ListingPage/fetchReviews/fulfilled',
-        payload: reviews,
-      });
-
-      expect(state.reviews).toEqual(reviews);
-    });
-
-    it('should handle fetchReviewsThunk.rejected', () => {
-      const initialState = reducer(undefined, { type: '@@INIT' });
-      const error = new Error('Reviews error');
-      const state = reducer(initialState, {
-        type: 'ListingPage/fetchReviews/rejected',
-        payload: error,
-      });
-
-      expect(state.fetchReviewsError).toBe(error);
+    return showListing(id, config)(dispatch, null, sdk).then(data => {
+      expect(data).toEqual(response);
+      expect(show.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            id,
+            'imageVariant.listing-card': 'w:400;h:400;fit:crop',
+            'imageVariant.listing-card-2x': 'w:800;h:800;fit:crop',
+            include: ['author', 'author.profileImage', 'images', 'currentStock'],
+          }),
+        ],
+      ]);
+      expect(dispatch.mock.calls).toEqual([
+        [showListingRequest(id)],
+        [expect.anything()], // fetchCurrentUser() call
+        [addMarketplaceEntities(data, { listingFields })],
+      ]);
     });
   });
 
-  describe('showListing thunk', () => {
-    it('should dispatch success and fetch current user', () => {
-      const id = new UUID('00000000-0000-0000-0000-000000000000');
-      const response = { data: { data: listing1, include: [] } };
-      const sdk = {
-        listings: { show: jest.fn(() => Promise.resolve(response)) },
-        currentUser: { show: jest.fn(() => Promise.resolve({})) },
-        authInfo: jest.fn(() => Promise.resolve({})),
-      };
-      let actions = [];
-      const store = configureStore({
-        initialState: { ListingPage: reducer(undefined, { type: '@@INIT' }) },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+  it('showListing() error', () => {
+    const id = new UUID('00000000-0000-0000-0000-000000000000');
+    const dispatch = jest.fn(action => action);
+    const error = new Error('fail');
+    const show = jest.fn(() => Promise.reject(error));
+    const sdk = { listings: { show } };
 
-      return showListing(id, config)(dispatch, getState, sdk).then(data => {
-        expect(sdk.listings.show.mock.calls).toEqual([
-          [
-            expect.objectContaining({
-              id,
-              'imageVariant.listing-card': 'w:400;h:400;fit:crop',
-              'imageVariant.listing-card-2x': 'w:800;h:800;fit:crop',
-              include: ['author', 'author.profileImage', 'images', 'currentStock'],
-            }),
-          ],
-        ]);
+    // Calling sdk.listings.show is expected to fail now
 
-        const relevantActions = actions.filter(
-          action => !action.type.startsWith('user/fetchCurrentUser/')
-        );
-
-        // Check that the expected action types are present
-        expect(relevantActions[0].type).toBe('ListingPage/showListing/pending');
-        expect(relevantActions[0].meta.arg).toEqual({ listingId: id, config, isOwn: false });
-
-        expect(relevantActions[1].type).toBe('marketplaceData/addEntities');
-        expect(relevantActions[2].type).toBe('ListingPage/showListing/fulfilled');
-        expect(relevantActions[2].payload).toEqual(response);
-
-        // fetchCurrentUser may complete after the main thunk resolves
-        const fetchCurrentUserFulfilled = actions.find(
-          action => action.type === 'user/fetchCurrentUser/fulfilled'
-        );
-        expect(fetchCurrentUserFulfilled).toBeDefined();
-      });
-    });
-
-    it('should dispatch error', () => {
-      const id = new UUID('00000000-0000-0000-0000-000000000000');
-      const error = new Error('fail');
-      const sdk = {
-        listings: { show: jest.fn(() => Promise.reject(error)) },
-        currentUser: { show: jest.fn(() => Promise.resolve({})) },
-        authInfo: jest.fn(() => Promise.resolve({})),
-      };
-      let actions = [];
-      const store = configureStore({
-        initialState: { ListingPage: reducer(undefined, { type: '@@INIT' }) },
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
-
-      return showListing(id, config)(dispatch, getState, sdk).catch(() => {
-        expect(sdk.listings.show.mock.calls).toEqual([
-          [
-            expect.objectContaining({
-              id,
-              'imageVariant.listing-card': 'w:400;h:400;fit:crop',
-              'imageVariant.listing-card-2x': 'w:800;h:800;fit:crop',
-              include: ['author', 'author.profileImage', 'images', 'currentStock'],
-            }),
-          ],
-        ]);
-
-        const relevantActions = actions.filter(
-          action => !action.type.startsWith('user/fetchCurrentUser/')
-        );
-
-        expect(relevantActions[0].type).toBe('ListingPage/showListing/pending');
-        expect(relevantActions[0].meta.arg).toEqual({ listingId: id, config, isOwn: false });
-
-        expect(relevantActions[1].type).toBe('ListingPage/showListing/rejected');
-        expect(relevantActions[1].payload).toEqual(storableError(error));
-      });
+    return showListing(id, config)(dispatch, null, sdk).then(data => {
+      expect(show.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            id,
+            'imageVariant.listing-card': 'w:400;h:400;fit:crop',
+            'imageVariant.listing-card-2x': 'w:800;h:800;fit:crop',
+            include: ['author', 'author.profileImage', 'images', 'currentStock'],
+          }),
+        ],
+      ]);
+      expect(dispatch.mock.calls).toEqual([
+        [showListingRequest(id)],
+        [expect.anything()], // fetchCurrentUser() call
+        [showListingError(storableError(error))],
+      ]);
     });
   });
 
@@ -562,12 +407,13 @@ describe('Duck', () => {
   const sanitizeConfig = { listingFields };
 
   it("loadData() for currentUser with full viewing rights loads someone else's listing", () => {
+    const uuid = new UUID(id);
     const currentUser = createCurrentUser('currentUser');
-    const testInitialState = {
+    const getState = () => ({
       ...initialState,
       user: { currentUser },
       auth: { isAuthenticated: true },
-    };
+    });
 
     // For users with full viewing rights, ListingPage.showListing
     // uses listings.show endpoint
@@ -578,140 +424,99 @@ describe('Duck', () => {
       reviews: { query: sdkFn(fakeResponse(review)) },
     };
 
-    let actions = [];
-    const store = configureStore({
-      initialState: testInitialState,
-      sdk,
-      extraMiddlewares: [logger(actions)],
-    });
-    const dispatch = store.dispatch;
-    const getState = store.getState;
+    const dispatch = createFakeDispatch(getState, sdk);
 
     // Tests the actions that get dispatched to the Redux store when ListingPage.duck.js
     // loadData() function is called. If you make customizations to the loadData() logic,
     // update the dispatched actions list in this test accordingly!
     return loadData({ id }, null, config)(dispatch, getState, sdk).then(data => {
-      const relevantActions = actions.filter(
-        action => !action.type.startsWith('user/fetchCurrentUser/')
-      );
-      expect(relevantActions[0]).toEqual(
-        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null })
-      );
-      expect(relevantActions[1].type).toBe('ListingPage/showListing/pending');
-      expect(relevantActions[2].type).toBe('ListingPage/fetchReviews/pending');
-      expect(relevantActions[3]).toEqual(
-        addMarketplaceEntities(fakeResponse(listing1), sanitizeConfig)
-      );
-      expect(relevantActions[4].type).toBe('auth/authInfo/pending');
-      expect(relevantActions[5].type).toBe('ListingPage/showListing/fulfilled');
-      expect(relevantActions[6].type).toBe('ListingPage/fetchReviews/fulfilled');
-      expect(relevantActions[7].type).toBe('auth/authInfo/fulfilled');
+      expect(dispatchedActions(dispatch)).toEqual([
+        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null }),
+        showListingRequest(uuid),
+        currentUserShowRequest(),
+        fetchReviewsRequest(uuid),
+        currentUserShowSuccess(currentUser),
+        addMarketplaceEntities(fakeResponse(listing1), sanitizeConfig),
+        fetchReviewsSuccess([review]),
+        authInfoRequest(),
+        authInfoSuccess({}),
+      ]);
     });
   });
 
   it("loadData() for currentUser with no viewing rights does not load someone else's listing", () => {
+    const uuid = new UUID(id);
     const currentUser = createCurrentUser('currentUser');
     currentUser.effectivePermissionSet.attributes.read = 'permission/deny';
-    const testInitialState = {
+    const getState = () => ({
       ...initialState,
       user: { currentUser },
       auth: { isAuthenticated: true },
-    };
+    });
 
-    const error = new Error('Request failed with status code 403');
-    error.status = 403;
-    error.apiErrors = [
-      {
-        id: new UUID('asdf'),
-        status: 403,
-        code: 'user-pending-approval',
-        title: 'User pending approval',
-      },
-    ];
+    const error = new Error({ status: 403, message: 'forbidden' });
 
     // For viewing rights restricted users, ListingPage.showListing
-    // uses ownListings.show endpoint, which throws 403 when accessing
+    // users ownListings.show endpoint, which throws 403 when accessing
     // a listing that is not the current user's own
     const sdk = {
       ownListings: { show: jest.fn(() => Promise.reject(error)) },
-      listings: { show: jest.fn(() => Promise.reject(error)) },
       currentUser: { show: sdkFn(fakeResponse(currentUser)) },
-      reviews: { query: jest.fn(() => Promise.reject(error)) },
       authInfo: sdkFn({}),
     };
 
-    let actions = [];
-    const store = configureStore({
-      initialState: testInitialState,
-      sdk,
-      extraMiddlewares: [logger(actions)],
-    });
-    const dispatch = store.dispatch;
-    const getState = store.getState;
+    const dispatch = createFakeDispatch(getState, sdk);
 
     // Tests the actions that get dispatched to the Redux store when ListingPage.duck.js
     // loadData() function is called. If you make customizations to the loadData() logic,
     // update the dispatched actions list in this test accordingly!
-    return loadData({ id }, null, config)(dispatch, getState, sdk).catch(e => {
-      // Note: catch for loadData is on Routes.js component in practice.
-      const relevantActions = actions.filter(
-        action => !action.type.startsWith('user/fetchCurrentUser/')
-      );
-      expect(relevantActions[0]).toEqual(
-        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null })
-      );
-      expect(relevantActions[2].type).toBe('auth/authInfo/pending');
-      expect(relevantActions[3].type).toBe('ListingPage/showListing/rejected');
-      expect(relevantActions[4].type).toBe('auth/authInfo/fulfilled');
+    return loadData({ id }, null, config)(dispatch, getState, sdk).then(data => {
+      expect(dispatchedActions(dispatch)).toEqual([
+        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null }),
+        showListingRequest(uuid),
+        currentUserShowRequest(),
+        currentUserShowSuccess(currentUser),
+        authInfoRequest(),
+        showListingError(storableError(error)),
+        authInfoSuccess({}),
+      ]);
     });
   });
 
   it("loadData() for currentUser with no viewing rights loads the user's own listing", () => {
+    const uuid = new UUID(id);
     const currentUser = createCurrentUser('currentUser');
     currentUser.effectivePermissionSet.attributes.read = 'permission/deny';
-    const testInitialState = {
+    const getState = () => ({
       ...initialState,
       user: { currentUser },
       auth: { isAuthenticated: true },
-    };
-    const error = new Error('Request failed with status code 403');
+    });
 
     // For viewing rights restricted users, ListingPage.showListing
     // users ownListings.show endpoint, which fetches the user's
     // own listings successfully.
     const sdk = {
       ownListings: { show: sdkFn(fakeResponse(listing1Own)) },
-      listings: { show: jest.fn(() => Promise.reject(error)) },
       currentUser: { show: sdkFn(fakeResponse(currentUser)) },
       authInfo: sdkFn({}),
     };
 
-    let actions = [];
-    const store = configureStore({
-      initialState: testInitialState,
-      sdk,
-      extraMiddlewares: [logger(actions)],
-    });
-    const dispatch = store.dispatch;
-    const getState = store.getState;
+    const dispatch = createFakeDispatch(getState, sdk);
 
     // Tests the actions that get dispatched to the Redux store when ListingPage.duck.js
     // loadData() function is called. If you make customizations to the loadData() logic,
     // update the dispatched actions list in this test accordingly!
     return loadData({ id }, null, config)(dispatch, getState, sdk).then(data => {
-      const relevantActions = actions.filter(
-        action => !action.type.startsWith('user/fetchCurrentUser/')
-      );
-      expect(relevantActions[0]).toEqual(
-        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null })
-      );
-      expect(relevantActions[1].type).toBe('ListingPage/showListing/pending');
-      expect(relevantActions[2]).toEqual(
-        addMarketplaceEntities(fakeResponse(listing1Own), sanitizeConfig)
-      );
-      expect(relevantActions[3].type).toBe('auth/authInfo/pending');
-      expect(relevantActions[4].type).toBe('ListingPage/showListing/fulfilled');
-      expect(relevantActions[5].type).toBe('auth/authInfo/fulfilled');
+      expect(dispatchedActions(dispatch)).toEqual([
+        setInitialValues({ inquiryModalOpenForListingId: null, lineItems: null }),
+        showListingRequest(uuid),
+        currentUserShowRequest(),
+        currentUserShowSuccess(currentUser),
+        addMarketplaceEntities(fakeResponse(listing1Own), sanitizeConfig),
+        authInfoRequest(),
+        authInfoSuccess({}),
+      ]);
     });
   });
 });

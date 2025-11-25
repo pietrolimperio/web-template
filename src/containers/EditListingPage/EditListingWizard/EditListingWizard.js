@@ -43,6 +43,7 @@ import {
   Tabs,
   StripeConnectAccountStatusBox,
   StripeConnectAccountForm,
+  Button,
 } from '../../../components';
 
 // Import modules from this directory

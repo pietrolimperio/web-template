@@ -102,3 +102,59 @@
     margin-bottom: 40px;
   }
 }
+
+/* AI Upload Page Styles */
+.aiUploadPage {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (--viewportMedium) {
+    padding: 60px 40px;
+  }
+}
+
+.aiPageTitle {
+  text-align: center;
+  margin-bottom: 40px;
+  color: var(--matterColorDark);
+}
+
+.aiErrorBanner {
+  width: 100%;
+  background-color: #ffebee;
+  border: 1px solid #ef5350;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.aiErrorBanner p {
+  margin: 0;
+  color: #c62828;
+  font-size: 14px;
+}
+
+.skipAISection {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.skipButton {
+  background: transparent;
+  border: none;
+  color: var(--matterColor);
+  cursor: pointer;
+  font-size: 16px;
+  text-decoration: underline;
+  padding: 12px 24px;
+  transition: color 0.2s ease;
+}
+
+.skipButton:hover {
+  color: var(--matterColorDark);
+}

@@ -3,6 +3,7 @@
  * We are following Ducks module proposition:
  * https://github.com/erikras/ducks-modular-redux
  */
+import AIListingCreationPage from './AIListingCreationPage/AIListingCreationPage.duck';
 import CheckoutPage from './CheckoutPage/CheckoutPage.duck';
 import ContactDetailsPage from './ContactDetailsPage/ContactDetailsPage.duck';
 import EditListingPage from './EditListingPage/EditListingPage.duck';
@@ -16,12 +17,12 @@ import PasswordResetPage from './PasswordResetPage/PasswordResetPage.duck';
 import PaymentMethodsPage from './PaymentMethodsPage/PaymentMethodsPage.duck';
 import ProfilePage from './ProfilePage/ProfilePage.duck';
 import ProfileSettingsPage from './ProfileSettingsPage/ProfileSettingsPage.duck';
-import RequestQuotePage from './RequestQuotePage/RequestQuotePage.duck';
 import SearchPage from './SearchPage/SearchPage.duck';
 import StripePayoutPage from './StripePayoutPage/StripePayoutPage.duck';
 import TransactionPage from './TransactionPage/TransactionPage.duck';
 
 export {
+  AIListingCreationPage,
   CheckoutPage,
   ContactDetailsPage,
   EditListingPage,
@@ -35,7 +36,6 @@ export {
   PaymentMethodsPage,
   ProfilePage,
   ProfileSettingsPage,
-  RequestQuotePage,
   SearchPage,
   StripePayoutPage,
   TransactionPage,

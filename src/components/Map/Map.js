@@ -64,7 +64,7 @@ export const Map = props => {
 
   const location = mapsConfiguration.fuzzy.enabled ? obfuscatedCenter : center;
   const zoomLevel =
-    zoom || mapsConfiguration.fuzzy.enabled ? mapsConfiguration.fuzzy.defaultZoomLevel : 11;
+    zoom || (mapsConfiguration.fuzzy.enabled ? mapsConfiguration.fuzzy.defaultZoomLevel : 11) || 11;
 
   const isMapProviderAvailable = hasApiAccessForMapProvider && isMapsLibLoaded();
   return !isMapProviderAvailable ? (

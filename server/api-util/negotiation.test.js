@@ -23,21 +23,27 @@ describe('negotiation utils', () => {
       });
 
       it('should return true for make-offer-from-quote-requested transition with positive offer', () => {
-        expect(isIntentionToMakeOffer(1000, 'transition/make-offer-from-request')).toBe(true);
-        expect(isIntentionToMakeOffer(5000, 'transition/make-offer-from-request')).toBe(true);
-        expect(isIntentionToMakeOffer(1, 'transition/make-offer-from-request')).toBe(true);
+        expect(isIntentionToMakeOffer(1000, 'transition/make-offer-from-quote-requested')).toBe(
+          true
+        );
+        expect(isIntentionToMakeOffer(5000, 'transition/make-offer-from-quote-requested')).toBe(
+          true
+        );
+        expect(isIntentionToMakeOffer(1, 'transition/make-offer-from-quote-requested')).toBe(true);
       });
 
       it('should return false for make offer transitions with zero offer', () => {
         expect(isIntentionToMakeOffer(0, 'transition/make-offer')).toBe(false);
         expect(isIntentionToMakeOffer(0, 'transition/make-offer-after-inquiry')).toBe(false);
-        expect(isIntentionToMakeOffer(0, 'transition/make-offer-from-request')).toBe(false);
+        expect(isIntentionToMakeOffer(0, 'transition/make-offer-from-quote-requested')).toBe(false);
       });
 
       it('should return false for make offer transitions with negative offer', () => {
         expect(isIntentionToMakeOffer(-100, 'transition/make-offer')).toBe(false);
         expect(isIntentionToMakeOffer(-5000, 'transition/make-offer-after-inquiry')).toBe(false);
-        expect(isIntentionToMakeOffer(-1, 'transition/make-offer-from-request')).toBe(false);
+        expect(isIntentionToMakeOffer(-1, 'transition/make-offer-from-quote-requested')).toBe(
+          false
+        );
       });
     });
 
@@ -156,9 +162,9 @@ describe('negotiation utils', () => {
         expect(isIntentionToMakeCounterOffer(5000, 'transition/make-offer-after-inquiry')).toBe(
           false
         );
-        expect(isIntentionToMakeCounterOffer(1000, 'transition/make-offer-from-request')).toBe(
-          false
-        );
+        expect(
+          isIntentionToMakeCounterOffer(1000, 'transition/make-offer-from-quote-requested')
+        ).toBe(false);
       });
 
       it('should return false for revoke counter offer transitions with positive offer', () => {
@@ -258,7 +264,9 @@ describe('negotiation utils', () => {
       it('should return false for make offer transitions', () => {
         expect(isIntentionToRevokeCounterOffer('transition/make-offer')).toBe(false);
         expect(isIntentionToRevokeCounterOffer('transition/make-offer-after-inquiry')).toBe(false);
-        expect(isIntentionToRevokeCounterOffer('transition/make-offer-from-request')).toBe(false);
+        expect(isIntentionToRevokeCounterOffer('transition/make-offer-from-quote-requested')).toBe(
+          false
+        );
       });
 
       it('should return false for counter offer transitions', () => {

@@ -160,10 +160,6 @@ export const metaTagProps = (tagData, config) => {
     ...googleSiteVerificationMaybe,
   ];
 
-  if (tagData.noIndex) {
-    defaultMeta.push({ name: 'robots', content: 'noindex' });
-  }
-
   const openGraphMeta = openGraphMetaProps({
     ...tagData,
     facebookAppId,
