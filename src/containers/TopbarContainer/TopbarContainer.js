@@ -32,20 +32,28 @@ export const TopbarContainerComponent = props => {
   // Locale state management
   const [currentLocale, setCurrentLocale] = useState(() => {
     // Get locale from localStorage or use default (it-IT)
-    return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+    // Safe for server-side rendering: check if localStorage is available
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+    }
+    return DEFAULT_LOCALE;
   });
 
   // Handle locale change
   const handleLocaleChange = newLocale => {
-    // Save to localStorage
-    localStorage.setItem('marketplace_locale', newLocale);
+    // Save to localStorage (only in browser)
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem('marketplace_locale', newLocale);
+    }
     
     // Update state
     setCurrentLocale(newLocale);
     
     // Reload page to apply new translations
     // Note: In the future, this could be done without full page reload
-    window.location.reload();
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   return (

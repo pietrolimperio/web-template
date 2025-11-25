@@ -115,7 +115,11 @@ export const CMSPageComponent = props => {
   }
 
   // Get current locale from localStorage (default: it-IT)
-  const currentLocale = localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+  // Safe for server-side rendering: check if localStorage is available
+  const currentLocale =
+    typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+      : DEFAULT_LOCALE;
 
   // Strip any existing locale suffix from the URL to get the true base page ID
   // Example: 'about_it_it' → 'about', 'about' → 'about'

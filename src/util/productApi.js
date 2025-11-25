@@ -17,7 +17,12 @@ class ProductAPI {
     this.baseURL = PRODUCT_API_BASE_URL;
     this.model = DEFAULT_MODEL;
     // Get current locale from localStorage (default: it-IT)
-    this.locale = localStorage.getItem('marketplace_locale') || APP_DEFAULT_LOCALE;
+    // Safe for server-side rendering: check if localStorage is available
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      this.locale = localStorage.getItem('marketplace_locale') || APP_DEFAULT_LOCALE;
+    } else {
+      this.locale = APP_DEFAULT_LOCALE;
+    }
   }
 
   /**

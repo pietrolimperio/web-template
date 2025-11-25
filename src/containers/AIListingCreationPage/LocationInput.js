@@ -96,7 +96,11 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
   const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Get current locale from localStorage (default: it-IT)
-  const currentLocale = localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+  // Safe for server-side rendering: check if localStorage is available
+  const currentLocale =
+    typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+      : DEFAULT_LOCALE;
   const searchCountry = getCountryForLocale(currentLocale);
 
   // Initialize location from user data

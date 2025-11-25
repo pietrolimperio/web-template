@@ -132,7 +132,10 @@ export const AIListingCreationPageComponent = ({
 
     try {
       // Call AI API to analyze product
-      const locale = localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+      const locale =
+        typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+          ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+          : DEFAULT_LOCALE;
       const formData = new FormData();
       uploadedImages.forEach(img => formData.append('images', img));
       formData.append('locale', locale);
@@ -179,7 +182,10 @@ export const AIListingCreationPageComponent = ({
 
     try {
       // Call refine API
-      const locale = localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+      const locale =
+        typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+          ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+          : DEFAULT_LOCALE;
       const refined = await productApiInstance.refine({
         previousAnalysis: productAnalysis,
         answers,
@@ -221,7 +227,10 @@ export const AIListingCreationPageComponent = ({
     if (Object.keys(partialAnswers).length > 0 && productAnalysis) {
       setStep(STEP_REFINING);
       try {
-        const locale = localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
+        const locale =
+          typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+            ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+            : DEFAULT_LOCALE;
         const refined = await productApiInstance.refine({
           previousAnalysis: productAnalysis,
           answers: partialAnswers,
