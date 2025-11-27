@@ -1646,6 +1646,7 @@
   "PreviewListingPage.descriptionLabel": "Descrizione",
   "PreviewListingPage.locationVisible": "Posizione visibile",
   "PreviewListingPage.handByHand": "Scambio di persona disponibile",
+  "PreviewListingPage.locationVisibleTooltip": "Non puoi nascondere la posizione mentre lo scambio di persona è attivo",
   "PreviewListingPage.details": "Dettagli",
   "PreviewListingPage.fieldRequired": "Questo campo non può essere vuoto",
   "PreviewListingPage.updateError": "Errore durante l'aggiornamento. Riprova.",

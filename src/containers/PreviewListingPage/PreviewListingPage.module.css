@@ -695,7 +695,7 @@
 
 /* Location Toggles */
 .locationToggles {
-  margin-top: 24px;
+  margin-bottom: 16px;
 }
 
 .toggleRow {
@@ -736,17 +736,18 @@
 
 .toggleTooltip {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 0;
-  margin-top: 8px;
+  margin-bottom: 8px;
   padding: 8px 12px;
-  background: var(--failColor);
-  color: white;
+  background: white;
+  color: var(--marketplaceColor);
+  border: 1px solid var(--marketplaceColor);
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Map Section */
@@ -1950,5 +1951,290 @@
   .modifyLink {
     margin-left: 0;
     align-self: flex-end;
+  }
+}
+
+/* ========================================
+   MOBILE FLAT DESIGN - Remove decorations
+   ======================================== */
+@media (max-width: 767px) {
+  /* Remove padding from root, add horizontal margin */
+  .root {
+    padding: 12px 5px;
+  }
+
+  /* Preview card - flat, no shadow, no border-radius */
+  .previewCard {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0 5px;
+  }
+
+  /* Main content - single column, reduced padding */
+  .mainContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 16px 16px 16px;
+  }
+
+  /* Use display: contents to flatten the hierarchy for reordering */
+  .summarySection {
+    display: contents;
+  }
+
+  .imagesSection {
+    display: contents;
+  }
+
+  /* 
+   * REORDER ELEMENTS:
+   * 1. Title (titleSection)
+   * 2. Images (mainImageWrapper, thumbnailsContainer)
+   * 3. Breadcrumb
+   * 4. Description
+   * 5. Condition/Brand
+   * 6. Details
+   * 7. Calendar
+   * 8. Price
+   * 9. Location
+   */
+
+  /* Title first - edit link on same line */
+  .titleSection {
+    order: 1;
+    margin-bottom: 0;
+  }
+
+  /* Title with edit link inline */
+  .titleSection .listingTitle {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .titleSection .editLink {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Images second */
+  .mainImageWrapper {
+    order: 2;
+    border-radius: 0;
+  }
+
+  .thumbnailsContainer {
+    order: 3;
+  }
+
+  /* Breadcrumb third */
+  .breadcrumb {
+    order: 4;
+    padding: 12px 0;
+    border-bottom: none;
+  }
+
+  /* Description fourth */
+  .descriptionSection {
+    order: 5;
+    padding-right: 0;
+    border-bottom: none;
+  }
+
+  /* Condition/Brand fifth - compact single row layout */
+  .conditionBrandSection {
+    order: 6;
+    margin-top: 0;
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  /* Condition/Brand items - key, value, edit on same row */
+  .conditionBrandSection .detailItem {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .conditionBrandSection .detailLabel {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .conditionBrandSection .detailValue {
+    flex: 1;
+    justify-content: flex-start;
+  }
+
+  /* Details sixth */
+  .detailsSection {
+    order: 7;
+    padding-right: 0;
+    border-bottom: none;
+  }
+
+  /* Calendar seventh */
+  .calendarSection {
+    order: 8;
+    padding-top: 16px;
+    border-top: 1px solid var(--matterColorNegative);
+    position: relative;
+  }
+
+  .calendarSection::before {
+    display: none;
+  }
+
+  /* Calendar header - position modify button on same row as navigation */
+  .calendarHeader {
+    position: absolute;
+    top: 16px;
+    right: 0;
+    z-index: 3;
+    margin-bottom: 0;
+  }
+
+  /* Calendar navigation - reset positioning for mobile */
+  .calendarSection > :global(div) > :global(div):first-child {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+  }
+
+  /* Add margin-top to calendar month container for spacing from nav */
+  .calendarSection :global(.AvailabilityCalendar_monthContainer__gasf5),
+  .calendarSection :global([class*="monthContainer"]) {
+    margin-top: 12px;
+  }
+
+  /* Ensure calendar root has proper padding for the header row */
+  .calendarSection :global(.AvailabilityCalendar_root__aG3qQ),
+  .calendarSection :global([class*="AvailabilityCalendar_root"]) {
+    padding-top: 0;
+  }
+
+  /* Scale down the entire calendar proportionally on mobile */
+  .calendarSection :global([class*="AvailabilityCalendar_root"]) {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -15%;
+  }
+
+  /* Increase font size by 2pt for calendar text elements */
+  .calendarSection :global([class*="monthName"]) {
+    font-size: 1.25rem;
+  }
+
+  .calendarSection :global([class*="dayName"]) {
+    font-size: 0.875rem;
+  }
+
+  .calendarSection :global([class*="day"]:not([class*="dayName"]):not([class*="daysGrid"])) {
+    font-size: 1rem;
+  }
+
+  .calendarSection :global([class*="legendItem"]) {
+    font-size: 1rem;
+  }
+
+  /* Price eighth */
+  .priceSection {
+    order: 9;
+    padding: 16px 0;
+    border-top: 1px solid var(--matterColorNegative);
+  }
+
+  /* Location ninth */
+  .mapSection {
+    order: 10;
+    margin-top: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--matterColorNegative);
+  }
+
+  /* FLAT DESIGN - Remove decorations */
+
+  /* Detail items - flat */
+  .detailItem {
+    background-color: transparent;
+    padding: 8px 0;
+  }
+
+  /* Price cards - flat */
+  .priceCard {
+    box-shadow: none;
+    min-width: 100px;
+    padding: 12px 8px;
+  }
+
+  /* Map wrapper - flat */
+  .mapWrapper {
+    border-radius: 0;
+    height: 250px;
+  }
+
+  /* Thumbnails - minimal */
+  .thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+  }
+
+  /* Key features - flat */
+  .keyFeatureListItem {
+    padding: 6px 0;
+  }
+
+  .keyFeatureListItem:hover {
+    background-color: transparent;
+  }
+
+  /* Title styling */
+  .listingTitle {
+    font-size: 22px;
+    margin-top: 12px;
+  }
+
+  /* Page title and description */
+  .title {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .description {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* Actions buttons */
+  .actions {
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  /* Price summary - flat */
+  .priceSummary {
+    border-radius: 0;
+    padding: 16px;
+  }
+
+  /* Location summary - flat */
+  .locationSummary {
+    border-radius: 0;
+    background-color: transparent;
+    padding: 12px 0;
+  }
+
+  /* Address display - flat */
+  .addressDisplay {
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 0;
   }
 }

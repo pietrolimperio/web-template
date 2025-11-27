@@ -703,6 +703,9 @@ const ListingConfigurationPage = ({
               marketplaceColor={marketplaceColor}
               availableFrom={availableFrom}
               availableUntil={availableUntil}
+              disabledDates={exceptions
+                .filter(exc => !editingException || exc.id !== editingException.id)
+                .flatMap(exc => exc.dates)}
             />
             <div className={css.exceptionActions}>
               <button

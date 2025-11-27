@@ -304,8 +304,8 @@ export const PreviewListingPageComponent = props => {
   const [priceVariantType, setPriceVariantType] = useState('length');
   const [newPriceVariant, setNewPriceVariant] = useState({
     type: 'length',
-    price: 0,
-    minLength: 0,
+    price: null,
+    minLength: null,
     maxLength: '',
     dates: [],
   });
@@ -1039,8 +1039,8 @@ export const PreviewListingPageComponent = props => {
       setEditingPriceVariant(null);
       setNewPriceVariant({
         type: 'length',
-        price: defaultPrice,
-        minLength: 0,
+        price: defaultPrice || null,
+        minLength: null,
         maxLength: '',
         dates: [],
       });
@@ -1224,6 +1224,13 @@ export const PreviewListingPageComponent = props => {
 
   // Price variant handlers
   const handleAddPriceVariant = () => {
+    if (!newPriceVariant.price || newPriceVariant.price <= 0) {
+      alert(intl.formatMessage({
+        id: 'PreviewListingPage.enterValidPrice',
+        defaultMessage: 'Please enter a valid price',
+      }));
+      return;
+    }
     if (priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0) {
       alert(intl.formatMessage({
         id: 'PreviewListingPage.selectDates',
@@ -1267,8 +1274,8 @@ export const PreviewListingPageComponent = props => {
     setShowAddPriceVariant(false);
     setNewPriceVariant({
       type: 'length',
-      price: modalDefaultPrice,
-      minLength: 0,
+      price: modalDefaultPrice || null,
+      minLength: null,
       maxLength: '',
       dates: [],
     });
@@ -1281,8 +1288,8 @@ export const PreviewListingPageComponent = props => {
     setPriceVariantType(uiType);
     setNewPriceVariant({
       type: variant.type || uiType, // Keep API type format
-      price: variant.priceInSubunits,
-      minLength: variant.minDuration || 0,
+      price: variant.priceInSubunits || null,
+      minLength: variant.minDuration || null,
       maxLength: variant.maxDuration || '',
       dates: variant.dates || [],
     });
@@ -2603,20 +2610,6 @@ export const PreviewListingPageComponent = props => {
                       return (
                         <div className={css.priceSection}>
                           <div className={css.priceSectionHeader}>
-                            <div className={css.priceSectionTitleContainer}>
-                              <h3 className={css.sectionTitle}>
-                                <FormattedMessage
-                                  id="PreviewListingPage.priceLabel"
-                                  defaultMessage="Price"
-                                />
-                              </h3>
-                              <div className={css.priceSectionSubtitle}>
-                                <FormattedMessage
-                                  id="PreviewListingPage.priceSubtitle"
-                                  defaultMessage="Configure your pricing options"
-                                />
-                              </div>
-                            </div>
                             <button
                               onClick={() => setShowPriceModal(true)}
                               className={css.modifyLink}
@@ -2712,6 +2705,45 @@ export const PreviewListingPageComponent = props => {
 
                       return (
                         <div className={css.mapSection}>
+                          {/* Location Visibility Toggles - above the map */}
+                          <div className={css.locationToggles}>
+                            <div className={css.toggleRow}>
+                              <button
+                                type="button"
+                                className={`${css.toggleButton} ${locationVisible ? css.toggleActive : ''}`}
+                                onClick={handleLocationVisibleToggle}
+                                disabled={updatingListing}
+                                style={locationVisible ? { backgroundColor: config.branding?.marketplaceColor || '#4A90E2', borderColor: config.branding?.marketplaceColor || '#4A90E2' } : {}}
+                              >
+                                <FormattedMessage
+                                  id="PreviewListingPage.locationVisible"
+                                  defaultMessage="Location visible"
+                                />
+                                {showLocationTooltip && (
+                                  <span className={css.toggleTooltip}>
+                                    <FormattedMessage
+                                      id="PreviewListingPage.locationVisibleTooltip"
+                                      defaultMessage="Cannot hide location while hand-by-hand is enabled"
+                                    />
+                                  </span>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                className={`${css.toggleButton} ${handByHandAvailable ? css.toggleActive : ''}`}
+                                onClick={handleHandByHandToggle}
+                                disabled={updatingListing}
+                                style={handByHandAvailable ? { backgroundColor: config.branding?.marketplaceColor || '#4A90E2', borderColor: config.branding?.marketplaceColor || '#4A90E2' } : {}}
+                              >
+                                <FormattedMessage
+                                  id="PreviewListingPage.handByHand"
+                                  defaultMessage="Hand-by-hand available"
+                                />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Map */}
                           {mapCenter && mapCenter.lat && mapCenter.lng ? (
                             <div className={css.mapWrapper}>
                               <Map
@@ -2758,22 +2790,23 @@ export const PreviewListingPageComponent = props => {
                               )}
                             </div>
                           )}
+
+                          {/* Edit Location Link - below the map */}
+                          <div className={css.mapEditLink}>
+                            <button
+                              type="button"
+                              onClick={() => setShowLocationModal(true)}
+                              className={css.modifyLink}
+                            >
+                              <FormattedMessage
+                                id="PreviewListingPage.editAddress"
+                                defaultMessage="Edit the address"
+                              />
+                            </button>
+                          </div>
                         </div>
                       );
                     })()}
-                  {/* Edit Location Link */}
-                  <div className={css.mapEditLink}>
-                    <button
-                      type="button"
-                      onClick={() => setShowLocationModal(true)}
-                      className={css.modifyLink}
-                    >
-                      <FormattedMessage
-                        id="PreviewListingPage.editAddress"
-                        defaultMessage="Edit the address"
-                      />
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -3113,11 +3146,11 @@ export const PreviewListingPageComponent = props => {
                           </span>
                           <input
                             type="number"
-                            value={newPriceVariant.price === 0 ? '' : newPriceVariant.price / 100}
+                            value={newPriceVariant.price ? newPriceVariant.price / 100 : ''}
                             onChange={e => {
                               const value = e.target.value;
                               if (value === '' || value === null || value === undefined) {
-                                setNewPriceVariant({ ...newPriceVariant, price: 0 });
+                                setNewPriceVariant({ ...newPriceVariant, price: null });
                               } else {
                                 const numValue = parseFloat(value);
                                 if (!isNaN(numValue) && numValue > 0) {
@@ -3126,7 +3159,7 @@ export const PreviewListingPageComponent = props => {
                                     price: Math.round(numValue * 100),
                                   });
                                 } else {
-                                  setNewPriceVariant({ ...newPriceVariant, price: 0 });
+                                  setNewPriceVariant({ ...newPriceVariant, price: null });
                                 }
                               }
                             }}
@@ -3153,15 +3186,21 @@ export const PreviewListingPageComponent = props => {
                           </label>
                           <input
                             type="number"
-                            value={newPriceVariant.minLength}
-                            onChange={e =>
-                              setNewPriceVariant({
-                                ...newPriceVariant,
-                                minLength: parseInt(e.target.value) || 0,
-                              })
-                            }
+                            value={newPriceVariant.minLength || ''}
+                            onChange={e => {
+                              const value = e.target.value;
+                              if (value === '' || value === null || value === undefined) {
+                                setNewPriceVariant({ ...newPriceVariant, minLength: null });
+                              } else {
+                                setNewPriceVariant({
+                                  ...newPriceVariant,
+                                  minLength: parseInt(value) || null,
+                                });
+                              }
+                            }}
                             className={css.input}
                             min="1"
+                            placeholder="0"
                           />
                         </div>
                         <div className={css.fieldGroup} style={{ flex: '1 1 50%' }}>
@@ -3207,11 +3246,11 @@ export const PreviewListingPageComponent = props => {
                           </span>
                           <input
                             type="number"
-                            value={newPriceVariant.price === 0 ? '' : newPriceVariant.price / 100}
+                            value={newPriceVariant.price ? newPriceVariant.price / 100 : ''}
                             onChange={e => {
                               const value = e.target.value;
                               if (value === '' || value === null || value === undefined) {
-                                setNewPriceVariant({ ...newPriceVariant, price: 0 });
+                                setNewPriceVariant({ ...newPriceVariant, price: null });
                               } else {
                                 const numValue = parseFloat(value);
                                 if (!isNaN(numValue) && numValue > 0) {
@@ -3220,7 +3259,7 @@ export const PreviewListingPageComponent = props => {
                                     price: Math.round(numValue * 100),
                                   });
                                 } else {
-                                  setNewPriceVariant({ ...newPriceVariant, price: 0 });
+                                  setNewPriceVariant({ ...newPriceVariant, price: null });
                                 }
                               }
                             }}
@@ -3262,7 +3301,10 @@ export const PreviewListingPageComponent = props => {
                       className={css.saveExceptionButton}
                       style={{ background: config.branding?.marketplaceColor || '#4A90E2' }}
                       disabled={
-                        priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0
+                        !newPriceVariant.price ||
+                        newPriceVariant.price <= 0 ||
+                        (priceVariantType === 'length' && !newPriceVariant.minLength) ||
+                        (priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0)
                       }
                     >
                       <FormattedMessage id="ListingConfiguration.save" defaultMessage="Save" />
@@ -3274,8 +3316,8 @@ export const PreviewListingPageComponent = props => {
                         setEditingPriceVariant(null);
                         setNewPriceVariant({
                           type: 'length',
-                          price: modalDefaultPrice,
-                          minLength: 0,
+                          price: modalDefaultPrice || null,
+                          minLength: null,
                           maxLength: '',
                           dates: [],
                         });
@@ -3291,6 +3333,9 @@ export const PreviewListingPageComponent = props => {
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
+              <SecondaryButton onClick={handleClosePriceModal} disabled={updatingListing}>
+                <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
+              </SecondaryButton>
               <PrimaryButton onClick={handleSavePrice} inProgress={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Save" />
               </PrimaryButton>
@@ -3394,6 +3439,9 @@ export const PreviewListingPageComponent = props => {
                     marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
                     availableFrom={currentListing.attributes?.publicData?.availableFrom}
                     availableUntil={currentListing.attributes?.publicData?.availableUntil}
+                    disabledDates={modalExceptions
+                      .filter(exc => !editingException || exc.id !== editingException.id)
+                      .flatMap(exc => exc.dates)}
                   />
                   <div className={css.exceptionActions}>
                     <button
@@ -3464,6 +3512,9 @@ export const PreviewListingPageComponent = props => {
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
+              <SecondaryButton onClick={() => setShowAvailabilityModal(false)} disabled={updatingListing}>
+                <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
+              </SecondaryButton>
               <PrimaryButton onClick={handleSaveAvailability} inProgress={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Save" />
               </PrimaryButton>
@@ -3782,6 +3833,16 @@ export const PreviewListingPageComponent = props => {
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
+              <SecondaryButton
+                onClick={() => {
+                  setShowLocationModal(false);
+                  setShowAddressSearch(false);
+                  setShowFullForm(false);
+                }}
+                disabled={updatingListing}
+              >
+                <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
+              </SecondaryButton>
               <PrimaryButton onClick={handleSaveLocation} inProgress={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Save" />
               </PrimaryButton>
