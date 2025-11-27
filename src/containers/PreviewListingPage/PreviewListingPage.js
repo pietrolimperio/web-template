@@ -310,6 +310,7 @@ export const PreviewListingPageComponent = props => {
     dates: [],
   });
   const [editingPriceVariant, setEditingPriceVariant] = useState(null);
+  const [priceVariantError, setPriceVariantError] = useState(null);
 
   // Location visibility
   const [locationVisible, setLocationVisible] = useState(
@@ -1224,26 +1225,88 @@ export const PreviewListingPageComponent = props => {
 
   // Price variant handlers
   const handleAddPriceVariant = () => {
+    // Clear previous error
+    setPriceVariantError(null);
+    
     if (!newPriceVariant.price || newPriceVariant.price <= 0) {
-      alert(intl.formatMessage({
+      setPriceVariantError(intl.formatMessage({
         id: 'PreviewListingPage.enterValidPrice',
         defaultMessage: 'Please enter a valid price',
       }));
       return;
     }
     if (priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0) {
-      alert(intl.formatMessage({
+      setPriceVariantError(intl.formatMessage({
         id: 'PreviewListingPage.selectDates',
         defaultMessage: 'Please select dates for seasonal pricing',
       }));
       return;
     }
     if (priceVariantType === 'length' && !newPriceVariant.minLength) {
-      alert(intl.formatMessage({
+      setPriceVariantError(intl.formatMessage({
         id: 'PreviewListingPage.enterMinLength',
         defaultMessage: 'Please enter minimum length',
       }));
       return;
+    }
+    
+    // Check for duplicate minDuration in duration-type variants
+    if (priceVariantType === 'length') {
+      const existingDurationVariant = modalPriceVariants.find(
+        v => (v.type === 'duration' || v.minDuration || v.minLength) && 
+             (v.minDuration || v.minLength) === newPriceVariant.minLength &&
+             (!editingPriceVariant || v.id !== editingPriceVariant.id)
+      );
+      if (existingDurationVariant) {
+        setPriceVariantError(intl.formatMessage({
+          id: 'PreviewListingPage.duplicateMinDuration',
+          defaultMessage: 'A price variant with this minimum duration already exists',
+        }));
+        return;
+      }
+    }
+    
+    // Check for overlapping dates in period-type variants
+    if (priceVariantType === 'seasonality' && newPriceVariant.dates.length > 0) {
+      // Get all dates from existing period-type variants (excluding the one being edited)
+      const existingPeriodDates = modalPriceVariants
+        .filter(v => (v.type === 'period' || v.dates || v.period) && 
+                     (!editingPriceVariant || v.id !== editingPriceVariant.id))
+        .flatMap(v => {
+          // If dates array exists (from modal), use it
+          if (v.dates && Array.isArray(v.dates) && v.dates.length > 0) {
+            return v.dates.map(d => {
+              const date = d instanceof Date ? d : new Date(d);
+              return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+            });
+          }
+          // If period string exists (from API), parse it
+          if (v.period && typeof v.period === 'string') {
+            return v.period.split(',').map(dateStr => {
+              // Parse YYYYMMDD format
+              const year = parseInt(dateStr.substring(0, 4), 10);
+              const month = parseInt(dateStr.substring(4, 6), 10) - 1; // Month is 0-indexed
+              const day = parseInt(dateStr.substring(6, 8), 10);
+              return `${year}-${month}-${day}`;
+            });
+          }
+          return [];
+        });
+      
+      // Check if any of the new dates overlap
+      const hasOverlap = newPriceVariant.dates.some(d => {
+        const date = d instanceof Date ? d : new Date(d);
+        const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        return existingPeriodDates.includes(dateKey);
+      });
+      
+      if (hasOverlap) {
+        setPriceVariantError(intl.formatMessage({
+          id: 'PreviewListingPage.overlappingDates',
+          defaultMessage: 'Some dates overlap with an existing price variant',
+        }));
+        return;
+      }
     }
 
     // Map UI type to API type: 'length' -> 'duration', 'seasonality' -> 'period'
@@ -1294,6 +1357,7 @@ export const PreviewListingPageComponent = props => {
       dates: variant.dates || [],
     });
     setShowAddPriceVariant(true);
+    setPriceVariantError(null);
   };
 
   const handleRemovePriceVariant = id => {
@@ -2929,7 +2993,10 @@ export const PreviewListingPageComponent = props => {
                 {!showAddPriceVariant && (
                   <button
                     type="button"
-                    onClick={() => setShowAddPriceVariant(true)}
+                    onClick={() => {
+                      setShowAddPriceVariant(true);
+                      setPriceVariantError(null);
+                    }}
                     className={css.addExceptionLink}
                     style={{ color: config.branding?.marketplaceColor || '#4A90E2' }}
                   >
@@ -3093,7 +3160,10 @@ export const PreviewListingPageComponent = props => {
                   <div className={css.variantTypeSelector}>
                     <button
                       type="button"
-                      onClick={() => setPriceVariantType('length')}
+                      onClick={() => {
+                        setPriceVariantType('length');
+                        setPriceVariantError(null);
+                      }}
                       className={css.chipCard}
                       style={
                         priceVariantType === 'length'
@@ -3112,7 +3182,10 @@ export const PreviewListingPageComponent = props => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPriceVariantType('seasonality')}
+                      onClick={() => {
+                        setPriceVariantType('seasonality');
+                        setPriceVariantError(null);
+                      }}
                       className={css.chipCard}
                       style={
                         priceVariantType === 'seasonality'
@@ -3149,6 +3222,7 @@ export const PreviewListingPageComponent = props => {
                             value={newPriceVariant.price ? newPriceVariant.price / 100 : ''}
                             onChange={e => {
                               const value = e.target.value;
+                              setPriceVariantError(null); // Clear error on change
                               if (value === '' || value === null || value === undefined) {
                                 setNewPriceVariant({ ...newPriceVariant, price: null });
                               } else {
@@ -3189,6 +3263,7 @@ export const PreviewListingPageComponent = props => {
                             value={newPriceVariant.minLength || ''}
                             onChange={e => {
                               const value = e.target.value;
+                              setPriceVariantError(null); // Clear error on change
                               if (value === '' || value === null || value === undefined) {
                                 setNewPriceVariant({ ...newPriceVariant, minLength: null });
                               } else {
@@ -3249,6 +3324,7 @@ export const PreviewListingPageComponent = props => {
                             value={newPriceVariant.price ? newPriceVariant.price / 100 : ''}
                             onChange={e => {
                               const value = e.target.value;
+                              setPriceVariantError(null); // Clear error on change
                               if (value === '' || value === null || value === undefined) {
                                 setNewPriceVariant({ ...newPriceVariant, price: null });
                               } else {
@@ -3284,14 +3360,45 @@ export const PreviewListingPageComponent = props => {
                       </p>
                       <AvailabilityCalendar
                         selectedDates={newPriceVariant.dates}
-                        onDatesChange={dates => setNewPriceVariant({ ...newPriceVariant, dates })}
+                        onDatesChange={dates => {
+                          setPriceVariantError(null); // Clear error on change
+                          setNewPriceVariant({ ...newPriceVariant, dates });
+                        }}
                         selectMode="exception"
                         marketplaceColor={config.branding?.marketplaceColor || '#4A90E2'}
-                        disabledDates={disabledDates}
+                        disabledDates={[
+                          ...disabledDates,
+                          // Include dates from other period-type price variants (exclude editing one)
+                          ...modalPriceVariants
+                            .filter(v => (v.type === 'period' || v.dates || v.period) && (!editingPriceVariant || v.id !== editingPriceVariant.id))
+                            .flatMap(v => {
+                              // If dates array exists (from modal), use it
+                              if (v.dates && Array.isArray(v.dates) && v.dates.length > 0) {
+                                return v.dates.map(d => d instanceof Date ? d : new Date(d));
+                              }
+                              // If period string exists (from API), parse it
+                              if (v.period && typeof v.period === 'string') {
+                                return v.period.split(',').map(dateStr => {
+                                  // Parse YYYYMMDD format
+                                  const year = parseInt(dateStr.substring(0, 4), 10);
+                                  const month = parseInt(dateStr.substring(4, 6), 10) - 1; // Month is 0-indexed
+                                  const day = parseInt(dateStr.substring(6, 8), 10);
+                                  return new Date(year, month, day);
+                                });
+                              }
+                              return [];
+                            })
+                        ]}
                         availableFrom={currentListing.attributes?.publicData?.availableFrom}
                         availableUntil={currentListing.attributes?.publicData?.availableUntil}
                       />
                     </>
+                  )}
+
+                  {priceVariantError && (
+                    <div className={css.priceVariantError}>
+                      {priceVariantError}
+                    </div>
                   )}
 
                   <div className={css.exceptionActions}>
@@ -3314,6 +3421,7 @@ export const PreviewListingPageComponent = props => {
                       onClick={() => {
                         setShowAddPriceVariant(false);
                         setEditingPriceVariant(null);
+                        setPriceVariantError(null);
                         setNewPriceVariant({
                           type: 'length',
                           price: modalDefaultPrice || null,

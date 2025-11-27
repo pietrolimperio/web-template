@@ -520,7 +520,7 @@
   background: none;
   border: none;
   color: var(--marketplaceColor);
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -1372,7 +1372,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
   transition: opacity 0.2s;
 }
 
@@ -1393,6 +1393,17 @@
   font-size: 14px;
   color: var(--matterColor);
   font-style: italic;
+}
+
+.priceVariantError {
+  color: #dc3545;
+  background-color: #fff5f5;
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 1rem;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .exceptionActions {
