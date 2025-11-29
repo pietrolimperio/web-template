@@ -495,10 +495,13 @@
   }
 
   .nameFields,
-  .phoneFields,
   .addressFields {
     flex-direction: column;
     gap: 0;
+  }
+
+  .phoneFields {
+    gap: 1;
   }
 
   .halfField,
@@ -508,7 +511,7 @@
   }
 
   .phonePrefixField {
-    flex: 1;
+    flex: 0.5 1;
   }
 
   .field {
