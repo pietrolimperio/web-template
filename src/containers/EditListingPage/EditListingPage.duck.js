@@ -704,7 +704,9 @@ export const requestPublishListingDraft = listingId => (dispatch, getState, sdk)
       return response;
     })
     .catch(e => {
-      dispatch(publishListingError(storableError(e)));
+      const error = storableError(e);
+      dispatch(publishListingError(error));
+      throw error; // Re-throw to propagate error to caller
     });
 };
 
