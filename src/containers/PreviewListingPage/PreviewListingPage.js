@@ -67,7 +67,7 @@ import {
 } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
-import LoadingPage from '../LoadingPage/LoadingPage';
+import { LoadingPage } from '../ListingPage/ListingPage.shared';
 import AvailabilityCalendar from '../AIListingCreationPage/AvailabilityCalendar';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
 
