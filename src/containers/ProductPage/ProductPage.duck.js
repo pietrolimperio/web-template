@@ -10,3 +10,5 @@ import { loadData as ListingPageLoadData } from '../ListingPage/ListingPage.duck
 // Later this can be customized if ProductPage needs different data loading
 export const loadData = ListingPageLoadData;
 
+
+
