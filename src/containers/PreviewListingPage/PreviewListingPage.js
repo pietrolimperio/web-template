@@ -2475,7 +2475,7 @@ export const PreviewListingPageComponent = props => {
                     >
                       <FormattedMessage
                         id="PreviewListingPage.modifyLink"
-                        defaultMessage="modify"
+                        defaultMessage="Edit"
                       />
                     </button>
                   )}
@@ -2807,8 +2807,8 @@ export const PreviewListingPageComponent = props => {
                         className={css.modifyLink}
                       >
                         <FormattedMessage
-                          id="PreviewListingPage.modifyLink"
-                          defaultMessage="modify"
+                          id="PreviewListingPage.modifyAvailabilityLink"
+                          defaultMessage="Modify availability"
                         />
                       </button>
                     </div>
@@ -3001,8 +3001,8 @@ export const PreviewListingPageComponent = props => {
                               className={css.modifyLink}
                             >
                               <FormattedMessage
-                                id="PreviewListingPage.modifyLink"
-                                defaultMessage="modify"
+                                id="PreviewListingPage.modifyPriceLink"
+                                defaultMessage="Modify price or add price variants"
                               />
                             </button>
                           </div>

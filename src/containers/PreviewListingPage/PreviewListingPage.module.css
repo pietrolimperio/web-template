@@ -34,7 +34,7 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--matterColor);
-  margin: 0 0 16px 0;
+  margin: 0;
   text-align: center;
 
   @media (--viewportMedium) {
@@ -351,9 +351,11 @@
   flex-direction: column;
   gap: 24px;
   padding: 3%;
-  border-radius: 3%;
-  background-color: var(--colorGrey50);
-  box-shadow: 0 2px 20px 5px rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  background-color: rgba(252, 252, 252, 1);
+  box-shadow: 0px 2px 20px 1px rgba(0, 0, 0, 0.05);
+  box-sizing: content-box;
+  color: rgba(74, 74, 79, 1);
   min-width: 0;
   width: 100%;
   height: auto;
@@ -1325,29 +1327,58 @@
 
 /* Availability Modal Styles */
 .availabilityModalContainer {
+  /* Inherit essential container styles from Modal */
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--colorWhite);
+  border-radius: var(--borderRadius);
+
+  /* Custom sizing */
   max-width: 900px;
   width: 100%;
   margin: auto;
+
+  /* Mobile: full screen */
+  min-height: 100vh;
+  height: 100%;
+  padding: 24px;
+
+  @media (--viewportMedium) {
+    flex-grow: 0;
+    min-height: auto;
+    height: auto;
+    padding: 32px;
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    border-bottom: 8px solid var(--marketplaceColor);
+  }
 }
 
 /* Override Modal scrollLayer to center vertically */
 .availabilityModalContainer :global(.scrollLayer) {
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: center !important;
+
+  @media (--viewportMedium) {
+    align-items: center !important;
+  }
 }
 
 .availabilityModalContent {
   width: 100%;
-  max-height: 85vh;
+  flex: 1;
   overflow-y: auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
   /* Hide scrollbar but keep scroll functionality */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+
+  @media (--viewportMedium) {
+    max-height: 75vh;
+  }
 }
 
 .availabilityModalContent::-webkit-scrollbar {

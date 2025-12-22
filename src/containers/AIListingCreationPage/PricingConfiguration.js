@@ -113,7 +113,7 @@ const PricingConfiguration = ({ suggestedPrice, currency, onComplete, onBack, is
             value={defaultPrice / 100}
             onChange={e => setDefaultPrice(Math.round(parseFloat(e.target.value) * 100))}
             className={css.input}
-            step="0.01"
+            step="0.50"
             min="0"
           />
           <span className={css.perDay}>/ day</span>
@@ -236,7 +236,7 @@ const PricingConfiguration = ({ suggestedPrice, currency, onComplete, onBack, is
                     setNewVariant({ ...newVariant, price: Math.round(parseFloat(e.target.value) * 100) })
                   }
                   className={css.input}
-                  step="0.01"
+                  step="0.50"
                   min="0"
                 />
                 <span className={css.perDay}>/ day</span>

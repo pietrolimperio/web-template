@@ -15,21 +15,47 @@ import css from './QuestionModal.module.css';
  * - Navigation: Previous, Skip, Skip All, Cancel
  * - Loading overlay during refinement
  */
-const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining }) => {
+const QuestionModal = ({
+  questions,
+  onComplete,
+  onSkipAll,
+  onCancel,
+  isRefining,
+  allowSkip = true,
+}) => {
   const intl = useIntl();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [otherValue, setOtherValue] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
+  React.useEffect(() => {
+    // Reset state whenever the questions change to avoid stale indices
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setOtherValue('');
+  }, [questions]);
+
   if (!questions || questions.length === 0) {
     return null;
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const safeIndex =
+    currentQuestionIndex >= 0 && currentQuestionIndex < questions.length
+      ? currentQuestionIndex
+      : 0;
+  const currentQuestion = questions[safeIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isFirstQuestion = currentQuestionIndex === 0;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const isFirstQuestion = safeIndex === 0;
+  const isLastQuestion = safeIndex === questions.length - 1;
+
+  // Calculate initial slider value, rounded to the nearest step
+  // e.g., for years (step=1): 2009.5 → 2010, for shoe sizes (step=0.5): 41.5 → 41.5
+  const getInitialSliderValue = question => {
+    const step = question.step ?? 1;
+    const midpoint = (question.min + question.max) / 2;
+    return Math.round(midpoint / step) * step;
+  };
 
   const handleSelectAnswer = value => {
     const newAnswers = { ...answers, [currentQuestion.id]: value };
@@ -67,37 +93,55 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
   };
 
   const handleNext = () => {
-    // For slider type, ensure we have a value
     if (currentQuestion.type === 'slider' && answers[currentQuestion.id] === undefined) {
-      // Use midpoint as default
-      const midpoint = (currentQuestion.min + currentQuestion.max) / 2;
-      setAnswers({ ...answers, [currentQuestion.id]: midpoint });
+      const initialValue = getInitialSliderValue(currentQuestion);
+      setAnswers({ ...answers, [currentQuestion.id]: initialValue });
+    }
+
+    if (currentQuestion.type === 'input') {
+      const value =
+        answers[currentQuestion.id] !== undefined
+          ? answers[currentQuestion.id]
+          : currentQuestion.defaultValue ?? '';
+      if (value === '' || value === undefined || value === null) {
+        return;
+      }
+      const newAnswers = { ...answers, [currentQuestion.id]: value };
+      if (isLastQuestion) {
+        onComplete(newAnswers);
+      } else {
+        setAnswers(newAnswers);
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      }
+      return;
     }
 
     if (isLastQuestion) {
       onComplete(answers);
     } else {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex(safeIndex + 1);
     }
   };
 
   const handlePrevious = () => {
     if (!isFirstQuestion) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      setCurrentQuestionIndex(safeIndex - 1);
       setOtherValue('');
     }
   };
 
   const handleSkip = () => {
+    if (!allowSkip) return;
     if (isLastQuestion) {
       onComplete(answers);
     } else {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex(safeIndex + 1);
     }
   };
 
   const handleSkipAll = () => {
-    onSkipAll(answers);
+    if (!allowSkip) return;
+    onSkipAll?.(answers);
   };
 
   const handleCancelClick = () => {
@@ -115,6 +159,8 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
 
   const currentAnswer = answers[currentQuestion.id];
   const isOtherSelected = currentAnswer === 'other';
+  const inputValue =
+    currentAnswer !== undefined ? currentAnswer : currentQuestion.defaultValue ?? '';
 
   return (
     <>
@@ -154,6 +200,9 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
           {/* Question Content */}
           <div className={css.content}>
             <h3 className={css.question}>{currentQuestion.question}</h3>
+            {currentQuestion.subtitle && (
+              <p className={css.subtitle}>{currentQuestion.subtitle}</p>
+            )}
 
             {currentQuestion.type === 'select' && (
               <div className={css.selectOptions}>
@@ -219,7 +268,7 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
                   <span className={css.sliderValueNumber}>
                     {currentAnswer !== undefined
                       ? currentAnswer
-                      : (currentQuestion.min + currentQuestion.max) / 2}
+                      : getInitialSliderValue(currentQuestion)}
                   </span>
                   {currentQuestion.unit && (
                     <span className={css.sliderValueUnit}>{currentQuestion.unit}</span>
@@ -229,11 +278,11 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
                   type="range"
                   min={currentQuestion.min}
                   max={currentQuestion.max}
-                  step={currentQuestion.step || 1}
+                  step={currentQuestion.step ?? 1}
                   value={
                     currentAnswer !== undefined
                       ? currentAnswer
-                      : (currentQuestion.min + currentQuestion.max) / 2
+                      : getInitialSliderValue(currentQuestion)
                   }
                   onChange={e => handleSliderChange(e.target.value)}
                   className={css.slider}
@@ -242,13 +291,35 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
                 <div className={css.sliderLabels}>
                   <span>
                     {currentQuestion.min}
-                    {currentQuestion.unit}
+                    {currentQuestion.unit && ` ${currentQuestion.unit}`}
                   </span>
                   <span>
                     {currentQuestion.max}
-                    {currentQuestion.unit}
+                    {currentQuestion.unit && ` ${currentQuestion.unit}`}
                   </span>
                 </div>
+              </div>
+            )}
+
+            {currentQuestion.type === 'input' && (
+              <div className={css.inputContainer}>
+                <div className={css.sliderValue}>
+                  <span className={css.sliderValueNumber}>{inputValue}</span>
+                  {currentQuestion.unit && (
+                    <span className={css.sliderValueUnit}>{currentQuestion.unit}</span>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  value={inputValue}
+                  onChange={e =>
+                    setAnswers({ ...answers, [currentQuestion.id]: parseFloat(e.target.value) || e.target.value })
+                  }
+                  className={css.textInput}
+                  disabled={isRefining}
+                  step={currentQuestion.step ?? 1}
+                  autoFocus
+                />
               </div>
             )}
           </div>
@@ -265,26 +336,28 @@ const QuestionModal = ({ questions, onComplete, onSkipAll, onCancel, isRefining 
                 ← <FormattedMessage id="QuestionModal.previousButton" defaultMessage="Previous" />
               </button>
             </div>
-            <div className={css.footerCenter}>
-              <button
-                type="button"
-                onClick={handleSkip}
-                className={css.secondaryButton}
-                disabled={isRefining}
-              >
-                <FormattedMessage id="QuestionModal.skipButton" defaultMessage="Skip" />
-              </button>
-              <button
-                type="button"
-                onClick={handleSkipAll}
-                className={css.secondaryButton}
-                disabled={isRefining}
-              >
-                <FormattedMessage id="QuestionModal.skipAllButton" defaultMessage="Skip All" />
-              </button>
-            </div>
+            {allowSkip && (
+              <div className={css.footerCenter}>
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className={css.secondaryButton}
+                  disabled={isRefining}
+                >
+                  <FormattedMessage id="QuestionModal.skipButton" defaultMessage="Skip" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkipAll}
+                  className={css.secondaryButton}
+                  disabled={isRefining}
+                >
+                  <FormattedMessage id="QuestionModal.skipAllButton" defaultMessage="Skip All" />
+                </button>
+              </div>
+            )}
             <div className={css.footerRight}>
-              {currentQuestion.type === 'slider' && (
+              {(currentQuestion.type === 'slider' || currentQuestion.type === 'input') && (
                 <button
                   type="button"
                   onClick={handleNext}
