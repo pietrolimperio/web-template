@@ -245,7 +245,8 @@ export const PreviewListingPageComponent = props => {
   const currentUserLoaded = !!ensuredCurrentUser.id;
 
   const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('');
+  // Pre-select country based on locale (e.g., 'IT' for 'it-IT')
+  const [selectedCountry, setSelectedCountry] = useState(() => getCountryForLocale(intl.locale));
   const [isCreatingStripeAccount, setIsCreatingStripeAccount] = useState(false);
   const [hasPublished, setHasPublished] = useState(false);
   const [listingFetched, setListingFetched] = useState(false);
@@ -1073,7 +1074,9 @@ export const PreviewListingPageComponent = props => {
     const stripeAccountComplete = stripeConnected && !stripeRequirementsMissing;
 
     console.log('[Stripe] Publish Decision Check:', {
+      listingTypeConfig,
       isPayoutDetailsRequired,
+      processName,
       isInquiryProcess,
       stripeConnected,
       stripeRequirementsMissing,
@@ -1217,7 +1220,8 @@ export const PreviewListingPageComponent = props => {
 
   const handlePayoutModalClose = () => {
     setShowPayoutModal(false);
-    setSelectedCountry('');
+    // Reset to locale-based default instead of empty
+    setSelectedCountry(getCountryForLocale(intl.locale));
   };
 
   // Helper to get Stripe account link after account is created/exists
