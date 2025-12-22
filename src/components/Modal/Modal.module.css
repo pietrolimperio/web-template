@@ -53,8 +53,7 @@
       height: auto;
 
       padding: var(--modalPaddingMedium);
-      margin-top: 12.5vh;
-      margin-bottom: 12.5vh;
+      margin-top: 1%;
       border-bottom: 8px solid var(--marketplaceColor);
     }
   }
