@@ -93,9 +93,12 @@ const QuestionModal = ({
   };
 
   const handleNext = () => {
+    let newAnswers = answers;
+
     if (currentQuestion.type === 'slider' && answers[currentQuestion.id] === undefined) {
       const initialValue = getInitialSliderValue(currentQuestion);
-      setAnswers({ ...answers, [currentQuestion.id]: initialValue });
+      newAnswers = { ...answers, [currentQuestion.id]: initialValue };
+      setAnswers(newAnswers);
     }
 
     if (currentQuestion.type === 'input') {
@@ -106,7 +109,7 @@ const QuestionModal = ({
       if (value === '' || value === undefined || value === null) {
         return;
       }
-      const newAnswers = { ...answers, [currentQuestion.id]: value };
+      newAnswers = { ...answers, [currentQuestion.id]: value };
       if (isLastQuestion) {
         onComplete(newAnswers);
       } else {
@@ -117,7 +120,7 @@ const QuestionModal = ({
     }
 
     if (isLastQuestion) {
-      onComplete(answers);
+      onComplete(newAnswers);
     } else {
       setCurrentQuestionIndex(safeIndex + 1);
     }
