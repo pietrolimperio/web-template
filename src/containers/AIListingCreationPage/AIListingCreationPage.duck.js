@@ -248,10 +248,11 @@ export const updateListing = (listingId, updateData, config) => (dispatch, getSt
 
   const { images, availabilityExceptions, ...otherUpdates } = updateData;
 
-  // Handle image uploads
+  // Handle image uploads - SEQUENTIAL to preserve order
+  // Using reduce to chain promises ensures images are added in the correct order
   const uploadImagesPromise = images
-    ? Promise.all(
-        images.map(imageFile => {
+    ? images.reduce((chainedPromise, imageFile) => {
+        return chainedPromise.then(() => {
           // Get proper image variant configuration
           const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
           const queryParams = {
@@ -270,8 +271,8 @@ export const updateListing = (listingId, updateData, config) => (dispatch, getSt
                 { expand: true, include: ['images'] }
               );
             });
-        })
-      )
+        });
+      }, Promise.resolve())
     : Promise.resolve();
 
   // Handle availability exceptions (create each one individually)
