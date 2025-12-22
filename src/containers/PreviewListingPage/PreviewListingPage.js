@@ -162,11 +162,16 @@ const geocodeAddress = async (addressString, countryCode) => {
 const getImageVariantInfo = listingImageConfig => {
   const { aspectWidth = 1, aspectHeight = 1, variantPrefix = 'listing-card' } = listingImageConfig;
   const aspectRatio = aspectHeight / aspectWidth;
+  // Include both cropped (listing-card-*) and scaled variants (scaled-* preserves original aspect ratio)
   const fieldsImage = [
     `variants.${variantPrefix}`,
     `variants.${variantPrefix}-2x`,
     `variants.${variantPrefix}-4x`,
     `variants.${variantPrefix}-6x`,
+    'variants.scaled-small',
+    'variants.scaled-medium',
+    'variants.scaled-large',
+    'variants.scaled-xlarge',
   ];
 
   return {
@@ -2334,13 +2339,15 @@ export const PreviewListingPageComponent = props => {
                       {(() => {
                         const mainImage = listing.images[selectedImageIndex];
                         const variants = mainImage?.attributes?.variants || {};
+                        // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
                         const imageUrl =
+                          variants['scaled-xlarge']?.url ||
+                          variants['scaled-large']?.url ||
+                          variants['scaled-medium']?.url ||
                           variants['listing-card-6x']?.url ||
                           variants['listing-card-4x']?.url ||
                           variants['listing-card-2x']?.url ||
-                          variants['listing-card']?.url ||
-                          variants['scaled-large']?.url ||
-                          variants['scaled-medium']?.url;
+                          variants['listing-card']?.url;
 
                         return (
                           <img
@@ -4335,13 +4342,15 @@ export const PreviewListingPageComponent = props => {
               {(() => {
                 const mainImage = listing.images[selectedImageIndex];
                 const variants = mainImage?.attributes?.variants || {};
+                // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
                 const imageUrl =
+                  variants['scaled-xlarge']?.url ||
+                  variants['scaled-large']?.url ||
+                  variants['scaled-medium']?.url ||
                   variants['listing-card-6x']?.url ||
                   variants['listing-card-4x']?.url ||
                   variants['listing-card-2x']?.url ||
-                  variants['listing-card']?.url ||
-                  variants['scaled-large']?.url ||
-                  variants['scaled-medium']?.url;
+                  variants['listing-card']?.url;
 
                 return (
                   <img

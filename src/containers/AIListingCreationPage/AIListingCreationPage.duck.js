@@ -6,7 +6,15 @@ import { createImageVariantConfig } from '../../util/sdkLoader';
 const getImageVariantInfo = listingImageConfig => {
   const { aspectWidth = 1, aspectHeight = 1, variantPrefix = 'listing-card' } = listingImageConfig;
   const aspectRatio = aspectHeight / aspectWidth;
-  const fieldsImage = [`variants.${variantPrefix}`, `variants.${variantPrefix}-2x`];
+  // Include both cropped (listing-card-*) and scaled variants (scaled-* preserves original aspect ratio)
+  const fieldsImage = [
+    `variants.${variantPrefix}`,
+    `variants.${variantPrefix}-2x`,
+    'variants.scaled-small',
+    'variants.scaled-medium',
+    'variants.scaled-large',
+    'variants.scaled-xlarge',
+  ];
 
   return {
     fieldsImage,
