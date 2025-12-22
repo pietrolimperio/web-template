@@ -270,12 +270,14 @@ export const getStripeConnectAccountLink = params => (dispatch, getState, sdk) =
   dispatch(getAccountLinkRequest());
 
   // Build the create params - type is required by the API
+  // Using 'eventually_due' to collect ALL requirements upfront (including ID verification)
+  // This prevents users from returning with incomplete verification
   const createParams = {
     failureURL,
     successURL,
     type: type || (accountId ? 'account_update' : 'account_onboarding'),
     collectionOptions: {
-      fields: 'currently_due',
+      fields: 'eventually_due',
       future_requirements: 'include',
     },
   };
