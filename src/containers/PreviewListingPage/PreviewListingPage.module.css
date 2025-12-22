@@ -1533,6 +1533,7 @@
   gap: 12px;
   flex-wrap: wrap;
   min-width: 0;
+  justify-content: end;
 }
 
 .priceSectionTitleContainer {
@@ -2186,13 +2187,16 @@
     display: none;
   }
 
-  /* Calendar header - position modify button on same row as navigation */
+  /* Calendar header - position modify button above navigation on mobile */
   .calendarHeader {
-    position: absolute;
-    top: 16px;
-    right: 0;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 3;
-    margin-bottom: 0;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: end;
+    width: 100%;
   }
 
   /* Calendar navigation - reset positioning for mobile */
