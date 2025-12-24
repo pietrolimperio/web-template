@@ -521,6 +521,32 @@ export const PreviewListingPageComponent = props => {
     }
   }, [currentListing.id]);
 
+  // Fetch Stripe account data on page load if user is logged in
+  // This ensures we have the full stripeAccountData (not just the ID reference)
+  const stripeAccountDataFromProps = stripeAccount?.attributes?.stripeAccountData;
+  const needsStripeDataFetch = currentUserLoaded && !stripeAccountDataFromProps;
+  
+  useEffect(() => {
+    console.log('[Stripe] Page load check:', {
+      currentUserLoaded,
+      stripeAccountFetched,
+      hasStripeAccountData: !!stripeAccountDataFromProps,
+      needsFetch: needsStripeDataFetch,
+    });
+    
+    if (needsStripeDataFetch) {
+      console.log('[Stripe] Fetching Stripe account data on page load...');
+      onFetchStripeAccount()
+        .then(() => {
+          console.log('[Stripe] Stripe account data fetched successfully');
+        })
+        .catch(err => {
+          // This is expected if user has no Stripe account yet
+          console.log('[Stripe] No Stripe account found or fetch failed:', err?.message || err);
+        });
+    }
+  }, [needsStripeDataFetch, onFetchStripeAccount]);
+
   // Geocode address when geolocation is missing (always geocode if address exists)
   useEffect(() => {
     const location = currentListing.attributes?.publicData?.location;
