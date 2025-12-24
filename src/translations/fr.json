@@ -1664,6 +1664,7 @@
   "PreviewListingPage.selectCountryPlaceholder": "Sélectionner un pays...",
   "PreviewListingPage.verificationNeededMessage": "Votre compte Stripe nécessite une vérification supplémentaire. Veuillez compléter le processus de vérification pour commencer à recevoir des paiements.",
   "PreviewListingPage.editLink": "modifier",
+  "PreviewListingPage.cannotDeleteLastImage": "Ajoutez une nouvelle image avant de supprimer celle-ci. Chaque annonce doit avoir au moins une image.",
   "PreviewListingPage.regenerateLink": "régénérer",
   "PreviewListingPage.regenerating": "régénération...",
   "PreviewListingPage.modifyLink": "modifier",

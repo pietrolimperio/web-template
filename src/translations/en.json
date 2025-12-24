@@ -1703,6 +1703,7 @@
   "PreviewListingPage.deleteImageWarning": "This action cannot be undone.",
   "PreviewListingPage.deleteButton": "Delete",
   "PreviewListingPage.deleteError": "Failed to delete image. Please try again.",
+  "PreviewListingPage.cannotDeleteLastImage": "Add a new image before deleting this one. Each listing must have at least one image.",
   "PreviewListingPage.editLink": "edit",
   "PreviewListingPage.regenerateLink": "regenerate",
   "PreviewListingPage.regenerating": "regenerating...",

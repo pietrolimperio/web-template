@@ -1671,6 +1671,7 @@
   "PreviewListingPage.deleteImageWarning": "Questa azione non può essere annullata.",
   "PreviewListingPage.deleteButton": "Elimina",
   "PreviewListingPage.deleteError": "Eliminazione immagine fallita. Riprova.",
+  "PreviewListingPage.cannotDeleteLastImage": "Aggiungi una nuova immagine prima di eliminare questa. Ogni annuncio deve avere almeno un'immagine.",
   "PreviewListingPage.editLink": "Modifica",
   "PreviewListingPage.regenerateLink": "Genera nuovamente con AI",
   "PreviewListingPage.regenerating": "Rigenerando..",
