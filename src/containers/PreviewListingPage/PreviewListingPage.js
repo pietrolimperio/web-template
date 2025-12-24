@@ -2387,10 +2387,12 @@ export const PreviewListingPageComponent = props => {
                         </div>
                         {listing.images.map((image, index) => {
                           const variants = image.attributes?.variants || {};
+                          // Use scaled variants to preserve original aspect ratio (CSS handles the cropping for thumbnails)
                           const imageUrl =
+                            variants['scaled-small']?.url ||
+                            variants['scaled-medium']?.url ||
                             variants['listing-card-2x']?.url ||
-                            variants['listing-card']?.url ||
-                            variants['scaled-medium']?.url;
+                            variants['listing-card']?.url;
                           const isDeleting = deletingImageId === image.id?.uuid;
 
                           return (
