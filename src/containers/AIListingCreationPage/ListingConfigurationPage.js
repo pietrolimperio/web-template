@@ -1612,7 +1612,7 @@ const ListingConfigurationPage = ({
                   <div className={css.locationTooltip}>
                     <FormattedMessage
                       id="ListingConfiguration.cannotDisableLocationTooltip"
-                      defaultMessage="Non puoi disabilitare questa opzione se sei disponibile allo scambio a mano"
+                      defaultMessage="Non puoi disabilitare questa opzione se sei disponibile allo consegna a mano"
                     />
                   </div>
                 )}
