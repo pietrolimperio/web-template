@@ -321,12 +321,14 @@ export const PreviewListingPageComponent = props => {
   const [newPriceVariant, setNewPriceVariant] = useState({
     type: 'length',
     price: null,
+    percentageDiscount: 50,
     minLength: null,
     maxLength: '',
     dates: [],
   });
   const [editingPriceVariant, setEditingPriceVariant] = useState(null);
   const [priceVariantError, setPriceVariantError] = useState(null);
+  const previousPercentageDiscountRef = useRef(50);
 
   // Location visibility
   const [locationVisible, setLocationVisible] = useState(
@@ -1388,10 +1390,12 @@ export const PreviewListingPageComponent = props => {
       setNewPriceVariant({
         type: 'length',
         price: defaultPrice || null,
+        percentageDiscount: 50,
         minLength: null,
         maxLength: '',
         dates: [],
       });
+      previousPercentageDiscountRef.current = 50;
     }
   }, [showPriceModal, currentListing.attributes?.price, currentListing.attributes?.publicData?.priceVariants]);
 
@@ -1575,47 +1579,86 @@ export const PreviewListingPageComponent = props => {
     // Clear previous error
     setPriceVariantError(null);
     
-    if (!newPriceVariant.price || newPriceVariant.price <= 0) {
-      setPriceVariantError(intl.formatMessage({
-        id: 'PreviewListingPage.enterValidPrice',
-        defaultMessage: 'Please enter a valid price',
-      }));
-      return;
-    }
-    if (priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0) {
-      setPriceVariantError(intl.formatMessage({
-        id: 'PreviewListingPage.selectDates',
-        defaultMessage: 'Please select dates for seasonal pricing',
-      }));
-      return;
-    }
-    if (priceVariantType === 'length' && !newPriceVariant.minLength) {
-      setPriceVariantError(intl.formatMessage({
-        id: 'PreviewListingPage.enterMinLength',
-        defaultMessage: 'Please enter minimum length',
-      }));
-      return;
-    }
-    
-    // Check for duplicate minDuration in duration-type variants
+    // Validate based on variant type
     if (priceVariantType === 'length') {
-      const existingDurationVariant = modalPriceVariants.find(
-        v => (v.type === 'duration' || v.minDuration || v.minLength) && 
-             (v.minDuration || v.minLength) === newPriceVariant.minLength &&
-             (!editingPriceVariant || v.id !== editingPriceVariant.id)
-      );
-      if (existingDurationVariant) {
+      // For duration-based variants, validate percentageDiscount
+      if (!newPriceVariant.percentageDiscount || newPriceVariant.percentageDiscount <= 0 || newPriceVariant.percentageDiscount > 100) {
         setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.duplicateMinDuration',
-          defaultMessage: 'A price variant with this minimum duration already exists',
+          id: 'PreviewListingPage.enterValidPercentage',
+          defaultMessage: 'Please enter a valid percentage discount (1-100)',
         }));
         return;
       }
-    }
-    
-    // Check for overlapping dates in period-type variants
-    if (priceVariantType === 'seasonality' && newPriceVariant.dates.length > 0) {
-      // Get all dates from existing period-type variants (excluding the one being edited)
+      if (!newPriceVariant.minLength) {
+        setPriceVariantError(intl.formatMessage({
+          id: 'PreviewListingPage.enterMinLength',
+          defaultMessage: 'Please enter minimum length',
+        }));
+        return;
+      }
+      
+      // Check for conflicts with existing duration variants
+      const existingDurationVariants = modalPriceVariants.filter(
+        v => (v.type === 'duration' || v.minDuration || v.minLength) && 
+             (!editingPriceVariant || v.id !== editingPriceVariant.id)
+      );
+      
+      for (const existingVariant of existingDurationVariants) {
+        const existingMinLength = existingVariant.minDuration || existingVariant.minLength;
+        const existingPercentageDiscount = existingVariant.percentageDiscount;
+        const newMinLength = newPriceVariant.minLength;
+        const newPercentageDiscount = newPriceVariant.percentageDiscount;
+        
+        // Check for same minimum duration
+        if (existingMinLength === newMinLength) {
+          setPriceVariantError(intl.formatMessage({
+            id: 'PreviewListingPage.duplicateMinDuration',
+            defaultMessage: 'A price variant with this minimum duration already exists',
+          }));
+          return;
+        }
+        
+        // Check for same percentage discount
+        if (existingPercentageDiscount === newPercentageDiscount) {
+          setPriceVariantError(intl.formatMessage({
+            id: 'PreviewListingPage.duplicatePercentageDiscount',
+            defaultMessage: 'A price variant with this percentage discount already exists',
+          }));
+          return;
+        }
+        
+        // Check for conflict: if new variant has lower minLength but higher percentageDiscount,
+        // it would make the existing variant useless (or vice versa)
+        // Example: existing (10 days, 50%) conflicts with new (6 days, 60%)
+        if (
+          (existingMinLength > newMinLength && existingPercentageDiscount < newPercentageDiscount) ||
+          (existingMinLength < newMinLength && existingPercentageDiscount > newPercentageDiscount)
+        ) {
+          setPriceVariantError(intl.formatMessage({
+            id: 'PreviewListingPage.conflictingVariant',
+            defaultMessage: 'This variant conflicts with an existing one. A variant with lower minimum duration cannot have a higher discount than variants with higher minimum duration.',
+          }));
+          return;
+        }
+      }
+    } else if (priceVariantType === 'seasonality') {
+      // For period-based variants, validate price
+      if (!newPriceVariant.price || newPriceVariant.price <= 0) {
+        setPriceVariantError(intl.formatMessage({
+          id: 'PreviewListingPage.enterValidPrice',
+          defaultMessage: 'Please enter a valid price',
+        }));
+        return;
+      }
+      if (newPriceVariant.dates.length === 0) {
+        setPriceVariantError(intl.formatMessage({
+          id: 'PreviewListingPage.selectDates',
+          defaultMessage: 'Please select dates for seasonal pricing',
+        }));
+        return;
+      }
+      
+      // Check for overlapping dates in period-type variants
       const existingPeriodDates = modalPriceVariants
         .filter(v => (v.type === 'period' || v.dates || v.period) && 
                      (!editingPriceVariant || v.id !== editingPriceVariant.id))
@@ -1662,12 +1705,13 @@ export const PreviewListingPageComponent = props => {
     const variant = {
       id: editingPriceVariant?.id || Date.now().toString() + Math.random(),
       type: apiType, // Always use API type format
-      priceInSubunits: newPriceVariant.price,
       ...(priceVariantType === 'length' && {
-        minDuration: newPriceVariant.minLength,
-        maxDuration: newPriceVariant.maxLength || null,
+        minLength: newPriceVariant.minLength,
+        percentageDiscount: newPriceVariant.percentageDiscount,
+        maxLength: newPriceVariant.maxLength || null,
       }),
       ...(priceVariantType === 'seasonality' && {
+        priceInSubunits: newPriceVariant.price,
         dates: newPriceVariant.dates,
       }),
     };
@@ -1685,10 +1729,12 @@ export const PreviewListingPageComponent = props => {
     setNewPriceVariant({
       type: 'length',
       price: modalDefaultPrice || null,
+      percentageDiscount: 50,
       minLength: null,
       maxLength: '',
       dates: [],
     });
+    previousPercentageDiscountRef.current = 50;
   };
 
   const handleEditPriceVariant = variant => {
@@ -1696,19 +1742,29 @@ export const PreviewListingPageComponent = props => {
     // Map API type to UI type: 'duration' -> 'length', 'period' -> 'seasonality'
     const uiType = variant.type === 'duration' ? 'length' : variant.type === 'period' ? 'seasonality' : variant.type || 'length';
     setPriceVariantType(uiType);
+    const percentageDiscount = variant.percentageDiscount || 50;
     setNewPriceVariant({
       type: variant.type || uiType, // Keep API type format
       price: variant.priceInSubunits || null,
-      minLength: variant.minDuration || null,
-      maxLength: variant.maxDuration || '',
+      percentageDiscount: percentageDiscount,
+      minLength: variant.minDuration || variant.minLength || null,
+      maxLength: variant.maxDuration || variant.maxLength || '',
       dates: variant.dates || [],
     });
+    previousPercentageDiscountRef.current = percentageDiscount;
     setShowAddPriceVariant(true);
     setPriceVariantError(null);
   };
 
   const handleRemovePriceVariant = id => {
     setModalPriceVariants(modalPriceVariants.filter(v => v.id !== id));
+  };
+
+  // Helper function to format price for modal
+  const formatPriceForModal = (priceAmount) => {
+    const currency = listing.attributes.price?.currency || 'EUR';
+    const currencyConfig = currencyFormatting(currency, { enforceSupportedCurrencies: false });
+    return intl.formatNumber(priceAmount, currencyConfig);
   };
 
   // Handle close price modal and reset state
@@ -1747,7 +1803,13 @@ export const PreviewListingPageComponent = props => {
     try {
       // Format price variants for API
       const formattedPriceVariants = modalPriceVariants
-        .filter(v => v.priceInSubunits || v.price) // Only include variants with a price
+        .filter(v => {
+          // Include duration variants with percentageDiscount or period variants with priceInSubunits
+          if (v.type === 'duration' || v.minLength || v.minDuration) {
+            return v.percentageDiscount != null;
+          }
+          return v.priceInSubunits || v.price;
+        })
         .map((v, index) => {
           // Determine type from variant data if not present
           let variantType = v.type;
@@ -1763,36 +1825,39 @@ export const PreviewListingPageComponent = props => {
           }
           
           const variant = {
-            name: v.name || `variant_${v.id || index}`,
-            priceInSubunits: v.priceInSubunits || (v.price ? Math.round(v.price * 100) : 0),
+            name: v.name || `variant_${Date.now()}.${Math.random()}`,
             type: variantType, // Always include type
           };
           
-          // Add duration fields for length-based variants
-          // Check both minDuration/minLength and maxDuration/maxLength
-          const minDuration = v.minDuration || v.minLength;
-          const maxDuration = v.maxDuration || v.maxLength;
-          
-          if (variantType === 'length' || variantType === 'duration' || minDuration) {
+          // Handle duration-based variants (with percentageDiscount)
+          if (variantType === 'duration') {
+            const minDuration = v.minDuration || v.minLength;
+            const maxDuration = v.maxDuration || v.maxLength;
+            
             if (minDuration) {
               variant.minLength = minDuration;
             }
             if (maxDuration) {
               variant.maxLength = maxDuration;
             }
-          }
-          
-          // Add period for seasonality/period-based variants
-          // Check if period exists (from API) or dates (from modal)
-          if (v.period) {
-            variant.period = v.period;
-          } else if ((variantType === 'seasonality' || variantType === 'period') && v.dates && v.dates.length > 0) {
-            variant.period = v.dates
-              .map(d => {
-                const date = d instanceof Date ? d : new Date(d);
-                return date.toISOString().split('T')[0].replace(/-/g, '');
-              })
-              .join(',');
+            if (v.percentageDiscount != null) {
+              variant.percentageDiscount = v.percentageDiscount;
+            }
+          } else {
+            // Handle period-based variants (with priceInSubunits)
+            variant.priceInSubunits = v.priceInSubunits || (v.price ? Math.round(v.price * 100) : 0);
+            
+            // Add period for seasonality/period-based variants
+            if (v.period) {
+              variant.period = v.period;
+            } else if (v.dates && v.dates.length > 0) {
+              variant.period = v.dates
+                .map(d => {
+                  const date = d instanceof Date ? d : new Date(d);
+                  return date.toISOString().split('T')[0].replace(/-/g, '');
+                })
+                .join(',');
+            }
           }
           
           // Remove undefined/null values (but keep type even if it's the only field)
@@ -3092,7 +3157,11 @@ export const PreviewListingPageComponent = props => {
                                 }}
                               >
                                 <div className={css.priceCardPrice}>
-                                  {formatPrice(variant.priceInSubunits / 100)}
+                                  {variant.type === 'duration' && variant.percentageDiscount != null ? (
+                                    <>-{variant.percentageDiscount}%</>
+                                  ) : (
+                                    formatPrice(variant.priceInSubunits / 100)
+                                  )}
                                 </div>
                                 <div className={css.priceCardLabel}>
                                   {formatPriceVariantLabel(variant)}
@@ -3433,8 +3502,14 @@ export const PreviewListingPageComponent = props => {
                       }}
                     >
                       <div className={css.priceCardPrice}>
-                        {(variant.priceInSubunits / 100).toFixed(2)}{' '}
-                        {listing.attributes.price?.currency || 'EUR'}
+                        {variant.type === 'duration' && variant.percentageDiscount != null ? (
+                          <>-{variant.percentageDiscount}%</>
+                        ) : (
+                          <>
+                            {(variant.priceInSubunits / 100).toFixed(2)}{' '}
+                            {listing.attributes.price?.currency || 'EUR'}
+                          </>
+                        )}
                       </div>
                       <div className={css.priceCardLabel}>
                         {(() => {
@@ -3622,48 +3697,131 @@ export const PreviewListingPageComponent = props => {
                       <div className={css.fieldGroup}>
                         <label className={css.fieldLabel}>
                           <FormattedMessage
-                            id="ListingConfiguration.variantPrice"
-                            defaultMessage="Price"
+                            id="PreviewListingPage.percentageDiscount"
+                            defaultMessage="Percentage Discount"
                           />
                         </label>
                         <div className={css.priceInputGroup}>
-                          <span className={css.currencySymbol}>
-                            {listing.attributes.price?.currency === 'EUR' ? '€' : listing.attributes.price?.currency || '€'}
-                          </span>
                           <input
                             type="number"
-                            value={newPriceVariant.price ? newPriceVariant.price / 100 : ''}
+                            value={newPriceVariant.percentageDiscount || ''}
+                            onMouseDown={e => {
+                              // Check if click is on spinner buttons
+                              const rect = e.target.getBoundingClientRect();
+                              const clickX = e.clientX - rect.left;
+                              const clickY = e.clientY - rect.top;
+                              const inputWidth = rect.width;
+                              const inputHeight = rect.height;
+                              
+                              // Spinner buttons are typically on the right side of the input
+                              // Check if click is in the right 30px of the input (where spinner buttons are)
+                              if (clickX > inputWidth - 30 && clickX < inputWidth) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                const currentValue = newPriceVariant.percentageDiscount || 50;
+                                const step = 5;
+                                
+                                // Determine if it's up or down button based on Y position
+                                // Upper half = up button, lower half = down button
+                                const isUpButton = clickY < inputHeight / 2;
+                                
+                                let newValue;
+                                if (isUpButton) {
+                                  newValue = Math.min(100, currentValue + step);
+                                } else {
+                                  newValue = Math.max(1, currentValue - step);
+                                }
+                                
+                                previousPercentageDiscountRef.current = newValue;
+                                setPriceVariantError(null);
+                                setNewPriceVariant({
+                                  ...newPriceVariant,
+                                  percentageDiscount: newValue,
+                                });
+                                
+                                // Prevent the default browser behavior
+                                return false;
+                              }
+                            }}
                             onChange={e => {
                               const value = e.target.value;
                               setPriceVariantError(null); // Clear error on change
                               if (value === '' || value === null || value === undefined) {
-                                setNewPriceVariant({ ...newPriceVariant, price: null });
+                                previousPercentageDiscountRef.current = null;
+                                setNewPriceVariant({ ...newPriceVariant, percentageDiscount: null });
                               } else {
                                 const numValue = parseFloat(value);
-                                if (!isNaN(numValue) && numValue > 0) {
+                                if (!isNaN(numValue) && numValue > 0 && numValue <= 100) {
+                                  previousPercentageDiscountRef.current = numValue;
                                   setNewPriceVariant({
                                     ...newPriceVariant,
-                                    price: Math.round(numValue * 100),
+                                    percentageDiscount: numValue,
                                   });
                                 } else {
-                                  setNewPriceVariant({ ...newPriceVariant, price: null });
+                                  previousPercentageDiscountRef.current = null;
+                                  setNewPriceVariant({ ...newPriceVariant, percentageDiscount: null });
                                 }
                               }
                             }}
+                            onBlur={e => {
+                              // Round to nearest multiple of 5 when field loses focus
+                              const currentValue = newPriceVariant.percentageDiscount;
+                              if (currentValue != null && currentValue > 0) {
+                                const rounded = Math.round(currentValue / 5) * 5;
+                                const clamped = Math.max(1, Math.min(100, rounded));
+                                if (clamped !== currentValue) {
+                                  setNewPriceVariant({
+                                    ...newPriceVariant,
+                                    percentageDiscount: clamped,
+                                  });
+                                }
+                              }
+                            }}
+                            onKeyDown={e => {
+                              // Handle arrow keys to ensure step of 5
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const currentValue = newPriceVariant.percentageDiscount || 50;
+                                const step = 5;
+                                let newValue;
+                                if (e.key === 'ArrowUp') {
+                                  newValue = Math.min(100, currentValue + step);
+                                } else {
+                                  newValue = Math.max(1, currentValue - step);
+                                }
+                                previousPercentageDiscountRef.current = newValue;
+                                setPriceVariantError(null);
+                                setNewPriceVariant({
+                                  ...newPriceVariant,
+                                  percentageDiscount: newValue,
+                                });
+                              }
+                            }}
                             className={css.priceInput}
-                            step="1"
+                            step="5"
                             min="1"
+                            max="100"
                             placeholder="0"
                           />
-                          <span className={css.perDay}>
-                            <FormattedMessage
-                              id="ListingConfiguration.perDay"
-                              defaultMessage="/giorno"
-                            />
-                          </span>
+                          <span className={css.perDay}>%</span>
                         </div>
+                        {newPriceVariant.percentageDiscount && modalDefaultPrice && (
+                          <div className={css.priceExample}>
+                            <FormattedMessage
+                              id="PreviewListingPage.priceExample"
+                              defaultMessage="Example: {standardPrice} → {discountedPrice} per day"
+                              values={{
+                                standardPrice: formatPriceForModal(modalDefaultPrice / 100),
+                                discountedPrice: formatPriceForModal(
+                                  (modalDefaultPrice / 100) * (1 - newPriceVariant.percentageDiscount / 100)
+                                ),
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+                      <div className={css.lengthVariantFieldsRow}>
                         <div className={css.fieldGroup} style={{ flex: '1 1 50%' }}>
                           <label className={css.fieldLabel}>
                             <FormattedMessage
@@ -3821,10 +3979,8 @@ export const PreviewListingPageComponent = props => {
                       className={css.saveExceptionButton}
                       style={{ background: config.branding?.marketplaceColor || '#4A90E2' }}
                       disabled={
-                        !newPriceVariant.price ||
-                        newPriceVariant.price <= 0 ||
-                        (priceVariantType === 'length' && !newPriceVariant.minLength) ||
-                        (priceVariantType === 'seasonality' && newPriceVariant.dates.length === 0)
+                        (priceVariantType === 'length' && (!newPriceVariant.percentageDiscount || !newPriceVariant.minLength)) ||
+                        (priceVariantType === 'seasonality' && (!newPriceVariant.price || newPriceVariant.price <= 0 || newPriceVariant.dates.length === 0))
                       }
                     >
                       <FormattedMessage id="ListingConfiguration.save" defaultMessage="Save" />
@@ -3838,6 +3994,7 @@ export const PreviewListingPageComponent = props => {
                         setNewPriceVariant({
                           type: 'length',
                           price: modalDefaultPrice || null,
+                          percentageDiscount: null,
                           minLength: null,
                           maxLength: '',
                           dates: [],

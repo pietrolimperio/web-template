@@ -150,15 +150,29 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
   const priceVariantConfig = priceVariants
     ? priceVariants.find(pv => pv.name === priceVariantName)
     : null;
-  const { priceInSubunits } = priceVariantConfig || {};
-  const isPriceInSubunitsValid = Number.isInteger(priceInSubunits) && priceInSubunits >= 0;
-
-  const unitPrice =
-    isBookable && priceVariationsEnabled && isPriceInSubunitsValid
-      ? new Money(priceInSubunits, currency)
-      : offer instanceof Money && isNegotiationUnitType
-      ? offer
-      : priceAttribute;
+  
+  // Handle different types of price variants
+  let unitPrice = priceAttribute;
+  
+  if (isBookable && priceVariationsEnabled && priceVariantConfig) {
+    const { priceInSubunits, percentageDiscount, type } = priceVariantConfig;
+    
+    // For duration-based variants with percentage discount
+    if (type === 'duration' && percentageDiscount != null) {
+      // Apply percentage discount to the base price (or period variant price if applicable)
+      // First check if there's a period variant that should be applied
+      const basePriceAmount = priceAttribute.amount;
+      const discountMultiplier = 1 - (percentageDiscount / 100);
+      const discountedAmount = Math.round(basePriceAmount * discountMultiplier);
+      unitPrice = new Money(discountedAmount, currency);
+    } 
+    // For period-based variants or duration variants with absolute price
+    else if (priceInSubunits != null && Number.isInteger(priceInSubunits) && priceInSubunits >= 0) {
+      unitPrice = new Money(priceInSubunits, currency);
+    }
+  } else if (offer instanceof Money && isNegotiationUnitType) {
+    unitPrice = offer;
+  }
 
   /**
    * Pricing starts with order's base price:

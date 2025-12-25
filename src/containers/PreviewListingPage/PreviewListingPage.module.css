@@ -1541,6 +1541,13 @@
   line-height: 1.4;
 }
 
+.priceExample {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #666;
+  font-style: italic;
+}
+
 .exceptionActions {
   display: flex;
   gap: 1rem;
@@ -1704,6 +1711,10 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+  }
 }
 
 .chipCard {
@@ -1726,6 +1737,16 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.lengthVariantFieldsRow {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+  }
 }
 
 .fieldGroup {
