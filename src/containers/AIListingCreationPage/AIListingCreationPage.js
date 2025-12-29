@@ -403,7 +403,7 @@ export const AIListingCreationPageComponent = ({
     } catch (err) {
       console.error('Refinement error:', err);
       setError(err.message || 'Failed to refine product analysis');
-      setStep(STEP_QUESTIONS);
+      setStep(STEP_UPLOAD);
     }
   };
 
