@@ -1517,6 +1517,8 @@
   "ListingConfiguration.errorMinLength": "Especifique la duración mínima",
   "ListingConfiguration.errorSeasonalityDates": "Seleccione fechas para esta variante de precio",
   "AvailabilityCalendar.selectEndDate": "Haz clic en otra fecha para completar el rango",
+  "AvailabilityCalendar.startEnd": "Inicio / Fin",
+  "AvailabilityCalendar.inRange": "En el rango",
   "AvailabilityCalendar.selected": "Seleccionado",
   "AvailabilityCalendar.available": "Disponible",
   "AvailabilityCalendar.past": "Fecha pasada",

@@ -28,9 +28,11 @@ const AvailabilityCalendar = ({
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectingRange, setSelectingRange] = useState(false);
   const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
   const [internalSelectedDates, setInternalSelectedDates] = useState([]);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hoveredDate, setHoveredDate] = useState(null);
 
   // Initialize with all future dates selected for default mode (up to 1 year)
   useEffect(() => {
@@ -191,13 +193,62 @@ const AvailabilityCalendar = ({
     return false;
   };
 
+  // Check if date is the start of the range
+  const isRangeStart = (date) => {
+    if (!rangeStart && !rangeEnd) return false;
+    const start = rangeStart && rangeEnd 
+      ? (rangeStart < rangeEnd ? rangeStart : rangeEnd)
+      : rangeStart;
+    return start && date.getTime() === start.getTime();
+  };
+
+  // Check if date is the end of the range
+  const isRangeEnd = (date) => {
+    if (!rangeEnd) return false;
+    const end = rangeStart < rangeEnd ? rangeEnd : rangeStart;
+    return date.getTime() === end.getTime();
+  };
+
+  // Check if date is in the middle of the range (not start or end)
+  const isInRange = (date) => {
+    if (!rangeStart || !rangeEnd) return false;
+    const start = rangeStart < rangeEnd ? rangeStart : rangeEnd;
+    const end = rangeStart < rangeEnd ? rangeEnd : rangeStart;
+    return date > start && date < end;
+  };
+
+  // Check if date would be in the preview range (when hovering during selection)
+  const isInPreviewRange = (date) => {
+    if (!selectingRange || !rangeStart || !hoveredDate) return false;
+    const start = rangeStart < hoveredDate ? rangeStart : hoveredDate;
+    const end = rangeStart < hoveredDate ? hoveredDate : rangeStart;
+    return date >= start && date <= end;
+  };
+
+  // Check if this would be the preview end date
+  const isPreviewEnd = (date) => {
+    if (!selectingRange || !rangeStart || !hoveredDate) return false;
+    return date.getTime() === hoveredDate.getTime() && date.getTime() !== rangeStart.getTime();
+  };
+
   const handleDateClick = (date) => {
     if (readOnly || isDateInPast(date) || isDateDisabled(date)) return;
+
+    // If there's already a complete range and user clicks on any date, clear and start new selection
+    if (rangeStart && rangeEnd && !selectingRange) {
+      setRangeStart(date);
+      setRangeEnd(null);
+      setSelectingRange(true);
+      setInternalSelectedDates([date]);
+      onDatesChange([date]);
+      return;
+    }
 
     // Both modes now work the same way: range selection
     if (!selectingRange) {
       // Start a new range - clear previous selection
       setRangeStart(date);
+      setRangeEnd(null);
       setSelectingRange(true);
       setInternalSelectedDates([date]);
       onDatesChange([date]);
@@ -213,9 +264,22 @@ const AvailabilityCalendar = ({
       
       setInternalSelectedDates(range);
       onDatesChange(range);
+      setRangeStart(start);
+      setRangeEnd(end);
       setSelectingRange(false);
-      setRangeStart(null);
     }
+  };
+
+  const handleDateHover = (date) => {
+    if (readOnly || isDateInPast(date) || isDateDisabled(date)) {
+      setHoveredDate(null);
+      return;
+    }
+    setHoveredDate(date);
+  };
+
+  const handleDateLeave = () => {
+    setHoveredDate(null);
   };
 
   const navigateMonth = (direction) => {
@@ -306,20 +370,42 @@ const AvailabilityCalendar = ({
                   date.getMonth() === today.getMonth() &&
                   date.getDate() === today.getDate();
 
+                // Skyscanner-style range classes
+                const isStart = isRangeStart(date);
+                const isEnd = isRangeEnd(date);
+                const inRange = isInRange(date);
+                const inPreview = isInPreviewRange(date);
+                const previewEnd = isPreviewEnd(date);
+                
+                // Check if this is a single-day selection (start equals end)
+                const isSingleDay = rangeStart && rangeEnd && rangeStart.getTime() === rangeEnd.getTime();
+                
+                // Hover state for clearing
+                const isHoveredWithRange = hoveredDate && 
+                  date.getTime() === hoveredDate.getTime() && 
+                  rangeStart && rangeEnd && !selectingRange;
+
                 return (
                   <button
                     key={dayIdx}
                     type="button"
                     onClick={() => handleDateClick(date)}
+                    onMouseEnter={() => handleDateHover(date)}
+                    onMouseLeave={handleDateLeave}
                     disabled={isPast || isDisabled || readOnly}
                     className={classNames(css.day, {
-                      [css.daySelected]: isSelected,
+                      [css.daySelected]: isSelected && !isStart && !isEnd && !inRange,
+                      [css.dayRangeStart]: isStart && !isSingleDay,
+                      [css.dayRangeEnd]: isEnd && !isSingleDay,
+                      [css.daySingleSelected]: isSingleDay && isStart,
+                      [css.dayInRange]: inRange,
+                      [css.dayPreview]: inPreview && selectingRange && !isStart,
+                      [css.dayPreviewEnd]: previewEnd,
                       [css.dayDisabled]: isPast,
                       [css.dayUnavailable]: isDisabled,
                       [css.dayToday]: isToday,
                       [css.dayReadOnly]: readOnly,
-                      [css.dayRangeStart]: selectingRange && rangeStart && 
-                        date.getTime() === rangeStart.getTime(),
+                      [css.dayHoverClear]: isHoveredWithRange,
                     })}
                   >
                     {day}
@@ -375,11 +461,11 @@ const AvailabilityCalendar = ({
 
       <div className={css.legend}>
         <div className={css.legendItem}>
-          <div className={classNames(css.legendBox, css.legendSelected)} />
+          <div className={classNames(css.legendBox, css.legendStartEnd)} />
           <span>
             <FormattedMessage 
-              id="AvailabilityCalendar.selected" 
-              defaultMessage="Selected" 
+              id="AvailabilityCalendar.startEnd" 
+              defaultMessage="Start / End" 
             />
           </span>
         </div>
