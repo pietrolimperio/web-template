@@ -55,7 +55,7 @@ const Heading = props => {
         <FormattedMessage id="ManageListingsPage.noResults" />
       </H3>
       <p className={css.createListingParagraph}>
-        <NamedLink className={css.createListingLink} name="NewListingPage">
+        <NamedLink className={css.createListingLink} name="AIListingCreationPage">
           <FormattedMessage id="ManageListingsPage.createListing" />
         </NamedLink>
       </p>

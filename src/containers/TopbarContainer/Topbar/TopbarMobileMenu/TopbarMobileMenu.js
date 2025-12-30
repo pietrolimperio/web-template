@@ -92,7 +92,7 @@ const TopbarMobileMenu = props => {
   });
 
   const createListingsLinkMaybe = showCreateListingsLink ? (
-    <NamedLink className={css.createNewListingLink} name="NewListingPage">
+    <NamedLink className={css.createNewListingLink} name="AIListingCreationPage">
       <FormattedMessage id="TopbarMobileMenu.newListingLink" />
     </NamedLink>
   ) : null;

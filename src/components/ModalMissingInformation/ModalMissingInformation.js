@@ -86,7 +86,7 @@ class ModalMissingInformation extends Component {
     const isPageWhitelisted = whitelistedPaths.includes(newLocation.pathname);
 
     // Check if user is on the AI listing creation page
-    const isCreatingListing = newLocation.pathname === '/l/create';
+    const isCreatingListing = newLocation.pathname === '/l/new';
     
     // Track if path changes inside Page level component
     const pathChanged = newLocation.pathname !== this.props.location.pathname;
@@ -163,7 +163,7 @@ class ModalMissingInformation extends Component {
     const currentUserLoaded = user && user.id;
     
     // Check if user is on the AI listing creation page - modal should be non-closable there
-    const isCreatingListing = location?.pathname === '/l/create';
+    const isCreatingListing = location?.pathname === '/l/new';
     const emailUnverified = currentUserLoaded && !user.attributes.emailVerified;
     
     // Force show modal on /create page if email is not verified

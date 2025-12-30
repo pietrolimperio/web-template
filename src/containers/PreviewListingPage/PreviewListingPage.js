@@ -1262,8 +1262,8 @@ export const PreviewListingPageComponent = props => {
   // Helper to get Stripe account link after account is created/exists
   const getStripeAccountLinkAndRedirect = (accountId, isNewAccount = false, needsVerification = false) => {
     const rootURL = config.marketplaceRootURL;
-    const successURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
-    const failureURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
+    const successURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
+    const failureURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
 
     // Determine link type based on account status
     // For new accounts, use account_onboarding (no accountId)
@@ -1365,7 +1365,7 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleEdit = () => {
-    history.push(`/l/create?draft=${listingId.uuid}`);
+    history.push(`/l/new?draft=${listingId.uuid}`);
   };
 
   // Initialize price modal state when opening

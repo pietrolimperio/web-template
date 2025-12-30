@@ -118,7 +118,7 @@ describe('util/routes.js', () => {
         '/l/some-slug-here/00000000-0000-0000-0000-000000000000/checkout'
       );
     });
-    it('handles NewListingPage', () => {
+    it('handles AIListingCreationPage', () => {
       const location = {
         pathname: '/l/new',
         search: '',

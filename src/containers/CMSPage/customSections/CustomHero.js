@@ -108,7 +108,7 @@ const CustomHero = () => {
 
           {/* Call-to-Action Buttons */}
           <div className={css.ctaButtons}>
-            <NamedLink name="NewListingPage" className={css.primaryButton}>
+            <NamedLink name="AIListingCreationPage" className={css.primaryButton}>
               <FormattedMessage id="CustomHero.postListing" />
             </NamedLink>
             <NamedLink name="SearchPage" className={css.secondaryButton}>

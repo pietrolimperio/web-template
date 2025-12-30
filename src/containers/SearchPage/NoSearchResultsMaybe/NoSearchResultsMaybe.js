@@ -10,7 +10,7 @@ const NoSearchResultsMaybe = props => {
   const hasSearchParams = location.search?.length > 0;
 
   const createListingLinkMaybe = showCreateListingsLink ? (
-    <NamedLink className={css.createListingLink} name="NewListingPage">
+    <NamedLink className={css.createListingLink} name="AIListingCreationPage">
       <FormattedMessage id="SearchPage.createListing" />
     </NamedLink>
   ) : null;

@@ -404,8 +404,8 @@ export const PreviewListingPageComponent = props => {
     const rootURL = config.marketplaceRootURL;
     const routes = config.routes;
 
-    const successURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
-    const failureURL = `${rootURL}/l/create-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
+    const successURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
+    const failureURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
 
     onGetStripeConnectAccountLink({
       accountId: stripeAccount?.id,
@@ -415,7 +415,7 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleEdit = () => {
-    history.push(`/l/create?draft=${listingId.uuid}`);
+    history.push(`/l/new?draft=${listingId.uuid}`);
   };
 
   // Show loading while fetching

@@ -120,13 +120,13 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       component: RedirectToLandingPage,
     },
     {
-      path: '/l/create-preview/:id',
+      path: '/l/new-preview/:id',
       name: 'PreviewListingPage',
       auth: true,
       component: PreviewListingPage,
     },
     {
-      path: '/l/create-preview/:id/:returnURLType',
+      path: '/l/new-preview/:id/:returnURLType',
       name: 'PreviewListingStripeOnboardingPage',
       auth: true,
       component: PreviewListingPage,
@@ -168,7 +168,7 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       loadData: pageDataLoadingAPI.ListingPage.loadData,
     },
     {
-      path: '/l/create',
+      path: '/l/new',
       name: 'AIListingCreationPage',
       auth: true,
       authPage: 'LoginPage',
@@ -176,7 +176,7 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       loadData: pageDataLoadingAPI.AIListingCreationPage.loadData,
     },
     {
-      path: '/l/new',
+      path: '/l/old-new',
       name: 'NewListingPage',
       auth: true,
       component: () => (
