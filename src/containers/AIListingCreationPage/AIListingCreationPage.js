@@ -288,7 +288,7 @@ export const AIListingCreationPageComponent = ({
           );
         }
 
-        history.push(`/l/new-preview/${listingId.uuid}`);
+        history.push(`/l/edit/${listingId.uuid}/draft`);
       } else {
         throw new Error('Failed to create listing draft');
       }

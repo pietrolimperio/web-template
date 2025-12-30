@@ -120,13 +120,25 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       component: RedirectToLandingPage,
     },
     {
-      path: '/l/new-preview/:id',
+      path: '/l/edit/:id/draft',
+      name: 'PreviewListingPageDraft',
+      auth: true,
+      component: PreviewListingPage,
+    },
+    {
+      path: '/l/edit/:id/draft/:returnURLType',
+      name: 'PreviewListingStripeOnboardingPageDraft',
+      auth: true,
+      component: PreviewListingPage,
+    },
+    {
+      path: '/l/edit/:id',
       name: 'PreviewListingPage',
       auth: true,
       component: PreviewListingPage,
     },
     {
-      path: '/l/new-preview/:id/:returnURLType',
+      path: '/l/edit/:id/:returnURLType',
       name: 'PreviewListingStripeOnboardingPage',
       auth: true,
       component: PreviewListingPage,

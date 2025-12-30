@@ -141,8 +141,8 @@ const ShowFinishDraftOverlayMaybe = props => {
       >
         <NamedLink
           className={css.finishListingDraftLink}
-          name="EditListingPage"
-          params={{ id, slug, type: LISTING_PAGE_PARAM_TYPE_DRAFT, tab: 'photos' }}
+          name="PreviewListingPageDraft"
+          params={{ id }}
         >
           <FormattedMessage id="ManageListingCard.finishListingDraft" />
         </NamedLink>
@@ -243,8 +243,8 @@ const ShowOutOfStockOverlayMaybe = props => {
         <>
           <NamedLink
             className={css.finishListingDraftLink}
-            name="EditListingPage"
-            params={{ id, slug, type: LISTING_PAGE_PARAM_TYPE_EDIT, tab: 'pricing-and-stock' }}
+            name="PreviewListingPageDraft"
+            params={{ id }}
           >
             <FormattedMessage id="ManageListingCard.setPriceAndStock" />
           </NamedLink>
@@ -294,13 +294,12 @@ const ShowOutOfStockOverlayMaybe = props => {
 const LinkToStockOrAvailabilityTab = props => {
   const {
     id,
-    slug,
-    editListingLinkType,
     isBookable,
     hasListingType,
     hasStockManagementInUse,
     currentStock,
     intl,
+    isDraft,
   } = props;
 
   if (!hasListingType || !(isBookable || hasStockManagementInUse)) {
@@ -314,16 +313,16 @@ const LinkToStockOrAvailabilityTab = props => {
       {isBookable ? (
         <NamedLink
           className={css.manageLink}
-          name="EditListingPage"
-          params={{ id, slug, type: editListingLinkType, tab: 'availability' }}
+          name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
+          params={{ id }}
         >
           <FormattedMessage id="ManageListingCard.manageAvailability" />
         </NamedLink>
       ) : (
         <NamedLink
           className={css.manageLink}
-          name="EditListingPage"
-          params={{ id, slug, type: editListingLinkType, tab: 'pricing-and-stock' }}
+          name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
+          params={{ id }}
         >
           {currentStock == null
             ? intl.formatMessage({ id: 'ManageListingCard.setPriceAndStock' })
@@ -639,21 +638,20 @@ export const ManageListingCard = props => {
         <div className={css.manageLinks}>
           <NamedLink
             className={css.manageLink}
-            name="EditListingPage"
-            params={{ id, slug, type: editListingLinkType, tab: 'details' }}
+            name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
+            params={{ id }}
           >
             <FormattedMessage id="ManageListingCard.editListing" />
           </NamedLink>
 
           <LinkToStockOrAvailabilityTab
             id={id}
-            slug={slug}
-            editListingLinkType={editListingLinkType}
             isBookable={isBookable}
             currentStock={currentStock}
             hasListingType={hasListingType}
             hasStockManagementInUse={hasStockManagementInUse}
             intl={intl}
+            isDraft={isDraft}
           />
         </div>
       </div>

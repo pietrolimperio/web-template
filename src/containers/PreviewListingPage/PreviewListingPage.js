@@ -240,6 +240,9 @@ export const PreviewListingPageComponent = props => {
   const { id, returnURLType } = params;
   const listingId = id ? new UUID(id) : null;
   const currentListing = ensureOwnListing(getListing(listingId));
+  
+  // Check if URL contains /draft parameter
+  const isDraftPath = history?.location?.pathname?.includes('/draft') || false;
   const { state: currentListingState } = currentListing.attributes || {};
 
   const ensuredCurrentUser = ensureCurrentUser(currentUser);
@@ -1016,6 +1019,22 @@ export const PreviewListingPageComponent = props => {
   // Check if listing exists and is in draft state
   const isDraft = currentListingState === LISTING_STATE_DRAFT;
   const listingNotFound = listingFetched && !currentListing.id;
+  
+  // Use draft path parameter or listing state to determine if it's a draft
+  const isDraftMode = isDraftPath || isDraft;
+  
+  // Redirect to correct URL based on listing state
+  useEffect(() => {
+    if (listingFetched && currentListing.id && history?.location?.pathname) {
+      const currentPath = history.location.pathname;
+      const expectedPath = isDraft ? `/l/edit/${id}/draft` : `/l/edit/${id}`;
+      
+      // If URL doesn't match the expected path, redirect
+      if (currentPath !== expectedPath && !currentPath.includes('/success') && !currentPath.includes('/failure')) {
+        history.replace(expectedPath);
+      }
+    }
+  }, [listingFetched, currentListing.id, isDraft, id, history]);
 
   // Handle successful Stripe return
   const returnedFromStripe = returnURLType === STRIPE_ONBOARDING_RETURN_URL_SUCCESS;
@@ -1262,8 +1281,9 @@ export const PreviewListingPageComponent = props => {
   // Helper to get Stripe account link after account is created/exists
   const getStripeAccountLinkAndRedirect = (accountId, isNewAccount = false, needsVerification = false) => {
     const rootURL = config.marketplaceRootURL;
-    const successURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
-    const failureURL = `${rootURL}/l/new-preview/${listingId.uuid}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
+    const draftPath = isDraftMode ? '/draft' : '';
+    const successURL = `${rootURL}/l/edit/${listingId.uuid}${draftPath}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
+    const failureURL = `${rootURL}/l/edit/${listingId.uuid}${draftPath}/${STRIPE_ONBOARDING_RETURN_URL_FAILURE}`;
 
     // Determine link type based on account status
     // For new accounts, use account_onboarding (no accountId)
@@ -2387,17 +2407,8 @@ export const PreviewListingPageComponent = props => {
     return <NotFoundPage />;
   }
 
-  if (!isDraft) {
-    // If listing is not a draft, redirect to listing page
-    const listingPath = createResourceLocatorString(
-      'ListingPage',
-      routeConfiguration,
-      { id: listingId.uuid, slug: createSlug(currentListing.attributes.title) },
-      {}
-    );
-    history.push(listingPath);
-    return null;
-  }
+  // Note: PreviewListingPage now handles both draft and published listings
+  // The CTA behavior will differ based on isDraft state
 
   const title = intl.formatMessage(
     { id: 'PreviewListingPage.title' },
@@ -3359,9 +3370,17 @@ export const PreviewListingPageComponent = props => {
             <div className={css.actions}>
               <PrimaryButton onClick={handlePublish} inProgress={publishInProgress}>
                 {publishInProgress ? (
-                  <FormattedMessage id="PreviewListingPage.publishingButton" />
+                  isDraftMode ? (
+                    <FormattedMessage id="PreviewListingPage.publishingButton" />
+                  ) : (
+                    <FormattedMessage id="PreviewListingPage.savingButton" defaultMessage="Salvataggio..." />
+                  )
                 ) : (
-                  <FormattedMessage id="PreviewListingPage.publishButton" />
+                  isDraftMode ? (
+                    <FormattedMessage id="PreviewListingPage.publishButton" />
+                  ) : (
+                    <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Salva" />
+                  )
                 )}
               </PrimaryButton>
             </div>

@@ -140,8 +140,8 @@ export const ActionBarMaybe = props => {
         <span className={isCTAEnabled ? css.linkContainer : css.noShrink}>
           <NamedLink
             className={classNames(css.editListingLink, { [css.CTAEnabled]: isCTAEnabled })}
-            name="EditListingPage"
-            params={editParams}
+            name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
+            params={{ id: editParams.id }}
           >
             <EditIcon className={css.editIcon} />
             <FormattedMessage id={message} />
