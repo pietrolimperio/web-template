@@ -3,7 +3,8 @@ import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import { getDefaultTimeZoneOnBrowser } from '../../util/dates';
 import { useConfiguration } from '../../context/configurationContext';
-import { Map } from '../../components';
+import { DEFAULT_LOCALE } from '../../config/localeConfig';
+import { Map, AddressCascadingDropdowns } from '../../components';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import classNames from 'classnames';
@@ -84,6 +85,12 @@ const ListingConfigurationPage = ({
   const [addressFieldsChanged, setAddressFieldsChanged] = useState(false); // Track if user changed any field
   const [addressFromAutocomplete, setAddressFromAutocomplete] = useState(false); // Track if address came from autocomplete
   const [invalidFields, setInvalidFields] = useState([]); // Track which fields are invalid
+  
+  // Get current locale from localStorage (default: it-IT)
+  const currentLocale =
+    typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+      : DEFAULT_LOCALE;
 
   // Validate mandatory location fields
   const validateLocationFields = () => {
@@ -1444,6 +1451,7 @@ const ListingConfigurationPage = ({
                   defaultMessage="Procedi con la ricerca automatica"
                 />
               </button>
+              {/* Street name and number */}
               <div className={css.twoColumns}>
                 <div className={css.fieldGroup}>
                   <label className={css.fieldLabel}>
@@ -1480,6 +1488,8 @@ const ListingConfigurationPage = ({
                   />
                 </div>
               </div>
+              
+              {/* Apartment/Address line 2 (optional) */}
               <div className={css.fieldGroup}>
                 <label className={css.fieldLabel}>
                   <FormattedMessage
@@ -1498,67 +1508,45 @@ const ListingConfigurationPage = ({
                   })}
                 />
               </div>
+              
+              {/* Cascading dropdowns: Country -> State/Province -> City */}
+              <AddressCascadingDropdowns
+                locale={currentLocale}
+                initialCountry={manualAddress.country}
+                initialState={manualAddress.region}
+                initialCity={manualAddress.city}
+                className={css.cascadingDropdowns}
+                labelClassName={css.fieldLabel}
+                selectClassName={css.input}
+                onCountryChange={(country, translatedName) => {
+                  handleManualAddressChange('country', translatedName);
+                  handleManualAddressChange('region', '');
+                  handleManualAddressChange('city', '');
+                }}
+                onStateChange={(state, stateName, stateCode) => {
+                  // Use state code (e.g., "TA" for Taranto) for consistency with existing data
+                  handleManualAddressChange('region', stateCode || stateName);
+                  handleManualAddressChange('city', '');
+                }}
+                onCityChange={(city, cityName) => {
+                  handleManualAddressChange('city', cityName);
+                }}
+              />
+              
+              {/* Postal Code */}
               <div className={css.fieldGroup}>
                 <label className={css.fieldLabel}>
-                  <FormattedMessage id="ListingConfiguration.city" defaultMessage="City" />
+                  <FormattedMessage
+                    id="ListingConfiguration.postalCode"
+                    defaultMessage="Postal Code"
+                  />
                 </label>
                 <input
                   type="text"
-                  value={manualAddress.city}
-                  onChange={e => handleManualAddressChange('city', e.target.value)}
+                  value={manualAddress.postalCode}
+                  onChange={e => handleManualAddressChange('postalCode', e.target.value)}
                   className={`${css.input} ${
-                    invalidFields.includes('city') ? css.inputInvalid : ''
-                  }`}
-                />
-              </div>
-              <div className={css.twoColumns}>
-                <div className={css.fieldGroup}>
-                  <label className={css.fieldLabel}>
-                    <FormattedMessage
-                      id="ListingConfiguration.region"
-                      defaultMessage="Region/Province"
-                    />
-                  </label>
-                  <input
-                    type="text"
-                    value={manualAddress.region}
-                    onChange={e => handleManualAddressChange('region', e.target.value)}
-                    className={`${css.input} ${
-                      invalidFields.includes('region') ? css.inputInvalid : ''
-                    }`}
-                    placeholder={intl.formatMessage({
-                      id: 'ListingConfiguration.regionPlaceholder',
-                      defaultMessage: 'Province',
-                    })}
-                  />
-                </div>
-                <div className={css.fieldGroup}>
-                  <label className={css.fieldLabel}>
-                    <FormattedMessage
-                      id="ListingConfiguration.postalCode"
-                      defaultMessage="Postal Code"
-                    />
-                  </label>
-                  <input
-                    type="text"
-                    value={manualAddress.postalCode}
-                    onChange={e => handleManualAddressChange('postalCode', e.target.value)}
-                    className={`${css.input} ${
-                      invalidFields.includes('postalCode') ? css.inputInvalid : ''
-                    }`}
-                  />
-                </div>
-              </div>
-              <div className={css.fieldGroup}>
-                <label className={css.fieldLabel}>
-                  <FormattedMessage id="ListingConfiguration.country" defaultMessage="Country" />
-                </label>
-                <input
-                  type="text"
-                  value={manualAddress.country}
-                  onChange={e => handleManualAddressChange('country', e.target.value)}
-                  className={`${css.input} ${
-                    invalidFields.includes('country') ? css.inputInvalid : ''
+                    invalidFields.includes('postalCode') ? css.inputInvalid : ''
                   }`}
                 />
               </div>

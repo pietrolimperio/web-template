@@ -46,6 +46,7 @@ export { default as IconUser } from './IconUser/IconUser';
 export { Heading, H1, H2, H3, H4, H5, H6  } from './Heading/Heading';
 
 // Other independent components
+export { default as AddressCascadingDropdowns } from './AddressCascadingDropdowns/AddressCascadingDropdowns';
 export { default as AspectRatioWrapper } from './AspectRatioWrapper/AspectRatioWrapper';
 export { default as ExternalLink } from './ExternalLink/ExternalLink';
 export { default as ExpandingTextarea } from './ExpandingTextarea/ExpandingTextarea';

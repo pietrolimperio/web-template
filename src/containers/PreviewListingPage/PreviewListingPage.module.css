@@ -2409,3 +2409,33 @@
     padding: 8px 0;
   }
 }
+
+/* Cascading dropdowns styles */
+.cascadingDropdownsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.cascadingDropdownSelect {
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.938rem;
+  transition: border-color 0.2s ease;
+  background-color: white;
+  width: 100%;
+  cursor: pointer;
+}
+
+.cascadingDropdownSelect:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+}
+
+.cascadingDropdownSelect:disabled {
+  background-color: #f8f9fa;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

@@ -64,6 +64,7 @@ import {
   IconClose,
   IconDelete,
   NotificationBanner,
+  AddressCascadingDropdowns,
 } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
@@ -312,6 +313,11 @@ export const PreviewListingPageComponent = props => {
   const [invalidFields, setInvalidFields] = useState([]);
   const [modalLocationVisible, setModalLocationVisible] = useState(true);
   const [modalHandByHandAvailable, setModalHandByHandAvailable] = useState(false);
+  
+  // Cascading dropdowns state for address
+  const [selectedCountryData, setSelectedCountryData] = useState(null);
+  const [selectedStateData, setSelectedStateData] = useState(null);
+  const [selectedCityData, setSelectedCityData] = useState(null);
 
   // Price modal state
   const [modalDefaultPrice, setModalDefaultPrice] = useState(0);
@@ -1952,16 +1958,28 @@ export const PreviewListingPageComponent = props => {
         }
       }
       
+      // Extract initial values for cascading dropdowns
+      const initialCountryValue = address.country || countryFromLocation || '';
+      const initialStateValue = address.region || address.state || regionFromLocation || '';
+      const initialCityValue = address.city || cityFromLocation || '';
+      
       setModalGeolocation(geolocation);
       setManualAddress({
         street: address.street || parsedStreet || address.addressLine1 || streetFromLocation || '',
         streetNumber: address.streetNumber || parsedStreetNumber || location.streetNumber || '',
         addressLine2: address.addressLine2 || location.addressLine2 || '',
-        city: address.city || cityFromLocation || '',
-        region: address.region || address.state || regionFromLocation || '',
+        city: initialCityValue,
+        region: initialStateValue,
         postalCode: address.postalCode || address.postal_code || postalCodeFromLocation || '',
-        country: address.country || countryFromLocation || '',
+        country: initialCountryValue,
       });
+      
+      // Reset cascading dropdown state - they will be initialized by the component
+      // based on initialCountry, initialState, initialCity props
+      setSelectedCountryData(initialCountryValue ? { name: initialCountryValue } : null);
+      setSelectedStateData(initialStateValue ? { name: initialStateValue, state_code: initialStateValue } : null);
+      setSelectedCityData(initialCityValue ? { name: initialCityValue } : null);
+      
       setModalLocationVisible(locationVisible);
       setModalHandByHandAvailable(handByHandAvailable);
       // Always show full form (prefilled if address exists)
@@ -1979,10 +1997,11 @@ export const PreviewListingPageComponent = props => {
         const invalid = [];
         if (!manualAddress.street.trim()) invalid.push('street');
         if (!manualAddress.streetNumber.trim()) invalid.push('streetNumber');
-        if (!manualAddress.city.trim()) invalid.push('city');
-        if (!manualAddress.region.trim()) invalid.push('region');
+        // Use cascading dropdown data for validation
+        if (!selectedCityData?.name) invalid.push('city');
+        if (!selectedStateData?.name) invalid.push('region');
         if (!manualAddress.postalCode.trim()) invalid.push('postalCode');
-        if (!manualAddress.country.trim()) invalid.push('country');
+        if (!selectedCountryData?.name) invalid.push('country');
         
         if (invalid.length > 0) {
           setInvalidFields(invalid);
@@ -1991,10 +2010,18 @@ export const PreviewListingPageComponent = props => {
         }
       }
 
+      // Build address object with data from cascading dropdowns
+      const addressFromDropdowns = showFullForm ? {
+        ...manualAddress,
+        city: selectedCityData?.name || manualAddress.city,
+        region: selectedStateData?.state_code || selectedStateData?.name || manualAddress.region,
+        country: selectedCountryData?.name || manualAddress.country,
+      } : currentListing.attributes?.publicData?.location?.address || {};
+
       // Build location object
       const locationData = {
         geolocation: modalGeolocation,
-        address: showFullForm ? manualAddress : currentListing.attributes?.publicData?.location?.address || {},
+        address: addressFromDropdowns,
       };
 
       // Update location and options
@@ -4416,94 +4443,48 @@ export const PreviewListingPageComponent = props => {
                       })}
                     />
                   </div>
-                  <div className={css.fieldGroup}>
-                    <label className={css.fieldLabel}>
-                      <FormattedMessage id="ListingConfiguration.city" defaultMessage="City" />
-                    </label>
-                    <input
-                      type="text"
-                      value={manualAddress.city}
-                      onChange={e => {
-                        const newAddress = { ...manualAddress, city: e.target.value };
-                        setManualAddress(newAddress);
-                        if (invalidFields.includes('city') && e.target.value.trim()) {
-                          setInvalidFields(invalidFields.filter(f => f !== 'city'));
-                        }
-                      }}
-                      className={`${css.input} ${
-                        invalidFields.includes('city') ? css.inputInvalid : ''
-                      }`}
-                    />
-                  </div>
-                  <div className={css.twoColumns}>
-                    <div className={css.fieldGroup}>
-                      <label className={css.fieldLabel}>
-                        <FormattedMessage
-                          id="ListingConfiguration.region"
-                          defaultMessage="Region/Province"
-                        />
-                      </label>
-                      <input
-                        type="text"
-                        value={manualAddress.region}
-                        onChange={e => {
-                          const newAddress = { ...manualAddress, region: e.target.value };
-                          setManualAddress(newAddress);
-                          if (invalidFields.includes('region') && e.target.value.trim()) {
-                            setInvalidFields(invalidFields.filter(f => f !== 'region'));
-                          }
-                        }}
-                        className={`${css.input} ${
-                          invalidFields.includes('region') ? css.inputInvalid : ''
-                        }`}
-                        placeholder={intl.formatMessage({
-                          id: 'ListingConfiguration.regionPlaceholder',
-                          defaultMessage: 'Province',
-                        })}
-                      />
-                    </div>
-                    <div className={css.fieldGroup}>
-                      <label className={css.fieldLabel}>
-                        <FormattedMessage
-                          id="ListingConfiguration.postalCode"
-                          defaultMessage="Postal Code"
-                        />
-                      </label>
-                      <input
-                        type="text"
-                        value={manualAddress.postalCode}
-                        onChange={e => {
-                          const newAddress = { ...manualAddress, postalCode: e.target.value };
-                          setManualAddress(newAddress);
-                          if (invalidFields.includes('postalCode') && e.target.value.trim()) {
-                            setInvalidFields(invalidFields.filter(f => f !== 'postalCode'));
-                          }
-                        }}
-                        className={`${css.input} ${
-                          invalidFields.includes('postalCode') ? css.inputInvalid : ''
-                        }`}
-                      />
-                    </div>
-                  </div>
-                  <div className={css.fieldGroup}>
-                    <label className={css.fieldLabel}>
-                      <FormattedMessage id="ListingConfiguration.country" defaultMessage="Country" />
-                    </label>
-                    <input
-                      type="text"
-                      value={manualAddress.country}
-                      onChange={e => {
-                        const newAddress = { ...manualAddress, country: e.target.value };
-                        setManualAddress(newAddress);
-                        if (invalidFields.includes('country') && e.target.value.trim()) {
-                          setInvalidFields(invalidFields.filter(f => f !== 'country'));
-                        }
-                      }}
-                      className={`${css.input} ${
-                        invalidFields.includes('country') ? css.inputInvalid : ''
-                      }`}
-                    />
-                  </div>
+                  {/* Cascading Dropdowns: Country -> Province -> City -> Postal Code (2x2 grid) */}
+                  <AddressCascadingDropdowns
+                    locale={intl.locale}
+                    initialCountry={manualAddress.country}
+                    initialState={manualAddress.region}
+                    initialCity={manualAddress.city}
+                    initialPostalCode={manualAddress.postalCode}
+                    onCountryChange={(country, translatedName) => {
+                      setSelectedCountryData(country ? { ...country, name: translatedName } : null);
+                      setSelectedStateData(null);
+                      setSelectedCityData(null);
+                      setManualAddress(prev => ({ ...prev, country: translatedName, region: '', city: '' }));
+                      if (invalidFields.includes('country') && translatedName) {
+                        setInvalidFields(invalidFields.filter(f => f !== 'country'));
+                      }
+                    }}
+                    onStateChange={(state, stateName, stateCode) => {
+                      setSelectedStateData(state ? { ...state, name: stateName, state_code: stateCode } : null);
+                      setSelectedCityData(null);
+                      setManualAddress(prev => ({ ...prev, region: stateCode || stateName, city: '' }));
+                      if (invalidFields.includes('region') && stateName) {
+                        setInvalidFields(invalidFields.filter(f => f !== 'region'));
+                      }
+                    }}
+                    onCityChange={(city, cityName) => {
+                      setSelectedCityData(city ? { ...city, name: cityName } : null);
+                      setManualAddress(prev => ({ ...prev, city: cityName }));
+                      if (invalidFields.includes('city') && cityName) {
+                        setInvalidFields(invalidFields.filter(f => f !== 'city'));
+                      }
+                    }}
+                    onPostalCodeChange={(postalCode) => {
+                      setManualAddress(prev => ({ ...prev, postalCode }));
+                      if (invalidFields.includes('postalCode') && postalCode.trim()) {
+                        setInvalidFields(invalidFields.filter(f => f !== 'postalCode'));
+                      }
+                    }}
+                    className={css.cascadingDropdownsContainer}
+                    labelClassName={css.fieldLabel}
+                    selectClassName={css.cascadingDropdownSelect}
+                    inputClassName={css.input}
+                  />
                 </div>
               )}
 
@@ -4521,7 +4502,24 @@ export const PreviewListingPageComponent = props => {
               >
                 <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
               </SecondaryButton>
-              <PrimaryButton onClick={handleSaveLocation} inProgress={updatingListing}>
+              <PrimaryButton 
+                onClick={handleSaveLocation} 
+                inProgress={updatingListing}
+                disabled={
+                  updatingListing || 
+                  // Disable when using autocomplete search (nothing to save yet)
+                  (showAddressSearch && !showFullForm) ||
+                  // Disable when form is shown but required fields are missing
+                  (showFullForm && (
+                    !manualAddress.street?.trim() ||
+                    !manualAddress.streetNumber?.trim() ||
+                    !selectedCountryData?.name ||
+                    !selectedStateData?.name ||
+                    !selectedCityData?.name ||
+                    !manualAddress.postalCode?.trim()
+                  ))
+                }
+              >
                 <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Save" />
               </PrimaryButton>
             </div>

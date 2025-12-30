@@ -35,6 +35,7 @@ import {
   NamedLink,
   IconSpinner,
   IconLocation,
+  AddressCascadingDropdowns,
 } from '../../components';
 
 import logoImage from '../../assets/logo.png';
@@ -274,6 +275,11 @@ export const NewSignupPageComponent = ({
   const [autocompleteUsed, setAutocompleteUsed] = useState(false); // Track if autocomplete was used
   const [isGeocoding, setIsGeocoding] = useState(false); // Track geocoding in progress
   const errorRef = useRef(null);
+  
+  // Cascading dropdown state for manual address entry
+  const [cascadingCountry, setCascadingCountry] = useState('');
+  const [cascadingState, setCascadingState] = useState('');
+  const [cascadingCity, setCascadingCity] = useState('');
 
   // Get marketplace color from config
   const marketplaceColor = config.branding?.marketplaceColor || '#0c9fa7';
@@ -582,7 +588,18 @@ export const NewSignupPageComponent = ({
                 initialValues={{ phonePrefix: defaultPhonePrefix }}
                 render={({ handleSubmit, invalid, pristine, values, form }) => {
                   const submitInProgress = authInProgress;
-                  const submitDisabled = invalid || submitInProgress || isGeocoding;
+                  
+                  // Check if address fields are complete when using manual address
+                  const addressFieldsIncomplete = (useManualAddress || autocompleteUsed) && (
+                    !values.street?.trim() ||
+                    !values.streetNumber?.trim() ||
+                    !values.city?.trim() ||
+                    !values.state?.trim() ||
+                    !values.postalCode?.trim() ||
+                    !values.country?.trim()
+                  );
+                  
+                  const submitDisabled = invalid || submitInProgress || isGeocoding || addressFieldsIncomplete;
 
                   // Extract and store address components when location is selected
                   React.useEffect(() => {
@@ -888,6 +905,7 @@ export const NewSignupPageComponent = ({
                           </button>
 
                           {/* Expanded form - shown after autocomplete selection OR manual toggle */}
+                          {/* Street name and number */}
                           <div className={css.addressFields}>
                             <FieldTextInput
                               className={css.streetField}
@@ -924,6 +942,7 @@ export const NewSignupPageComponent = ({
                             />
                           </div>
 
+                          {/* Address line 2 (optional) */}
                           <FieldTextInput
                             className={css.field}
                             type="text"
@@ -937,73 +956,41 @@ export const NewSignupPageComponent = ({
                             onChange={e => handleManualFieldChange('addressLine2', e.target.value)}
                           />
 
-                          <div className={css.addressFields}>
-                            <FieldTextInput
-                              className={css.halfField}
-                              type="text"
-                              id="city"
-                              name="city"
-                              autoComplete="address-level2"
-                              label={intl.formatMessage({ id: 'NewSignupPage.cityLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.cityPlaceholder',
-                              })}
-                              onChange={e => handleManualFieldChange('city', e.target.value)}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.cityRequired' })
-                              )}
-                            />
-
-                            <FieldTextInput
-                              className={css.halfField}
-                              type="text"
-                              id="state"
-                              name="state"
-                              autoComplete="address-level1"
-                              label={intl.formatMessage({ id: 'NewSignupPage.stateLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.statePlaceholder',
-                              })}
-                              onChange={e => handleManualFieldChange('state', e.target.value)}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.stateRequired' })
-                              )}
-                            />
-                          </div>
-
-                          <div className={css.addressFields}>
-                            <FieldTextInput
-                              className={css.halfField}
-                              type="text"
-                              id="postalCode"
-                              name="postalCode"
-                              autoComplete="postal-code"
-                              label={intl.formatMessage({ id: 'NewSignupPage.postalCodeLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.postalCodePlaceholder',
-                              })}
-                              onChange={e => handleManualFieldChange('postalCode', e.target.value)}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.postalCodeRequired' })
-                              )}
-                            />
-
-                            <FieldTextInput
-                              className={css.halfField}
-                              type="text"
-                              id="country"
-                              name="country"
-                              autoComplete="country"
-                              label={intl.formatMessage({ id: 'NewSignupPage.countryLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.countryPlaceholder',
-                              })}
-                              onChange={e => handleManualFieldChange('country', e.target.value)}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.countryRequired' })
-                              )}
-                            />
-                          </div>
+                          {/* Cascading dropdowns: Country -> State -> City -> Postal Code (2x2 grid) */}
+                          <AddressCascadingDropdowns
+                            locale={currentLocale}
+                            initialCountry={values.country || cascadingCountry}
+                            initialState={values.state || cascadingState}
+                            initialCity={values.city || cascadingCity}
+                            initialPostalCode={values.postalCode || ''}
+                            className={css.cascadingDropdowns}
+                            onCountryChange={(country, translatedName) => {
+                              setCascadingCountry(translatedName);
+                              setCascadingState('');
+                              setCascadingCity('');
+                              form.change('country', translatedName);
+                              form.change('state', '');
+                              form.change('city', '');
+                              handleManualFieldChange('country', translatedName);
+                            }}
+                            onStateChange={(state, stateName, stateCode) => {
+                              // Use state code (e.g., "TA" for Taranto) for consistency
+                              setCascadingState(stateCode || stateName);
+                              setCascadingCity('');
+                              form.change('state', stateCode || stateName);
+                              form.change('city', '');
+                              handleManualFieldChange('state', stateCode || stateName);
+                            }}
+                            onCityChange={(city, cityName) => {
+                              setCascadingCity(cityName);
+                              form.change('city', cityName);
+                              handleManualFieldChange('city', cityName);
+                            }}
+                            onPostalCodeChange={(postalCode) => {
+                              form.change('postalCode', postalCode);
+                              handleManualFieldChange('postalCode', postalCode);
+                            }}
+                          />
                         </>
                       )}
 
