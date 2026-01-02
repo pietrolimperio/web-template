@@ -55,6 +55,10 @@
   --marketplaceColorLight: #7748d5; /* hsl(260, 63%, 56%), +10L from marketplaceColor */
   --marketplaceColorDark: #492296; /* hsl(260, 63%, 26%), -10L from marketplaceColor */
 
+  --marketplaceColorSecondary: #07A2A9; /* hsl(183, 92%, 34%) */
+  --marketplaceColorSecondaryLight: #1AB8C0; /* hsl(183, 92%, 44%), +10L from marketplaceColorSecondary */
+  --marketplaceColorSecondaryDark: #057C82; /* hsl(183, 92%, 24%), -10L from marketplaceColorSecondary */
+
   /** 
    * The fill color used by <PrimaryButton>
    * These might be overwritten by values from hosted assets
