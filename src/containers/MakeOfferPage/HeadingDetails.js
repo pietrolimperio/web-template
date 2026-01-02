@@ -16,7 +16,7 @@ export const HeadingDetails = props => {
 
   const listingTitleLink = (
     <NamedLink
-      name="ListingPage"
+      name="ProductPage"
       params={{ id: listing?.id?.uuid, slug: createSlug(listingTitle) }}
     >
       {listingTitle}

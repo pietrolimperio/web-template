@@ -79,7 +79,7 @@ const DetailsSideCard = props => {
         >
           <H4 as="h2">
             <NamedLink
-              name="ListingPage"
+              name="ProductPage"
               params={{ id: listing?.id?.uuid, slug: createSlug(listingTitle) }}
             >
               {listingTitle}

@@ -144,18 +144,18 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       component: PreviewListingPage,
     },
     {
-      path: '/p/:slug/:id',
-      name: 'ProductPage',
-      ...authForPrivateMarketplace,
-      component: ProductPage,
-      loadData: pageDataLoadingAPI.ProductPage.loadData,
-    },
-    {
-      path: '/l/:slug/:id',
+      path: '/lold/:slug/:id',
       name: 'ListingPage',
       ...authForPrivateMarketplace,
       component: ListingPage,
       loadData: pageDataLoadingAPI.ListingPage.loadData,
+    },
+    {
+      path: '/l/:slug/:id',
+      name: 'ProductPage',
+      ...authForPrivateMarketplace,
+      component: ProductPage,
+      loadData: pageDataLoadingAPI.ProductPage.loadData,
     },
     {
       path: '/l/:slug/:id/make-offer',

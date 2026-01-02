@@ -166,7 +166,7 @@ export const ListingPageComponent = props => {
   const shouldShowPublicListingPage = pendingIsApproved || pendingOtherUsersListing;
 
   if (shouldShowPublicListingPage) {
-    return <NamedRedirect name="ListingPage" params={params} search={location.search} />;
+    return <NamedRedirect name="ProductPage" params={params} search={location.search} />;
   }
 
   const topbar = <TopbarContainer />;
@@ -448,7 +448,7 @@ export const ListingPageComponent = props => {
               authorLink={
                 <NamedLink
                   className={css.authorNameLink}
-                  name={isVariant ? 'ListingPageVariant' : 'ListingPage'}
+                  name={isVariant ? 'ListingPageVariant' : 'ProductPage'}
                   params={params}
                   to={{ hash: '#author' }}
                 >

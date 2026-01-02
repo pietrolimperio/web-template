@@ -137,7 +137,7 @@ const EnhancedCheckoutPage = props => {
     console.error('Missing or invalid data for checkout, redirecting back to listing page.', {
       listing,
     });
-    return <NamedRedirect name="ListingPage" params={params} />;
+    return <NamedRedirect name="ProductPage" params={params} />;
     // Redirect to NoAccessPage if access rights are missing
   } else if (shouldRedirectUnathorizedUser) {
     return (

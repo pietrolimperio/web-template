@@ -14,7 +14,7 @@ const createListingLink = (listingId, label, listingDeleted, searchParams = {}, 
     const params = { id: listingId, slug: createSlug(label) };
     const to = { search: stringify(searchParams) };
     return (
-      <NamedLink className={className} name="ListingPage" params={params} to={to}>
+      <NamedLink className={className} name="ProductPage" params={params} to={to}>
         {label}
       </NamedLink>
     );

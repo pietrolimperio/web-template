@@ -206,7 +206,7 @@ export const ListingCard = props => {
     : null;
 
   return (
-    <NamedLink className={classes} name="ListingPage" params={{ id, slug }}>
+    <NamedLink className={classes} name="ProductPage" params={{ id, slug }}>
       <ListingCardImage
         renderSizes={renderSizes}
         title={title}

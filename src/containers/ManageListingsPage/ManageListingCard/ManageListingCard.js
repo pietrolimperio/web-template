@@ -76,26 +76,25 @@ const createListingURL = (routes, listing) => {
   const slug = createSlug(listing.attributes.title);
   const isPendingApproval = listing.attributes.state === LISTING_STATE_PENDING_APPROVAL;
   const isDraft = listing.attributes.state === LISTING_STATE_DRAFT;
-  const variant = isDraft
-    ? LISTING_PAGE_DRAFT_VARIANT
-    : isPendingApproval
-    ? LISTING_PAGE_PENDING_APPROVAL_VARIANT
-    : null;
 
-  const linkProps =
-    isPendingApproval || isDraft
-      ? {
-          name: 'ListingPageVariant',
-          params: {
-            id,
-            slug,
-            variant,
-          },
-        }
-      : {
-          name: 'ListingPage',
-          params: { id, slug },
-        };
+  const linkProps = isDraft
+    ? {
+        name: 'PreviewListingPageDraft',
+        params: { id },
+      }
+    : isPendingApproval
+    ? {
+        name: 'ListingPageVariant',
+        params: {
+          id,
+          slug,
+          variant: LISTING_PAGE_PENDING_APPROVAL_VARIANT,
+        },
+      }
+    : {
+        name: 'ProductPage',
+        params: { id, slug },
+      };
 
   return createResourceLocatorString(linkProps.name, routes, linkProps.params, {});
 };
@@ -458,7 +457,7 @@ export const ManageListingCard = props => {
 
   const onOverListingLink = () => {
     // Enforce preloading of ListingPage (loadable component)
-    const { component: Page } = findRouteByRouteName('ListingPage', routeConfiguration);
+    const { component: Page } = findRouteByRouteName('ProductPage', routeConfiguration);
     // Loadable Component has a "preload" function.
     if (Page.preload) {
       Page.preload();

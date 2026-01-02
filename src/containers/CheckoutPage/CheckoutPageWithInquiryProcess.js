@@ -149,7 +149,7 @@ export const CheckoutPageWithInquiryProcess = props => {
   const firstImage = listing?.images?.length > 0 ? listing.images[0] : null;
   const listingTitleLink = (
     <NamedLink
-      name="ListingPage"
+      name="ProductPage"
       params={{ id: listing?.id?.uuid, slug: createSlug(listingTitle) }}
     >
       {listingTitle}

@@ -43,7 +43,7 @@ const PreviewResolverPage = props => {
       params={{ id: listingId, slug: 'from-console', variant: listingStatus }}
     />
   ) : (
-    <NamedRedirect name="ListingPage" params={{ id: listingId, slug: 'from-console' }} />
+    <NamedRedirect name="ProductPage" params={{ id: listingId, slug: 'from-console' }} />
   );
 
   // Check if a specific page should be shown

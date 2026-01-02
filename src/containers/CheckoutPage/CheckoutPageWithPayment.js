@@ -481,7 +481,7 @@ export const CheckoutPageWithPayment = props => {
 
   const listingLink = (
     <NamedLink
-      name="ListingPage"
+      name="ProductPage"
       params={{ id: listing?.id?.uuid, slug: createSlug(listingTitle) }}
     >
       <FormattedMessage id="CheckoutPage.errorlistingLinkText" />

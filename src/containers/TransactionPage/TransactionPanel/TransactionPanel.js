@@ -372,7 +372,7 @@ export class TransactionPanelComponent extends Component {
                       listingTitle
                     ) : (
                       <NamedLink
-                        name="ListingPage"
+                        name="ProductPage"
                         params={{ id: listing.id?.uuid, slug: createSlug(listingTitle) }}
                       >
                         {listingTitle}

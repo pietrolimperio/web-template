@@ -1079,7 +1079,7 @@ export const PreviewListingPageComponent = props => {
       // Listing already published, redirect to listing page
       const title = currentListing?.attributes?.title || 'listing';
       const listingPath = createResourceLocatorString(
-        'ListingPage',
+        'ProductPage',
         routeConfiguration,
         { id: listingId.uuid, slug: createSlug(title) },
         {}
