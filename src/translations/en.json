@@ -1666,6 +1666,8 @@
   "PreviewListingPage.loading": "Loading listing...",
   "PreviewListingPage.heading": "Preview your listing",
   "PreviewListingPage.description": "Review your listing before publishing. You can still edit it if needed.",
+  "PreviewListingPage.headingEdit": "Edit your listing",
+  "PreviewListingPage.descriptionEdit": "Edit your listing and save changes. You can modify any details if needed.",
   "PreviewListingPage.priceLabel": "Price",
   "PreviewListingPage.priceSubtitle": "Configure your pricing options",
   "PreviewListingPage.locationLabel": "Location",

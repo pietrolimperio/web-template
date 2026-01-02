@@ -2379,10 +2379,10 @@ export const PreviewListingPageComponent = props => {
         <div className={css.root}>
           <div className={css.container}>
             <h1 className={css.title}>
-              <FormattedMessage id="PreviewListingPage.heading" />
+              <FormattedMessage id={isDraft ? "PreviewListingPage.heading" : "PreviewListingPage.headingEdit"} />
             </h1>
             <p className={css.description}>
-              <FormattedMessage id="PreviewListingPage.description" />
+              <FormattedMessage id={isDraft ? "PreviewListingPage.description" : "PreviewListingPage.descriptionEdit"} />
             </p>
 
             {/* Preview Content */}
