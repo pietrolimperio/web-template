@@ -402,7 +402,7 @@ const BookingForm = props => {
       <div className={css.submitButtonWrapper}>
         <PrimaryButton
           onClick={handleFormSubmit}
-          disabled={!hasValidDates}
+          disabled={!hasValidDates || isOwnListing}
           inProgress={fetchLineItemsInProgress}
         >
           <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />
