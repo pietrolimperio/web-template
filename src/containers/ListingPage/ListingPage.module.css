@@ -57,7 +57,7 @@
   flex-direction: column;
   width: 100%;
   color: var(--colorGrey100);
-  background-color: var(--colorGrey700);
+  background-color: var(--marketplaceColorSecondaryDark);
   z-index: 1; /* bring on top of mobile image */
   padding: 0 24px;
 
