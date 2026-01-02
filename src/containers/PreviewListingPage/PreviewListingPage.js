@@ -538,22 +538,10 @@ export const PreviewListingPageComponent = props => {
   const needsStripeDataFetch = currentUserLoaded && !stripeAccountDataFromProps;
   
   useEffect(() => {
-    console.log('[Stripe] Page load check:', {
-      currentUserLoaded,
-      stripeAccountFetched,
-      hasStripeAccountData: !!stripeAccountDataFromProps,
-      needsFetch: needsStripeDataFetch,
-    });
-    
     if (needsStripeDataFetch) {
-      console.log('[Stripe] Fetching Stripe account data on page load...');
       onFetchStripeAccount()
-        .then(() => {
-          console.log('[Stripe] Stripe account data fetched successfully');
-        })
-        .catch(err => {
+        .catch(() => {
           // This is expected if user has no Stripe account yet
-          console.log('[Stripe] No Stripe account found or fetch failed:', err?.message || err);
         });
     }
   }, [needsStripeDataFetch, onFetchStripeAccount]);
@@ -994,27 +982,6 @@ export const PreviewListingPageComponent = props => {
     (hasRequirements(stripeAccountData, 'past_due') ||
       hasRequirements(stripeAccountData, 'currently_due'));
 
-  // Log user and Stripe account information for debugging
-  console.log('[Stripe] User and Account Status:', {
-    currentUserLoaded,
-    currentUserId: currentUser?.id?.uuid || currentUser?.id,
-    stripeAccountExists: !!stripeAccount,
-    stripeAccountId: stripeAccount?.id?.uuid || stripeAccount?.id,
-    hasStripeAccountData: hasValidStripeAccountData,
-    stripeAccountData: stripeAccountData ? {
-      country: stripeAccountData.country,
-      business_type: stripeAccountData.business_type,
-      charges_enabled: stripeAccountData.charges_enabled,
-      payouts_enabled: stripeAccountData.payouts_enabled,
-      requirements: {
-        past_due: stripeAccountData.requirements?.past_due || [],
-        currently_due: stripeAccountData.requirements?.currently_due || [],
-      },
-    } : null,
-    stripeConnected,
-    stripeRequirementsMissing,
-    listingState: currentListingState,
-  });
 
   // Check if listing exists and is in draft state
   const isDraft = currentListingState === LISTING_STATE_DRAFT;
@@ -1059,7 +1026,6 @@ export const PreviewListingPageComponent = props => {
   // Helper function to handle successful publish
   const handleSuccessfulPublish = useCallback((publishedListingResponse) => {
     if (!publishedListingResponse) {
-      console.error('[Stripe] Publish response is empty');
       setHasPublished(false);
       setIsPublishing(false);
       return;
@@ -1072,7 +1038,6 @@ export const PreviewListingPageComponent = props => {
     const publishedListing = publishedListingResponse?.data?.data;
     
     if (!publishedListing) {
-      console.error('[Stripe] Published listing not found in response');
       setHasPublished(false);
       setIsPublishing(false);
       return;
@@ -1081,7 +1046,6 @@ export const PreviewListingPageComponent = props => {
     // Verify listing is actually published (not draft)
     const listingState = publishedListing?.attributes?.state;
     if (listingState === LISTING_STATE_DRAFT) {
-      console.error('[Stripe] Listing is still in draft state after publish');
       setHasPublished(false);
       setIsPublishing(false);
       return;
@@ -1092,8 +1056,6 @@ export const PreviewListingPageComponent = props => {
     
     // Use the published listing ID (should be the same, but just in case)
     const listingIdUuid = publishedListingId?.uuid || listingId.uuid;
-    
-    console.log('[Stripe] Publishing successful, redirecting to:', { listingIdUuid, title, state: listingState });
     
     // Redirect to listing page
     const listingPath = createResourceLocatorString(
@@ -1143,25 +1105,12 @@ export const PreviewListingPageComponent = props => {
     // 1. It's connected (exists and has valid data)
     // 2. It has no missing requirements
     const stripeAccountComplete = stripeConnected && !stripeRequirementsMissing;
-
-    console.log('[Stripe] Publish Decision Check:', {
-      listingTypeConfig,
-      isPayoutDetailsRequired,
-      processName,
-      isInquiryProcess,
-      stripeConnected,
-      stripeRequirementsMissing,
-      stripeAccountComplete,
-      willShowModal: !stripeAccountComplete && isPayoutDetailsRequired && !isInquiryProcess,
-    });
-
     // If payout details are not required OR it's an inquiry process, publish directly
     if (!isPayoutDetailsRequired || isInquiryProcess) {
       setIsPublishing(true);
       onPublishListingDraft(listingId)
         .then(response => {
           if (!response) {
-            console.error('[Stripe] Publish returned empty response');
             setHasPublished(false);
             setIsPublishing(false);
             alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
@@ -1170,7 +1119,6 @@ export const PreviewListingPageComponent = props => {
           handleSuccessfulPublish(response);
         })
         .catch(e => {
-          console.error('[Stripe] Failed to publish listing:', e);
           setHasPublished(false); // Reset on error
           setIsPublishing(false);
           alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
@@ -1185,7 +1133,6 @@ export const PreviewListingPageComponent = props => {
       onPublishListingDraft(listingId)
         .then(response => {
           if (!response) {
-            console.error('[Stripe] Publish returned empty response');
             setHasPublished(false);
             setIsPublishing(false);
             alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
@@ -1194,7 +1141,6 @@ export const PreviewListingPageComponent = props => {
           handleSuccessfulPublish(response);
         })
         .catch(e => {
-          console.error('[Stripe] Failed to publish listing:', e);
           setHasPublished(false); // Reset on error
           setIsPublishing(false);
           alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
@@ -1202,7 +1148,6 @@ export const PreviewListingPageComponent = props => {
     } else {
       // Stripe account missing or incomplete - show onboarding modal
       // IMPORTANT: Listing must remain in draft until Stripe onboarding is complete
-      console.log('[Stripe] Showing onboarding modal - listing will remain in draft');
       setShowPayoutModal(true);
     }
   }, [
@@ -1224,18 +1169,15 @@ export const PreviewListingPageComponent = props => {
   useEffect(() => {
     // When returning from Stripe, reload account data first
     if (returnedFromStripe && !isCheckingStripeStatus) {
-      console.log('[Stripe] Returned from Stripe onboarding - reloading account data');
       setIsCreatingStripeAccount(false);
       setIsCheckingStripeStatus(true);
       
       // Reload Stripe account data to get updated information
       onFetchStripeAccount()
         .then(() => {
-          console.log('[Stripe] Stripe account data reloaded successfully');
           setIsCheckingStripeStatus(false);
         })
-        .catch(err => {
-          console.error('[Stripe] Failed to reload Stripe account data:', err);
+        .catch(() => {
           setIsCheckingStripeStatus(false);
         });
     }
@@ -1261,21 +1203,10 @@ export const PreviewListingPageComponent = props => {
       !isPublishing &&
       !publishAttemptedRef.current
     ) {
-      console.log('[Stripe] Auto-publishing listing after successful Stripe onboarding');
       publishAttemptedRef.current = true;
       setIsPublishing(true);
       // Auto-publish after successful Stripe onboarding
       handlePublish();
-    } else if (returnedFromStripe && stripeAccountFetched && !isCheckingStripeStatus) {
-      console.log('[Stripe] Not auto-publishing - conditions not met:', {
-        stripeConnected,
-        stripeRequirementsMissing,
-        isCreatingStripeAccount,
-        hasPublished,
-        isPublishing,
-        publishAttempted: publishAttemptedRef.current,
-        stripeAccountFetched,
-      });
     }
   }, [
     returnedFromStripe,
@@ -1324,38 +1255,22 @@ export const PreviewListingPageComponent = props => {
         // Redirect immediately to Stripe
         window.location.href = url;
       })
-      .catch(err => {
-        console.error('Failed to get Stripe account link:', err);
+      .catch(() => {
         setIsCreatingStripeAccount(false);
       });
   };
 
   const handleGoToStripe = () => {
-    console.log('[Stripe] handleGoToStripe called:', {
-      stripeConnected,
-      stripeAccountId: stripeAccount?.id?.uuid || stripeAccount?.id,
-      stripeRequirementsMissing,
-      selectedCountry,
-    });
-
     if (stripeConnected) {
       // Account exists - determine if it needs verification or just update
       const needsVerification = stripeRequirementsMissing;
       // Extract UUID string from UUID object
       const accountIdString = stripeAccount.id?.uuid || stripeAccount.id;
       
-      console.log('[Stripe] Redirecting to Stripe for existing account:', {
-        accountIdString,
-        needsVerification,
-        linkType: needsVerification ? 'account_update' : 'account_update',
-      });
       getStripeAccountLinkAndRedirect(accountIdString, false, needsVerification);
     } else {
       // No account - need to create one first
-      console.log('[Stripe] No valid Stripe account found - creating new account');
-      
       if (!selectedCountry) {
-        console.warn('[Stripe] Country is required but not selected');
         return; // Country is required
       }
 
@@ -1378,15 +1293,9 @@ export const PreviewListingPageComponent = props => {
         businessProfileURL,
         stripePublishableKey: config.stripe?.publishableKey,
       };
-
-      console.log('[Stripe] Creating Stripe account with params:', createParams);
       
       onCreateStripeAccount(createParams)
         .then(newStripeAccount => {
-          console.log('[Stripe] Stripe account created successfully:', {
-            accountId: newStripeAccount.id?.uuid || newStripeAccount.id,
-          });
-          
           // Account created, now get the onboarding link and redirect immediately
           // Use account_onboarding type for new accounts
           // Extract UUID string from UUID object
@@ -1394,8 +1303,7 @@ export const PreviewListingPageComponent = props => {
           // The flag will be reset when user returns from Stripe
           getStripeAccountLinkAndRedirect(newAccountIdString, true);
         })
-        .catch(err => {
-          console.error('[Stripe] Failed to create Stripe account:', err);
+        .catch(() => {
           setIsCreatingStripeAccount(false);
         });
     }
