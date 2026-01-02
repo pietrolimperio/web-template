@@ -359,12 +359,12 @@
 
 .manageLink {
   text-decoration: underline;
-  color: var(--colorGrey700);
+  color: var(--marketplaceColor);
   white-space: pre;
 
   &:hover {
     text-decoration: underline;
-    color: var(--colorBlack);
+    color: var(--marketplaceColorDark);
   }
 }
 

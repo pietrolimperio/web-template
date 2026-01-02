@@ -315,6 +315,7 @@ const LinkToStockOrAvailabilityTab = props => {
           className={css.manageLink}
           name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
           params={{ id }}
+          to={{ search: '?openAvailabilityModal=true' }}
         >
           <FormattedMessage id="ManageListingCard.manageAvailability" />
         </NamedLink>

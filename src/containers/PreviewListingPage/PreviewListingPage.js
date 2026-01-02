@@ -1036,6 +1036,23 @@ export const PreviewListingPageComponent = props => {
     }
   }, [listingFetched, currentListing.id, isDraft, id, history]);
 
+  // Open availability modal automatically if query parameter is present
+  useEffect(() => {
+    if (listingFetched && currentListing.id && history?.location?.search) {
+      const searchParams = new URLSearchParams(history.location.search);
+      if (searchParams.get('openAvailabilityModal') === 'true') {
+        setShowAvailabilityModal(true);
+        // Remove query parameter from URL after opening modal
+        searchParams.delete('openAvailabilityModal');
+        const newSearch = searchParams.toString();
+        history.replace({
+          pathname: history.location.pathname,
+          search: newSearch ? `?${newSearch}` : '',
+        });
+      }
+    }
+  }, [listingFetched, currentListing.id, history]);
+
   // Handle successful Stripe return
   const returnedFromStripe = returnURLType === STRIPE_ONBOARDING_RETURN_URL_SUCCESS;
 
