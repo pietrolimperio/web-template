@@ -224,7 +224,20 @@ const AvailabilityCalendar = ({
     if (!selectingRange || !rangeStart || !hoveredDate) return false;
     const start = rangeStart < hoveredDate ? rangeStart : hoveredDate;
     const end = rangeStart < hoveredDate ? hoveredDate : rangeStart;
-    return date >= start && date <= end;
+    
+    // Only show preview if the date is within the range
+    if (date < start || date > end) return false;
+    
+    // Check if the entire preview range would be valid (no disabled dates)
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateToCheck = new Date(d);
+      dateToCheck.setHours(0, 0, 0, 0);
+      if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   // Check if this would be the preview end date
@@ -255,15 +268,29 @@ const AvailabilityCalendar = ({
       setInternalSelectedDates([date]);
       onDatesChange([date]);
     } else {
-      // Complete the range
+      // Complete the range - check if all dates in range are available
       const start = rangeStart < date ? rangeStart : date;
       const end = rangeStart < date ? date : rangeStart;
       const range = [];
       
+      // Build the range and check for disabled dates
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateToCheck = new Date(d);
+        dateToCheck.setHours(0, 0, 0, 0);
+        
+        // If any date in the range is disabled, reject the selection
+        if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
+          // Reset to just the start date
+          setInternalSelectedDates([rangeStart]);
+          onDatesChange([rangeStart]);
+          setSelectingRange(true);
+          return;
+        }
+        
         range.push(new Date(d));
       }
       
+      // All dates in range are available, complete the selection
       setInternalSelectedDates(range);
       onDatesChange(range);
       setRangeStart(start);
@@ -277,6 +304,24 @@ const AvailabilityCalendar = ({
       setHoveredDate(null);
       return;
     }
+    
+    // If selecting a range, check if the hovered date would create a valid range
+    if (selectingRange && rangeStart) {
+      const start = rangeStart < date ? rangeStart : date;
+      const end = rangeStart < date ? date : rangeStart;
+      
+      // Check if all dates in the potential range would be available
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateToCheck = new Date(d);
+        dateToCheck.setHours(0, 0, 0, 0);
+        if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
+          // Don't show hover preview if range would be invalid
+          setHoveredDate(null);
+          return;
+        }
+      }
+    }
+    
     setHoveredDate(date);
   };
 
