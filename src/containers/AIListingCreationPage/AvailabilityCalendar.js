@@ -19,6 +19,7 @@ const AvailabilityCalendar = ({
   readOnly = false, // If true, calendar is read-only (only navigation, no date selection)
   availableFrom = null, // Start date of availability range
   availableUntil = null, // End date of availability range
+  singleMonth = false, // If true, always show only one month regardless of screen size
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -447,7 +448,7 @@ const AvailabilityCalendar = ({
 
       <div className={css.monthsContainer}>
         {renderMonth(0)}
-        {isLargeScreen && renderMonth(1)}
+        {!singleMonth && isLargeScreen && renderMonth(1)}
       </div>
 
       {selectingRange && (
