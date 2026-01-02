@@ -8,7 +8,7 @@ import css from './AvailabilityCalendar.module.css';
  * 
  * A calendar component that shows current and next months
  * Allows date range selection or single date selection
- * All dates from today onwards are selected by default
+ * All dates from today onwards are selected by default (unless autoSelectDates is false)
  */
 const AvailabilityCalendar = ({ 
   selectedDates = [], 
@@ -20,6 +20,7 @@ const AvailabilityCalendar = ({
   availableFrom = null, // Start date of availability range
   availableUntil = null, // End date of availability range
   singleMonth = false, // If true, always show only one month regardless of screen size
+  autoSelectDates = true, // If false, calendar starts without any dates selected
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -37,7 +38,7 @@ const AvailabilityCalendar = ({
 
   // Initialize with all future dates selected for default mode (up to 1 year)
   useEffect(() => {
-    if (selectMode === 'range' && selectedDates.length === 0 && !readOnly) {
+    if (selectMode === 'range' && selectedDates.length === 0 && !readOnly && autoSelectDates) {
       // Auto-select all dates from today for 1 year ahead
       const futureDates = [];
       const endDate = new Date(today);
@@ -52,7 +53,7 @@ const AvailabilityCalendar = ({
     } else {
       setInternalSelectedDates(selectedDates);
     }
-  }, [selectMode, readOnly]); // Removed selectedDates from dependencies to avoid loop
+  }, [selectMode, readOnly, autoSelectDates]); // Removed selectedDates from dependencies to avoid loop
 
   // Separate useEffect to update internal state when selectedDates prop changes
   useEffect(() => {

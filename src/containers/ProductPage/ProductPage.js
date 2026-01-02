@@ -376,6 +376,7 @@ const BookingForm = props => {
             availableFrom={publicData?.availableFrom}
             availableUntil={publicData?.availableUntil}
             singleMonth={true}
+            autoSelectDates={false}
           />
         )}
       </div>
