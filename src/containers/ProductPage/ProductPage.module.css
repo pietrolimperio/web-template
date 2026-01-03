@@ -140,6 +140,32 @@
   object-fit: cover;
 }
 
+/* Mobile Header - visible only on mobile */
+.mobileHeader {
+  display: none;
+}
+
+/* ActionBar in mobile header - keep items on same row */
+.mobileHeader :global(.ListingPage_actionBar__a8C0m) {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobileHeader :global(.ListingPage_ownListingText__6je8F) {
+  margin: 14px 0;
+  flex-shrink: 0;
+}
+
+.mobileHeader :global(.ListingPage_noShrink__dMT8J) {
+  flex-shrink: 0;
+}
+
+.mobileHeader :global(a[class*="editListingLink"]),
+.mobileHeader :global(a[class*="addPayoutDetails"]) {
+  margin: 12px 0 12px 0;
+}
+
 /* Info Column */
 .infoColumn {
   width: 100%;
@@ -657,10 +683,44 @@
   text-align: center;
 }
 
+/* Mobile Booking Form - visible only on mobile */
+.mobileBookingForm {
+  display: none;
+}
+
+/* Desktop Booking Form - visible only on desktop */
+.desktopBookingForm {
+  display: block;
+}
+
 /* Responsive adjustments */
 @media (max-width: 767px) {
+  /* Show mobile header */
+  .mobileHeader {
+    display: block;
+    margin-bottom: 24px;
+  }
+
+  /* Hide desktop elements in infoColumn on mobile */
+  .infoColumn .actionBar,
+  .infoColumn .listingTitle,
+  .infoColumn .priceContainer,
+  .infoColumn .authorSection {
+    display: none;
+  }
+
   .infoColumn {
     position: static;
+  }
+
+  /* Show mobile booking form, hide desktop */
+  .mobileBookingForm {
+    display: block;
+    margin-top: 24px;
+  }
+
+  .desktopBookingForm {
+    display: none;
   }
   
   .imageNavButton {

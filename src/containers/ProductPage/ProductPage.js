@@ -730,6 +730,73 @@ export const ProductPageComponent = props => {
     >
       <LayoutSingleColumn className={css.pageRoot} topbar={topbar} footer={<FooterContainer />}>
         <div className={css.contentWrapper}>
+          {/* Mobile Header - ActionBar, Title, Price, Author (visible only on mobile) */}
+          <div className={css.mobileHeader}>
+            {/* Action Bar (for own listing) */}
+            {mounted && currentListing.id && isOwnListing && (
+              <ActionBarMaybe
+                className={css.actionBar}
+                isOwnListing={isOwnListing}
+                listing={currentListing}
+                showNoPayoutDetailsSet={noPayoutDetailsSetWithOwnListing}
+                currentUser={currentUser}
+                editParams={{
+                  id: listingId.uuid,
+                  slug: listingSlug,
+                  type: listingPathParamType,
+                  tab: listingTab,
+                }}
+              />
+            )}
+
+            {/* Title */}
+            <H4 as="h1" className={css.listingTitle}>
+              {richTitle}
+            </H4>
+
+            {/* Price */}
+            {price && (
+              <div className={css.priceContainer}>
+                <span className={css.price}>{formattedPrice}</span>
+                <span className={css.perUnit}>
+                  <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
+                </span>
+              </div>
+            )}
+
+            {/* Author */}
+            <div className={css.authorSection}>
+              <AvatarSmall user={ensuredAuthor} className={css.authorAvatar} />
+              <div className={css.authorInfo}>
+                <span className={css.authorName}>
+                  <FormattedMessage
+                    id="ProductPage.hostedBy"
+                    defaultMessage="Offerto da {name}"
+                    values={{
+                      name: (
+                        <NamedLink
+                          className={css.authorNameLink}
+                          name="ProfilePage"
+                          params={{ id: ensuredAuthor.id?.uuid }}
+                        >
+                          {authorDisplayName}
+                        </NamedLink>
+                      ),
+                    }}
+                  />
+                </span>
+                <div className={css.authorRating}>
+                  <ReviewRating
+                    rating={authorAverageRatingRounded}
+                    className={css.authorReviewRating}
+                    reviewStarClassName={css.authorReviewStar}
+                  />
+                  <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Breadcrumb */}
           {publicData?.category && (
             <div className={css.breadcrumb}>
@@ -888,7 +955,29 @@ export const ProductPageComponent = props => {
                     );
                   })()}
 
-                                {/* Map (shown if locationVisible is true) - outside images block so it shows even without images */}
+                  {/* Booking Form - Mobile (after details, before location) */}
+                  {isBooking && !isClosed && (
+                    <div className={css.mobileBookingForm}>
+                      <BookingForm
+                        listing={currentListing}
+                        isOwnListing={isOwnListing}
+                        onSubmit={handleOrderSubmit}
+                        intl={intl}
+                        config={config}
+                        monthlyTimeSlots={monthlyTimeSlots}
+                        onFetchTimeSlots={onFetchTimeSlots}
+                        onFetchTransactionLineItems={onFetchTransactionLineItems}
+                        lineItems={lineItems}
+                        fetchLineItemsInProgress={fetchLineItemsInProgress}
+                        fetchLineItemsError={fetchLineItemsError}
+                        dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
+                        marketplaceName={marketplaceName}
+                        payoutDetailsWarning={payoutDetailsWarning}
+                      />
+                    </div>
+                  )}
+
+                  {/* Map (shown if locationVisible is true) - outside images block so it shows even without images */}
               {publicData?.locationVisible && (() => {
                 const location = publicData?.location || {};
                 const locationGeolocation = location.geolocation || geolocation || null;
@@ -1004,9 +1093,9 @@ export const ProductPageComponent = props => {
               )}
             </div>
 
-            {/* Right Column - Title, Price, Author, Booking Form */}
+            {/* Right Column - Title, Price, Author, Booking Form (Desktop) */}
             <div className={css.infoColumn}>
-              {/* Action Bar (for own listing) */}
+              {/* Action Bar (for own listing) - Desktop only */}
               {mounted && currentListing.id && isOwnListing && (
                 <ActionBarMaybe
                   className={css.actionBar}
@@ -1023,12 +1112,12 @@ export const ProductPageComponent = props => {
                 />
               )}
 
-              {/* Title */}
+              {/* Title - Desktop only */}
               <H4 as="h1" className={css.listingTitle}>
                 {richTitle}
               </H4>
 
-              {/* Price */}
+              {/* Price - Desktop only */}
               {price && (
                 <div className={css.priceContainer}>
                   <span className={css.price}>{formattedPrice}</span>
@@ -1038,7 +1127,7 @@ export const ProductPageComponent = props => {
                 </div>
               )}
 
-              {/* Author */}
+              {/* Author - Desktop only */}
               <div className={css.authorSection}>
                 <AvatarSmall user={ensuredAuthor} className={css.authorAvatar} />
                 <div className={css.authorInfo}>
@@ -1070,24 +1159,26 @@ export const ProductPageComponent = props => {
                 </div>
               </div>
 
-              {/* Booking Form */}
+              {/* Booking Form - Desktop only */}
               {isBooking && !isClosed && (
-                <BookingForm
-                  listing={currentListing}
-                  isOwnListing={isOwnListing}
-                  onSubmit={handleOrderSubmit}
-                  intl={intl}
-                  config={config}
-                  monthlyTimeSlots={monthlyTimeSlots}
-                  onFetchTimeSlots={onFetchTimeSlots}
-                  onFetchTransactionLineItems={onFetchTransactionLineItems}
-                  lineItems={lineItems}
-                  fetchLineItemsInProgress={fetchLineItemsInProgress}
-                  fetchLineItemsError={fetchLineItemsError}
-                  dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
-                  marketplaceName={marketplaceName}
-                  payoutDetailsWarning={payoutDetailsWarning}
-                />
+                <div className={css.desktopBookingForm}>
+                  <BookingForm
+                    listing={currentListing}
+                    isOwnListing={isOwnListing}
+                    onSubmit={handleOrderSubmit}
+                    intl={intl}
+                    config={config}
+                    monthlyTimeSlots={monthlyTimeSlots}
+                    onFetchTimeSlots={onFetchTimeSlots}
+                    onFetchTransactionLineItems={onFetchTransactionLineItems}
+                    lineItems={lineItems}
+                    fetchLineItemsInProgress={fetchLineItemsInProgress}
+                    fetchLineItemsError={fetchLineItemsError}
+                    dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
+                    marketplaceName={marketplaceName}
+                    payoutDetailsWarning={payoutDetailsWarning}
+                  />
+                </div>
               )}
 
               {/* Closed Listing Message */}
