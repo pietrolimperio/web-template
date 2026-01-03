@@ -611,6 +611,7 @@
   "ProductPage.listingCreated": "Listing created on {date}",
   "ProductPage.description": "Description",
   "ProductPage.details": "Details",
+  "ProductPage.discountForRental": "Discount for all the duration of your rental",
   "ProductPage.fromDays": "from {days} days",
   "ProductPage.fromToDays": "from {min} to {max} days",
   "ProductPage.hostedBy": "Offered by {name}",

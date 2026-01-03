@@ -600,6 +600,7 @@
   "ProductPage.listingCreated": "Annonce créée le {date}",
   "ProductPage.description": "Description",
   "ProductPage.details": "Détails",
+  "ProductPage.discountForRental": "Réduction pour toute la durée de votre location",
   "ProductPage.fromDays": "à partir de {days} jours",
   "ProductPage.fromToDays": "de {min} à {max} jours",
   "ProductPage.hostedBy": "Proposé par {name}",

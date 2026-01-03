@@ -342,28 +342,8 @@ const BookingForm = props => {
 
   return (
     <div className={css.bookingFormWrapper}>
-      {/* Price Variant Cards (display only, excluding default) */}
-      {priceVariants.length > 0 && (
-        <div className={css.priceVariantsSection}>
-          <div className={css.priceVariantsGrid}>
-            {priceVariants.map((variant, index) => (
-              <PriceVariantCard
-                key={variant.name || index}
-                variant={variant}
-                currency={currency}
-                intl={intl}
-                marketplaceColor={marketplaceColor}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Availability Calendar */}
       <div className={css.calendarSection}>
-        <h3 className={css.calendarTitle}>
-          <FormattedMessage id="ProductPage.selectDates" defaultMessage="Seleziona le date" />
-        </h3>
         {isLoadingAvailability ? (
           <div className={css.loadingCalendar}>
             <FormattedMessage id="ProductPage.loadingAvailability" defaultMessage="Caricamento disponibilità..." />
@@ -421,6 +401,29 @@ const BookingForm = props => {
           />
         )}
       </p>
+            {/* Price Variant Cards (display only, excluding default) */}
+            {priceVariants.length > 0 && (
+        <div className={css.priceVariantsSection}>
+          <h3 className={css.sectionTitle}>
+            <FormattedMessage 
+              id="ProductPage.discountForRental" 
+              defaultMessage="Sconto per tutta la durata del noleggio" 
+            />
+          </h3>
+          <div className={css.priceVariantsGrid}>
+            {priceVariants.map((variant, index) => (
+              <PriceVariantCard
+                key={variant.name || index}
+                variant={variant}
+                currency={currency}
+                intl={intl}
+                marketplaceColor={marketplaceColor}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

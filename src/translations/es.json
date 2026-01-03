@@ -603,6 +603,7 @@
   "ProductPage.listingCreated": "Anuncio creado el {date}",
   "ProductPage.description": "Descripción",
   "ProductPage.details": "Detalles",
+  "ProductPage.discountForRental": "Descuento por toda la duración de tu alquiler",
   "ProductPage.fromDays": "desde {days} días",
   "ProductPage.fromToDays": "de {min} a {max} días",
   "ProductPage.hostedBy": "Ofrecido por {name}",
