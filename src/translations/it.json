@@ -592,6 +592,7 @@
   "ListingPage.payoutDetailsWarning": "Questa inserzione non è disponibile {processType, select, booking {per la prenotazione} other {per l’acquisto}}. Non hai ancora aggiunto i dettagli per i pagamenti in uscita.",
   "ListingPage.payoutDetailsWarningLink": "Aggiungi i dettagli per i pagamenti in uscita",
   "ListingPage.reviewsError": "Caricamento delle recensioni non riuscito.",
+  "ListingPage.noReviews": "Questo annuncio non ha ancora recensioni.",
   "ListingPage.reviewsTitle": "Recensioni ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Vedi foto ({count})",

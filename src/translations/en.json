@@ -603,6 +603,7 @@
   "ListingPage.payoutDetailsWarning": "This listing is not available {processType, select, booking {for booking} other {for purchase}}. You have not added your payout details yet.",
   "ListingPage.payoutDetailsWarningLink": "Add your payout details",
   "ListingPage.reviewsError": "Loading reviews failed.",
+  "ListingPage.noReviews": "This listing has not yet any reviews.",
   "ListingPage.reviewsTitle": "Reviews ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "View photos ({count})",

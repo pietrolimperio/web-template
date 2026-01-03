@@ -16,6 +16,10 @@ const SectionReviews = props => {
         <H2 className={css.errorText}>
           <FormattedMessage id="ListingPage.reviewsError" />
         </H2>
+      ) : reviews.length === 0 ? (
+        <p className={css.noReviewsText}>
+          <FormattedMessage id="ListingPage.noReviews" />
+        </p>
       ) : null}
       <Reviews reviews={reviews} />
     </section>

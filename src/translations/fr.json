@@ -592,6 +592,7 @@
   "ListingPage.payoutDetailsWarning": "Cette annonce n'est pas disponible {processType, select, booking {à la réservation} other {à l'achat}}. Vous n'avez pas encore ajouté vos détails de paiement.",
   "ListingPage.payoutDetailsWarningLink": "Ajouter vos détails de paiement",
   "ListingPage.reviewsError": "Impossible de charger les annonces.",
+  "ListingPage.noReviews": "Cette annonce n'a pas encore de commentaires.",
   "ListingPage.reviewsTitle": "Commentaires ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Voir les images ({count})",

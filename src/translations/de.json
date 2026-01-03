@@ -592,6 +592,7 @@
   "ListingPage.payoutDetailsWarning": "Dieser Eintrag steht nicht {processType, select, booking {zur Buchung} other {zum Kaufen}} zur Verfügung. Du hast deine Auszahlungsdetails noch nicht hinzugefügt.",
   "ListingPage.payoutDetailsWarningLink": "Deine Auszahlungsdetails hinzufügen",
   "ListingPage.reviewsError": "Fehler beim Laden der Bewertungen.",
+  "ListingPage.noReviews": "Diese Anzeige hat noch keine Bewertungen.",
   "ListingPage.reviewsTitle": "Bewertungen ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Fotos anzeigen ({count})",

@@ -20,6 +20,12 @@
   margin: 24px;
 }
 
+.noReviewsText {
+  color: var(--matterColorAnti);
+  margin: 16px 0;
+  font-size: 14px;
+}
+
 .sectionHero {
   position: relative;
   margin: 0 0 36px 0;

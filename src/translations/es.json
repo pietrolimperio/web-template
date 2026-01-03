@@ -595,6 +595,7 @@
   "ListingPage.payoutDetailsWarning": "Este anuncio no está disponible para ser {processType, select, booking {reservado} other {comprado}}. Aún no has agregado tus detalles de pago.",
   "ListingPage.payoutDetailsWarningLink": "Añade los detalles de pago",
   "ListingPage.reviewsError": "Error al cargar las evaluaciones.",
+  "ListingPage.noReviews": "Este anuncio aún no tiene evaluaciones.",
   "ListingPage.reviewsTitle": "Evaluaciones ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Ver fotos ({count})",
