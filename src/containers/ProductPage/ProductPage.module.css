@@ -386,6 +386,11 @@
   margin-bottom: 24px;
 }
 
+/* Description Section */
+.descriptionSection {
+  margin-top: 24px;
+}
+
 /* Details Section */
 .detailsSection {
   border-top: 1px solid var(--matterColorNegative);

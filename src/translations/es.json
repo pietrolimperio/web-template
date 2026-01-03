@@ -601,6 +601,7 @@
   "ListingPage.viewImagesButton": "Ver fotos ({count})",
   "ProductPage.closedListing": "Este anuncio está cerrado",
   "ProductPage.listingCreated": "Anuncio creado el {date}",
+  "ProductPage.description": "Descripción",
   "ProductPage.details": "Detalles",
   "ProductPage.fromDays": "desde {days} días",
   "ProductPage.fromToDays": "de {min} a {max} días",

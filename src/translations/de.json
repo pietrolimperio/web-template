@@ -598,6 +598,7 @@
   "ListingPage.viewImagesButton": "Fotos anzeigen ({count})",
   "ProductPage.closedListing": "Diese Anzeige ist geschlossen",
   "ProductPage.listingCreated": "Anzeige erstellt am {date}",
+  "ProductPage.description": "Beschreibung",
   "ProductPage.details": "Details",
   "ProductPage.fromDays": "ab {days} Tagen",
   "ProductPage.fromToDays": "von {min} bis {max} Tagen",

@@ -839,7 +839,14 @@ export const ProductPageComponent = props => {
                   )}
 
                   {/* Description */}
-                  <SectionTextMaybe text={description} showAsIngress />
+                  {description && (
+                    <div className={css.descriptionSection}>
+                      <h3 className={css.sectionTitle}>
+                        <FormattedMessage id="ProductPage.description" defaultMessage="Descrizione" />
+                      </h3>
+                      <SectionTextMaybe text={description} showAsIngress />
+                    </div>
+                  )}
 
                   {/* Details */}
                   <CustomListingFields
