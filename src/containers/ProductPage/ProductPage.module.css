@@ -201,7 +201,7 @@
 /* Author Section */
 .authorSection {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--matterColorNegative);
@@ -210,6 +210,13 @@
 
 .authorAvatar {
   flex-shrink: 0;
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex: 1;
 }
 
 .authorName {
@@ -225,6 +232,31 @@
 
 .authorNameLink:hover {
   text-decoration: underline;
+}
+
+.authorRating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.authorReviewRating {
+  display: inline-flex;
+}
+
+.authorReviewStar {
+  height: 14px;
+  width: 14px;
+  margin-right: 2px;
+}
+
+.authorReviewStar:last-of-type {
+  margin-right: 0;
+}
+
+.authorReviewsCount {
+  font-size: 13px;
+  color: var(--matterColorAnti);
 }
 
 /* Booking Form Wrapper */

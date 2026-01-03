@@ -76,6 +76,7 @@ import {
   IconArrowHead,
   Map,
   Heading,
+  ReviewRating,
 } from '../../components';
 
 // Related components and modules
@@ -455,8 +456,7 @@ export const ProductPageComponent = props => {
     showListingError,
     reviews = [],
     fetchReviewsError,
-    sendInquiryInProgress,
-    sendInquiryError,
+    authorReviews = [],
     callSetInitialValues,
     onSendInquiry,
     onInitializeCardPaymentData,
@@ -626,6 +626,17 @@ export const ProductPageComponent = props => {
   const authorDisplayName = userDisplayNameAsString(ensuredAuthor, '');
   const { formattedPrice } = priceData(price, config.currency, intl);
   const marketplaceColor = config.branding?.marketplaceColor || '#4A90E2';
+
+  // Calculate author reviews average and total
+  const authorReviewsCount = authorReviews.length;
+  const authorAverageRating = authorReviewsCount > 0
+    ? Math.round(
+        (authorReviews.reduce((sum, review) => sum + (review.attributes?.rating || 0), 0) /
+          authorReviewsCount) *
+          10
+      ) / 10
+    : 0;
+  const authorAverageRatingRounded = authorAverageRating > 0 ? Math.round(authorAverageRating) : 0;
 
   const commonParams = { params, history, routes: routeConfiguration };
   const onContactUser = handleContactUser({
@@ -1020,23 +1031,33 @@ export const ProductPageComponent = props => {
               {/* Author */}
               <div className={css.authorSection}>
                 <AvatarSmall user={ensuredAuthor} className={css.authorAvatar} />
-                <span className={css.authorName}>
-                  <FormattedMessage
-                    id="ProductPage.hostedBy"
-                    defaultMessage="Offerto da {name}"
-                    values={{
-                      name: (
-                        <NamedLink
-                          className={css.authorNameLink}
-                          name="ProfilePage"
-                          params={{ id: ensuredAuthor.id?.uuid }}
-                        >
-                          {authorDisplayName}
-                        </NamedLink>
-                      ),
-                    }}
-                  />
-                </span>
+                <div className={css.authorInfo}>
+                  <span className={css.authorName}>
+                    <FormattedMessage
+                      id="ProductPage.hostedBy"
+                      defaultMessage="Offerto da {name}"
+                      values={{
+                        name: (
+                          <NamedLink
+                            className={css.authorNameLink}
+                            name="ProfilePage"
+                            params={{ id: ensuredAuthor.id?.uuid }}
+                          >
+                            {authorDisplayName}
+                          </NamedLink>
+                        ),
+                      }}
+                    />
+                    </span>
+                  <div className={css.authorRating}>
+                    <ReviewRating
+                      rating={authorAverageRatingRounded}
+                      className={css.authorReviewRating}
+                      reviewStarClassName={css.authorReviewStar}
+                    />
+                      <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
+                  </div>
+                </div>
               </div>
 
               {/* Booking Form */}
@@ -1194,6 +1215,10 @@ const mapStateToProps = state => {
     fetchLineItemsError,
     inquiryModalOpenForListingId,
   } = state.ListingPage;
+  const {
+    authorReviews = [],
+    queryAuthorReviewsError = null,
+  } = state.ProductPage || { authorReviews: [], queryAuthorReviewsError: null };
   const { currentUser } = state.user;
 
   const getListing = id => {
@@ -1218,6 +1243,8 @@ const mapStateToProps = state => {
     showListingError,
     reviews,
     fetchReviewsError,
+    authorReviews,
+    queryAuthorReviewsError,
     monthlyTimeSlots,
     timeSlotsForDate,
     lineItems,
