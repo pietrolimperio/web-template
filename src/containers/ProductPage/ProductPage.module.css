@@ -544,14 +544,70 @@
   border: 1px solid #81c784;
   border-radius: 8px;
   padding: 12px 16px;
-  margin-top: 16px;
   font-size: 14px;
   font-weight: 500;
   color: #2e7d32;
+  margin: 0;
 }
 
 .exchangeBadgeIcon {
   font-size: 18px;
+}
+
+/* Map Section */
+.mapSection {
+  margin-top: 24px;
+}
+
+.mapSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mapWrapper {
+  position: relative;
+  height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.approximateLabel {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10;
+}
+
+.addressDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--matterColorNegative);
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.locationIcon {
+  font-size: 18px;
+}
+
+.sectionHeading {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--matterColor);
 }
 
 /* Responsive adjustments */

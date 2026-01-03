@@ -213,3 +213,83 @@ export const getMapProviderApiAccess = mapConfig => {
   const isGoogleMapsInUse = mapConfig.mapProvider === 'googleMaps';
   return isGoogleMapsInUse ? mapConfig.googleMapsAPIKey : mapConfig.mapboxAccessToken;
 };
+
+/**
+ * Get country code for location search based on locale
+ *
+ * @param {string} locale - Locale string (e.g., 'it-IT')
+ * @returns {string} ISO country code (e.g., 'IT')
+ */
+export const getCountryForLocale = locale => {
+  // Extract base locale (e.g., 'it' from 'it-IT')
+  const baseLocale = locale ? locale.split('-')[0].toLowerCase() : 'en';
+  const countryMap = {
+    en: 'GB',
+    de: 'DE',
+    fr: 'FR',
+    it: 'IT',
+    es: 'ES',
+    pt: 'PT',
+  };
+  return countryMap[baseLocale] || 'IT';
+};
+
+/**
+ * Geocode an address using Mapbox Geocoding API
+ *
+ * @param {string} addressString - Full address string
+ * @param {string} countryCode - ISO country code for limiting results (e.g., 'IT')
+ * @returns {Promise<{lat: number, lng: number}|null>} - Geolocation coordinates or null if not found
+ */
+export const geocodeAddress = async (addressString, countryCode) => {
+  if (!addressString || !addressString.trim()) {
+    return null;
+  }
+
+  // Check if Mapbox SDK is available
+  if (typeof window === 'undefined' || !window.mapboxgl || !window.mapboxSdk || !window.mapboxgl.accessToken) {
+    console.warn('Mapbox SDK not available for geocoding');
+    return null;
+  }
+
+  try {
+    const client = window.mapboxSdk({
+      accessToken: window.mapboxgl.accessToken,
+    });
+
+    const queryParams = {
+      limit: 1,
+      types: 'address',
+    };
+
+    // Add country if provided
+    if (countryCode) {
+      queryParams.country = countryCode.toLowerCase();
+    }
+
+    const request = client.createRequest({
+      method: 'GET',
+      path: '/geocoding/v5/mapbox.places/:query.json',
+      params: {
+        query: addressString,
+      },
+      query: queryParams,
+    });
+
+    const response = await request.send();
+
+    if (response.body && response.body.features && response.body.features.length > 0) {
+      const feature = response.body.features[0];
+      if (feature.center && Array.isArray(feature.center) && feature.center.length === 2) {
+        // Mapbox returns coordinates as [longitude, latitude]
+        const [lng, lat] = feature.center;
+        return { lat, lng };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    return null;
+  }
+};

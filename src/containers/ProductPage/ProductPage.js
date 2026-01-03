@@ -36,6 +36,7 @@ import {
 import { richText } from '../../util/richText';
 import { formatMoney } from '../../util/currency';
 import { currencyFormatting } from '../../config/settingsCurrency';
+import { geocodeAddress, getCountryForLocale } from '../../util/maps';
 import {
   isBookingProcess,
   isNegotiationProcess,
@@ -73,6 +74,8 @@ import {
   H6,
   Modal,
   IconArrowHead,
+  Map,
+  Heading,
 } from '../../components';
 
 // Related components and modules
@@ -101,7 +104,6 @@ import {
 import ActionBarMaybe from '../ListingPage/ActionBarMaybe';
 import SectionTextMaybe from '../ListingPage/SectionTextMaybe';
 import SectionReviews from '../ListingPage/SectionReviews';
-import SectionMapMaybe from '../ListingPage/SectionMapMaybe';
 import CustomListingFields from '../ListingPage/CustomListingFields';
 import EstimatedCustomerBreakdownMaybe from '../../components/OrderPanel/EstimatedCustomerBreakdownMaybe';
 
@@ -429,6 +431,8 @@ export const ProductPageComponent = props => {
   const [mounted, setMounted] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [geocodedLocation, setGeocodedLocation] = useState(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
@@ -475,7 +479,64 @@ export const ProductPageComponent = props => {
       ? ensureOwnListing(getOwnListing(listingId))
       : ensureListing(getListing(listingId));
 
-  const listingSlug = rawParams.slug || createSlug(currentListing.attributes.title || '');
+  // Extract attributes safely for geocoding useEffect (must be before early returns)
+  const listingAttributes = currentListing?.attributes || {};
+  const listingGeolocation = listingAttributes.geolocation || null;
+  const listingPublicData = listingAttributes.publicData || {};
+
+  // Geocode address if geolocation is not available but locationVisible is true
+  // This useEffect MUST be before any early returns to follow Rules of Hooks
+  useEffect(() => {
+    // Reset geocoded location if geolocation is available
+    if (listingGeolocation) {
+      setGeocodedLocation(null);
+      setIsGeocoding(false);
+      return;
+    }
+
+    // Only geocode if locationVisible is true and we have location data
+    if (!listingPublicData?.locationVisible) {
+      setGeocodedLocation(null);
+      setIsGeocoding(false);
+      return;
+    }
+
+    // Extract address from publicData.location
+    const location = listingPublicData?.location || {};
+    const addressObj = location.address || {};
+    const addressString = typeof addressObj === 'string' 
+      ? addressObj 
+      : addressObj.street && addressObj.streetNumber
+      ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city || ''} ${addressObj.postalCode || ''}`.trim()
+      : addressObj.city || addressObj.address || '';
+
+    // If no geolocation but address exists, try to geocode it
+    if (!listingGeolocation && addressString) {
+      setIsGeocoding(true);
+      const countryCode = getCountryForLocale(intl.locale);
+      
+      geocodeAddress(addressString, countryCode)
+        .then(coords => {
+          if (coords) {
+            setGeocodedLocation(coords);
+          } else {
+            setGeocodedLocation(null);
+          }
+        })
+        .catch(error => {
+          console.error('Error geocoding address:', error);
+          setGeocodedLocation(null);
+        })
+        .finally(() => {
+          setIsGeocoding(false);
+        });
+    } else {
+      setGeocodedLocation(null);
+      setIsGeocoding(false);
+    }
+  }, [listingGeolocation, listingPublicData?.location, listingPublicData?.locationVisible, intl.locale]);
+
+  const listingSlug = rawParams.slug || createSlug(currentListing.attributes?.title || '');
   const params = { slug: listingSlug, ...rawParams };
 
   const listingPathParamType = isDraftVariant
@@ -484,7 +545,7 @@ export const ProductPageComponent = props => {
   const listingTab = isDraftVariant ? 'photos' : 'details';
 
   const isApproved =
-    currentListing.id && currentListing.attributes.state !== LISTING_STATE_PENDING_APPROVAL;
+    currentListing.id && currentListing.attributes?.state !== LISTING_STATE_PENDING_APPROVAL;
   const pendingIsApproved = isPendingApprovalVariant && isApproved;
   const pendingOtherUsersListing =
     (isPendingApprovalVariant || isDraftVariant) &&
@@ -508,10 +569,10 @@ export const ProductPageComponent = props => {
 
   const {
     description = '',
-    geolocation = null,
+    geolocation = listingGeolocation,
     price = null,
     title = '',
-    publicData = {},
+    publicData = listingPublicData,
     metadata = {},
   } = currentListing.attributes;
 
@@ -806,28 +867,98 @@ export const ProductPageComponent = props => {
                     );
                   })()}
 
+                                {/* Map (shown if locationVisible is true) - outside images block so it shows even without images */}
+              {publicData?.locationVisible && (() => {
+                const location = publicData?.location || {};
+                const locationGeolocation = location.geolocation || geolocation || null;
+                
+                // Normalize geolocation format - handle both {lat, lng} and {latitude, longitude}
+                let normalizedGeolocation = null;
+                if (locationGeolocation) {
+                  if (locationGeolocation.lat !== undefined && locationGeolocation.lng !== undefined) {
+                    normalizedGeolocation = { lat: locationGeolocation.lat, lng: locationGeolocation.lng };
+                  } else if (locationGeolocation.latitude !== undefined && locationGeolocation.longitude !== undefined) {
+                    normalizedGeolocation = { lat: locationGeolocation.latitude, lng: locationGeolocation.longitude };
+                  } else if (Array.isArray(locationGeolocation) && locationGeolocation.length === 2) {
+                    // Handle [lat, lng] or [lng, lat] format
+                    normalizedGeolocation = { lat: locationGeolocation[0], lng: locationGeolocation[1] };
+                  }
+                }
+                
+                // Use geocoded location if geolocation is not available
+                const mapCenter = normalizedGeolocation || geocodedLocation;
+                
+                // Handle address as object or string
+                const addressObj = location.address || {};
+                const addressString = typeof addressObj === 'string' 
+                  ? addressObj 
+                  : addressObj.street && addressObj.streetNumber
+                  ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city || ''} ${addressObj.postalCode || ''}`.trim()
+                  : addressObj.city || addressObj.address || '';
+
+                return (
+                  <div className={css.imagesSection}>
+                    <section className={css.mapSection} id="listing-location">
+                      {/* Title and badge on same row */}
+                      <div className={css.mapSectionHeader}>
+                        <Heading as="h2" rootClassName={css.sectionHeading}>
+                          <FormattedMessage id="ListingPage.locationTitle" />
+                        </Heading>
+                        {/* Hand-by-hand exchange badge */}
+                        {publicData?.handByHandAvailable && (
+                          <div className={css.exchangeBadge}>
+                            <span className={css.exchangeBadgeIcon}>🤝</span>
+                            <FormattedMessage id="ProductPage.handByHand" defaultMessage="Consegna a mano disponibile" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Map */}
+                      {mapCenter && mapCenter.lat && mapCenter.lng ? (
+                        <div className={css.mapWrapper}>
+                          <Map
+                            center={mapCenter}
+                            obfuscatedCenter={mapCenter}
+                            address={addressString}
+                            zoom={13}
+                            useStaticMap={false}
+                            mapsConfig={{
+                              ...config.maps,
+                              fuzzy: {
+                                enabled: true,
+                                offset: config.maps?.fuzzy?.offset || 500,
+                                defaultZoomLevel: config.maps?.fuzzy?.defaultZoomLevel || 13,
+                                circleColor: config.branding?.marketplaceColor || config.maps?.fuzzy?.circleColor || '#4A90E2',
+                              },
+                            }}
+                          />
+                          <div className={css.approximateLabel}>
+                            <FormattedMessage
+                              id="PreviewListingPage.approximateLocation"
+                              defaultMessage="Posizione approssimativa per privacy"
+                            />
+                          </div>
+                        </div>
+                      ) : isGeocoding ? (
+                        <div className={css.addressDisplay}>
+                          <FormattedMessage
+                            id="PreviewListingPage.geocodingAddress"
+                            defaultMessage="Caricamento mappa..."
+                          />
+                        </div>
+                      ) : addressString ? (
+                        <div className={css.addressDisplay}>
+                          <span className={css.locationIcon}>📍</span>
+                          <span>{addressString}</span>
+                        </div>
+                      ) : null}
+                    </section>
+                  </div>
+                );
+              })()}
+
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
-
-                  {/* Map (shown if locationVisible is true) */}
-                  {publicData?.locationVisible && (
-                    <>
-                      <SectionMapMaybe
-                        geolocation={geolocation}
-                        publicData={publicData}
-                        listingId={currentListing.id}
-                        mapsConfig={config.maps}
-                      />
-                      
-                      {/* Hand-by-hand exchange badge */}
-                      {publicData?.handByHandAvailable && (
-                        <div className={css.exchangeBadge}>
-                          <span className={css.exchangeBadgeIcon}>🤝</span>
-                          <FormattedMessage id="ProductPage.handByHand" defaultMessage="Consegna a mano disponibile" />
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
               )}
             </div>
