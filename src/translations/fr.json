@@ -597,6 +597,7 @@
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Voir les images ({count})",
   "ProductPage.closedListing": "Cette annonce est fermée",
+  "ProductPage.listingCreated": "Annonce créée le {date}",
   "ProductPage.details": "Détails",
   "ProductPage.fromDays": "à partir de {days} jours",
   "ProductPage.fromToDays": "de {min} à {max} jours",

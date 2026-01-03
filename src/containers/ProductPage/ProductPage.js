@@ -959,6 +959,26 @@ export const ProductPageComponent = props => {
 
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
+                  
+                  {/* Listing creation date */}
+                  {(currentListing.attributes?.createdAt || currentListing.createdAt) && (
+                    <div className={css.listingCreationDate}>
+                      <FormattedMessage
+                        id="ProductPage.listingCreated"
+                        defaultMessage="Annuncio creato il {date}"
+                        values={{
+                          date: intl.formatDate(
+                            currentListing.attributes?.createdAt || currentListing.createdAt,
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          ),
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -610,6 +610,14 @@
   color: var(--matterColor);
 }
 
+.listingCreationDate {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--matterColorNegative);
+  color: var(--matterColorAnti);
+  font-size: 14px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 767px) {
   .infoColumn {
