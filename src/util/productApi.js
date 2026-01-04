@@ -7,7 +7,8 @@ import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE } from '../config/localeConfig';
 
 const PRODUCT_API_BASE_URL =
   process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api/products';
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODELS = ['gemini-2.5-flash'];
+//const DEFAULT_MODELS = ['gemini-2.5-flash', 'gpt-5', 'claude-4.5-sonnet'];
 
 /**
  * Product API Client Class
@@ -15,7 +16,8 @@ const DEFAULT_MODEL = 'gemini-2.5-flash';
 class ProductAPI {
   constructor() {
     this.baseURL = PRODUCT_API_BASE_URL;
-    this.model = DEFAULT_MODEL;
+    this.models = [...DEFAULT_MODELS];
+    this.model = DEFAULT_MODELS[0]; // Default model for other methods (refine, regenerate, etc.)
     // Get current locale from localStorage (default: it-IT)
     // Safe for server-side rendering: check if localStorage is available
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
@@ -27,6 +29,7 @@ class ProductAPI {
 
   /**
    * Analyze product images and get structured data
+   * Tries models in order, falling back to next model on error
    * @param {File[]} images - Array of image files (1-10)
    * @param {string} locale - Language locale (it-IT, fr-FR, es-ES, etc.) - defaults to current locale
    * @returns {Promise<ProductAnalysis>}
@@ -40,20 +43,39 @@ class ProductAPI {
       throw new Error('Maximum 10 images allowed');
     }
 
-    const formData = new FormData();
+    // Validate all images first
     images.forEach(img => {
-      // Validate image
       if (!this.isValidImage(img)) {
         throw new Error(
           `Invalid image: ${img.name}. Must be JPG, PNG, WebP, or HEIF and under 5MB`
         );
       }
-      formData.append('images', img);
     });
-    formData.append('model', this.model);
-    formData.append('locale', locale);
 
-    return await this.call('analyze', formData);
+    // Try each model in order until one succeeds
+    let lastError = null;
+    for (const model of this.models) {
+      try {
+        const formData = new FormData();
+        images.forEach(img => formData.append('images', img));
+        formData.append('model', model);
+        formData.append('locale', locale);
+
+        const result = await this.call('analyze', formData);
+        // Save the successful model for subsequent calls (refine, regenerate, etc.)
+        this.model = model;
+        console.log(`✅ [Product API] Successfully used model: ${model}`);
+        return result;
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ [Product API] Model ${model} failed, trying next model...`, error.message);
+        // Continue to next model
+      }
+    }
+
+    // All models failed, throw the last error
+    console.error('❌ [Product API] All models failed');
+    throw lastError;
   }
 
   /**
@@ -212,7 +234,7 @@ export const mapProductToListingData = (productAnalysis, config) => {
     },
     privateData: {
       aiGenerated: true,
-      aiModel: 'gemini-2.5-flash',
+      aiModel: productAnalysis.model || productApiInstance.model,
       aiConfidence: productAnalysis.confidence,
       // Store priceSuggestion in privateData
       ...(fields.priceSuggestion && { priceSuggestion: fields.priceSuggestion }),

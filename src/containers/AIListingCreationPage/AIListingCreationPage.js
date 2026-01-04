@@ -39,9 +39,6 @@ const getCurrencySymbol = currencyCode => {
   }
 };
 
-// Hardcoded AI Model (as per requirements)
-const AI_MODEL = 'gemini-2.5-flash';
-
 // Question constraints
 const QUESTION_CONSTRAINTS = {
   MAX_ROUNDS: 3,
@@ -321,10 +318,6 @@ export const AIListingCreationPageComponent = ({
         typeof window !== 'undefined' && typeof localStorage !== 'undefined'
           ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
           : DEFAULT_LOCALE;
-      const formData = new FormData();
-      uploadedImages.forEach(img => formData.append('images', img));
-      formData.append('locale', locale);
-      formData.append('model', AI_MODEL);
 
       const analysis = await productApiInstance.analyze(uploadedImages, locale);
 
