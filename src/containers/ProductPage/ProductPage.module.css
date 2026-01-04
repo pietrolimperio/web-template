@@ -155,6 +155,7 @@
 .mobileHeader :global(.ListingPage_ownListingText__6je8F) {
   margin: 14px 0;
   flex-shrink: 0;
+  font-size: 10px;
 }
 
 .mobileHeader :global(.ListingPage_noShrink__dMT8J) {
@@ -164,6 +165,7 @@
 .mobileHeader :global(a[class*="editListingLink"]),
 .mobileHeader :global(a[class*="addPayoutDetails"]) {
   margin: 12px 0 12px 0;
+  font-size: 10px;
 }
 
 /* Info Column */
