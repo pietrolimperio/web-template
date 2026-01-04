@@ -757,10 +757,38 @@ export const ProductPageComponent = props => {
             {/* Price */}
             {price && (
               <div className={css.priceContainer}>
-                <span className={css.price}>{formattedPrice}</span>
-                <span className={css.perUnit}>
-                  <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
-                </span>
+                <div className={css.priceInfo}>
+                  <span className={css.price}>{formattedPrice}</span>
+                  <span className={css.perUnit}>
+                    <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
+                  </span>
+                </div>
+                {isBooking && !isClosed && (
+                  <PrimaryButton
+                    className={css.mobileRequestToBookButton}
+                    onClick={() => {
+                      const bookingFormElement = document.getElementById('mobile-booking-form');
+                      if (bookingFormElement) {
+                        // Get navbar height (topbar)
+                        const topbarElement = document.querySelector('[class*="Topbar_container"]') || 
+                                             document.querySelector('[class*="TopbarDesktop"]') ||
+                                             document.querySelector('nav');
+                        const navbarHeight = topbarElement ? topbarElement.offsetHeight : 64;
+                        
+                        // Calculate scroll position with navbar offset
+                        const elementPosition = bookingFormElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+                        
+                        window.scrollTo({
+                          top: offsetPosition,
+                          behavior: 'smooth'
+                        });
+                      }
+                    }}
+                  >
+                    <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />
+                  </PrimaryButton>
+                )}
               </div>
             )}
 
@@ -977,7 +1005,7 @@ export const ProductPageComponent = props => {
 
                   {/* Booking Form - Mobile (after details, before location) */}
                   {isBooking && !isClosed && (
-                    <div className={css.mobileBookingForm}>
+                    <div id="mobile-booking-form" className={css.mobileBookingForm}>
                       <BookingForm
                         listing={currentListing}
                         isOwnListing={isOwnListing}

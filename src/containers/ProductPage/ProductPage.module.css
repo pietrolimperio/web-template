@@ -168,6 +168,24 @@
   font-size: 10px;
 }
 
+/* Mobile Request to Book Button */
+.mobileRequestToBookButton {
+  display: block;
+  margin-left: auto;
+  white-space: nowrap;
+  width: 50%;
+
+  @media (--viewportMedium) {
+    display: none;
+  }
+}
+
+.mobileHeader .priceContainer {
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
 /* Info Column */
 .infoColumn {
   width: 100%;
@@ -209,6 +227,13 @@
   align-items: baseline;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+.priceInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
 }
 
 .price {
