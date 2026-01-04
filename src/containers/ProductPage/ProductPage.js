@@ -915,6 +915,26 @@ export const ProductPageComponent = props => {
                         <FormattedMessage id="ProductPage.description" defaultMessage="Descrizione" />
                       </h3>
                       <SectionTextMaybe text={description} showAsIngress />
+                      
+                      {/* Listing creation date - below description, aligned right */}
+                      {(currentListing.attributes?.createdAt || currentListing.createdAt) && (
+                        <div className={css.listingCreationDate}>
+                          <FormattedMessage
+                            id="ProductPage.listingCreated"
+                            defaultMessage="Annuncio creato il {date}"
+                            values={{
+                              date: intl.formatDate(
+                                currentListing.attributes?.createdAt || currentListing.createdAt,
+                                {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                }
+                              ),
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1069,26 +1089,6 @@ export const ProductPageComponent = props => {
 
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
-                  
-                  {/* Listing creation date */}
-                  {(currentListing.attributes?.createdAt || currentListing.createdAt) && (
-                    <div className={css.listingCreationDate}>
-                      <FormattedMessage
-                        id="ProductPage.listingCreated"
-                        defaultMessage="Annuncio creato il {date}"
-                        values={{
-                          date: intl.formatDate(
-                            currentListing.attributes?.createdAt || currentListing.createdAt,
-                            {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            }
-                          ),
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
               )}
             </div>

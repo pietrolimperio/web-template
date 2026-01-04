@@ -675,12 +675,12 @@
 }
 
 .listingCreationDate {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--matterColorNegative);
+  margin-top: 16px;
+  padding-top: 0;
+  border-top: none;
   color: var(--matterColorAnti);
   font-size: 14px;
-  text-align: center;
+  text-align: end;
 }
 
 /* Mobile Booking Form - visible only on mobile */
