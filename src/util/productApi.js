@@ -226,7 +226,7 @@ export const mapProductToListingData = (productAnalysis, config) => {
       // Add all other fields as custom extended data (excluding priceSuggestion)
       ...Object.keys(fields).reduce((acc, key) => {
         // Skip core fields that are already mapped and priceSuggestion
-        if (!['title', 'brand', 'condition', 'longDescription', 'priceSuggestion'].includes(key)) {
+        if (!['title', 'brand', 'condition', 'longDescription', 'priceSuggestion', 'weight', 'dimensions', 'priceNew'].includes(key)) {
           acc[`ai_${key}`] = fields[key];
         }
         return acc;
