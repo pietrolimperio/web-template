@@ -739,6 +739,7 @@
   "OrderBreakdown.commission": "{role, select, customer {Tarifa de {marketplaceName} *} provider {Tarifa de {marketplaceName} *} other {}}",
   "OrderBreakdown.commissionFeeNote": "* ¡La tarifa nos ayuda a operar esta plataforma y brindarte el mejor servicio posible!",
   "OrderBreakdown.pickupFee": "Recolección",
+  "OrderBreakdown.insuranceFee": "Seguro",
   "OrderBreakdown.providerTotalDefault": "Recibirás",
   "OrderBreakdown.providerTotalReceived": "Has recibido",
   "OrderBreakdown.providerTotalRefunded": "Costo total",

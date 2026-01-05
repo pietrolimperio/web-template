@@ -23,6 +23,7 @@ import LineItemBasePriceMaybe from './LineItemBasePriceMaybe';
 import LineItemSubTotalMaybe from './LineItemSubTotalMaybe';
 import LineItemShippingFeeMaybe from './LineItemShippingFeeMaybe';
 import LineItemPickupFeeMaybe from './LineItemPickupFeeMaybe';
+import LineItemInsuranceFeeMaybe from './LineItemInsuranceFeeMaybe';
 import LineItemCustomerCommissionMaybe from './LineItemCustomerCommissionMaybe';
 import LineItemCustomerCommissionRefundMaybe from './LineItemCustomerCommissionRefundMaybe';
 import LineItemProviderCommissionMaybe from './LineItemProviderCommissionMaybe';
@@ -82,6 +83,8 @@ export const OrderBreakdownComponent = props => {
    * LineItemBasePriceMaybe: prints the base price calculation for the listing, e.g.
    * "$150.00 * 2 nights $300"
    *
+   * LineItemInsuranceFeeMaybe: prints the insurance fee
+   *
    * LineItemUnknownItemsMaybe: prints the line items that are unknown. In ideal case there
    * should not be unknown line items. If you are using custom pricing, you should create
    * new custom line items if you need them.
@@ -116,6 +119,7 @@ export const OrderBreakdownComponent = props => {
       <LineItemBasePriceMaybe lineItems={lineItems} code={lineItemUnitType} intl={intl} />
       <LineItemShippingFeeMaybe lineItems={lineItems} intl={intl} />
       <LineItemPickupFeeMaybe lineItems={lineItems} intl={intl} />
+      <LineItemInsuranceFeeMaybe lineItems={lineItems} intl={intl} />
       <LineItemUnknownItemsMaybe lineItems={lineItems} isProvider={isProvider} intl={intl} />
 
       <LineItemSubTotalMaybe

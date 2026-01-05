@@ -736,6 +736,7 @@
   "OrderBreakdown.commission": "{role, select, customer {frais {marketplaceName} *} provider {frais {marketplaceName} *} other {}}",
   "OrderBreakdown.commissionFeeNote": "* Les frais nous aident à gérer cette plate-forme et à vous fournir le meilleur service possible !",
   "OrderBreakdown.pickupFee": "Retrait",
+  "OrderBreakdown.insuranceFee": "Assurance",
   "OrderBreakdown.providerTotalDefault": "Vous allez gagner",
   "OrderBreakdown.providerTotalReceived": "Vous avez gagné",
   "OrderBreakdown.providerTotalRefunded": "Prix total",

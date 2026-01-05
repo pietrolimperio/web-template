@@ -750,6 +750,7 @@
   "OrderBreakdown.commission": "{role, select, customer {{marketplaceName} fee *} provider {{marketplaceName} fee *} other {}}",
   "OrderBreakdown.commissionFeeNote": "* The fee helps us run this platform and provide the best possible service to you!",
   "OrderBreakdown.pickupFee": "Pickup",
+  "OrderBreakdown.insuranceFee": "Insurance",
   "OrderBreakdown.providerTotalDefault": "You'll earn",
   "OrderBreakdown.providerTotalReceived": "You earned",
   "OrderBreakdown.providerTotalRefunded": "Total price",
