@@ -1429,6 +1429,7 @@
   "AIListingCreationPage.analyzingDescription": "Nuestra IA está analizando tus fotos para crear el anuncio perfecto",
   "AIListingCreationPage.errorTitle": "Error",
   "AIListingCreationPage.errorMessage": "Por favor, inténtalo de nuevo",
+  "AIListingCreationPage.prohibitedCategoryErrorMessage": "El producto parece no estar alineado con nuestra política. Si no está seguro, póngase en contacto con nuestro servicio al cliente.",
   "AIListingCreationPage.createManually": "Crear manualmente",
   "AIListingCreationPage.description": "Crea anuncios fácilmente con IA",
   "ProductImageUpload.title": "Sube fotos de tu producto",

@@ -1429,6 +1429,7 @@
   "AIListingCreationPage.analyzingDescription": "Unsere KI analysiert Ihre Fotos, um das perfekte Inserat zu erstellen",
   "AIListingCreationPage.errorTitle": "Fehler",
   "AIListingCreationPage.errorMessage": "Bitte versuchen Sie es erneut",
+  "AIListingCreationPage.prohibitedCategoryErrorMessage": "Das Produkt scheint nicht mit unserer Richtlinie übereinzustimmen. Falls Sie sich nicht sicher sind, kontaktieren Sie bitte unseren Kundenservice.",
   "AIListingCreationPage.createManually": "Manuell erstellen",
   "AIListingCreationPage.description": "Erstellen Sie einfach Inserate mit KI",
   "ProductImageUpload.title": "Laden Sie Fotos Ihres Produkts hoch",

@@ -1428,6 +1428,7 @@
   "AIListingCreationPage.analyzingDescription": "Our AI is examining your images to create a detailed listing. This usually takes 10-30 seconds.",
   "AIListingCreationPage.errorTitle": "Error",
   "AIListingCreationPage.errorMessage": "Please try again",
+  "AIListingCreationPage.prohibitedCategoryErrorMessage": "The product seems not aligned with our policy. If you're not sure, please reach out to our customer service.",
   "AIListingCreationPage.createManually": "Or create a listing manually",
   "ProductImageUpload.title": "Upload Product Images",
   "ProductImageUpload.description": "Drag and drop up to 10 images, or click to browse",

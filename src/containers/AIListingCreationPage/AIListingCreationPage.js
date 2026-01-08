@@ -96,6 +96,7 @@ export const AIListingCreationPageComponent = ({
   const [pricingData, setPricingData] = useState(null);
   const [locationData, setLocationData] = useState(null);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // 'PROHIBITED_CATEGORY' or null
 
   const user = ensureCurrentUser(currentUser);
   const emailVerified = user.attributes?.emailVerified || false;
@@ -242,6 +243,7 @@ export const AIListingCreationPageComponent = ({
 
   const createDraftAndRedirectToPreview = async effectivePricingOverride => {
     if (!productAnalysis) {
+      setErrorType(null);
       setError('Missing product information');
       return;
     }
@@ -258,6 +260,7 @@ export const AIListingCreationPageComponent = ({
 
     setStep(STEP_SAVING);
     setError(null);
+    setErrorType(null);
 
     try {
       const listingData = buildListingDraftPayload(
@@ -291,6 +294,7 @@ export const AIListingCreationPageComponent = ({
       }
     } catch (err) {
       console.error('❌ Draft creation after price error:', err);
+      setErrorType(null);
       setError(err.message || 'Failed to create listing draft');
       setStep(STEP_PRICE_QUESTION);
     }
@@ -300,17 +304,20 @@ export const AIListingCreationPageComponent = ({
   const handleImagesSelected = files => {
     setUploadedImages(files);
     setError(null);
+    setErrorType(null);
   };
 
   // Handle AI analysis start
   const handleStartAnalysis = async () => {
     if (uploadedImages.length === 0) {
+      setErrorType(null);
       setError('Please upload at least one image');
       return;
     }
 
     setStep(STEP_ANALYZING);
     setError(null);
+    setErrorType(null);
 
     try {
       // Call AI API to analyze product
@@ -341,7 +348,14 @@ export const AIListingCreationPageComponent = ({
       }
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || 'Failed to analyze product images');
+      // Check for PROHIBITED_CATEGORY error
+      if (err.errorCode === 'PROHIBITED_CATEGORY') {
+        setErrorType('PROHIBITED_CATEGORY');
+        setError(err.message || 'Failed to analyze product images');
+      } else {
+        setErrorType(null);
+        setError(err.message || 'Failed to analyze product images');
+      }
       setStep(STEP_UPLOAD);
     }
   };
@@ -358,6 +372,7 @@ export const AIListingCreationPageComponent = ({
 
     setStep(STEP_REFINING);
     setError(null);
+    setErrorType(null);
 
     try {
       // Call refine API
@@ -395,6 +410,7 @@ export const AIListingCreationPageComponent = ({
       }
     } catch (err) {
       console.error('Refinement error:', err);
+      setErrorType(null);
       setError(err.message || 'Failed to refine product analysis');
       setStep(STEP_UPLOAD);
     }
@@ -599,13 +615,24 @@ export const AIListingCreationPageComponent = ({
                 id: 'AIListingCreationPage.errorTitle',
                 defaultMessage: 'Error',
               })}
-              message={intl.formatMessage({
-                id: 'AIListingCreationPage.errorMessage',
-                defaultMessage: 'Please try again',
-              })}
+              message={
+                errorType === 'PROHIBITED_CATEGORY'
+                  ? intl.formatMessage({
+                      id: 'AIListingCreationPage.prohibitedCategoryErrorMessage',
+                      defaultMessage:
+                        'The product seems not aligned with our policy. If you\'re not sure, please reach out to our customer service.',
+                    })
+                  : intl.formatMessage({
+                      id: 'AIListingCreationPage.errorMessage',
+                      defaultMessage: 'Please try again',
+                    })
+              }
               type="error"
               duration={5000}
-              onClose={() => setError(null)}
+              onClose={() => {
+                setError(null);
+                setErrorType(null);
+              }}
             />
           )}
 

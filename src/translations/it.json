@@ -1406,6 +1406,7 @@
   "AIListingCreationPage.analyzingDescription": "La nostra AI sta esaminando le tue immagini per creare un annuncio dettagliato. Di solito richiede 10-30 secondi.",
   "AIListingCreationPage.errorTitle": "Sembra ci sia stato un errore",
   "AIListingCreationPage.errorMessage": "Per favore riprova",
+  "AIListingCreationPage.prohibitedCategoryErrorMessage": "Il prodotto sembra non essere allineato con la nostra policy. In caso di dubbi, contattare il servizio clienti.",
   "AIListingCreationPage.createManually": "Oppure crea un annuncio manualmente",
   "ProductImageUpload.title": "Per il tuo annuncio basta solo una foto!",
   "ProductImageUpload.description": "Trascina e rilascia fino a 10 immagini, o clicca per sfogliare",

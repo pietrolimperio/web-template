@@ -168,15 +168,24 @@ class ProductAPI {
 
       if (!response.ok) {
         let errorMessage;
+        let errorCode = null;
         try {
           const error = await response.json();
           errorMessage =
             error.error || error.message || `API call failed with status ${response.status}`;
+          // Check for PROHIBITED_CATEGORY error code
+          if (response.status === 403 && error.errorCode === 'PROHIBITED_CATEGORY') {
+            errorCode = 'PROHIBITED_CATEGORY';
+          }
         } catch {
           errorMessage = `API call failed with status ${response.status} - ${response.statusText}`;
         }
         console.error('❌ [Product API] Error response:', errorMessage);
-        throw new Error(errorMessage);
+        const apiError = new Error(errorMessage);
+        if (errorCode) {
+          apiError.errorCode = errorCode;
+        }
+        throw apiError;
       }
 
       const data = await response.json();
