@@ -559,7 +559,7 @@ export const AIListingCreationPageComponent = ({
             questions={[priceQuestion]}
             onComplete={handlePriceQuestionComplete}
             onSkipAll={handleSkipPriceQuestion}
-            onCancel={handleSkipPriceQuestion}
+            onCancel={handleCancelQuestions}
             isRefining={false}
             allowSkip={false}
           />
