@@ -419,7 +419,7 @@ export const AIListingCreationPageComponent = ({
   // Handle skip all questions
   const handleSkipAll = async partialAnswers => {
     // Still refine with partial answers if provided
-    if (Object.keys(partialAnswers).length > 0 && productAnalysis) {
+    if (productAnalysis) {
       setStep(STEP_REFINING);
       try {
         const locale =
@@ -434,12 +434,14 @@ export const AIListingCreationPageComponent = ({
           roundNumber,
         });
         setProductAnalysis(refined);
+        setStep(STEP_PRICE_QUESTION);
       } catch (err) {
         console.error('Refinement error:', err);
-        // Continue anyway
+        setErrorType(null);
+        setError(err.message || 'Failed to refine product analysis');
+        setStep(STEP_UPLOAD);
       }
     }
-    setStep(STEP_PRICE_QUESTION);
   };
 
   // Handle cancel questions
