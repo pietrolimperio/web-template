@@ -221,7 +221,16 @@ const productApiInstance = new ProductAPI();
  * @returns {Object} Sharetribe-compatible listing data
  */
 export const mapProductToListingData = (productAnalysis, config) => {
-  const { fields, category, subcategory, calendarAvailability } = productAnalysis;
+  const {
+    fields,
+    category,
+    subcategory,
+    thirdCategory,
+    categoryId,
+    subcategoryId,
+    thirdCategoryId,
+    calendarAvailability,
+  } = productAnalysis;
 
   // Map to Sharetribe structure
   const listingData = {
@@ -230,6 +239,10 @@ export const mapProductToListingData = (productAnalysis, config) => {
     publicData: {
       category: category || 'Other',
       subcategory: subcategory || '',
+      thirdCategory: thirdCategory || '',
+      ...(categoryId != null && { categoryId: categoryId }),
+      ...(subcategoryId != null && { subcategoryId: subcategoryId }),
+      ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId }),
       brand: fields.brand || '',
       condition: fields.condition || 'Used',
       // Add all other fields as custom extended data (excluding priceSuggestion)
@@ -295,6 +308,19 @@ export const mapProductToListingData = (productAnalysis, config) => {
 export const mapListingToProductData = listing => {
   const { title, description, publicData, privateData } = listing.attributes || {};
 
+  // Resolve category hierarchy names
+  const category =
+    publicData?.category || '';
+  const subcategory =
+    publicData?.subcategory || '';
+  const thirdCategory =
+    publicData?.thirdCategory ||  '';
+
+  // Resolve category hierarchy IDs (if present)
+  const categoryId = publicData?.categoryId ?? null;
+  const subcategoryId = publicData?.subcategoryId ?? null;
+  const thirdCategoryId = publicData?.thirdCategoryId ?? null;
+
   // Extract AI fields
   const aiFields = {};
   Object.keys(publicData || {}).forEach(key => {
@@ -304,8 +330,12 @@ export const mapListingToProductData = listing => {
   });
 
   return {
-    category: publicData?.category || privateData?.aiCategory || '',
-    subcategory: publicData?.subcategory || privateData?.aiSubcategory || '',
+    category,
+    subcategory,
+    thirdCategory,
+    categoryId,
+    subcategoryId,
+    thirdCategoryId,
     confidence: privateData?.aiConfidence || 'medium',
     locale: 'en-US', // Could be dynamic based on user settings
     fields: {
@@ -336,7 +366,8 @@ export const isValidProductAnalysis = analysis => {
   return (
     analysis &&
     typeof analysis === 'object' &&
-    analysis.category &&
+    // Category string OR numeric categoryId must be present
+    (analysis.category || typeof analysis.categoryId === 'number') &&
     analysis.fields &&
     analysis.fields.title
   );
