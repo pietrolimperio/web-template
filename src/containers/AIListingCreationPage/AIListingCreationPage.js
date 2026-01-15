@@ -410,8 +410,13 @@ export const AIListingCreationPageComponent = ({
       }
     } catch (err) {
       console.error('Refinement error:', err);
-      setErrorType(null);
-      setError(err.message || 'Failed to refine product analysis');
+      if (err.errorCode === 'PROHIBITED_CATEGORY') {
+        setErrorType('PROHIBITED_CATEGORY');
+        setError(err.message || 'Failed to refine product analysis');
+      } else {
+        setErrorType(null);
+        setError(err.message || 'Failed to refine product analysis');
+      }
       setStep(STEP_UPLOAD);
     }
   };
@@ -437,8 +442,13 @@ export const AIListingCreationPageComponent = ({
         setStep(STEP_PRICE_QUESTION);
       } catch (err) {
         console.error('Refinement error:', err);
-        setErrorType(null);
-        setError(err.message || 'Failed to refine product analysis');
+        if (err.errorCode === 'PROHIBITED_CATEGORY') {
+          setErrorType('PROHIBITED_CATEGORY');
+          setError(err.message || 'Failed to refine product analysis');
+        } else {
+          setErrorType(null);
+          setError(err.message || 'Failed to refine product analysis');
+        }
         setStep(STEP_UPLOAD);
       }
     }
