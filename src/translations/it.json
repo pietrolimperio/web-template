@@ -473,7 +473,7 @@
   "QuestionModal.cancelDialogTitle": "Interrompere la creazione dell'annuncio?",
   "QuestionModal.cancelDialogMessage": "Se continui, il processo di creazione dell'annuncio verrà interrotto e tornerai al primo passaggio con le immagini precedentemente caricate. Tutte le risposte andranno perse.",
   "QuestionModal.cancelDialogStay": "Rimani",
-  "QuestionModal.cancelDialogConfirm": "Sì, Interrompi",
+  "QuestionModal.cancelDialogConfirm": "Sì, interrompi",
   "QuestionModal.refiningMessage": "Stiamo creando la scheda perfetta per te...",
   "InboxPage.default-booking.accepted.status": "Accettata",
   "InboxPage.default-booking.canceled.status": "Annullata",
