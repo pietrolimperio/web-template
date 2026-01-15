@@ -833,7 +833,8 @@ export const ProductPageComponent = props => {
                 to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
                 className={css.breadcrumbItem}
               >
-                {publicData.category.charAt(0).toUpperCase() + publicData.category.slice(1).toLowerCase()}
+                {publicData.category.charAt(0).toUpperCase() +
+                  publicData.category.slice(1).toLowerCase()}
               </NamedLink>
               {publicData.subcategory && (
                 <>
@@ -843,7 +844,21 @@ export const ProductPageComponent = props => {
                     to={{ search: `?keywords=${encodeURIComponent(publicData.subcategory)}` }}
                     className={css.breadcrumbItem}
                   >
-                    {publicData.subcategory.charAt(0).toUpperCase() + publicData.subcategory.slice(1).toLowerCase()}
+                    {publicData.subcategory.charAt(0).toUpperCase() +
+                      publicData.subcategory.slice(1).toLowerCase()}
+                  </NamedLink>
+                </>
+              )}
+              {publicData.thirdCategory && (
+                <>
+                  <span className={css.breadcrumbSeparator}>›</span>
+                  <NamedLink
+                    name="SearchPage"
+                    to={{ search: `?keywords=${encodeURIComponent(publicData.thirdCategory)}` }}
+                    className={css.breadcrumbItem}
+                  >
+                    {publicData.thirdCategory.charAt(0).toUpperCase() +
+                      publicData.thirdCategory.slice(1).toLowerCase()}
                   </NamedLink>
                 </>
               )}
