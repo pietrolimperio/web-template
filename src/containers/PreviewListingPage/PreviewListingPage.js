@@ -2447,7 +2447,11 @@ export const PreviewListingPageComponent = props => {
                 <div className={css.breadcrumb}>
                   <NamedLink
                     name="SearchPage"
-                    to={{ search: `?keywords=${encodeURIComponent(listing.attributes.publicData.category)}` }}
+                    to={{
+                      search: `?keywords=${encodeURIComponent(
+                        listing.attributes.publicData.category
+                      )}`,
+                    }}
                     className={css.breadcrumbItem}
                   >
                     {listing.attributes.publicData.category.charAt(0).toUpperCase() + 
@@ -2458,11 +2462,32 @@ export const PreviewListingPageComponent = props => {
                       <span className={css.breadcrumbSeparator}>›</span>
                       <NamedLink
                         name="SearchPage"
-                        to={{ search: `?keywords=${encodeURIComponent(listing.attributes.publicData.subcategory)}` }}
+                        to={{
+                          search: `?keywords=${encodeURIComponent(
+                            listing.attributes.publicData.subcategory
+                          )}`,
+                        }}
                         className={css.breadcrumbItem}
                       >
                         {listing.attributes.publicData.subcategory.charAt(0).toUpperCase() + 
                          listing.attributes.publicData.subcategory.slice(1).toLowerCase()}
+                      </NamedLink>
+                    </>
+                  )}
+                  {listing.attributes.publicData.thirdCategory && (
+                    <>
+                      <span className={css.breadcrumbSeparator}>›</span>
+                      <NamedLink
+                        name="SearchPage"
+                        to={{
+                          search: `?keywords=${encodeURIComponent(
+                            listing.attributes.publicData.thirdCategory
+                          )}`,
+                        }}
+                        className={css.breadcrumbItem}
+                      >
+                        {listing.attributes.publicData.thirdCategory.charAt(0).toUpperCase() +
+                          listing.attributes.publicData.thirdCategory.slice(1).toLowerCase()}
                       </NamedLink>
                     </>
                   )}
