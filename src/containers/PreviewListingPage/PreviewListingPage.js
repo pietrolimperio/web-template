@@ -520,10 +520,30 @@ export const PreviewListingPageComponent = props => {
 
   // Handler functions for editing
   const handleEditField = fieldName => {
+    // Evita la modifica di alcuni campi su annunci pubblicati (non draft)
+    if (
+      !isDraftMode &&
+      (fieldName === 'title' ||
+        fieldName === 'description' ||
+        fieldName === 'condition' ||
+        fieldName === 'brand')
+    ) {
+      return;
+    }
     setEditingField(fieldName);
   };
 
   const handleSaveField = async fieldName => {
+    // Non salvare modifiche per campi bloccati sugli annunci pubblicati
+    if (
+      !isDraftMode &&
+      (fieldName === 'title' ||
+        fieldName === 'description' ||
+        fieldName === 'condition' ||
+        fieldName === 'brand')
+    ) {
+      return;
+    }
     const value = fieldValues[fieldName];
 
     // Basic validation
@@ -609,6 +629,10 @@ export const PreviewListingPageComponent = props => {
 
   // Handler for removing a key feature
   const handleRemoveKeyFeature = async (indexToRemove) => {
+    // Non consentire modifiche dei dettagli se l'annuncio è pubblicato
+    if (!isDraftMode) {
+      return;
+    }
     const publicData = currentListing.attributes?.publicData || {};
     const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
     const currentKeyFeatures = publicData[keyFeaturesFieldName] || [];
@@ -638,6 +662,10 @@ export const PreviewListingPageComponent = props => {
 
   // Handler for adding a key feature
   const handleAddKeyFeature = async (newFeature, currentFeatures, keyFeaturesFieldName) => {
+    // Non consentire modifiche dei dettagli se l'annuncio è pubblicato
+    if (!isDraftMode) {
+      return;
+    }
     if (!newFeature.trim()) return;
     
     setUpdatingListing(true);
@@ -760,6 +788,10 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleImageUpload = async event => {
+    // Niente upload immagini se l'annuncio non è in bozza
+    if (!isDraftMode) {
+      return;
+    }
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -797,6 +829,10 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleImageDelete = async (imageId, imageIndex) => {
+    // Niente eliminazione immagini se l'annuncio non è in bozza
+    if (!isDraftMode) {
+      return;
+    }
     // Show confirmation dialog
     setImageToDelete(imageId);
     setImageToDeleteIndex(imageIndex);
@@ -805,6 +841,11 @@ export const PreviewListingPageComponent = props => {
 
   const confirmImageDelete = async () => {
     if (!imageToDelete) return;
+    // Ulteriore sicurezza: blocca su annunci non draft
+    if (!isDraftMode) {
+      cancelImageDelete();
+      return;
+    }
 
     setDeletingImageId(imageToDelete.uuid);
     setShowDeleteImageDialog(false);
@@ -2268,14 +2309,8 @@ export const PreviewListingPageComponent = props => {
   );
   const listing = currentListing;
 
-  // Debug: Log listing data (commented out to reduce console noise)
-  // console.log('📋 Preview listing data:', {
-  //   listing,
-  //   images: listing.images,
-  //   imagesCount: listing.images?.length,
-  //   firstImage: listing.images?.[0],
-  //   firstImageVariants: listing.images?.[0]?.attributes?.variants,
-  // });
+  // Debug: Log listing data as structured JSON
+  console.log('📋 Preview listing data:', JSON.stringify(listing, null, 2));
 
   const handleNotificationClose = () => {
     setNotificationTitle(null);
@@ -2354,19 +2389,21 @@ export const PreviewListingPageComponent = props => {
                     {/* Thumbnails - Horizontally scrollable, delete icons if more than 4 images */}
                     <div className={css.thumbnailsContainer}>
                       <div className={css.thumbnailsScroll}>
-                                                {/* Upload New Image Button */}
-                                                <div className={css.thumbnail}>
-                          <label className={css.uploadThumbnail}>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              style={{ display: 'none' }}
-                              disabled={uploadingImage}
-                            />
-                            <div className={css.uploadIcon}>{uploadingImage ? '...' : '+'}</div>
-                          </label>
-                        </div>
+                        {/* Upload New Image Button – solo in modalità bozza */}
+                        {isDraftMode && (
+                          <div className={css.thumbnail}>
+                            <label className={css.uploadThumbnail}>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                style={{ display: 'none' }}
+                                disabled={uploadingImage}
+                              />
+                              <div className={css.uploadIcon}>{uploadingImage ? '...' : '+'}</div>
+                            </label>
+                          </div>
+                        )}
                         {listing.images.map((image, index) => {
                           const variants = image.attributes?.variants || {};
                           // Use scaled variants to preserve original aspect ratio (CSS handles the cropping for thumbnails)
@@ -2393,50 +2430,53 @@ export const PreviewListingPageComponent = props => {
                                   className={css.thumbnailImage}
                                 />
                               </div>
-                              <div className={css.thumbnailDeleteButtonWrapper}>
-                                <button
-                                  className={css.thumbnailDeleteButton}
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    if (isLastImage) {
-                                      // Show tooltip when trying to delete the last image
-                                      setShowDeleteImageTooltipIndex(index);
-                                      setTimeout(() => setShowDeleteImageTooltipIndex(null), 3000);
-                                    } else {
-                                      handleImageDelete(image.id, index);
-                                    }
-                                  }}
-                                  disabled={isDisabled}
-                                  aria-label={intl.formatMessage(
-                                    { id: 'PreviewListingPage.deleteImage' },
-                                    { index: index + 1 }
+                              {/* Pulsante elimina immagine – solo in modalità bozza */}
+                              {isDraftMode && (
+                                <div className={css.thumbnailDeleteButtonWrapper}>
+                                  <button
+                                    className={css.thumbnailDeleteButton}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      if (isLastImage) {
+                                        // Mostra tooltip quando si prova a cancellare l'ultima immagine
+                                        setShowDeleteImageTooltipIndex(index);
+                                        setTimeout(() => setShowDeleteImageTooltipIndex(null), 3000);
+                                      } else {
+                                        handleImageDelete(image.id, index);
+                                      }
+                                    }}
+                                    disabled={isDisabled}
+                                    aria-label={intl.formatMessage(
+                                      { id: 'PreviewListingPage.deleteImage' },
+                                      { index: index + 1 }
+                                    )}
+                                  >
+                                    {isDeleting ? (
+                                      '⏳'
+                                    ) : (
+                                      <svg
+                                        className={css.trashIcon}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
+                                    )}
+                                  </button>
+                                  {showDeleteImageTooltipIndex === index && isLastImage && (
+                                    <div className={css.deleteImageTooltip}>
+                                      <FormattedMessage id="PreviewListingPage.cannotDeleteLastImage" />
+                                    </div>
                                   )}
-                                >
-                                  {isDeleting ? (
-                                    '⏳'
-                                  ) : (
-                                    <svg
-                                      className={css.trashIcon}
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                      />
-                                    </svg>
-                                  )}
-                                </button>
-                                {showDeleteImageTooltipIndex === index && isLastImage && (
-                                  <div className={css.deleteImageTooltip}>
-                                    <FormattedMessage id="PreviewListingPage.cannotDeleteLastImage" />
-                                  </div>
-                                )}
-                              </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -2454,8 +2494,8 @@ export const PreviewListingPageComponent = props => {
                     }}
                     className={css.breadcrumbItem}
                   >
-                    {listing.attributes.publicData.category.charAt(0).toUpperCase() + 
-                     listing.attributes.publicData.category.slice(1).toLowerCase()}
+                    {listing.attributes.publicData.category.charAt(0).toUpperCase() +
+                      listing.attributes.publicData.category.slice(1).toLowerCase()}
                   </NamedLink>
                   {listing.attributes.publicData.subcategory && (
                     <>
@@ -2469,8 +2509,8 @@ export const PreviewListingPageComponent = props => {
                         }}
                         className={css.breadcrumbItem}
                       >
-                        {listing.attributes.publicData.subcategory.charAt(0).toUpperCase() + 
-                         listing.attributes.publicData.subcategory.slice(1).toLowerCase()}
+                        {listing.attributes.publicData.subcategory.charAt(0).toUpperCase() +
+                          listing.attributes.publicData.subcategory.slice(1).toLowerCase()}
                       </NamedLink>
                     </>
                   )}
@@ -2503,7 +2543,7 @@ export const PreviewListingPageComponent = props => {
                       defaultMessage="Description"
                     />
                   </h3>
-                  {editingField !== 'description' && (
+                  {editingField !== 'description' && isDraftMode && (
                     <button
                       onClick={() => handleEditField('description')}
                       className={css.modifyLink}
@@ -2516,7 +2556,7 @@ export const PreviewListingPageComponent = props => {
                   )}
                 </div>
                 <div className={css.editableField}>
-                  {editingField === 'description' ? (
+                  {editingField === 'description' && isDraftMode ? (
                     <>
                       <textarea
                         className={css.descriptionTextarea}
@@ -2564,7 +2604,7 @@ export const PreviewListingPageComponent = props => {
                       <span className={css.detailLabel}>
                         <FormattedMessage id="PreviewListingPage.condition" defaultMessage="Condition" />:
                       </span>
-                      {editingField === 'condition' ? (
+                      {editingField === 'condition' && isDraftMode ? (
                         <div className={css.detailEditWrapper}>
                           <select
                             value={fieldValues.condition || listing.attributes?.publicData?.condition || 'Used'}
@@ -2618,12 +2658,14 @@ export const PreviewListingPageComponent = props => {
                               { id: conditionKey, defaultMessage: condition }
                             );
                           })()}
-                          <button onClick={() => handleEditField('condition')} className={css.editLink}>
-                            <FormattedMessage
-                              id="PreviewListingPage.editLink"
-                              defaultMessage="edit"
-                            />
-                          </button>
+                          {isDraftMode && (
+                            <button onClick={() => handleEditField('condition')} className={css.editLink}>
+                              <FormattedMessage
+                                id="PreviewListingPage.editLink"
+                                defaultMessage="edit"
+                              />
+                            </button>
+                          )}
                         </span>
                       )}
                     </div>
@@ -2633,7 +2675,7 @@ export const PreviewListingPageComponent = props => {
                       <span className={css.detailLabel}>
                         <FormattedMessage id="PreviewListingPage.brand" defaultMessage="Brand" />:
                       </span>
-                      {editingField === 'brand' ? (
+                      {editingField === 'brand' && isDraftMode ? (
                         <div className={css.detailEditWrapper}>
                           <input
                             type="text"
@@ -2662,12 +2704,14 @@ export const PreviewListingPageComponent = props => {
                       ) : (
                         <span className={css.detailValue}>
                           {fieldValues.brand || listing.attributes?.publicData?.brand || ''}
-                          <button onClick={() => handleEditField('brand')} className={css.editLink}>
-                            <FormattedMessage
-                              id="PreviewListingPage.editLink"
-                              defaultMessage="edit"
-                            />
-                          </button>
+                          {isDraftMode && (
+                            <button onClick={() => handleEditField('brand')} className={css.editLink}>
+                              <FormattedMessage
+                                id="PreviewListingPage.editLink"
+                                defaultMessage="edit"
+                              />
+                            </button>
+                          )}
                         </span>
                       )}
                     </div>
@@ -2712,7 +2756,7 @@ export const PreviewListingPageComponent = props => {
                               >
                                 <span className={css.keyFeatureBullet}></span>
                                 <span className={css.keyFeatureText}>{String(feature)}</span>
-                                {hoveredFeatureIndex === index && (
+                                {hoveredFeatureIndex === index && isDraftMode && (
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveKeyFeature(index)}
@@ -2727,58 +2771,60 @@ export const PreviewListingPageComponent = props => {
                             ))}
                           </ul>
                           
-                          {/* Add Feature Link */}
-                          {showAddFeatureInput ? (
-                            <div className={css.addFeatureInputWrapper}>
-                              <input
-                                type="text"
-                                value={newFeatureValue}
-                                onChange={e => setNewFeatureValue(e.target.value)}
-                                onKeyPress={e => {
-                                  if (e.key === 'Enter' && newFeatureValue.trim()) {
-                                    handleAddKeyFeature(newFeatureValue.trim(), keyFeaturesArray, keyFeaturesFieldName);
-                                    setNewFeatureValue('');
-                                    setShowAddFeatureInput(false);
-                                  }
-                                }}
-                                className={css.addFeatureInput}
-                                autoFocus
-                                placeholder={intl.formatMessage({ id: 'PreviewListingPage.addFeaturePlaceholder', defaultMessage: 'Enter feature...' })}
-                              />
-                              <div className={css.addFeatureActions}>
-                                <button
-                                  onClick={() => {
-                                    if (newFeatureValue.trim()) {
+                          {/* Add Feature Link – solo per annunci in bozza */}
+                          {isDraftMode && (
+                            showAddFeatureInput ? (
+                              <div className={css.addFeatureInputWrapper}>
+                                <input
+                                  type="text"
+                                  value={newFeatureValue}
+                                  onChange={e => setNewFeatureValue(e.target.value)}
+                                  onKeyPress={e => {
+                                    if (e.key === 'Enter' && newFeatureValue.trim()) {
                                       handleAddKeyFeature(newFeatureValue.trim(), keyFeaturesArray, keyFeaturesFieldName);
                                       setNewFeatureValue('');
+                                      setShowAddFeatureInput(false);
                                     }
-                                    setShowAddFeatureInput(false);
                                   }}
-                                  className={css.saveButton}
-                                  disabled={!newFeatureValue.trim() || updatingListing}
-                                >
-                                  <FormattedMessage id="PreviewListingPage.saveButton" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setNewFeatureValue('');
-                                    setShowAddFeatureInput(false);
-                                  }}
-                                  className={css.cancelButton}
-                                  disabled={updatingListing}
-                                >
-                                  <FormattedMessage id="PreviewListingPage.cancelButton" />
-                                </button>
+                                  className={css.addFeatureInput}
+                                  autoFocus
+                                  placeholder={intl.formatMessage({ id: 'PreviewListingPage.addFeaturePlaceholder', defaultMessage: 'Enter feature...' })}
+                                />
+                                <div className={css.addFeatureActions}>
+                                  <button
+                                    onClick={() => {
+                                      if (newFeatureValue.trim()) {
+                                        handleAddKeyFeature(newFeatureValue.trim(), keyFeaturesArray, keyFeaturesFieldName);
+                                        setNewFeatureValue('');
+                                      }
+                                      setShowAddFeatureInput(false);
+                                    }}
+                                    className={css.saveButton}
+                                    disabled={!newFeatureValue.trim() || updatingListing}
+                                  >
+                                    <FormattedMessage id="PreviewListingPage.saveButton" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setNewFeatureValue('');
+                                      setShowAddFeatureInput(false);
+                                    }}
+                                    className={css.cancelButton}
+                                    disabled={updatingListing}
+                                  >
+                                    <FormattedMessage id="PreviewListingPage.cancelButton" />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setShowAddFeatureInput(true)}
-                              className={css.addFeatureLink}
-                            >
-                              <FormattedMessage id="PreviewListingPage.addFeature" defaultMessage="Add" />
-                            </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setShowAddFeatureInput(true)}
+                                className={css.addFeatureLink}
+                              >
+                                <FormattedMessage id="PreviewListingPage.addFeature" defaultMessage="Add" />
+                              </button>
+                            )
                           )}
                         </div>
                       );
@@ -2793,7 +2839,7 @@ export const PreviewListingPageComponent = props => {
                 <div className={css.summarySection}>
                   {/* Editable Title */}
                   <div className={css.titleSection}>
-                    {editingField === 'title' ? (
+                    {editingField === 'title' && isDraftMode ? (
                       <>
                         <textarea
                           value={fieldValues.title || ''}
@@ -2823,12 +2869,14 @@ export const PreviewListingPageComponent = props => {
                       <>
                         <h2 className={css.listingTitle}>
                           {fieldValues.title || listing.attributes.title}
-                          <button onClick={() => handleEditField('title')} className={css.editLink}>
-                            <FormattedMessage
-                              id="PreviewListingPage.editLink"
-                              defaultMessage="edit"
-                            />
-                          </button>
+                          {isDraftMode && (
+                            <button onClick={() => handleEditField('title')} className={css.editLink}>
+                              <FormattedMessage
+                                id="PreviewListingPage.editLink"
+                                defaultMessage="edit"
+                              />
+                            </button>
+                          )}
                         </h2>
                       </>
                     )}
