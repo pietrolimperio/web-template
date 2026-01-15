@@ -470,7 +470,7 @@
   "QuestionModal.skipAllButton": "Salta domande rimanenti",
   "QuestionModal.nextButton": "Avanti",
   "QuestionModal.finishButton": "Fine",
-  "QuestionModal.cancelDialogTitle": "Interrompere la Creazione dell'Annuncio?",
+  "QuestionModal.cancelDialogTitle": "Interrompere la creazione dell'annuncio?",
   "QuestionModal.cancelDialogMessage": "Se continui, il processo di creazione dell'annuncio verrà interrotto e tornerai al primo passaggio con le immagini precedentemente caricate. Tutte le risposte andranno perse.",
   "QuestionModal.cancelDialogStay": "Rimani",
   "QuestionModal.cancelDialogConfirm": "Sì, Interrompi",
