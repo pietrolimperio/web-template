@@ -30,9 +30,8 @@
   gap: 8px;
   font-size: 14px;
   color: var(--matterColorAnti);
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--matterColorNegative);
+  margin: 32px 0 0 0;
+  padding: 0;
 }
 
 .breadcrumbItem {
@@ -75,7 +74,7 @@
 .imagesSection {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0px;
 }
 
 /* Main Image */
@@ -442,7 +441,7 @@
 
 /* Description Section */
 .descriptionSection {
-  margin-top: 24px;
+  margin-top: 5px;
 }
 
 /* Details Section */

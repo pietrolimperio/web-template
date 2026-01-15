@@ -825,46 +825,6 @@ export const ProductPageComponent = props => {
             </div>
           </div>
 
-          {/* Breadcrumb */}
-          {publicData?.category && (
-            <div className={css.breadcrumb}>
-              <NamedLink
-                name="SearchPage"
-                to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
-                className={css.breadcrumbItem}
-              >
-                {publicData.category.charAt(0).toUpperCase() +
-                  publicData.category.slice(1).toLowerCase()}
-              </NamedLink>
-              {publicData.subcategory && (
-                <>
-                  <span className={css.breadcrumbSeparator}>›</span>
-                  <NamedLink
-                    name="SearchPage"
-                    to={{ search: `?keywords=${encodeURIComponent(publicData.subcategory)}` }}
-                    className={css.breadcrumbItem}
-                  >
-                    {publicData.subcategory.charAt(0).toUpperCase() +
-                      publicData.subcategory.slice(1).toLowerCase()}
-                  </NamedLink>
-                </>
-              )}
-              {publicData.thirdCategory && (
-                <>
-                  <span className={css.breadcrumbSeparator}>›</span>
-                  <NamedLink
-                    name="SearchPage"
-                    to={{ search: `?keywords=${encodeURIComponent(publicData.thirdCategory)}` }}
-                    className={css.breadcrumbItem}
-                  >
-                    {publicData.thirdCategory.charAt(0).toUpperCase() +
-                      publicData.thirdCategory.slice(1).toLowerCase()}
-                  </NamedLink>
-                </>
-              )}
-            </div>
-          )}
-
           <div className={css.mainContent}>
             {/* Left Column - Images */}
             <div className={css.imagesColumn}>
@@ -948,6 +908,52 @@ export const ProductPageComponent = props => {
                           );
                         })}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Breadcrumb (between images and description) */}
+                  {publicData?.category && (
+                    <div className={css.breadcrumb}>
+                      <NamedLink
+                        name="SearchPage"
+                        to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
+                        className={css.breadcrumbItem}
+                      >
+                        {publicData.category.charAt(0).toUpperCase() +
+                          publicData.category.slice(1).toLowerCase()}
+                      </NamedLink>
+                      {publicData.subcategory && (
+                        <>
+                          <span className={css.breadcrumbSeparator}>›</span>
+                          <NamedLink
+                            name="SearchPage"
+                            to={{
+                              search: `?keywords=${encodeURIComponent(publicData.subcategory)}`,
+                            }}
+                            className={css.breadcrumbItem}
+                          >
+                            {publicData.subcategory.charAt(0).toUpperCase() +
+                              publicData.subcategory.slice(1).toLowerCase()}
+                          </NamedLink>
+                        </>
+                      )}
+                      {publicData.thirdCategory && (
+                        <>
+                          <span className={css.breadcrumbSeparator}>›</span>
+                          <NamedLink
+                            name="SearchPage"
+                            to={{
+                              search: `?keywords=${encodeURIComponent(
+                                publicData.thirdCategory
+                              )}`,
+                            }}
+                            className={css.breadcrumbItem}
+                          >
+                            {publicData.thirdCategory.charAt(0).toUpperCase() +
+                              publicData.thirdCategory.slice(1).toLowerCase()}
+                          </NamedLink>
+                        </>
+                      )}
                     </div>
                   )}
 
