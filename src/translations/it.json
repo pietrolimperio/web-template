@@ -593,7 +593,7 @@
   "ListingPage.payoutDetailsWarningLink": "Aggiungi i dettagli per i pagamenti in uscita",
   "ListingPage.reviewsError": "Caricamento delle recensioni non riuscito.",
   "ListingPage.noReviews": "Questo annuncio non ha ancora recensioni.",
-  "ListingPage.reviewsTitle": "Recensioni ({count})",
+  "ListingPage.reviewsTitle": "Recensioni prodotto ({count})",
   "ListingPage.schemaTitle": "{title} | {marketplaceName}",
   "ListingPage.viewImagesButton": "Vedi foto ({count})",
   "ProductPage.closedListing": "Questo annuncio è chiuso",
