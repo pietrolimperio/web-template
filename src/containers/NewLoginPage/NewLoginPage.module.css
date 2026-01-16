@@ -83,7 +83,7 @@
 .formSubtitle {
   font-size: 16px;
   color: var(--colorGrey500);
-  margin: 0 0 32px 0;
+  margin: 0 0 0px 0;
   line-height: 1.5;
 }
 
@@ -166,7 +166,7 @@
 
 .signupContainer {
   text-align: center;
-  padding: 20px 0 10px 0;
+  padding: 0px 0 32px 0;
   margin-top: 8px;
 }
 

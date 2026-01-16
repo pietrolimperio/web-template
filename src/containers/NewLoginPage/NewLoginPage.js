@@ -111,6 +111,16 @@ export const NewLoginPageComponent = props => {
                 <FormattedMessage id="NewLoginPage.loginSubtitle" />
               </p>
 
+              {/* Sign up and back links without dividers */}
+              <div className={css.signupContainer}>
+                <span className={css.signupText}>
+                  <FormattedMessage id="NewLoginPage.dontHaveAccount" />
+                </span>
+                <NamedLink name="SignupPage" className={css.signupLink}>
+                  <FormattedMessage id="NewLoginPage.signUp" />
+                </NamedLink>
+              </div>
+
               {loginError && (
                 <div className={css.error}>
                   <FormattedMessage id="NewLoginPage.loginFailed" />
