@@ -1646,7 +1646,7 @@
   "NewSignupPage.countryPlaceholder": "Italia",
   "NewSignupPage.countryRequired": "Il paese è obbligatorio",
   "NewSignupPage.taxIdLabel": "Codice fiscale",
-  "NewSignupPage.taxIdPlaceholder": "Numero identificativo fiscale",
+  "NewSignupPage.taxIdPlaceholder": "Codice fiscale",
   "NewSignupPage.taxIdRequired": "Il codice fiscale è obbligatorio",
   "NewSignupPage.taxIdInvalid": "Inserisci un codice fiscale valido",
   "NewSignupPage.signUp": "Crea account",
