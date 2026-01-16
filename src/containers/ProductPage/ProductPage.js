@@ -813,14 +813,16 @@ export const ProductPageComponent = props => {
                     }}
                   />
                 </span>
-                <div className={css.authorRating}>
-                  <ReviewRating
-                    rating={authorAverageRatingRounded}
-                    className={css.authorReviewRating}
-                    reviewStarClassName={css.authorReviewStar}
-                  />
-                  <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
-                </div>
+                {authorReviewsCount > 0 && (
+                  <div className={css.authorRating}>
+                    <ReviewRating
+                      rating={authorAverageRatingRounded}
+                      className={css.authorReviewRating}
+                      reviewStarClassName={css.authorReviewStar}
+                    />
+                    <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1197,14 +1199,16 @@ export const ProductPageComponent = props => {
                       }}
                     />
                     </span>
-                  <div className={css.authorRating}>
-                    <ReviewRating
-                      rating={authorAverageRatingRounded}
-                      className={css.authorReviewRating}
-                      reviewStarClassName={css.authorReviewStar}
-                    />
+                  {authorReviewsCount > 0 && (
+                    <div className={css.authorRating}>
+                      <ReviewRating
+                        rating={authorAverageRatingRounded}
+                        className={css.authorReviewRating}
+                        reviewStarClassName={css.authorReviewStar}
+                      />
                       <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
