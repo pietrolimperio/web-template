@@ -1025,9 +1025,9 @@ export const PreviewListingPageComponent = props => {
     // Use the published listing ID (should be the same, but just in case)
     const listingIdUuid = publishedListingId?.uuid || listingId.uuid;
     
-    // Redirect to listing page
+    // Redirect to product page
     const listingPath = createResourceLocatorString(
-      'ListingPage',
+      'ProductPage',
       routeConfiguration,
       { id: listingIdUuid, slug: createSlug(title) },
       {}
