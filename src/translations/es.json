@@ -703,6 +703,8 @@
   "ModalMissingInformation.sendingEmail": "Enviando correo de verificación…",
   "ModalMissingInformation.verifyEmailText": "Verifica tu dirección de correo electrónico para que podamos enviarte el recibo e información sobre el estado de la orden. No podemos enviar correos a direcciones no verificadas.",
   "ModalMissingInformation.verifyEmailTitle": "Por favor, verifica tu cuenta de correo electrónico",
+  "ModalMissingInformation.backToHome": "Volver al Inicio",
+  "ModalMissingInformation.reload": "Recargar",
   "NegotiationForm.ctaButton": "Envía una oferta",
   "NoAccessPage.initiateTransactions.content": "Para iniciar una transacción, necesitas permiso del equipo de {marketplaceName}.",
   "NoAccessPage.initiateTransactions.heading": "No tienes permiso para iniciar transacciones",

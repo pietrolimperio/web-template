@@ -700,6 +700,8 @@
   "ModalMissingInformation.sendingEmail": "Envoi de l'email de confirmation…",
   "ModalMissingInformation.verifyEmailText": "Veuillez confirmer votre adresse email afin que nous puissions vous envoyer votre reçu et des informations sur l'état de votre commande. Nous ne pouvons pas vous envoyer un email tant que votre adresse email n'a pas été confirmée.",
   "ModalMissingInformation.verifyEmailTitle": "Veuillez confirmer votre adresse email",
+  "ModalMissingInformation.backToHome": "Retour à l'accueil",
+  "ModalMissingInformation.reload": "Recharger",
   "NegotiationForm.ctaButton": "Faire une offre",
   "NoAccessPage.initiateTransactions.content": "Pour pouvoir initier une transaction, vous devez obtenir les droits de transaction par l'équipe {marketplaceName}.",
   "NoAccessPage.initiateTransactions.heading": "Vous n'avez pas le droit d'initier de transactions.",

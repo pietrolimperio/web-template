@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormattedMessage } from '../../util/reactIntl';
 import { isTooManyEmailVerificationRequestsError } from '../../util/errors';
-import { IconEmailAttention, InlineTextButton, NamedLink } from '../../components';
+import { IconEmailAttention, InlineTextButton, NamedLink, PrimaryButton } from '../../components';
 
 import css from './ModalMissingInformation.module.css';
 
@@ -67,6 +67,19 @@ const EmailReminder = props => {
         <p className={css.helperText}>
           <FormattedMessage id="ModalMissingInformation.fixEmail" values={{ fixEmailLink }} />
         </p>
+      </div>
+
+      {/* CTA Buttons */}
+      <div className={css.ctaButtons}>
+        <NamedLink name="LandingPage" className={css.ctaButtonSecondary}>
+          <FormattedMessage id="ModalMissingInformation.backToHome" />
+        </NamedLink>
+        <PrimaryButton
+          onClick={() => window.location.reload()}
+          className={css.ctaButtonPrimary}
+        >
+          <FormattedMessage id="ModalMissingInformation.reload" />
+        </PrimaryButton>
       </div>
     </div>
   );

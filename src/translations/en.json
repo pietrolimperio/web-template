@@ -713,6 +713,8 @@
   "ModalMissingInformation.sendingEmail": "Sending verification email…",
   "ModalMissingInformation.verifyEmailText": "Please verify your email address so we can send you your receipt and information on your order status. We are unable to send you emails before your email has been verified.",
   "ModalMissingInformation.verifyEmailTitle": "Please verify your email address",
+  "ModalMissingInformation.backToHome": "Back to Home",
+  "ModalMissingInformation.reload": "Reload",
   "NegotiationForm.ctaButton": "Submit an offer",
   "NoAccessPage.initiateTransactions.content": "To start a transaction, you need to receive transaction rights from the {marketplaceName} team.",
   "NoAccessPage.initiateTransactions.heading": "You don't have transaction rights",
