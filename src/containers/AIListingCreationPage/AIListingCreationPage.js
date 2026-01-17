@@ -15,6 +15,7 @@ import FooterContainer from '../FooterContainer/FooterContainer';
 
 import ImageUpload from './ImageUpload';
 import QuestionModal from './QuestionModal';
+import CategoryModal from './CategoryModal';
 import LoadingOverlay from './LoadingOverlay';
 import { getDefaultTimeZoneOnBrowser } from '../../util/dates';
 
@@ -50,6 +51,7 @@ const STEP_UPLOAD = 'upload';
 const STEP_ANALYZING = 'analyzing';
 const STEP_QUESTIONS = 'questions';
 const STEP_REFINING = 'refining';
+const STEP_CATEGORIES = 'categories';
 const STEP_PRICE_QUESTION = 'priceQuestion';
 const STEP_SAVING = 'saving';
 
@@ -340,11 +342,11 @@ export const AIListingCreationPageComponent = ({
       setCurrentQuestions(questions);
       setTotalQuestionsAsked(questions.length);
 
-      // If questions exist, show them; otherwise go to price question
+      // If questions exist, show them; otherwise go to categories step
       if (questions.length > 0) {
         setStep(STEP_QUESTIONS);
       } else {
-        setStep(STEP_PRICE_QUESTION);
+        setStep(STEP_CATEGORIES);
       }
     } catch (err) {
       console.error('Analysis error:', err);
@@ -366,7 +368,7 @@ export const AIListingCreationPageComponent = ({
 
     // If no answers, just move to next step
     if (Object.keys(answers).length === 0) {
-      setStep(STEP_PRICE_QUESTION);
+      setStep(STEP_CATEGORIES);
       return;
     }
 
@@ -401,8 +403,8 @@ export const AIListingCreationPageComponent = ({
         newTotal >= QUESTION_CONSTRAINTS.MAX_TOTAL_QUESTIONS ||
         roundNumber >= QUESTION_CONSTRAINTS.MAX_ROUNDS
       ) {
-        // No more questions, proceed to manual price question
-        setStep(STEP_PRICE_QUESTION);
+        // No more questions, proceed to categories step
+        setStep(STEP_CATEGORIES);
       } else {
         // More questions to ask
         setCurrentQuestions(newQuestions);
@@ -439,7 +441,7 @@ export const AIListingCreationPageComponent = ({
           roundNumber,
         });
         setProductAnalysis(refined);
-        setStep(STEP_PRICE_QUESTION);
+        setStep(STEP_CATEGORIES);
       } catch (err) {
         console.error('Refinement error:', err);
         if (err.errorCode === 'PROHIBITED_CATEGORY') {
@@ -457,6 +459,30 @@ export const AIListingCreationPageComponent = ({
   // Handle cancel questions
   const handleCancelQuestions = () => {
       setStep(STEP_UPLOAD);
+  };
+
+  // Handle category modal completion
+  const handleCategoryComplete = categoriesData => {
+    if (!productAnalysis) return;
+
+    // Update productAnalysis with selected categories
+    const updatedAnalysis = {
+      ...productAnalysis,
+      category: categoriesData.category,
+      subcategory: categoriesData.subcategory,
+      thirdCategory: categoriesData.thirdCategory,
+      categoryId: categoriesData.categoryId,
+      subcategoryId: categoriesData.subcategoryId,
+      thirdCategoryId: categoriesData.thirdCategoryId,
+    };
+
+    setProductAnalysis(updatedAnalysis);
+    setStep(STEP_PRICE_QUESTION);
+  };
+
+  // Handle cancel categories
+  const handleCancelCategories = () => {
+    setStep(STEP_UPLOAD);
   };
 
   // Manual price question (single question shown like the AI ones)
@@ -562,6 +588,17 @@ export const AIListingCreationPageComponent = ({
             onSkipAll={handleSkipAll}
             onCancel={handleCancelQuestions}
             isRefining={true}
+          />
+        );
+
+      case STEP_CATEGORIES:
+        return (
+          <CategoryModal
+            initialCategoryId={productAnalysis?.categoryId || productAnalysis?.category || null}
+            initialSubcategoryId={productAnalysis?.subcategoryId || productAnalysis?.subcategory || null}
+            initialThirdCategoryId={productAnalysis?.thirdCategoryId || productAnalysis?.thirdCategory || null}
+            onComplete={handleCategoryComplete}
+            onCancel={handleCancelCategories}
           />
         );
 

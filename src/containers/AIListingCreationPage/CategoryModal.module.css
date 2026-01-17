@@ -1,0 +1,182 @@
+/* Overlay */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Modal */
+.modalContent {
+  background-color: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Header */
+.modalHeader {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--matterColorNegative);
+}
+
+.modalTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--matterColor);
+  margin: 0 0 8px 0;
+}
+
+.modalSubtitle {
+  font-size: 16px;
+  color: var(--matterColorAnti);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Body */
+.modalBody {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.dropdownGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dropdownWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropdownLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--matterColor);
+}
+
+.dropdown {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--matterColor);
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.dropdown:focus {
+  outline: none;
+  border-color: var(--marketplaceColor);
+}
+
+.dropdown:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: var(--matterColorBright);
+  color: var(--matterColor);
+}
+
+.dropdown option {
+  padding: 8px;
+}
+
+/* Footer */
+.modalFooter {
+  padding: 24px 32px;
+  border-top: 1px solid var(--matterColorNegative);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cancelButton {
+  padding: 12px 24px;
+  background-color: white;
+  color: var(--matterColor);
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  border-color: var(--matterColorAnti);
+  background-color: var(--matterColorBright);
+}
+
+.continueButton {
+  padding: 12px 24px;
+  background-color: var(--marketplaceColor);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.continueButton:hover:not(.continueButtonDisabled) {
+  background-color: var(--marketplaceColorDark);
+}
+
+.continueButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalContent {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modalHeader {
+    padding: 20px 16px;
+  }
+
+  .modalTitle {
+    font-size: 20px;
+  }
+
+  .modalSubtitle {
+    font-size: 14px;
+  }
+
+  .modalBody {
+    padding: 24px 16px;
+  }
+
+  .modalFooter {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .cancelButton,
+  .continueButton {
+    width: 100%;
+  }
+}
