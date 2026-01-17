@@ -245,9 +245,11 @@ export const mapProductToListingData = (productAnalysis, config) => {
       ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId }),
       brand: fields.brand || '',
       condition: fields.condition || 'Used',
+      // Map weight and dimensions from API (same keys in publicData)
+      ...(fields.weight != null && fields.weight !== '' && { weight: fields.weight }),
+      ...(fields.dimensions != null && fields.dimensions !== '' && { dimensions: fields.dimensions }),
       // Add all other fields as custom extended data (excluding priceSuggestion)
       ...Object.keys(fields).reduce((acc, key) => {
-        // Skip core fields that are already mapped and priceSuggestion
         if (!['title', 'brand', 'condition', 'longDescription', 'priceSuggestion', 'weight', 'dimensions', 'priceNew'].includes(key)) {
           acc[`ai_${key}`] = fields[key];
         }
@@ -344,6 +346,8 @@ export const mapListingToProductData = listing => {
       condition: publicData?.condition || '',
       shortDescription: description?.substring(0, 200) || '',
       longDescription: description || '',
+      weight: publicData?.weight,
+      dimensions: publicData?.dimensions,
       ...aiFields,
     },
   };
