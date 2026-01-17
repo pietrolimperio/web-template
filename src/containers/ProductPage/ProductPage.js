@@ -31,6 +31,7 @@ import {
   ensureListing,
   ensureOwnListing,
   ensureUser,
+  ensureCurrentUser,
   userDisplayNameAsString,
 } from '../../util/data';
 import { richText } from '../../util/richText';
@@ -59,6 +60,7 @@ import { required, bookingDatesRequired, composeValidators } from '../../util/va
 import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 import { manageDisableScrolling, isScrollingDisabled } from '../../ducks/ui.duck';
 import { initializeCardPaymentData } from '../../ducks/stripe.duck.js';
+import { sendVerificationEmail } from '../../ducks/user.duck';
 
 // Shared components
 import {
@@ -78,6 +80,7 @@ import {
   Heading,
   ReviewRating,
 } from '../../components';
+import EmailReminder from '../../components/ModalMissingInformation/EmailReminder';
 
 // Related components and modules
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
@@ -192,7 +195,14 @@ const BookingForm = props => {
     dayCountAvailableForBooking,
     marketplaceName,
     payoutDetailsWarning,
+    currentUser,
+    onResendVerificationEmail,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
+    onManageDisableScrolling,
   } = props;
+
+  const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
 
   const publicData = listing?.attributes?.publicData || {};
   const price = listing?.attributes?.price;
@@ -311,8 +321,18 @@ const BookingForm = props => {
     }
   };
 
+  // Check if user is logged in but not verified
+  const user = ensureCurrentUser(currentUser);
+  const isUserUnverified = user.id && !user.attributes?.emailVerified;
+
   const handleFormSubmit = () => {
     if (calendarSelectedDates.length < 2) return;
+
+    // If user is not verified, show email verification modal
+    if (isUserUnverified && onResendVerificationEmail) {
+      setShowEmailVerificationModal(true);
+      return;
+    }
 
     const startDate = calendarSelectedDates[0];
     const endDate = calendarSelectedDates[calendarSelectedDates.length - 1];
@@ -424,6 +444,26 @@ const BookingForm = props => {
         </div>
       )}
 
+      {/* Email Verification Modal */}
+      {showEmailVerificationModal && user.id && (
+        <Modal
+          id="ProductPageBookingEmailVerificationReminder"
+          isOpen={showEmailVerificationModal}
+          onClose={() => setShowEmailVerificationModal(false)}
+          usePortal
+          onManageDisableScrolling={onManageDisableScrolling}
+          closeButtonMessage={
+            <FormattedMessage id="ModalMissingInformation.closeVerifyEmailReminder" />
+          }
+        >
+          <EmailReminder
+            user={user}
+            onResendVerificationEmail={onResendVerificationEmail}
+            sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+            sendVerificationEmailError={sendVerificationEmailError}
+          />
+        </Modal>
+      )}
     </div>
   );
 };
@@ -470,6 +510,9 @@ export const ProductPageComponent = props => {
     fetchLineItemsInProgress,
     fetchLineItemsError,
     showOwnListingsOnly,
+    onResendVerificationEmail,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
   } = props;
 
   const listingConfig = config.listing;
@@ -1044,6 +1087,11 @@ export const ProductPageComponent = props => {
                         dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
                         marketplaceName={marketplaceName}
                         payoutDetailsWarning={payoutDetailsWarning}
+                        currentUser={currentUser}
+                        onResendVerificationEmail={onResendVerificationEmail}
+                        sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+                        sendVerificationEmailError={sendVerificationEmailError}
+                        onManageDisableScrolling={onManageDisableScrolling}
                       />
                     </div>
                   )}
@@ -1230,6 +1278,11 @@ export const ProductPageComponent = props => {
                     dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
                     marketplaceName={marketplaceName}
                     payoutDetailsWarning={payoutDetailsWarning}
+                    currentUser={currentUser}
+                    onResendVerificationEmail={onResendVerificationEmail}
+                    sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+                    sendVerificationEmailError={sendVerificationEmailError}
+                    onManageDisableScrolling={onManageDisableScrolling}
                   />
                 </div>
               )}
@@ -1373,7 +1426,11 @@ const mapStateToProps = state => {
     authorReviews = [],
     queryAuthorReviewsError = null,
   } = state.ProductPage || { authorReviews: [], queryAuthorReviewsError: null };
-  const { currentUser } = state.user;
+  const {
+    currentUser,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
+  } = state.user;
 
   const getListing = id => {
     const ref = { id, type: 'listing' };
@@ -1406,6 +1463,8 @@ const mapStateToProps = state => {
     fetchLineItemsError,
     sendInquiryInProgress,
     sendInquiryError,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
   };
 };
 
@@ -1419,6 +1478,7 @@ const mapDispatchToProps = dispatch => ({
   onInitializeCardPaymentData: () => dispatch(initializeCardPaymentData()),
   onFetchTimeSlots: (listingId, start, end, timeZone, options) =>
     dispatch(fetchTimeSlots(listingId, start, end, timeZone, options)),
+  onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
 });
 
 const ProductPage = compose(

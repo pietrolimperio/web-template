@@ -24,7 +24,7 @@ import {
 } from '../../util/types';
 import { formatMoney } from '../../util/currency';
 import { createSlug, parse, stringify } from '../../util/urlHelpers';
-import { userDisplayNameAsString } from '../../util/data';
+import { userDisplayNameAsString, ensureCurrentUser } from '../../util/data';
 import {
   INQUIRY_PROCESS_NAME,
   NEGOTIATION_PROCESS_NAME,
@@ -34,8 +34,9 @@ import {
   resolveLatestProcessName,
 } from '../../transactions/transaction';
 
-import { ModalInMobile, PrimaryButton, AvatarSmall, H1, H2 } from '../../components';
+import { ModalInMobile, PrimaryButton, AvatarSmall, H1, H2, Modal } from '../../components';
 import PriceVariantPicker from './PriceVariantPicker/PriceVariantPicker';
+import EmailReminder from '../ModalMissingInformation/EmailReminder';
 
 import css from './OrderPanel.module.css';
 
@@ -115,12 +116,33 @@ const closeOrderModal = (history, location) => {
   history.push(`${pathname}${searchString}`, state);
 };
 
-const handleSubmit = (isOwnListing, isClosed, isDirectSubmit, onSubmit, history, location) => {
+const handleSubmit = (
+  isOwnListing,
+  isClosed,
+  isDirectSubmit,
+  onSubmit,
+  history,
+  location,
+  isBooking,
+  isUserUnverified,
+  onShowEmailVerificationModal
+) => {
   // TODO: currently, inquiry-process does not have any form to ask more order data.
   // We can submit without opening any inquiry/order modal.
-  return isDirectSubmit
-    ? () => onSubmit({})
-    : () => openOrderModal(isOwnListing, isClosed, history, location);
+  return () => {
+    // If user is not verified and trying to book, show email verification modal
+    if (isBooking && isUserUnverified && onShowEmailVerificationModal) {
+      onShowEmailVerificationModal(true);
+      return;
+    }
+    
+    // Otherwise proceed with normal flow
+    if (isDirectSubmit) {
+      onSubmit({});
+    } else {
+      openOrderModal(isOwnListing, isClosed, history, location);
+    }
+  };
 };
 
 const dateFormattingOptions = { month: 'short', day: 'numeric', weekday: 'short' };
@@ -256,11 +278,13 @@ const hasValidPriceVariants = priceVariants => {
  * @param {string} props.marketplaceCurrency - The currency used in the marketplace
  * @param {number} props.dayCountAvailableForBooking - Number of days available for booking
  * @param {string} props.marketplaceName - Name of the marketplace
+ * @param {propTypes.currentUser} [props.currentUser] - The current user (optional)
  *
  * @returns {JSX.Element} Component that displays the order panel with appropriate form
  */
 const OrderPanel = props => {
   const [mounted, setMounted] = useState(false);
+  const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
   const intl = useIntl();
   const location = useLocation();
   const history = useHistory();
@@ -295,6 +319,10 @@ const OrderPanel = props => {
     fetchLineItemsError,
     payoutDetailsWarning,
     showListingImage,
+    currentUser,
+    onResendVerificationEmail,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
   } = props;
 
   const publicData = listing?.attributes?.publicData || {};
@@ -359,6 +387,10 @@ const OrderPanel = props => {
   const preselectedPriceVariantSlug = searchParams.bookableOption;
 
   const seatsEnabled = [AVAILABILITY_MULTIPLE_SEATS].includes(listingTypeConfig?.availabilityType);
+
+  // Check if user is logged in but not verified (for booking restrictions)
+  const user = ensureCurrentUser(currentUser);
+  const isUserUnverified = user.id && !user.attributes?.emailVerified;
 
   // Note: publicData contains priceVariationsEnabled if listing is created with priceVariations enabled.
   const isPriceVariationsInUse = !!publicData?.priceVariationsEnabled;
@@ -543,7 +575,10 @@ const OrderPanel = props => {
               showInquiryForm || showNegotiationForm,
               onSubmit,
               history,
-              location
+              location,
+              isBooking,
+              isUserUnverified,
+              setShowEmailVerificationModal
             )}
             disabled={isOutOfStock}
           >
@@ -561,6 +596,27 @@ const OrderPanel = props => {
           </PrimaryButton>
         )}
       </div>
+      
+      {/* Email Verification Modal */}
+      {showEmailVerificationModal && user.id && (
+        <Modal
+          id="BookingEmailVerificationReminder"
+          isOpen={showEmailVerificationModal}
+          onClose={() => setShowEmailVerificationModal(false)}
+          usePortal
+          onManageDisableScrolling={onManageDisableScrolling}
+          closeButtonMessage={
+            <FormattedMessage id="ModalMissingInformation.closeVerifyEmailReminder" />
+          }
+        >
+          <EmailReminder
+            user={user}
+            onResendVerificationEmail={onResendVerificationEmail}
+            sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+            sendVerificationEmailError={sendVerificationEmailError}
+          />
+        </Modal>
+      )}
     </div>
   );
 };
