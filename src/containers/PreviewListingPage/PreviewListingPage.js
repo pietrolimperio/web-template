@@ -8,6 +8,7 @@ import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 import { FormattedMessage, useIntl, intlShape, injectIntl } from '../../util/reactIntl';
 import { propTypes } from '../../util/types';
 import { currencyFormatting } from '../../config/settingsCurrency';
+import { getLocalizedCategoryName } from '../../util/string';
 import { ensureCurrentUser, ensureOwnListing } from '../../util/data';
 import { LISTING_STATE_DRAFT } from '../../util/types';
 import { createResourceLocatorString, findRouteByRouteName } from '../../util/routes';
@@ -2494,8 +2495,7 @@ export const PreviewListingPageComponent = props => {
                     }}
                     className={css.breadcrumbItem}
                   >
-                    {listing.attributes.publicData.category.charAt(0).toUpperCase() +
-                      listing.attributes.publicData.category.slice(1).toLowerCase()}
+                    {getLocalizedCategoryName(intl, listing.attributes.publicData.category)}
                   </NamedLink>
                   {listing.attributes.publicData.subcategory && (
                     <>
@@ -2509,8 +2509,7 @@ export const PreviewListingPageComponent = props => {
                         }}
                         className={css.breadcrumbItem}
                       >
-                        {listing.attributes.publicData.subcategory.charAt(0).toUpperCase() +
-                          listing.attributes.publicData.subcategory.slice(1).toLowerCase()}
+                        {getLocalizedCategoryName(intl, listing.attributes.publicData.subcategory)}
                       </NamedLink>
                     </>
                   )}
@@ -2526,8 +2525,7 @@ export const PreviewListingPageComponent = props => {
                         }}
                         className={css.breadcrumbItem}
                       >
-                        {listing.attributes.publicData.thirdCategory.charAt(0).toUpperCase() +
-                          listing.attributes.publicData.thirdCategory.slice(1).toLowerCase()}
+                        {getLocalizedCategoryName(intl, listing.attributes.publicData.thirdCategory)}
                       </NamedLink>
                     </>
                   )}

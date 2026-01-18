@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
+import { getLocalizedCategoryName } from '../../util/string';
 import css from './CategoryModal.module.css';
 import categoriesData from '../../config/categories.json';
 
@@ -231,7 +232,7 @@ const CategoryModal = ({
                 </option>
                 {availableCategories.map(category => (
                   <option key={category.id} value={category.id}>
-                    {category.name}
+                    {getLocalizedCategoryName(intl, category.name)}
                   </option>
                 ))}
               </select>
@@ -260,7 +261,7 @@ const CategoryModal = ({
                 </option>
                 {availableSubcategories.map(subcategory => (
                   <option key={subcategory.id} value={subcategory.id}>
-                    {subcategory.name}
+                    {getLocalizedCategoryName(intl, subcategory.name)}
                   </option>
                 ))}
               </select>
@@ -289,7 +290,7 @@ const CategoryModal = ({
                   </option>
                   {availableThirdCategories.map(thirdCategory => (
                     <option key={thirdCategory.id} value={thirdCategory.id}>
-                      {thirdCategory.name}
+                      {getLocalizedCategoryName(intl, thirdCategory.name)}
                     </option>
                   ))}
                 </select>

@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { Field } from 'react-final-form';
 import classNames from 'classnames';
-import { FormattedMessage } from '../../../../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../../../../util/reactIntl';
+import { getLocalizedCategoryName } from '../../../../../util/string';
 
 import { OutsideClickHandler } from '../../../../../components';
 
 import css from './FilterCategories.module.css';
 
 const CategoryDropdown = ({ input, className, rootClassName, categories, alignLeft }) => {
+  const intl = useIntl();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [hasSelected, setHasSelected] = useState(false);
@@ -67,7 +69,7 @@ const CategoryDropdown = ({ input, className, rootClassName, categories, alignLe
   const selectedCategory = categories.find(category => category.id === input.value);
 
   const labelText = selectedCategory ? (
-    selectedCategory.name
+    getLocalizedCategoryName(intl, selectedCategory.name)
   ) : hasSelected && input.value === '' ? (
     <FormattedMessage id="PageBuilder.SearchCTA.CategoryFilter.selectAll" />
   ) : (
@@ -121,6 +123,10 @@ const CategoryDropdown = ({ input, className, rootClassName, categories, alignLe
               const isSelected =
                 id === input.value || (id === 'all-categories' && input.value === '');
               const isActive = index === activeIndex;
+              // If name is a React element (FormattedMessage), use it as-is; otherwise, it's a string category name that needs localization
+              const displayName = React.isValidElement(name) 
+                ? name 
+                : getLocalizedCategoryName(intl, name);
               return (
                 <li
                   key={id}
@@ -135,7 +141,7 @@ const CategoryDropdown = ({ input, className, rootClassName, categories, alignLe
                   <span
                     className={isSelected ? css.dropdownItemBorderSelected : css.dropdownItemBorder}
                   />
-                  {name}
+                  {displayName}
                 </li>
               );
             })}

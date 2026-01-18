@@ -5,8 +5,7 @@
 
 import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE } from '../config/localeConfig';
 
-const PRODUCT_API_BASE_URL =
-  process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api';
+const PRODUCT_API_BASE_URL = 'http://localhost:3001/api';
 const DEFAULT_MODELS = ['gemini-2.5-flash'];
 //const DEFAULT_MODELS = ['gemini-2.5-flash', 'gpt-5', 'claude-4.5-sonnet'];
 

@@ -11,6 +11,7 @@ import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 // Utils
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { LISTING_STATE_PENDING_APPROVAL, LISTING_STATE_CLOSED, propTypes } from '../../util/types';
+import { getLocalizedCategoryName } from '../../util/string';
 import { types as sdkTypes, createInstance } from '../../util/sdkLoader';
 import {
   LISTING_PAGE_DRAFT_VARIANT,
@@ -964,8 +965,7 @@ export const ProductPageComponent = props => {
                         to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
                         className={css.breadcrumbItem}
                       >
-                        {publicData.category.charAt(0).toUpperCase() +
-                          publicData.category.slice(1).toLowerCase()}
+                        {getLocalizedCategoryName(intl, publicData.category)}
                       </NamedLink>
                       {publicData.subcategory && (
                         <>
@@ -977,8 +977,7 @@ export const ProductPageComponent = props => {
                             }}
                             className={css.breadcrumbItem}
                           >
-                            {publicData.subcategory.charAt(0).toUpperCase() +
-                              publicData.subcategory.slice(1).toLowerCase()}
+                            {getLocalizedCategoryName(intl, publicData.subcategory)}
                           </NamedLink>
                         </>
                       )}
@@ -994,8 +993,7 @@ export const ProductPageComponent = props => {
                             }}
                             className={css.breadcrumbItem}
                           >
-                            {publicData.thirdCategory.charAt(0).toUpperCase() +
-                              publicData.thirdCategory.slice(1).toLowerCase()}
+                            {getLocalizedCategoryName(intl, publicData.thirdCategory)}
                           </NamedLink>
                         </>
                       )}
