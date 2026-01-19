@@ -170,7 +170,7 @@ class ProductAPI {
         let errorCode = null;
         try {
           const error = await response.json();
-          console.log('error', error);
+          console.error('❌ Error', error);
           errorMessage =
             error.error || error.message || `API call failed with status ${response.status}`;
           // Check for PROHIBITED_CATEGORY error code
