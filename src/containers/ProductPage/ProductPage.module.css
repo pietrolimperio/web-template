@@ -38,6 +38,7 @@
   color: var(--matterColorAnti);
   text-decoration: none;
   transition: color 0.2s;
+  width: min-content;
 }
 
 .breadcrumbItem:hover {
