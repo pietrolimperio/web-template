@@ -176,11 +176,12 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
         tags.Make || tags.Model || tags.DateTime || tags.DateTimeOriginal;
 
       // Check for photo metadata (email downloads often preserve these)
+      // Note: XResolution/YResolution alone are NOT significant - they're standard JPEG values
+      // that can be present in web images too, so we don't use them as validation criteria
       const hasPhotoMetadata =
         tags.Orientation ||
         tags.ExifVersion ||
         tags.ColorSpace ||
-        (tags.XResolution && tags.YResolution) ||
         tags.PixelXDimension ||
         tags.PixelYDimension ||
         tags.ExifImageWidth ||
