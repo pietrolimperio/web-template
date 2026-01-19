@@ -454,6 +454,7 @@
   "ImageUpload.errorFileType": "\"{fileName}\" n'est pas un format pris en charge. Seuls JPG et PNG sont autorisés.",
   "ImageUpload.errorExifWebDownload": "\"{fileName}\" semble être un téléchargement web ou une capture d'écran. Veuillez utiliser des photos prises avec votre appareil photo ou téléchargées par email.",
   "ImageUpload.errorExifNoMetadata": "\"{fileName}\" n'a pas de métadonnées photo. Veuillez utiliser des photos prises avec votre appareil photo.",
+  "ImageUpload.errorAIGenerated": "\"{fileName}\" semble être générée par IA. Veuillez utiliser de vraies photos prises avec votre appareil photo.",
   "ImageUpload.errorNoImages": "Veuillez télécharger au moins une image.",
   "ImageUpload.previewTitle": "Images Sélectionnées ({count}/{maxFiles})",
   "ImageUpload.removeImageAriaLabel": "Supprimer l'image {index}",

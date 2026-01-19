@@ -454,6 +454,7 @@
   "ImageUpload.errorFileType": "\"{fileName}\" ist kein unterstütztes Format. Nur JPG und PNG sind erlaubt.",
   "ImageUpload.errorExifWebDownload": "\"{fileName}\" scheint ein Web-Download oder Screenshot zu sein. Bitte verwenden Sie Fotos von Ihrer Kamera oder aus E-Mails.",
   "ImageUpload.errorExifNoMetadata": "\"{fileName}\" hat keine Foto-Metadaten. Bitte verwenden Sie Fotos von Ihrer Kamera.",
+  "ImageUpload.errorAIGenerated": "\"{fileName}\" scheint KI-generiert zu sein. Bitte verwenden Sie echte Fotos von Ihrer Kamera.",
   "ImageUpload.errorNoImages": "Bitte laden Sie mindestens ein Bild hoch.",
   "ImageUpload.previewTitle": "Ausgewählte Bilder ({count}/{maxFiles})",
   "ImageUpload.removeImageAriaLabel": "Bild {index} entfernen",

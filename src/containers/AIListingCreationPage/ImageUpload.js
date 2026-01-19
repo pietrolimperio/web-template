@@ -23,7 +23,8 @@ const UPLOAD_CONSTRAINTS = {
  *
  * Features:
  * - Drag & drop interface
- * - EXIF validation (camera photos only)
+ * - EXIF validation (camera photos, email downloads, WhatsApp images)
+ * - AI-generated image detection
  * - File type/size validation
  * - Preview grid with remove buttons
  * - "Analyze Product" button
@@ -35,10 +36,101 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
   const [errors, setErrors] = useState([]);
   const [validationInProgress, setValidationInProgress] = useState(false);
 
-  // EXIF Validation
+  // Heuristic checks for images without EXIF (WhatsApp vs Web/AI)
+  const checkImageHeuristics = async (file, arrayBuffer, intl, exifError = null) => {
+    const fileName = file.name.toLowerCase();
+
+    // 1. Check WhatsApp filename patterns
+    const whatsappPatterns = [
+      /^img-\d{8}-wa\d{4}/, // IMG-20240115-WA0001.jpg
+      /whatsapp.*image/i, // WhatsApp Image 2024-01-15 at 14.30.45.jpeg
+      /^ptt-\d{8}-\d{6}-/i, // PTT-20240115-143045-AAC.jpg
+      /^wa\d{4}/i, // WA0001.jpg (shortened pattern)
+    ];
+
+    const isWhatsAppFilename = whatsappPatterns.some(pattern => pattern.test(fileName));
+    
+    if (isWhatsAppFilename) {
+      return { valid: true }; // Accept WhatsApp images
+    }
+
+    // 2. Load image to check dimensions (WhatsApp typically resizes to common dimensions)
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = imageUrl;
+      });
+
+      URL.revokeObjectURL(imageUrl);
+
+      const width = img.width;
+      const height = img.height;
+      const aspectRatio = width / height;
+
+      // WhatsApp common dimensions (after compression)
+      // Usually maintains reasonable aspect ratios and typical phone camera dimensions
+      const commonWhatsAppDimensions = [
+        { w: 1600, h: 1200 }, // 4:3
+        { w: 1920, h: 1080 }, // 16:9
+        { w: 1280, h: 960 },
+        { w: 1024, h: 768 },
+      ];
+
+      const matchesWhatsAppDimensions = commonWhatsAppDimensions.some(
+        dim => Math.abs(width - dim.w) < 50 && Math.abs(height - dim.h) < 50
+      );
+
+      // AI images often have dimensions like 512x512, 1024x1024, etc.
+      const isAILikeDimension = 
+        (width === height && [512, 768, 1024, 1536, 2048].includes(width)) ||
+        (width % 512 === 0 && height % 512 === 0 && width >= 512 && height >= 512);
+
+      // Web downloads often have unusual dimensions or very high resolutions
+      const isWebLikeDimension = 
+        width > 3000 || height > 3000 || 
+        (width < 400 && height < 400) ||
+        aspectRatio < 0.3 || aspectRatio > 3.0;
+
+      // If dimensions suggest WhatsApp and not AI/Web, accept it
+      if (matchesWhatsAppDimensions && !isAILikeDimension && !isWebLikeDimension) {
+        // Additional check: file size (WhatsApp compresses, so files are usually smaller)
+        // WhatsApp images are typically 50KB - 2MB for compressed photos
+        if (file.size > 50 * 1024 && file.size < 3 * 1024 * 1024) {
+          return { valid: true };
+        }
+      }
+
+      // Reject AI-like or web-like dimensions without WhatsApp indicators
+      if (isAILikeDimension || isWebLikeDimension) {
+        return {
+          valid: false,
+          error: intl.formatMessage(
+            { id: 'ImageUpload.errorExifWebDownload' },
+            { fileName: file.name }
+          ),
+        };
+      }
+    } catch (imgError) {
+      // If we can't load image, default to rejection (safer)
+      console.warn('Could not analyze image dimensions:', imgError);
+    }
+
+    // 3. Default: reject if no indicators of authenticity
+    return {
+      valid: false,
+      error: exifError
+        ? intl.formatMessage({ id: 'ImageUpload.errorExifNoMetadata' }, { fileName: file.name })
+        : intl.formatMessage({ id: 'ImageUpload.errorExifWebDownload' }, { fileName: file.name }),
+    };
+  };
+
+  // EXIF Validation with WhatsApp detection
   // This checks if images have proper photo metadata
-  // Allows: Camera photos, email downloads with orientation/resolution
-  // Rejects: Web downloads without metadata, WhatsApp images (stripped EXIF)
+  // Allows: Camera photos, email downloads, WhatsApp images (by heuristics)
+  // Rejects: Web downloads without metadata, AI-generated images
   const validateImageEXIF = async (file, intl) => {
     // Skip validation if testing flag is enabled
     if (SKIP_EXIF_VALIDATION) {
@@ -50,9 +142,38 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
       const arrayBuffer = await file.arrayBuffer();
       const tags = await ExifReader.load(arrayBuffer);
 
+      // Check for AI software tags in EXIF
+      const softwareTag = tags.Software?.description || tags.Software?.value || '';
+      const aiSoftwarePatterns = [
+        'stable diffusion',
+        'midjourney',
+        'dall-e',
+        'dall·e',
+        'imagen',
+        'firefly',
+        'leonardo',
+        'flux',
+        'ideogram',
+        'generative ai',
+      ];
+      
+      const isAIGenerated = aiSoftwarePatterns.some(pattern =>
+        softwareTag.toLowerCase().includes(pattern)
+      );
+
+      if (isAIGenerated) {
+        return {
+          valid: false,
+          error: intl.formatMessage(
+            { id: 'ImageUpload.errorAIGenerated' },
+            { fileName: file.name }
+          ),
+        };
+      }
+
       // Check for camera-specific EXIF tags (original camera photos)
       const hasCameraInfo =
-        tags.Make || tags.Model || tags.DateTime || tags.DateTimeOriginal || tags.Software;
+        tags.Make || tags.Model || tags.DateTime || tags.DateTimeOriginal;
 
       // Check for photo metadata (email downloads often preserve these)
       const hasPhotoMetadata =
@@ -70,23 +191,11 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
         return { valid: true };
       }
 
-      // Reject if no meaningful EXIF data
-      return {
-        valid: false,
-        error: intl.formatMessage(
-          { id: 'ImageUpload.errorExifWebDownload' },
-          { fileName: file.name }
-        ),
-      };
+      // If no EXIF data, check heuristics for WhatsApp vs Web/AI
+      return await checkImageHeuristics(file, arrayBuffer, intl);
     } catch (error) {
-      // If we can't read EXIF at all, it's likely a web download or screenshot
-      return {
-        valid: false,
-        error: intl.formatMessage(
-          { id: 'ImageUpload.errorExifNoMetadata' },
-          { fileName: file.name }
-        ),
-      };
+      // If we can't read EXIF at all, check heuristics
+      return await checkImageHeuristics(file, null, intl, error);
     }
   };
 

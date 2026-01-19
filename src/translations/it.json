@@ -454,6 +454,7 @@
   "ImageUpload.errorFileType": "\"{fileName}\" non è un formato supportato. Sono consentiti solo JPG e PNG.",
   "ImageUpload.errorExifWebDownload": "\"{fileName}\" sembra essere un download web o uno screenshot. Utilizzare foto scattate con la fotocamera o scaricate da email.",
   "ImageUpload.errorExifNoMetadata": "\"{fileName}\" non ha metadati fotografici. Utilizzare foto scattate con la fotocamera.",
+  "ImageUpload.errorAIGenerated": "\"{fileName}\" sembra essere generata da AI. Utilizzare foto reali scattate con la fotocamera.",
   "ImageUpload.errorNoImages": "Caricare almeno un'immagine.",
   "ImageUpload.previewTitle": "Immagini caricate ({count}/{maxFiles})",
   "ImageUpload.removeImageAriaLabel": "Rimuovi immagine {index}",
