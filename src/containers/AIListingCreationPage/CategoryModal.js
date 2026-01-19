@@ -225,10 +225,7 @@ const CategoryModal = ({
                 required
               >
                 <option value="">
-                  <FormattedMessage
-                    id="CategoryModal.selectCategory"
-                    defaultMessage="Seleziona una categoria"
-                  />
+                  {intl.formatMessage({ id: 'CategoryModal.selectCategory' })}
                 </option>
                 {availableCategories.map(category => (
                   <option key={category.id} value={category.id}>
@@ -254,10 +251,7 @@ const CategoryModal = ({
                 required
               >
                 <option value="">
-                  <FormattedMessage
-                    id="CategoryModal.selectSubcategory"
-                    defaultMessage={selectedCategoryId ? "Seleziona una sottocategoria" : "Seleziona prima una categoria"}
-                  />
+                  {intl.formatMessage({ id: 'CategoryModal.selectSubcategory' })}
                 </option>
                 {availableSubcategories.map(subcategory => (
                   <option key={subcategory.id} value={subcategory.id}>
@@ -283,10 +277,7 @@ const CategoryModal = ({
                   disabled={!selectedSubcategoryId}
                 >
                   <option value="">
-                    <FormattedMessage
-                      id="CategoryModal.selectThirdCategory"
-                      defaultMessage="Nessuna"
-                    />
+                    {intl.formatMessage({ id: 'CategoryModal.selectThirdCategory' })}
                   </option>
                   {availableThirdCategories.map(thirdCategory => (
                     <option key={thirdCategory.id} value={thirdCategory.id}>
