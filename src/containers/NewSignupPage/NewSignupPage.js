@@ -205,6 +205,15 @@ const taxIdValid = (message, locale) => value => {
   return pattern.test(value.toUpperCase()) ? null : message;
 };
 
+// VAT Number (Partita IVA) validation - Italy: 11 numeric digits
+//TODO: add validation for other countries
+const vatNumberValid = message => value => {
+  if (!value) return null; // Let required validator handle empty values
+  // Italian Partita IVA: exactly 11 numeric digits
+  const pattern = /^\d{11}$/;
+  return pattern.test(value) ? null : message;
+};
+
 // Phone prefixes by country
 const PHONE_PREFIXES = [
   { code: '+1', country: 'US/CA', label: '+1 (US/CA)' },
@@ -274,6 +283,7 @@ export const NewSignupPageComponent = ({
   const [manualFieldsChanged, setManualFieldsChanged] = useState(false);
   const [autocompleteUsed, setAutocompleteUsed] = useState(false); // Track if autocomplete was used
   const [isGeocoding, setIsGeocoding] = useState(false); // Track geocoding in progress
+  const [customerType, setCustomerType] = useState('individual'); // 'individual' or 'company' - customer type selection
   const errorRef = useRef(null);
   
   // Cascading dropdown state for manual address entry
@@ -353,6 +363,7 @@ export const NewSignupPageComponent = ({
       password,
       firstName,
       lastName,
+      companyName,
       phonePrefix,
       phoneNumber,
       dateOfBirth,
@@ -366,6 +377,7 @@ export const NewSignupPageComponent = ({
       postalCode,
       country,
       taxId,
+      vatNumber,
       termsAccepted,
     } = values;
 
@@ -454,21 +466,33 @@ export const NewSignupPageComponent = ({
       addressInfo.geolocation = geolocation;
     }
 
+    // Build privateData based on customer type
+    const privateData = {
+      customerType,
+      phoneNumber: fullPhoneNumber,
+      address: addressInfo,
+    };
+
+    // Add fields based on customer type
+    if (customerType === 'individual') {
+      privateData.dateOfBirth = dateOfBirth?.trim();
+      privateData.taxId = taxId?.trim();
+    } else {
+      privateData.vatNumber = vatNumber?.trim();
+      privateData.companyName = companyName?.trim();
+    }
+
     const params = {
       email,
       password,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      // For companies: use company name as firstName, and a placeholder for lastName (Sharetribe requires both)
+      firstName: customerType === 'individual' ? firstName.trim() : companyName.trim(),
+      lastName: customerType === 'individual' ? lastName.trim() : 'COMPANY',
       publicData: {
         userType: 'customer', // Default user type
         locale: currentLocale, // Store locale for email localization
       },
-      privateData: {
-        phoneNumber: fullPhoneNumber,
-        dateOfBirth: dateOfBirth?.trim(),
-        address: addressInfo,
-        taxId: taxId?.trim(),
-      },
+      privateData,
       protectedData: {
         terms: termsAccepted ? ['tos-and-privacy'] : [],
       },
@@ -716,6 +740,92 @@ export const NewSignupPageComponent = ({
                         <FormattedMessage id="NewSignupPage.basicInformation" />
                       </div>
 
+                      {/* Customer Type Selection */}
+                      <div className={css.customerTypeContainer}>
+                        <button
+                          type="button"
+                          className={classNames(css.customerTypeChip, {
+                            [css.customerTypeChipActive]: customerType === 'individual',
+                          })}
+                          onClick={() => setCustomerType('individual')}
+                          style={customerType === 'individual' ? {
+                            backgroundColor: marketplaceColor,
+                            borderColor: marketplaceColor,
+                          } : {
+                            borderColor: marketplaceColor,
+                            color: marketplaceColor,
+                          }}
+                        >
+                          <FormattedMessage id="NewSignupPage.customerTypeIndividual" />
+                        </button>
+                        <button
+                          type="button"
+                          className={classNames(css.customerTypeChip, {
+                            [css.customerTypeChipActive]: customerType === 'company',
+                          })}
+                          onClick={() => setCustomerType('company')}
+                          style={customerType === 'company' ? {
+                            backgroundColor: marketplaceColor,
+                            borderColor: marketplaceColor,
+                          } : {
+                            borderColor: marketplaceColor,
+                            color: marketplaceColor,
+                          }}
+                        >
+                          <FormattedMessage id="NewSignupPage.customerTypeCompany" />
+                        </button>
+                      </div>
+
+                      {/* Name fields - moved above email */}
+                      {customerType === 'individual' ? (
+                        <div className={css.nameFields}>
+                          <FieldTextInput
+                            className={css.halfField}
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            autoComplete="given-name"
+                            label={intl.formatMessage({ id: 'NewSignupPage.firstNameLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.firstNamePlaceholder',
+                            })}
+                            validate={validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.firstNameRequired' })
+                            )}
+                          />
+
+                          <FieldTextInput
+                            className={css.halfField}
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            autoComplete="family-name"
+                            label={intl.formatMessage({ id: 'NewSignupPage.lastNameLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.lastNamePlaceholder',
+                            })}
+                            validate={validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.lastNameRequired' })
+                            )}
+                          />
+                        </div>
+                      ) : (
+                        <FieldTextInput
+                          className={css.field}
+                          type="text"
+                          id="companyName"
+                          name="companyName"
+                          autoComplete="organization"
+                          label={intl.formatMessage({ id: 'NewSignupPage.companyNameLabel' })}
+                          placeholder={intl.formatMessage({
+                            id: 'NewSignupPage.companyNamePlaceholder',
+                          })}
+                          validate={validators.required(
+                            intl.formatMessage({ id: 'NewSignupPage.companyNameRequired' })
+                          )}
+                        />
+                      )}
+
                       <FieldTextInput
                         className={css.field}
                         type="email"
@@ -733,38 +843,6 @@ export const NewSignupPageComponent = ({
                           )
                         )}
                       />
-
-                      <div className={css.nameFields}>
-                        <FieldTextInput
-                          className={css.halfField}
-                          type="text"
-                          id="firstName"
-                          name="firstName"
-                          autoComplete="given-name"
-                          label={intl.formatMessage({ id: 'NewSignupPage.firstNameLabel' })}
-                          placeholder={intl.formatMessage({
-                            id: 'NewSignupPage.firstNamePlaceholder',
-                          })}
-                          validate={validators.required(
-                            intl.formatMessage({ id: 'NewSignupPage.firstNameRequired' })
-                          )}
-                        />
-
-                        <FieldTextInput
-                          className={css.halfField}
-                          type="text"
-                          id="lastName"
-                          name="lastName"
-                          autoComplete="family-name"
-                          label={intl.formatMessage({ id: 'NewSignupPage.lastNameLabel' })}
-                          placeholder={intl.formatMessage({
-                            id: 'NewSignupPage.lastNamePlaceholder',
-                          })}
-                          validate={validators.required(
-                            intl.formatMessage({ id: 'NewSignupPage.lastNameRequired' })
-                          )}
-                        />
-                      </div>
 
                       <FieldTextInput
                         className={css.field}
@@ -826,31 +904,35 @@ export const NewSignupPageComponent = ({
                         />
                       </div>
 
-                      {/* Personal Information */}
-                      <div className={css.sectionTitle}>
-                        <FormattedMessage id="NewSignupPage.personalInformation" />
-                      </div>
+                      {/* Personal Information - only show for individuals */}
+                      {customerType === 'individual' && (
+                        <>
+                          <div className={css.sectionTitle}>
+                            <FormattedMessage id="NewSignupPage.personalInformation" />
+                          </div>
 
-                      <FieldTextInput
-                        className={css.field}
-                        type="date"
-                        id="dateOfBirth"
-                        name="dateOfBirth"
-                        label={intl.formatMessage({ id: 'NewSignupPage.dateOfBirthLabel' })}
-                        placeholder={intl.formatMessage({
-                          id: 'NewSignupPage.dateOfBirthPlaceholder',
-                        })}
-                        onChange={handleDateChange}
-                        validate={composeValidators(
-                          validators.required(
-                            intl.formatMessage({ id: 'NewSignupPage.dateOfBirthRequired' })
-                          ),
-                          dateNotInFuture(
-                            intl.formatMessage({ id: 'NewSignupPage.dateNotInFuture' })
-                          ),
-                          ageAtLeast18(intl.formatMessage({ id: 'NewSignupPage.ageAtLeast18' }))
-                        )}
-                      />
+                          <FieldTextInput
+                            className={css.field}
+                            type="date"
+                            id="dateOfBirth"
+                            name="dateOfBirth"
+                            label={intl.formatMessage({ id: 'NewSignupPage.dateOfBirthLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.dateOfBirthPlaceholder',
+                            })}
+                            onChange={handleDateChange}
+                            validate={composeValidators(
+                              validators.required(
+                                intl.formatMessage({ id: 'NewSignupPage.dateOfBirthRequired' })
+                              ),
+                              dateNotInFuture(
+                                intl.formatMessage({ id: 'NewSignupPage.dateNotInFuture' })
+                              ),
+                              ageAtLeast18(intl.formatMessage({ id: 'NewSignupPage.ageAtLeast18' }))
+                            )}
+                          />
+                        </>
+                      )}
 
                       {/* Address fields */}
                       {!useManualAddress && !autocompleteUsed ? (
@@ -1014,25 +1096,44 @@ export const NewSignupPageComponent = ({
                         </button>
                       )}
 
-                      {/* Tax ID Field */}
-                      <FieldTextInput
-                        className={css.field}
-                        type="text"
-                        id="taxId"
-                        name="taxId"
-                        label={intl.formatMessage({ id: 'NewSignupPage.taxIdLabel' })}
-                        placeholder={intl.formatMessage({ id: 'NewSignupPage.taxIdPlaceholder' })}
-                        onChange={handleTaxIdChange}
-                        validate={composeValidators(
-                          validators.required(
-                            intl.formatMessage({ id: 'NewSignupPage.taxIdRequired' })
-                          ),
-                          taxIdValid(
-                            intl.formatMessage({ id: 'NewSignupPage.taxIdInvalid' }),
-                            currentLocale
-                          )
-                        )}
-                      />
+                      {/* Tax ID / VAT Number Field */}
+                      {customerType === 'individual' ? (
+                        <FieldTextInput
+                          className={css.field}
+                          type="text"
+                          id="taxId"
+                          name="taxId"
+                          label={intl.formatMessage({ id: 'NewSignupPage.taxIdLabel' })}
+                          placeholder={intl.formatMessage({ id: 'NewSignupPage.taxIdPlaceholder' })}
+                          onChange={handleTaxIdChange}
+                          validate={composeValidators(
+                            validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.taxIdRequired' })
+                            ),
+                            taxIdValid(
+                              intl.formatMessage({ id: 'NewSignupPage.taxIdInvalid' }),
+                              currentLocale
+                            )
+                          )}
+                        />
+                      ) : (
+                        <FieldTextInput
+                          className={css.field}
+                          type="text"
+                          id="vatNumber"
+                          name="vatNumber"
+                          label={intl.formatMessage({ id: 'NewSignupPage.vatNumberLabel' })}
+                          placeholder={intl.formatMessage({ id: 'NewSignupPage.vatNumberPlaceholder' })}
+                          validate={composeValidators(
+                            validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.vatNumberRequired' })
+                            ),
+                            vatNumberValid(
+                              intl.formatMessage({ id: 'NewSignupPage.vatNumberInvalid' })
+                            )
+                          )}
+                        />
+                      )}
 
                       {/* Terms and Conditions Checkbox */}
                       <FieldCheckbox

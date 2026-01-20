@@ -276,6 +276,41 @@
   border-radius: 6px;
 }
 
+/* Customer Type Selection Chips */
+.customerTypeContainer {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.customerTypeChip {
+  flex: 1;
+  padding: 14px 20px;
+  border: 2px solid var(--marketplaceColor);
+  border-radius: 30px;
+  background: white;
+  color: var(--marketplaceColor);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.customerTypeChip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.customerTypeChipActive {
+  background: var(--marketplaceColor);
+  color: white;
+}
+
+.customerTypeChipActive:hover {
+  opacity: 0.9;
+}
+
 .chipCard {
   width: 100%;
   padding: 12px 16px;
