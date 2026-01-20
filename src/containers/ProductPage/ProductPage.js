@@ -111,6 +111,7 @@ import SectionTextMaybe from '../ListingPage/SectionTextMaybe';
 import SectionReviews from '../ListingPage/SectionReviews';
 import CustomListingFields from '../ListingPage/CustomListingFields';
 import EstimatedCustomerBreakdownMaybe from '../../components/OrderPanel/EstimatedCustomerBreakdownMaybe';
+import OwnerCard from './OwnerCard';
 
 import css from './ProductPage.module.css';
 
@@ -1094,95 +1095,19 @@ export const ProductPageComponent = props => {
                     </div>
                   )}
 
-                  {/* Map (shown if locationVisible is true) - outside images block so it shows even without images */}
-              {publicData?.locationVisible && (() => {
-                const location = publicData?.location || {};
-                const locationGeolocation = location.geolocation || geolocation || null;
-                
-                // Normalize geolocation format - handle both {lat, lng} and {latitude, longitude}
-                let normalizedGeolocation = null;
-                if (locationGeolocation) {
-                  if (locationGeolocation.lat !== undefined && locationGeolocation.lng !== undefined) {
-                    normalizedGeolocation = { lat: locationGeolocation.lat, lng: locationGeolocation.lng };
-                  } else if (locationGeolocation.latitude !== undefined && locationGeolocation.longitude !== undefined) {
-                    normalizedGeolocation = { lat: locationGeolocation.latitude, lng: locationGeolocation.longitude };
-                  } else if (Array.isArray(locationGeolocation) && locationGeolocation.length === 2) {
-                    // Handle [lat, lng] or [lng, lat] format
-                    normalizedGeolocation = { lat: locationGeolocation[0], lng: locationGeolocation[1] };
-                  }
-                }
-                
-                // Use geocoded location if geolocation is not available
-                const mapCenter = normalizedGeolocation || geocodedLocation;
-                
-                // Handle address as object or string
-                const addressObj = location.address || {};
-                const addressString = typeof addressObj === 'string' 
-                  ? addressObj 
-                  : addressObj.street && addressObj.streetNumber
-                  ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city || ''} ${addressObj.postalCode || ''}`.trim()
-                  : addressObj.city || addressObj.address || '';
-
-                return (
-                  <div className={css.imagesSection}>
-                    <section className={css.mapSection} id="listing-location">
-                      {/* Title and badge on same row */}
-                      <div className={css.mapSectionHeader}>
-                        <Heading as="h2" rootClassName={css.sectionHeading}>
-                          <FormattedMessage id="ListingPage.locationTitle" />
-                        </Heading>
-                        {/* Hand-by-hand exchange badge */}
-                        {publicData?.handByHandAvailable && (
-                          <div className={css.exchangeBadge}>
-                            <span className={css.exchangeBadgeIcon}>🤝</span>
-                            <FormattedMessage id="ProductPage.handByHand" defaultMessage="Consegna a mano disponibile" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Map */}
-                      {mapCenter && mapCenter.lat && mapCenter.lng ? (
-                        <div className={css.mapWrapper}>
-                          <Map
-                            center={mapCenter}
-                            obfuscatedCenter={mapCenter}
-                            address={addressString}
-                            zoom={13}
-                            useStaticMap={false}
-                            mapsConfig={{
-                              ...config.maps,
-                              fuzzy: {
-                                enabled: true,
-                                offset: config.maps?.fuzzy?.offset || 500,
-                                defaultZoomLevel: config.maps?.fuzzy?.defaultZoomLevel || 13,
-                                circleColor: config.branding?.marketplaceColor || config.maps?.fuzzy?.circleColor || '#4A90E2',
-                              },
-                            }}
-                          />
-                          <div className={css.approximateLabel}>
-                            <FormattedMessage
-                              id="PreviewListingPage.approximateLocation"
-                              defaultMessage="Posizione approssimativa per privacy"
-                            />
-                          </div>
-                        </div>
-                      ) : isGeocoding ? (
-                        <div className={css.addressDisplay}>
-                          <FormattedMessage
-                            id="PreviewListingPage.geocodingAddress"
-                            defaultMessage="Caricamento mappa..."
-                          />
-                        </div>
-                      ) : addressString ? (
-                        <div className={css.addressDisplay}>
-                          <span className={css.locationIcon}>📍</span>
-                          <span>{addressString}</span>
-                        </div>
-                      ) : null}
-                    </section>
-                  </div>
-                );
-              })()}
+                  {/* Owner Card with location map */}
+                  <OwnerCard
+                    author={ensuredAuthor}
+                    authorReviews={authorReviews}
+                    listing={currentListing}
+                    onContactUser={onContactUser}
+                    config={config}
+                    intl={intl}
+                    isOwnListing={isOwnListing}
+                    geolocation={geolocation}
+                    geocodedLocation={geocodedLocation}
+                    isGeocoding={isGeocoding}
+                  />
 
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />

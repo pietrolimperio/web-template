@@ -1,0 +1,334 @@
+@import '../../styles/customMediaQueries.css';
+
+/* Owner Card Container */
+.ownerCard {
+  display: flex;
+  flex-direction: column;
+  background: var(--matterColorBright);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-top: 32px;
+  border: 1px solid var(--matterColorNegative);
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+  }
+}
+
+/* Left side - Owner Info */
+.ownerInfo {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (--viewportMedium) {
+    padding: 28px 32px;
+  }
+}
+
+/* Header with avatar and name */
+.ownerHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.avatarLink {
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.avatarLink:hover {
+  transform: scale(1.05);
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--matterColorBright);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+  @media (--viewportMedium) {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+.ownerDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ownerNameRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ownedByLabel {
+  font-size: 14px;
+  color: var(--matterColorAnti);
+  font-weight: 400;
+}
+
+.ownerName {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  line-height: 1.3;
+  word-break: break-word;
+
+  @media (--viewportMedium) {
+    font-size: 22px;
+  }
+}
+
+.ownerName:hover {
+  text-decoration: underline;
+}
+
+/* Rating row */
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviewRating {
+  display: inline-flex;
+}
+
+.reviewStar {
+  height: 18px;
+  width: 18px;
+  margin-right: 2px;
+  color: #FFB400;
+}
+
+.reviewStar:last-of-type {
+  margin-right: 0;
+}
+
+.ratingValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--matterColor);
+}
+
+/* Verified user line */
+.verifiedLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--marketplaceColorSecondary);
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.verifiedBadgeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--marketplaceColorSecondary);
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.verifiedText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--marketplaceColorSecondary);
+}
+
+/* Info badges */
+.infoBadges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--matterColor);
+}
+
+.badgeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Verified badge special styling */
+.verifiedBadge .badgeIcon {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badgeText {
+  line-height: 1.4;
+}
+
+/* Contact button */
+.contactButton {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 200px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.contactButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Insurance notice */
+.insuranceNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--marketplaceColorSecondary);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.insuranceIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.insuranceText {
+  font-size: 13px;
+  color: var(--matterColorBright);
+  line-height: 1.4;
+}
+
+.insuranceReadMore {
+  color: var(--marketplaceColor);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.insuranceReadMore:hover {
+  opacity: 0.85;
+}
+
+/* Right side - Map preview */
+.mapPreview {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: var(--matterColorNegative);
+  overflow: hidden;
+
+  @media (--viewportMedium) {
+    width: 300px;
+    min-width: 300px;
+    height: auto;
+    min-height: 280px;
+    border-left: 1px solid var(--matterColorNegative);
+  }
+
+  @media (--viewportLarge) {
+    width: 350px;
+    min-width: 350px;
+  }
+}
+
+.mapPreview > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* Map loading state */
+.mapLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--matterColorAnti);
+  font-size: 14px;
+}
+
+/* Map placeholder */
+.mapPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  color: var(--matterColorAnti);
+}
+
+.mapPlaceholderIcon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.mapPlaceholderText {
+  font-size: 14px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .ownerCard {
+    margin-top: 24px;
+  }
+
+  .ownerInfo {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .ownerName {
+    font-size: 18px;
+  }
+
+  .contactButton {
+    max-width: 100%;
+  }
+
+  .mapPreview {
+    height: 180px;
+    border-top: 1px solid var(--matterColorNegative);
+  }
+}
