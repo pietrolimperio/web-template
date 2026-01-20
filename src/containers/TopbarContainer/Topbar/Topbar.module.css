@@ -262,9 +262,34 @@
 }
 
 .genericErrorContent {
-  padding: 16px 22px;
+  position: relative;
+  padding: 16px 40px 16px 22px;
   background-color: var(--marketplaceColorLight);
   border-radius: var(--borderRadiusMedium);
+}
+
+.genericErrorClose {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+
+  & svg {
+    fill: var(--colorWhite);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
 }
 
 .genericErrorText {

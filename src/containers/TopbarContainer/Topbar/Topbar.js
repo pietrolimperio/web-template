@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import pickBy from 'lodash/pickBy';
 import classNames from 'classnames';
 
@@ -13,6 +13,7 @@ import { parse, stringify } from '../../../util/urlHelpers';
 import { createResourceLocatorString, matchPathname, pathByRouteName } from '../../../util/routes';
 import {
   Button,
+  IconClose,
   LimitedAccessBanner,
   LinkedLogo,
   Modal,
@@ -114,15 +115,31 @@ const getResolvedCurrentPage = (location, routeConfiguration) => {
 
 const GenericError = props => {
   const { show } = props;
+  const [isDismissed, setIsDismissed] = useState(false);
+  const isVisible = show && !isDismissed;
+  
   const classes = classNames(css.genericError, {
-    [css.genericErrorVisible]: show,
+    [css.genericErrorVisible]: isVisible,
   });
-  return show ? (
+  
+  const handleClose = () => {
+    setIsDismissed(true);
+  };
+  
+  return isVisible ? (
     <div className={classes} role="alert">
       <div className={css.genericErrorContent}>
         <p className={css.genericErrorText}>
           <FormattedMessage id="Topbar.genericError" />
         </p>
+        <button 
+          className={css.genericErrorClose} 
+          onClick={handleClose}
+          type="button"
+          aria-label="Close"
+        >
+          <IconClose size="small" />
+        </button>
       </div>
     </div>
   ) : null;
