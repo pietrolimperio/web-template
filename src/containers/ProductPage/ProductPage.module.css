@@ -25,13 +25,24 @@
 
 /* Breadcrumb */
 .breadcrumb {
+  margin: 32px 0 0 0;
+  padding: 0;
+}
+
+.breadcrumbList {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: var(--matterColorAnti);
-  margin: 32px 0 0 0;
+  margin: 0;
   padding: 0;
+  list-style: none;
+}
+
+.breadcrumbListItem {
+  display: flex;
+  align-items: center;
 }
 
 .breadcrumbItem {
@@ -44,6 +55,16 @@
 .breadcrumbItem:hover {
   color: var(--marketplaceColor);
   text-decoration: underline;
+}
+
+.breadcrumbCurrent {
+  color: var(--matterColorAnti);
+  font-weight: 500;
+}
+
+.breadcrumbSeparatorItem {
+  display: flex;
+  align-items: center;
 }
 
 .breadcrumbSeparator {

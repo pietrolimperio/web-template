@@ -960,45 +960,71 @@ export const ProductPageComponent = props => {
 
                   {/* Breadcrumb (between images and description) */}
                   {publicData?.category && (
-                    <div className={css.breadcrumb}>
-                      <NamedLink
-                        name="SearchPage"
-                        to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
-                        className={css.breadcrumbItem}
-                      >
-                        {getLocalizedCategoryName(intl, publicData.category)}
-                      </NamedLink>
-                      {publicData.subcategory && (
-                        <>
-                          <span className={css.breadcrumbSeparator}>›</span>
-                          <NamedLink
-                            name="SearchPage"
-                            to={{
-                              search: `?keywords=${encodeURIComponent(publicData.subcategory)}`,
-                            }}
-                            className={css.breadcrumbItem}
-                          >
-                            {getLocalizedCategoryName(intl, publicData.subcategory)}
-                          </NamedLink>
-                        </>
-                      )}
-                      {publicData.thirdCategory && (
-                        <>
-                          <span className={css.breadcrumbSeparator}>›</span>
-                          <NamedLink
-                            name="SearchPage"
-                            to={{
-                              search: `?keywords=${encodeURIComponent(
-                                publicData.thirdCategory
-                              )}`,
-                            }}
-                            className={css.breadcrumbItem}
-                          >
-                            {getLocalizedCategoryName(intl, publicData.thirdCategory)}
-                          </NamedLink>
-                        </>
-                      )}
-                    </div>
+                    <nav
+                      className={css.breadcrumb}
+                      aria-label={intl.formatMessage({
+                        id: 'ProductPage.breadcrumbNavigation',
+                        defaultMessage: 'Navigazione breadcrumb',
+                      })}
+                    >
+                      <ol className={css.breadcrumbList}>
+                        {!publicData.subcategory && !publicData.thirdCategory ? (
+                          <li className={css.breadcrumbListItem}>
+                            <span className={css.breadcrumbCurrent} aria-current="page">
+                              {getLocalizedCategoryName(intl, publicData.category)}
+                            </span>
+                          </li>
+                        ) : (
+                          <>
+                            <li className={css.breadcrumbListItem}>
+                              <NamedLink
+                                name="SearchPage"
+                                to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
+                                className={css.breadcrumbItem}
+                              >
+                                {getLocalizedCategoryName(intl, publicData.category)}
+                              </NamedLink>
+                            </li>
+                            {publicData.subcategory && (
+                              <>
+                                <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
+                                  <span className={css.breadcrumbSeparator}>›</span>
+                                </li>
+                                <li className={css.breadcrumbListItem}>
+                                  {publicData.thirdCategory ? (
+                                    <NamedLink
+                                      name="SearchPage"
+                                      to={{
+                                        search: `?keywords=${encodeURIComponent(publicData.subcategory)}`,
+                                      }}
+                                      className={css.breadcrumbItem}
+                                    >
+                                      {getLocalizedCategoryName(intl, publicData.subcategory)}
+                                    </NamedLink>
+                                  ) : (
+                                    <span className={css.breadcrumbCurrent} aria-current="page">
+                                      {getLocalizedCategoryName(intl, publicData.subcategory)}
+                                    </span>
+                                  )}
+                                </li>
+                              </>
+                            )}
+                            {publicData.thirdCategory && (
+                              <>
+                                <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
+                                  <span className={css.breadcrumbSeparator}>›</span>
+                                </li>
+                                <li className={css.breadcrumbListItem}>
+                                  <span className={css.breadcrumbCurrent} aria-current="page">
+                                    {getLocalizedCategoryName(intl, publicData.thirdCategory)}
+                                  </span>
+                                </li>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </ol>
+                    </nav>
                   )}
 
                   {/* Description */}

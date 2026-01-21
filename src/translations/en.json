@@ -627,6 +627,7 @@
   "ProductPage.schemaTitle": "{title} - {price} | {marketplaceName}",
   "ProductPage.selectDates": "Select dates",
   "ProductPage.youWontBeChargedInfo": "You won't be charged yet",
+  "ProductPage.breadcrumbNavigation": "Breadcrumb navigation",
   "ProductPage.handByHand": "Hand-by-hand exchange available",
   "LoadableComponentErrorBoundaryPage.description": "It looks like the app needs to be updated! Please refresh the page or go back to {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Oops, we couldn't fetch the page.",

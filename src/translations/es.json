@@ -619,6 +619,7 @@
   "ProductPage.schemaTitle": "{title} - {price} | {marketplaceName}",
   "ProductPage.selectDates": "Selecciona las fechas",
   "ProductPage.youWontBeChargedInfo": "No se te cobrará ahora",
+  "ProductPage.breadcrumbNavigation": "Navegación de migas de pan",
   "ProductPage.handByHand": "Intercambio en persona disponible",
   "LoadableComponentErrorBoundaryPage.description": "¡Parece que es necesario actualizar la aplicación! Actualiza la página o regresa a {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "No pudimos obtener la página.",
