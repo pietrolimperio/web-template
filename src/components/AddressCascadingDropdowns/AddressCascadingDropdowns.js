@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { GetCountries, GetState, GetCity } from 'react-country-state-city';
 import { useIntl } from '../../util/reactIntl';
 import css from './AddressCascadingDropdowns.module.css';
+import { 
+  ITALIAN_PROVINCES, 
+  ITALIAN_CITIES_BY_PROVINCE, 
+  getProvinceByCode, 
+  getCitiesByProvinceCode,
+  getAllProvincesSorted 
+} from './italianGeoData';
 
 /**
  * Map locale to country ISO2 code
@@ -181,12 +188,50 @@ const findCountryByName = (countries, countryName) => {
  * Find state/province by name or code
  * @param {Array} states - List of states
  * @param {string} stateName - State name or code to find
+ * @param {boolean} isItaly - Whether the country is Italy (to search Italian data)
  * @returns {Object|null} - Found state or null
  */
-const findStateByNameOrCode = (states, stateName) => {
-  if (!stateName || !states.length) return null;
+const findStateByNameOrCode = (states, stateName, isItaly = false) => {
+  if (!stateName) return null;
   
   const normalizedName = stateName.toLowerCase().trim();
+  const upperName = stateName.toUpperCase().trim();
+  
+  // For Italy, first try to find in the Italian dataset
+  if (isItaly) {
+    // Try to find by code first (e.g., "MI", "RM")
+    const italianProvince = getProvinceByCode(upperName);
+    if (italianProvince) {
+      // Convert to state-like object for consistency
+      return {
+        id: `it-${italianProvince.code}`,
+        name: italianProvince.name,
+        state_code: italianProvince.code,
+        region: italianProvince.region,
+        regionId: italianProvince.regionId,
+        isItalianDataset: true
+      };
+    }
+    
+    // Try to find by name in Italian dataset
+    const byName = ITALIAN_PROVINCES.find(p => 
+      p.name.toLowerCase() === normalizedName ||
+      p.code.toLowerCase() === normalizedName
+    );
+    if (byName) {
+      return {
+        id: `it-${byName.code}`,
+        name: byName.name,
+        state_code: byName.code,
+        region: byName.region,
+        regionId: byName.regionId,
+        isItalianDataset: true
+      };
+    }
+  }
+  
+  // Fallback to searching in the provided states array
+  if (!states.length) return null;
   
   return states.find(
     s => 
@@ -302,35 +347,53 @@ const AddressCascadingDropdowns = ({
         // Load states for the selected country
         try {
           setLoadingStates(true);
-          const statesResult = await GetState(countryToSelect.id);
           
-          // For Italy, filter to show only provinces (2-letter codes)
-          const filteredStates = isItaly 
-            ? (statesResult || []).filter(isItalianProvince)
-            : (statesResult || []);
+          let filteredStates = [];
+          
+          if (isItaly) {
+            // Use complete Italian dataset for provinces
+            filteredStates = getAllProvincesSorted().map(p => ({
+              id: `it-${p.code}`,
+              name: p.name,
+              state_code: p.code,
+              region: p.region,
+              regionId: p.regionId,
+              isItalianDataset: true
+            }));
+          } else {
+            // Use library for other countries
+            const statesResult = await GetState(countryToSelect.id);
+            filteredStates = statesResult || [];
+          }
           
           setStates(filteredStates);
           
           // If initial state is provided, select it
           if (initialState && filteredStates?.length > 0) {
-            const stateToSelect = findStateByNameOrCode(filteredStates, initialState);
+            const stateToSelect = findStateByNameOrCode(filteredStates, initialState, isItaly);
             if (stateToSelect) {
               setSelectedState(stateToSelect);
               
               // Load cities for the selected state
-              // For Italy, load from the parent region
               try {
                 setLoadingCities(true);
                 
-                let stateIdForCities = stateToSelect.id;
-                if (isItaly && isItalianProvince(stateToSelect)) {
-                  const regionId = getItalianRegionIdForProvince(stateToSelect.state_code);
-                  if (regionId) {
-                    stateIdForCities = regionId;
-                  }
+                let citiesResult = [];
+                
+                if (isItaly && (stateToSelect.isItalianDataset || stateToSelect.state_code)) {
+                  // Use Italian dataset for cities
+                  const provinceCode = stateToSelect.state_code;
+                  const italianCities = getCitiesByProvinceCode(provinceCode);
+                  citiesResult = italianCities.map((name, index) => ({
+                    id: `it-city-${provinceCode}-${index}`,
+                    name: name,
+                    isItalianDataset: true
+                  }));
+                } else {
+                  // Use library for other countries
+                  citiesResult = await GetCity(countryToSelect.id, stateToSelect.id);
                 }
                 
-                const citiesResult = await GetCity(countryToSelect.id, stateIdForCities);
                 setCities(citiesResult || []);
                 
                 // If initial city is provided, try to select it
@@ -410,6 +473,75 @@ const AddressCascadingDropdowns = ({
     initializeSelection();
   }, [countries, initialCountry, initialState, initialCity, initialPostalCode, locale, initialized]);
 
+  // React to changes in initialState after initialization (for autocomplete prefill)
+  useEffect(() => {
+    if (!initialized || !selectedCountry || !states.length || !initialState) return;
+    
+    // Skip if the current selection already matches
+    if (selectedState?.state_code === initialState || selectedState?.name === initialState) return;
+    
+    const isItaly = selectedCountry.id === 107 || selectedCountry.iso2 === 'IT';
+    const stateToSelect = findStateByNameOrCode(states, initialState, isItaly);
+    
+    if (stateToSelect && stateToSelect.id !== selectedState?.id) {
+      setSelectedState(stateToSelect);
+      setSelectedCity(null);
+      
+      // Load cities for the newly selected state
+      const loadCitiesForState = async () => {
+        try {
+          setLoadingCities(true);
+          let citiesResult = [];
+          
+          if (isItaly && (stateToSelect.isItalianDataset || stateToSelect.state_code)) {
+            const provinceCode = stateToSelect.state_code;
+            const italianCities = getCitiesByProvinceCode(provinceCode);
+            citiesResult = italianCities.map((name, index) => ({
+              id: `it-city-${provinceCode}-${index}`,
+              name: name,
+              isItalianDataset: true
+            }));
+          } else {
+            citiesResult = await GetCity(selectedCountry.id, stateToSelect.id);
+          }
+          
+          setCities(citiesResult || []);
+          
+          // Try to select initial city if provided
+          if (initialCity && citiesResult?.length > 0) {
+            const cityToSelect = findCityByName(citiesResult, initialCity);
+            if (cityToSelect) {
+              setSelectedCity(cityToSelect);
+              onCityChange?.(cityToSelect, cityToSelect.name);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading cities for autocomplete prefill:', error);
+          setCities([]);
+        } finally {
+          setLoadingCities(false);
+        }
+      };
+      
+      loadCitiesForState();
+      onStateChange?.(stateToSelect, stateToSelect.name, stateToSelect.state_code || stateToSelect.iso2 || '');
+    }
+  }, [initialState, initialized, selectedCountry, states, selectedState]);
+
+  // React to changes in initialCity after state is selected
+  useEffect(() => {
+    if (!initialized || !selectedState || !cities.length || !initialCity) return;
+    
+    // Skip if the current selection already matches
+    if (selectedCity?.name === initialCity) return;
+    
+    const cityToSelect = findCityByName(cities, initialCity);
+    if (cityToSelect && cityToSelect.id !== selectedCity?.id) {
+      setSelectedCity(cityToSelect);
+      onCityChange?.(cityToSelect, cityToSelect.name);
+    }
+  }, [initialCity, initialized, selectedState, cities, selectedCity]);
+
   // Handle country change
   const handleCountryChange = async e => {
     const countryId = parseInt(e.target.value, 10);
@@ -424,14 +556,25 @@ const AddressCascadingDropdowns = ({
     if (country) {
       try {
         setLoadingStates(true);
-        const statesResult = await GetState(country.id);
         
-        // For Italy (id: 107), filter to show only provinces (2-letter codes like TA, MI)
-        // not regions (numeric codes like 75, 25)
         const isItaly = country.id === 107 || country.iso2 === 'IT';
-        const filteredStates = isItaly 
-          ? (statesResult || []).filter(isItalianProvince)
-          : (statesResult || []);
+        let filteredStates = [];
+        
+        if (isItaly) {
+          // Use complete Italian dataset for provinces
+          filteredStates = getAllProvincesSorted().map(p => ({
+            id: `it-${p.code}`,
+            name: p.name,
+            state_code: p.code,
+            region: p.region,
+            regionId: p.regionId,
+            isItalianDataset: true
+          }));
+        } else {
+          // Use library for other countries
+          const statesResult = await GetState(country.id);
+          filteredStates = statesResult || [];
+        }
         
         setStates(filteredStates);
       } catch (error) {
@@ -448,8 +591,9 @@ const AddressCascadingDropdowns = ({
 
   // Handle state change
   const handleStateChange = async e => {
-    const stateId = parseInt(e.target.value, 10);
-    const state = states.find(s => s.id === stateId);
+    const stateId = e.target.value;
+    // Handle both string IDs (Italian dataset) and numeric IDs (library)
+    const state = states.find(s => String(s.id) === String(stateId));
     
     setSelectedState(state || null);
     setSelectedCity(null);
@@ -459,19 +603,23 @@ const AddressCascadingDropdowns = ({
       try {
         setLoadingCities(true);
         
-        // For Italy, get cities from the parent region instead of the province
         const isItaly = selectedCountry.id === 107 || selectedCountry.iso2 === 'IT';
-        let stateIdForCities = state.id;
+        let citiesResult = [];
         
-        if (isItaly && isItalianProvince(state)) {
-          // Get the region ID for this province
-          const regionId = getItalianRegionIdForProvince(state.state_code);
-          if (regionId) {
-            stateIdForCities = regionId;
-          }
+        if (isItaly && (state.isItalianDataset || state.state_code)) {
+          // Use Italian dataset for cities - filtered by province
+          const provinceCode = state.state_code;
+          const italianCities = getCitiesByProvinceCode(provinceCode);
+          citiesResult = italianCities.map((name, index) => ({
+            id: `it-city-${provinceCode}-${index}`,
+            name: name,
+            isItalianDataset: true
+          }));
+        } else {
+          // Use library for other countries
+          citiesResult = await GetCity(selectedCountry.id, state.id);
         }
         
-        const citiesResult = await GetCity(selectedCountry.id, stateIdForCities);
         setCities(citiesResult || []);
       } catch (error) {
         console.error('Error loading cities:', error);
@@ -487,8 +635,9 @@ const AddressCascadingDropdowns = ({
 
   // Handle city change (dropdown)
   const handleCityChange = e => {
-    const cityId = parseInt(e.target.value, 10);
-    const city = cities.find(c => c.id === cityId);
+    const cityId = e.target.value;
+    // Handle both string IDs (Italian dataset) and numeric IDs (library)
+    const city = cities.find(c => String(c.id) === String(cityId));
     
     setSelectedCity(city || null);
     onCityChange?.(city, city?.name || '');
@@ -572,19 +721,18 @@ const AddressCascadingDropdowns = ({
             </option>
             {[...states]
               .sort((a, b) => {
-                // For Italian provinces, sort by code; for others, sort by name
+                // For Italian provinces from our dataset, sort by code
                 const isItaly = selectedCountry?.id === 107 || selectedCountry?.iso2 === 'IT';
-                if (isItaly && isItalianProvince(a) && isItalianProvince(b)) {
+                if (isItaly && a.state_code && b.state_code) {
                   return a.state_code.localeCompare(b.state_code);
                 }
                 return a.name.localeCompare(b.name);
               })
               .map(state => {
-                // For Italian provinces, show only the code (e.g., "TA", "MB")
-                // to avoid translation issues (e.g., "Monza and Brianza" vs "Monza e Brianza")
+                // For Italian provinces, show code + name (e.g., "MI - Milano")
                 const isItaly = selectedCountry?.id === 107 || selectedCountry?.iso2 === 'IT';
-                const displayName = (isItaly && isItalianProvince(state)) 
-                  ? state.state_code 
+                const displayName = (isItaly && state.state_code) 
+                  ? `${state.state_code} - ${state.name}` 
                   : state.name;
                 return (
                   <option key={state.id} value={state.id}>
@@ -626,11 +774,13 @@ const AddressCascadingDropdowns = ({
               <option value="">
                 {loadingCities ? '...' : placeholders.city}
               </option>
-              {cities.map(city => (
-                <option key={city.id} value={city.id}>
-                  {city.name}
-                </option>
-              ))}
+              {[...cities]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(city => (
+                  <option key={city.id} value={city.id}>
+                    {city.name}
+                  </option>
+                ))}
             </select>
           )}
         </div>
