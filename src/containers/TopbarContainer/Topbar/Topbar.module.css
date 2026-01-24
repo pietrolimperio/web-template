@@ -263,7 +263,7 @@
 
 .genericErrorContent {
   position: relative;
-  padding: 16px 40px 16px 22px;
+  padding: 16px 36px 16px 22px;
   background-color: var(--marketplaceColorLight);
   border-radius: var(--borderRadiusMedium);
 }
@@ -285,6 +285,7 @@
 
   & svg {
     fill: var(--colorWhite);
+    stroke: none;
   }
 
   &:hover {
