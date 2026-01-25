@@ -246,8 +246,13 @@ export const updateStripeAccount = params => (dispatch, getState, sdk) => {
 export const fetchStripeAccount = params => (dispatch, getState, sdk) => {
   dispatch(stripeAccountFetchRequest());
 
+  // Use expand parameter to get full stripeAccountData
+  const queryParams = {
+    expand: true,
+  };
+
   return sdk.stripeAccount
-    .fetch()
+    .fetch(queryParams)
     .then(response => {
       const stripeAccount = response.data.data;
       dispatch(stripeAccountFetchSuccess(stripeAccount));

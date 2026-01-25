@@ -25,6 +25,7 @@ const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ 
 const NewLandingPage = loadable(() => import(/* webpackChunkName: "NewLandingPage" */ '../containers/NewLandingPage/NewLandingPage'));
 const NewLoginPage = loadable(() => import(/* webpackChunkName: "NewLoginPage" */ '../containers/NewLoginPage/NewLoginPage'));
 const NewSignupPage = loadable(() => import(/* webpackChunkName: "NewSignupPage" */ '../containers/NewSignupPage/NewSignupPage'));
+const NewSignupStripePage = loadable(() => import(/* webpackChunkName: "NewSignupStripePage" */ '../containers/NewSignupStripePage/NewSignupStripePage'));
 const ListingPageCoverPhoto = loadable(() => import(/* webpackChunkName: "ListingPageCoverPhoto" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCoverPhoto'));
 const ListingPageCarousel = loadable(() => import(/* webpackChunkName: "ListingPageCarousel" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCarousel'));
 const ProductPage = loadable(() => import(/* webpackChunkName: "ProductPage" */ '../containers/ProductPage/ProductPage'));
@@ -274,19 +275,30 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       extraProps: { tab: 'login' },
     },
     {
-      path: '/signup',
-      name: 'SignupPage',
+      path: '/old-signup',
+      name: 'OldSignupPage',
       component: NewSignupPage,
     },
     {
-      path: '/old-signup',
-      name: 'OldSignupPage',
+      path: '/original-signup',
+      name: 'OriginalSignupPage',
       component: AuthenticationPage,
       extraProps: { tab: 'signup' },
       loadData: pageDataLoadingAPI.AuthenticationPage.loadData,
     },
+    // Stripe-first signup page (main signup endpoint)
     {
-      path: '/signup/:userType',
+      path: '/signup',
+      name: 'SignupPage',
+      component: NewSignupStripePage,
+    },
+    {
+      path: '/signup/:returnURLType',
+      name: 'NewSignupStripePageReturn',
+      component: NewSignupStripePage,
+    },
+    {
+      path: '/old-signup/:userType',
       name: 'SignupForUserTypePage',
       component: AuthenticationPage,
       extraProps: { tab: 'signup' },

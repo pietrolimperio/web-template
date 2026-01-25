@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -9,18 +9,21 @@ import { propTypes } from '../../util/types';
 import { parse } from '../../util/urlHelpers';
 import { ensureCurrentUser } from '../../util/data';
 import { verify } from '../../ducks/emailVerification.duck';
+import { fetchCurrentUser } from '../../ducks/user.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 import {
   Page,
   ResponsiveBackgroundImageContainer,
   NamedRedirect,
   LayoutSingleColumn,
+  IconSpinner,
 } from '../../components';
 
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
 import FooterContainer from '../../containers/FooterContainer/FooterContainer';
 
 import EmailVerificationForm from './EmailVerificationForm/EmailVerificationForm';
+import { PENDING_VERIFICATION_TOKEN_KEY } from './EmailVerificationPage.duck';
 
 import css from './EmailVerificationPage.module.css';
 
@@ -72,33 +75,222 @@ export const EmailVerificationPageComponent = props => {
     emailVerificationInProgress,
     verificationError,
     location,
+    onFetchCurrentUser,
   } = props;
 
-  const initialValues = {
-    verificationToken: parseVerificationToken(location ? location.search : null),
-  };
+  const [verificationAttempted, setVerificationAttempted] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [redirectTarget, setRedirectTarget] = useState(null);
+  const [userFetchAttempted, setUserFetchAttempted] = useState(false);
+  const [userFetchInProgress, setUserFetchInProgress] = useState(false);
+  const [fetchRetryCount, setFetchRetryCount] = useState(0);
+  const MAX_FETCH_RETRIES = 5;
+  const FETCH_RETRY_DELAY = 500; // 500ms between retries
+
+  const token = parseVerificationToken(location ? location.search : null);
+  const initialValues = { verificationToken: token };
+  
   const user = ensureCurrentUser(currentUser);
   const { email, emailVerified, pendingEmail, profile } = user.attributes || {};
   const name = profile?.firstName;
+  
+  // Access privateData from profile (pendingStripeOnboarding is only in privateData)
+  const profilePrivateData = profile?.privateData;
+  
+  // Check privateData only (pendingStripeOnboarding is only in privateData)
+  const pendingStripeOnboarding = profilePrivateData?.pendingStripeOnboarding;
 
-  // Determine verification status for notification
-  const getVerificationStatus = () => {
-    const anyPendingEmailHasBeenVerifiedForCurrentUser = emailVerified && !pendingEmail;
-    
-    if (anyPendingEmailHasBeenVerifiedForCurrentUser && verificationError) {
-      return 'no-pending';
-    } else if (anyPendingEmailHasBeenVerifiedForCurrentUser) {
-      return 'success';
-    } else if (verificationError) {
-      return 'error';
+  // Effect: Force fetch current user to get privateData with retry mechanism
+  useEffect(() => {
+    // Only trigger if we need to fetch and haven't exceeded max retries
+    if (user.id && profilePrivateData === undefined && !userFetchInProgress && fetchRetryCount < MAX_FETCH_RETRIES) {
+      console.log(`📧 profilePrivateData undefined, forcing user fetch (attempt ${fetchRetryCount + 1}/${MAX_FETCH_RETRIES})...`);
+      setUserFetchAttempted(true);
+      setUserFetchInProgress(true);
+      
+      onFetchCurrentUser({ enforce: true })
+        .then(() => {
+          console.log('✅ User fetch completed, waiting for Redux to update...');
+          // Wait a bit for Redux to update
+          setTimeout(() => {
+            // If we haven't exceeded retries, retry (the effect will check if profilePrivateData is available)
+            if (fetchRetryCount < MAX_FETCH_RETRIES - 1) {
+              console.log(`⚠️ Will retry fetch (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
+              setUserFetchInProgress(false);
+              // Increment retry count to trigger retry
+              setTimeout(() => {
+                setFetchRetryCount(prev => prev + 1);
+              }, FETCH_RETRY_DELAY);
+            } else {
+              console.log('⚠️ Max retries reached, profilePrivateData still undefined');
+              setUserFetchInProgress(false);
+            }
+          }, FETCH_RETRY_DELAY);
+        })
+        .catch(err => {
+          console.error('❌ User fetch failed:', err);
+          if (fetchRetryCount < MAX_FETCH_RETRIES - 1) {
+            console.log(`⚠️ Fetch failed, will retry (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
+            setUserFetchInProgress(false);
+            // Increment retry count to trigger retry
+            setTimeout(() => {
+              setFetchRetryCount(prev => prev + 1);
+            }, FETCH_RETRY_DELAY);
+          } else {
+            console.error('❌ Max retries reached, giving up');
+            setUserFetchInProgress(false);
+          }
+        });
     }
-    return 'success'; // Default to success if verification is in progress
-  };
+  }, [user.id, profilePrivateData, userFetchInProgress, fetchRetryCount, onFetchCurrentUser]);
 
-  // Always redirect to landing page with verification status
-  if (user.id) {
-    const status = getVerificationStatus();
-    return <NamedRedirect name="LandingPage" state={{ emailVerification: status, userName: name, userEmail: email }} />;
+  // Effect: Handle verification logic based on pendingStripeOnboarding
+  useEffect(() => {
+    if (!user.id || verificationAttempted) return;
+
+    // CRITICAL: Do NOT proceed with verification if we don't have profilePrivateData yet
+    // We need to be sure about the Stripe onboarding status
+    if (profilePrivateData === undefined && userFetchAttempted) {
+      console.log('📧 Waiting for profilePrivateData to be available before proceeding...');
+      return;
+    }
+
+    // If fetch is in progress, wait
+    if (userFetchInProgress) {
+      console.log('📧 User fetch in progress, waiting...');
+      return;
+    }
+
+    // Debug logging
+    console.log('📧 EmailVerificationPage effect - checking conditions:', {
+      userId: user.id,
+      pendingStripeOnboarding,
+      emailVerified,
+      pendingEmail,
+      hasToken: !!token,
+      profilePrivateData: user.attributes?.profile?.privateData,
+      userFetchAttempted,
+      userFetchInProgress,
+      fetchRetryCount,
+    });
+
+    // If Stripe onboarding is pending, redirect to complete it first
+    // Token is already stored in sessionStorage by loadData
+    if (pendingStripeOnboarding === true) {
+      console.log('📧 Stripe onboarding pending - redirecting to complete Stripe first');
+      // Ensure token is stored
+      if (token) {
+        sessionStorage.setItem(PENDING_VERIFICATION_TOKEN_KEY, token);
+      }
+      setRedirectTarget({ name: 'SignupPage', state: { completeStripeOnboarding: true } });
+      setShouldRedirect(true);
+      setVerificationAttempted(true);
+      return;
+    }
+
+    // If email is already verified, just redirect
+    if (emailVerified && !pendingEmail) {
+      console.log('📧 Email already verified');
+      setRedirectTarget({ 
+        name: 'LandingPage', 
+        state: { emailVerification: 'success', userName: name, userEmail: email } 
+      });
+      setShouldRedirect(true);
+      setVerificationAttempted(true);
+      return;
+    }
+
+    // Verify the email now (no pending Stripe)
+    // Only proceed if we have profilePrivateData available (we're sure about the status)
+    if (token && !emailVerificationInProgress && profilePrivateData !== undefined) {
+      console.log('📧 Verifying email now (pendingStripeOnboarding is false or undefined, and we have profilePrivateData)...');
+      setVerificationAttempted(true);
+      submitVerification({ verificationToken: token })
+        .then(() => {
+          console.log('✅ Email verified successfully');
+          // Clear token from sessionStorage
+          sessionStorage.removeItem(PENDING_VERIFICATION_TOKEN_KEY);
+          setRedirectTarget({ 
+            name: 'LandingPage', 
+            state: { emailVerification: 'success', userName: name, userEmail: email } 
+          });
+          setShouldRedirect(true);
+        })
+        .catch(err => {
+          console.error('❌ Email verification failed:', err);
+          setRedirectTarget({ 
+            name: 'LandingPage', 
+            state: { emailVerification: 'error', userName: name, userEmail: email } 
+          });
+          setShouldRedirect(true);
+        });
+    } else if (token && profilePrivateData === undefined) {
+      console.log('📧 Cannot verify email yet - profilePrivateData not available');
+    }
+  }, [user.id, user.attributes?.profile?.privateData, pendingStripeOnboarding, emailVerified, pendingEmail, token, verificationAttempted, emailVerificationInProgress, userFetchAttempted, userFetchInProgress, profilePrivateData, fetchRetryCount]);
+
+  // Handle redirect
+  if (shouldRedirect && redirectTarget) {
+    return <NamedRedirect name={redirectTarget.name} state={redirectTarget.state} />;
+  }
+
+  // Show loading while processing or fetching user data
+  // Also show error if max retries reached
+  if (user.id && (emailVerificationInProgress || !verificationAttempted || userFetchInProgress || (profilePrivateData === undefined && userFetchAttempted))) {
+    const loadingMessage = userFetchInProgress || (profilePrivateData === undefined && userFetchAttempted)
+      ? 'EmailVerificationPage.loadingUserData'
+      : 'EmailVerificationPage.verifying';
+    
+    const showError = fetchRetryCount >= MAX_FETCH_RETRIES && profilePrivateData === undefined && !userFetchInProgress;
+    
+    return (
+      <Page
+        title={intl.formatMessage({ id: 'EmailVerificationPage.title' })}
+        scrollingDisabled={scrollingDisabled}
+        referrer="origin"
+      >
+        <LayoutSingleColumn
+          mainColumnClassName={css.layoutWrapperMain}
+          topbar={<TopbarContainer />}
+          footer={<FooterContainer />}
+        >
+          <ResponsiveBackgroundImageContainer
+            className={css.root}
+            childrenWrapperClassName={css.contentContainer}
+            as="section"
+            image={config.branding.brandImage}
+            sizes="100%"
+            useOverlay
+          >
+            <div className={css.content}>
+              <div className={css.loadingContainer}>
+                {!showError && <IconSpinner />}
+                <p>
+                  {showError ? (
+                    <>
+                      <FormattedMessage 
+                        id="EmailVerificationPage.fetchError" 
+                        defaultMessage="Impossibile caricare i dati utente. Per favore aggiorna la pagina." 
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <FormattedMessage 
+                        id={loadingMessage} 
+                        defaultMessage={userFetchInProgress ? "Caricamento dati utente..." : "Verifying your email..."} 
+                      />
+                      {userFetchInProgress && fetchRetryCount > 0 && (
+                        <span> ({fetchRetryCount}/{MAX_FETCH_RETRIES})</span>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          </ResponsiveBackgroundImageContainer>
+        </LayoutSingleColumn>
+      </Page>
+    );
   }
 
   return (
@@ -157,6 +349,7 @@ const mapDispatchToProps = dispatch => ({
   submitVerification: ({ verificationToken }) => {
     return dispatch(verify(verificationToken));
   },
+  onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
 });
 
 // Note: it is important that the withRouter HOC is **outside** the
