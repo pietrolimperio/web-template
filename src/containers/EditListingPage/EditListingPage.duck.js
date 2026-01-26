@@ -183,6 +183,10 @@ export const SAVE_PAYOUT_DETAILS_REQUEST = 'app/EditListingPage/SAVE_PAYOUT_DETA
 export const SAVE_PAYOUT_DETAILS_SUCCESS = 'app/EditListingPage/SAVE_PAYOUT_DETAILS_SUCCESS';
 export const SAVE_PAYOUT_DETAILS_ERROR = 'app/EditListingPage/SAVE_PAYOUT_DETAILS_ERROR';
 
+export const DELETE_DRAFT_REQUEST = 'app/EditListingPage/DELETE_DRAFT_REQUEST';
+export const DELETE_DRAFT_SUCCESS = 'app/EditListingPage/DELETE_DRAFT_SUCCESS';
+export const DELETE_DRAFT_ERROR = 'app/EditListingPage/DELETE_DRAFT_ERROR';
+
 // ================ Reducer ================ //
 
 const initialState = {
@@ -223,6 +227,8 @@ const initialState = {
   updateInProgress: false,
   payoutDetailsSaveInProgress: false,
   payoutDetailsSaved: false,
+  deleteDraftInProgress: false,
+  deleteDraftError: null,
 };
 
 export default function reducer(state = initialState, action = {}) {
@@ -469,6 +475,13 @@ export default function reducer(state = initialState, action = {}) {
     case SAVE_PAYOUT_DETAILS_SUCCESS:
       return { ...state, payoutDetailsSaveInProgress: false, payoutDetailsSaved: true };
 
+    case DELETE_DRAFT_REQUEST:
+      return { ...state, deleteDraftInProgress: true, deleteDraftError: null };
+    case DELETE_DRAFT_SUCCESS:
+      return { ...state, deleteDraftInProgress: false };
+    case DELETE_DRAFT_ERROR:
+      return { ...state, deleteDraftInProgress: false, deleteDraftError: payload };
+
     default:
       return state;
   }
@@ -552,6 +565,11 @@ export const deleteAvailabilityExceptionError = errorAction(DELETE_EXCEPTION_ERR
 export const savePayoutDetailsRequest = requestAction(SAVE_PAYOUT_DETAILS_REQUEST);
 export const savePayoutDetailsSuccess = successAction(SAVE_PAYOUT_DETAILS_SUCCESS);
 export const savePayoutDetailsError = errorAction(SAVE_PAYOUT_DETAILS_ERROR);
+
+// SDK method: ownListings.discardDraft
+export const deleteDraftRequest = requestAction(DELETE_DRAFT_REQUEST);
+export const deleteDraftSuccess = successAction(DELETE_DRAFT_SUCCESS);
+export const deleteDraftError = errorAction(DELETE_DRAFT_ERROR);
 
 // ================ Thunk ================ //
 
@@ -719,6 +737,22 @@ export const requestPublishListingDraft = listingId => (dispatch, getState, sdk)
     .catch(e => {
       const error = storableError(e);
       dispatch(publishListingError(error));
+      throw error; // Re-throw to propagate error to caller
+    });
+};
+
+export const requestDeleteDraft = listingId => (dispatch, getState, sdk) => {
+  dispatch(deleteDraftRequest({ listingId }));
+
+  return sdk.ownListings
+    .discardDraft({ id: listingId }, { expand: true })
+    .then(response => {
+      dispatch(deleteDraftSuccess(response));
+      return response;
+    })
+    .catch(e => {
+      const error = storableError(e);
+      dispatch(deleteDraftError(error));
       throw error; // Re-throw to propagate error to caller
     });
 };

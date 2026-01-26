@@ -145,6 +145,37 @@ class ProductAPI {
   }
 
   /**
+   * Verify if changes to a product are still consistent with original category classification
+   * @param {Object} original - Original product snapshot before modifications
+   * @param {Object} newSnapshot - New product snapshot after modifications
+   * @param {string} locale - Locale code (default: current locale)
+   * @param {string} model - AI model to use (default: current model)
+   * @param {number} categoryConfidenceThreshold - Minimum confidence threshold for category (default: 70)
+   * @param {number} subcategoryConfidenceThreshold - Minimum confidence threshold for subcategory (default: 70)
+   * @param {number} thirdCategoryConfidenceThreshold - Minimum confidence threshold for third category (default: 70)
+   * @returns {Promise<Object>} Verification result with confidence scores and isValid flag
+   */
+  async verifyChanges(
+    original,
+    newSnapshot,
+    locale = this.locale,
+    model = this.model,
+    categoryConfidenceThreshold = 70,
+    subcategoryConfidenceThreshold = 70,
+    thirdCategoryConfidenceThreshold = 70
+  ) {
+    return await this.call('verify-changes', {
+      original,
+      new: newSnapshot,
+      locale,
+      model,
+      categoryConfidenceThreshold,
+      subcategoryConfidenceThreshold,
+      thirdCategoryConfidenceThreshold,
+    });
+  }
+
+  /**
    * Internal API call method
    * @private
    */
@@ -376,6 +407,69 @@ export const isValidProductAnalysis = analysis => {
     analysis.fields &&
     analysis.fields.title
   );
+};
+
+/**
+ * Create a ProductSnapshot from a listing for change verification
+ * @param {Object} listing - Sharetribe listing object
+ * @returns {Object} ProductSnapshot
+ */
+export const createProductSnapshot = listing => {
+  const { title, description, publicData } = listing.attributes || {};
+  
+  // Extract key features from publicData (they might be stored as ai_keyFeatures or similar)
+  const keyFeatures = [];
+  Object.keys(publicData || {}).forEach(key => {
+    if (key.startsWith('ai_') && Array.isArray(publicData[key])) {
+      // Check if it's a keyFeatures array
+      const fieldName = key.replace('ai_', '');
+      if (fieldName.toLowerCase().includes('feature') || fieldName.toLowerCase().includes('key')) {
+        keyFeatures.push(...publicData[key]);
+      }
+    }
+  });
+  
+  // Also check for non-prefixed keyFeatures fields
+  const keyFeaturesFieldNames = ['AI_KeyFeatures', 'ai_KeyFeatures', 'ai_keyFeatures', 'keyFeatures'];
+  for (const fieldName of keyFeaturesFieldNames) {
+    if (publicData?.[fieldName] && Array.isArray(publicData[fieldName])) {
+      keyFeatures.push(...publicData[fieldName]);
+      break; // Use first match
+    }
+  }
+  
+  // If no key features found, try to extract from description or other fields
+  if (keyFeatures.length === 0 && description) {
+    // Simple extraction: look for bullet points or numbered lists
+    const lines = description.split('\n').filter(line => line.trim().startsWith('-') || line.trim().match(/^\d+\./));
+    if (lines.length > 0) {
+      keyFeatures.push(...lines.map(line => line.replace(/^[-•]\s*/, '').replace(/^\d+\.\s*/, '').trim()).filter(Boolean));
+    }
+  }
+  
+  // Extract image UUIDs from listing.images (not listing.attributes.images)
+  const imageUuids = (listing.images || []).map(img => {
+    // Extract UUID from image ID object
+    const imgId = img.imageId || img.id;
+    if (typeof imgId === 'object' && imgId.uuid) {
+      return imgId.uuid;
+    }
+    if (typeof imgId === 'string') {
+      return imgId;
+    }
+    return null;
+  }).filter(Boolean);
+  
+  return {
+    title: title || '',
+    description: description || '',
+    keyFeatures: keyFeatures.length > 0 ? keyFeatures : [],
+    brand: publicData?.brand || '',
+    images: imageUuids,
+    category: publicData?.categoryId || null,
+    subcategory: publicData?.subcategoryId || null,
+    thirdcategory: publicData?.thirdCategoryId || undefined,
+  };
 };
 
 // Export singleton instance

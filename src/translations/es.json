@@ -1832,5 +1832,18 @@
   "PreviewListingPage.removeFeature": "Eliminar característica",
   "PreviewListingPage.addFeature": "Añadir",
   "PreviewListingPage.addFeaturePlaceholder": "Introduce característica...",
-  "PreviewListingPage.editAddress": "Editar la dirección"
+  "PreviewListingPage.editAddress": "Editar la dirección",
+  "PreviewListingPage.verificationErrorTitle": "Modificación no válida",
+  "PreviewListingPage.verificationError": "Los cambios no son consistentes con la categoría original. Baja confianza para: {lowConfidences}. Se recomienda modificar el contenido para hacerlo más consistente o eliminar este anuncio y crear uno nuevo con imágenes y categoría más apropiadas.",
+  "PreviewListingPage.verificationErrorNetwork": "No se pueden verificar los cambios. Ocurrió un error de conexión. Por favor, inténtelo de nuevo más tarde o elimine este anuncio y cree uno nuevo.",
+  "PreviewListingPage.verifyingTitle": "Verificando cambios...",
+  "PreviewListingPage.deleteDraftButton": "Eliminar anuncio",
+  "PreviewListingPage.deleteDraftDialogTitle": "Eliminar anuncio",
+  "PreviewListingPage.deleteDraftConfirm": "¿Está seguro de que desea eliminar este anuncio en borrador? Esta acción no se puede deshacer.",
+  "PreviewListingPage.deleting": "Eliminando...",
+  "PreviewListingPage.deleteDraftErrorTitle": "Error",
+  "PreviewListingPage.deleteDraftError": "No se pudo eliminar el anuncio. Por favor, inténtelo de nuevo más tarde.",
+  "PreviewListingPage.resetToOriginal": "Restaurar al estado original",
+  "PreviewListingPage.resetErrorTitle": "Error",
+  "PreviewListingPage.resetError": "No se pudo restaurar el estado original. Por favor, inténtelo de nuevo más tarde."
 }

@@ -1832,5 +1832,18 @@
   "PreviewListingPage.removeFeature": "Supprimer la caractéristique",
   "PreviewListingPage.addFeature": "Ajouter",
   "PreviewListingPage.addFeaturePlaceholder": "Entrez une caractéristique...",
-  "PreviewListingPage.editAddress": "Modifier l'adresse"
+  "PreviewListingPage.editAddress": "Modifier l'adresse",
+  "PreviewListingPage.verificationErrorTitle": "Modification non valide",
+  "PreviewListingPage.verificationError": "Les modifications ne sont pas cohérentes avec la catégorie d'origine. Faible confiance pour: {lowConfidences}. Il est recommandé de modifier le contenu pour le rendre plus cohérent ou de supprimer cette annonce et d'en créer une nouvelle avec des images et une catégorie plus appropriées.",
+  "PreviewListingPage.verificationErrorNetwork": "Impossible de vérifier les modifications. Une erreur de connexion s'est produite. Veuillez réessayer plus tard ou supprimer cette annonce et en créer une nouvelle.",
+  "PreviewListingPage.verifyingTitle": "Vérification des modifications...",
+  "PreviewListingPage.deleteDraftButton": "Supprimer l'annonce",
+  "PreviewListingPage.deleteDraftDialogTitle": "Supprimer l'annonce",
+  "PreviewListingPage.deleteDraftConfirm": "Êtes-vous sûr de vouloir supprimer cette annonce en brouillon? Cette action ne peut pas être annulée.",
+  "PreviewListingPage.deleting": "Suppression...",
+  "PreviewListingPage.deleteDraftErrorTitle": "Erreur",
+  "PreviewListingPage.deleteDraftError": "Impossible de supprimer l'annonce. Veuillez réessayer plus tard.",
+  "PreviewListingPage.resetToOriginal": "Restaurer l'état d'origine",
+  "PreviewListingPage.resetErrorTitle": "Erreur",
+  "PreviewListingPage.resetError": "Impossible de restaurer l'état d'origine. Veuillez réessayer plus tard."
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { bool, func, object, shape, string } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
@@ -73,14 +73,18 @@ import NotFoundPage from '../NotFoundPage/NotFoundPage';
 import { LoadingPage } from '../ListingPage/ListingPage.shared';
 import AvailabilityCalendar from '../AIListingCreationPage/AvailabilityCalendar';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
+import LoadingOverlay from '../AIListingCreationPage/LoadingOverlay';
 
 import {
   requestPublishListingDraft,
   clearPublishError,
   requestShowListing,
   requestUpdateListing,
+  requestDeleteDraft,
 } from '../EditListingPage/EditListingPage.duck';
 import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
+import productApiInstance, { createProductSnapshot } from '../../util/productApi';
+import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
 import css from './PreviewListingPage.module.css';
 
@@ -149,6 +153,7 @@ export const PreviewListingPageComponent = props => {
     onFetchListing,
     onUpdateListing,
     onPublishListingDraft,
+    onDeleteDraft,
     onUploadImage,
     onDeleteImage,
     publishListingError,
@@ -172,6 +177,12 @@ export const PreviewListingPageComponent = props => {
   // Check if URL contains /draft parameter
   const isDraftPath = history?.location?.pathname?.includes('/draft') || false;
   const { state: currentListingState } = currentListing.attributes || {};
+  
+  // Check if listing exists and is in draft state
+  const isDraft = currentListingState === LISTING_STATE_DRAFT;
+  
+  // Use draft path parameter or listing state to determine if it's a draft
+  const isDraftMode = isDraftPath || isDraft;
 
   const ensuredCurrentUser = ensureCurrentUser(currentUser);
   const currentUserLoaded = !!ensuredCurrentUser.id;
@@ -222,6 +233,16 @@ export const PreviewListingPageComponent = props => {
   const [notificationTitle, setNotificationTitle] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [notificationType, setNotificationType] = useState('error');
+  
+  // Original snapshot for change verification (only in draft mode)
+  const [originalSnapshot, setOriginalSnapshot] = useState(null);
+  const [originalListing, setOriginalListing] = useState(null); // Store complete original listing for restoration
+  const [verificationError, setVerificationError] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [deleteDraftInProgress, setDeleteDraftInProgress] = useState(false);
+  const [hasSensitiveFieldsChanged, setHasSensitiveFieldsChanged] = useState(false);
+  const [showDeleteDraftDialog, setShowDeleteDraftDialog] = useState(false);
+  const [hiddenImageIds, setHiddenImageIds] = useState(new Set()); // Track hidden images (UUIDs as strings)
   
   // Location modal state
   const [showAddressSearch, setShowAddressSearch] = useState(false);
@@ -457,8 +478,72 @@ export const PreviewListingPageComponent = props => {
         brand: currentListing.attributes?.publicData?.brand || '',
         condition: currentListing.attributes?.publicData?.condition || 'Used',
       });
+      
+      // Load or create original snapshot when listing is loaded in draft mode
+      if (isDraftMode && !originalSnapshot) {
+        const privateData = currentListing.attributes?.privateData || {};
+        const savedOriginalSnapshot = privateData.originalSnapshot;
+        const sensitiveFieldsModified = privateData.sensitiveFieldsModified || false;
+        
+        if (savedOriginalSnapshot) {
+          // Load original snapshot from privateData
+          setOriginalSnapshot(savedOriginalSnapshot);
+          setHasSensitiveFieldsChanged(sensitiveFieldsModified);
+          
+          // Reconstruct originalListing from snapshot
+          const publicData = currentListing.attributes?.publicData || {};
+          const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
+          setOriginalListing({
+            title: savedOriginalSnapshot.title,
+            description: savedOriginalSnapshot.description,
+            brand: savedOriginalSnapshot.brand,
+            keyFeatures: savedOriginalSnapshot.keyFeatures || [],
+            images: (() => {
+              // Reconstruct image objects from UUIDs
+              const originalImageUuids = savedOriginalSnapshot.images || [];
+              return (currentListing.images || []).filter(img => {
+                const imgId = img.imageId || img.id;
+                const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+                return originalImageUuids.includes(imgUuid);
+              });
+            })(),
+          });
+        } else {
+          // Create and save original snapshot for the first time
+          const snapshot = createProductSnapshot(currentListing);
+          setOriginalSnapshot(snapshot);
+          
+          // Save complete listing for restoration
+          setOriginalListing({
+            title: currentListing.attributes?.title || '',
+            description: currentListing.attributes?.description || '',
+            brand: currentListing.attributes?.publicData?.brand || '',
+            keyFeatures: (() => {
+              const publicData = currentListing.attributes?.publicData || {};
+              const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
+              return publicData[keyFeaturesFieldName] || [];
+            })(),
+            images: currentListing.images || [],
+          });
+          
+          // Save original snapshot to privateData
+          onUpdateListing('details', {
+            id: listingId,
+            privateData: {
+              ...privateData,
+              originalSnapshot: snapshot,
+              sensitiveFieldsModified: false,
+            },
+          }, config).catch(error => {
+            console.error('Failed to save original snapshot:', error);
+          });
+        }
+        
+        // Reset hidden images when loading a new listing
+        setHiddenImageIds(new Set());
+      }
     }
-  }, [currentListing.id]);
+  }, [currentListing.id, isDraftMode]);
 
   // Fetch Stripe account data on page load if user is logged in
   // This ensures we have the full stripeAccountData (not just the ID reference)
@@ -534,6 +619,99 @@ export const PreviewListingPageComponent = props => {
     setEditingField(fieldName);
   };
 
+  // Verify changes before publishing (only in draft mode)
+  const verifyChangesBeforePublish = async () => {
+    if (!isDraftMode || !originalSnapshot || !hasSensitiveFieldsChanged) {
+      return { isValid: true };
+    }
+
+    setIsVerifying(true);
+    setVerificationError(null);
+
+    try {
+      // Create new snapshot from current listing state, but only include visible images
+      // Filter out hidden images before creating snapshot
+      const visibleImages = getVisibleImages(currentListing.images || []);
+      const listingWithVisibleImages = {
+        ...currentListing,
+        images: visibleImages,
+      };
+      const newSnapshot = createProductSnapshot(listingWithVisibleImages);
+
+      // Log snapshots before calling verifyChanges
+      console.log('📸 Original Snapshot:', JSON.stringify(originalSnapshot, null, 2));
+      console.log('📸 New Snapshot:', JSON.stringify(newSnapshot, null, 2));
+
+      // Get locale
+      const locale =
+        typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+          ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+          : DEFAULT_LOCALE;
+
+      // Call verify-changes API
+      const result = await productApiInstance.verifyChanges(
+        originalSnapshot,
+        newSnapshot,
+        locale
+      );
+
+      if (!result.isValid) {
+        // Build error message with confidence scores
+        const lowConfidences = [];
+        if (result.categoryConfidence < result.thresholds.category) {
+          lowConfidences.push(`categoria (${result.categoryConfidence}% < ${result.thresholds.category}%)`);
+        }
+        if (result.subcategoryConfidence < result.thresholds.subcategory) {
+          lowConfidences.push(`sottocategoria (${result.subcategoryConfidence}% < ${result.thresholds.subcategory}%)`);
+        }
+        if (result.thirdCategoryConfidence !== undefined && result.thirdCategoryConfidence < (result.thresholds.thirdCategory || 70)) {
+          lowConfidences.push(`terza categoria (${result.thirdCategoryConfidence}% < ${result.thresholds.thirdCategory || 70}%)`);
+        }
+
+        const errorMessage = intl.formatMessage(
+          { id: 'PreviewListingPage.verificationError' },
+          {
+            defaultMessage: `Le modifiche non sono coerenti con la categoria originale. Confidence bassa per: ${lowConfidences.join(', ')}. Si consiglia di modificare il contenuto per renderlo più coerente o di eliminare questo annuncio e crearne uno nuovo con immagini e categoria più appropriate.`,
+            lowConfidences: lowConfidences.join(', '),
+          }
+        );
+
+        setVerificationError({
+          message: errorMessage,
+          result,
+        });
+
+        // Scroll to top of page to make error more visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        return { isValid: false, error: errorMessage };
+      }
+
+      return { isValid: true };
+    } catch (error) {
+      console.error('Error verifying changes:', error);
+      // On error, block publish but show a different error message
+      const errorMessage = intl.formatMessage(
+        { id: 'PreviewListingPage.verificationErrorNetwork' },
+        {
+          defaultMessage: 'Impossibile verificare le modifiche. Si è verificato un errore di connessione. Riprova più tardi o elimina questo annuncio e crearne uno nuovo.',
+        }
+      );
+
+      setVerificationError({
+        message: errorMessage,
+        result: null,
+      });
+
+      // Scroll to top of page to make error more visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      return { isValid: false, error: errorMessage };
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const handleSaveField = async fieldName => {
     // Non salvare modifiche per campi bloccati sugli annunci pubblicati
     if (
@@ -551,6 +729,14 @@ export const PreviewListingPageComponent = props => {
     if (!value || (typeof value === 'string' && !value.trim())) {
       alert(intl.formatMessage({ id: 'PreviewListingPage.fieldRequired' }));
       return;
+    }
+
+    // Track if sensitive fields have changed (for verification before publish)
+    const sensitiveFields = ['title', 'description', 'brand'];
+    if (isDraftMode && sensitiveFields.includes(fieldName)) {
+      setHasSensitiveFieldsChanged(true);
+      // Save flag to privateData
+      await saveSensitiveFieldsModified(true);
     }
 
     setUpdatingListing(true);
@@ -581,6 +767,12 @@ export const PreviewListingPageComponent = props => {
       }
 
       await onUpdateListing('details', updateData, config);
+      
+      // Clear verification error on successful save
+      setVerificationError(null);
+      setNotificationTitle(null);
+      setNotificationMessage(null);
+      
       setEditingField(null);
     } catch (error) {
       console.error('Failed to update listing:', error);
@@ -628,6 +820,189 @@ export const PreviewListingPageComponent = props => {
            'AI_KeyFeatures'; // default
   };
 
+  // Reset listing to original state
+  const handleResetToOriginal = async () => {
+    if (!isDraftMode || !originalListing) {
+      return;
+    }
+
+    setUpdatingListing(true);
+    try {
+      const publicData = currentListing.attributes?.publicData || {};
+      const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
+      
+      // Prepare update data to restore original values
+      const updateData = {
+        id: listingId,
+        title: originalListing.title,
+        description: originalListing.description,
+        publicData: {
+          ...publicData,
+          brand: originalListing.brand,
+          [keyFeaturesFieldName]: originalListing.keyFeatures,
+        },
+      };
+
+      // Restore images: delete all images that are not in the original snapshot
+      // Get original image UUIDs from the snapshot (stored in privateData)
+      const originalImageUuids = originalSnapshot?.images || [];
+      console.log('📸 Original image UUIDs from snapshot:', originalImageUuids);
+      
+      // Delete images one by one, reloading the listing after each deletion
+      // to ensure we have the updated image list
+      let imagesDeleted = 0;
+      let maxIterations = 10; // Safety limit to prevent infinite loops
+      let iteration = 0;
+      
+      while (iteration < maxIterations) {
+        iteration++;
+        const allCurrentImages = getAllImages();
+        console.log('🔄 Iteration', iteration, '- Current images:', allCurrentImages.length);
+        
+        // Get all current image UUIDs (including hidden ones)
+        const currentImageUuids = allCurrentImages.map(img => {
+          const imgId = img.imageId || img.id;
+          return typeof imgId === 'object' ? imgId.uuid : imgId;
+        });
+        console.log('🔄 Current image UUIDs:', currentImageUuids);
+
+        // Find images that need to be deleted (not in original snapshot)
+        const imagesToDelete = allCurrentImages.filter(img => {
+          const imgId = img.imageId || img.id;
+          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+          const shouldDelete = !originalImageUuids.includes(imgUuid);
+          if (shouldDelete) {
+            console.log('🗑️  Image to delete:', imgUuid, 'not in original:', originalImageUuids);
+          }
+          return shouldDelete;
+        });
+        
+        if (imagesToDelete.length === 0) {
+          console.log('✅ No more images to delete');
+          break;
+        }
+        
+        // Delete the first image that needs to be deleted
+        const imageToDelete = imagesToDelete[0];
+        const imgId = imageToDelete.imageId || imageToDelete.id;
+        const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+        
+        console.log('🗑️  Deleting image:', imgUuid);
+        try {
+          await onDeleteImage(listingId, imageToDelete, allCurrentImages, config);
+          imagesDeleted++;
+          
+          // Reload listing to get updated image list
+          await onFetchListing({ id: listingId }, config);
+          
+          // Small delay to ensure the deletion is processed
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error('❌ Failed to delete image:', imgUuid, error);
+          break; // Stop if deletion fails
+        }
+      }
+      
+      console.log('✅ Deleted', imagesDeleted, 'images');
+
+      // Clear hiddenImageIds since we're restoring to original state
+      setHiddenImageIds(new Set());
+
+      // Update privateData to reset sensitiveFieldsModified flag
+      const privateData = currentListing.attributes?.privateData || {};
+      const originalSnapshotFromPrivate = privateData.originalSnapshot;
+      
+      await onUpdateListing('details', {
+        ...updateData,
+        privateData: {
+          ...privateData,
+          sensitiveFieldsModified: false,
+          // Keep original snapshot in privateData
+          originalSnapshot: originalSnapshotFromPrivate,
+        },
+      }, config);
+      
+      // Reload listing to see restored values
+      await onFetchListing({ id: listingId }, config);
+      
+      // Reset tracking state
+      setHasSensitiveFieldsChanged(false);
+      setVerificationError(null);
+      setNotificationTitle(null);
+      setNotificationMessage(null);
+      
+      // Update original snapshot and listing after successful reset
+      // Use the original snapshot from privateData if available
+      const updatedSnapshot = originalSnapshotFromPrivate || createProductSnapshot({
+        attributes: {
+          ...currentListing.attributes,
+          title: originalListing.title,
+          description: originalListing.description,
+          publicData: {
+            ...currentListing.attributes?.publicData,
+            brand: originalListing.brand,
+            [keyFeaturesFieldName]: originalListing.keyFeatures,
+          },
+        },
+        images: originalListing.images,
+      });
+      setOriginalSnapshot(updatedSnapshot);
+      
+      // Update originalListing to reflect current state after restoration
+      setOriginalListing({
+        title: originalListing.title,
+        description: originalListing.description,
+        brand: originalListing.brand,
+        keyFeatures: originalListing.keyFeatures,
+        images: originalListing.images,
+      });
+      
+      // Update field values to match restored listing
+      setFieldValues({
+        title: originalListing.title,
+        description: originalListing.description,
+        brand: originalListing.brand,
+        condition: currentListing.attributes?.publicData?.condition || 'Used',
+        price: currentListing.attributes?.price?.amount / 100 || 0,
+      });
+    } catch (error) {
+      console.error('Failed to reset to original:', error);
+      setNotificationTitle(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.resetErrorTitle' },
+          { defaultMessage: 'Errore' }
+        )
+      );
+      setNotificationMessage(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.resetError' },
+          { defaultMessage: 'Impossibile ripristinare lo stato originale. Riprova più tardi.' }
+        )
+      );
+      setNotificationType('error');
+    } finally {
+      setUpdatingListing(false);
+    }
+  };
+
+  // Helper function to save sensitiveFieldsModified flag to privateData
+  const saveSensitiveFieldsModified = async (modified) => {
+    if (!isDraftMode) return;
+    
+    try {
+      const privateData = currentListing.attributes?.privateData || {};
+      await onUpdateListing('details', {
+        id: listingId,
+        privateData: {
+          ...privateData,
+          sensitiveFieldsModified: modified,
+        },
+      }, config);
+    } catch (error) {
+      console.error('Failed to save sensitiveFieldsModified flag:', error);
+    }
+  };
+
   // Handler for removing a key feature
   const handleRemoveKeyFeature = async (indexToRemove) => {
     // Non consentire modifiche dei dettagli se l'annuncio è pubblicato
@@ -641,6 +1016,11 @@ export const PreviewListingPageComponent = props => {
       ? currentKeyFeatures.filter((_, index) => index !== indexToRemove)
       : [];
     
+    // Track that sensitive fields have changed
+    setHasSensitiveFieldsChanged(true);
+    // Save flag to privateData
+    await saveSensitiveFieldsModified(true);
+    
     setUpdatingListing(true);
     try {
       const updateData = {
@@ -651,6 +1031,11 @@ export const PreviewListingPageComponent = props => {
         },
       };
       await onUpdateListing('details', updateData, config);
+      
+      // Clear verification error on successful save
+      setVerificationError(null);
+      setNotificationTitle(null);
+      setNotificationMessage(null);
     } catch (error) {
       console.error('Failed to remove key feature:', error);
       alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
@@ -669,9 +1054,15 @@ export const PreviewListingPageComponent = props => {
     }
     if (!newFeature.trim()) return;
     
+    const updatedFeatures = [...(Array.isArray(currentFeatures) ? currentFeatures : []), newFeature.trim()];
+    
+    // Track that sensitive fields have changed
+    setHasSensitiveFieldsChanged(true);
+    // Save flag to privateData
+    await saveSensitiveFieldsModified(true);
+    
     setUpdatingListing(true);
     try {
-      const updatedFeatures = [...(Array.isArray(currentFeatures) ? currentFeatures : []), newFeature.trim()];
       const updateData = {
         id: listingId,
         publicData: {
@@ -680,6 +1071,11 @@ export const PreviewListingPageComponent = props => {
         },
       };
       await onUpdateListing('details', updateData, config);
+      
+      // Clear verification error on successful save
+      setVerificationError(null);
+      setNotificationTitle(null);
+      setNotificationMessage(null);
     } catch (error) {
       console.error('Failed to add key feature:', error);
       alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
@@ -689,8 +1085,11 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleImageClick = index => {
-    setSelectedImageIndex(index);
-    setShowImageModal(true);
+    const visibleImages = getVisibleImages(currentListing.images || []);
+    if (index >= 0 && index < visibleImages.length) {
+      setSelectedImageIndex(index);
+      setShowImageModal(true);
+    }
   };
 
   const handleCloseImageModal = () => {
@@ -698,14 +1097,16 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleNextImage = () => {
-    if (listing.images && listing.images.length > 0) {
-      setSelectedImageIndex(prev => (prev + 1) % listing.images.length);
+    const visibleImages = getVisibleImages(currentListing.images || []);
+    if (visibleImages && visibleImages.length > 0) {
+      setSelectedImageIndex(prev => (prev + 1) % visibleImages.length);
     }
   };
 
   const handlePrevImage = () => {
-    if (listing.images && listing.images.length > 0) {
-      setSelectedImageIndex(prev => (prev - 1 + listing.images.length) % listing.images.length);
+    const visibleImages = getVisibleImages(currentListing.images || []);
+    if (visibleImages && visibleImages.length > 0) {
+      setSelectedImageIndex(prev => (prev - 1 + visibleImages.length) % visibleImages.length);
     }
   };
 
@@ -814,6 +1215,11 @@ export const PreviewListingPageComponent = props => {
       await onUploadImage(listingId, file, config);
       console.log('✅ Image uploaded successfully');
 
+      // Track that sensitive fields (images) have changed
+      setHasSensitiveFieldsChanged(true);
+      // Save flag to privateData
+      await saveSensitiveFieldsModified(true);
+
       // Reset the file input so the same file can be uploaded again if needed
       event.target.value = '';
     } catch (error) {
@@ -827,6 +1233,22 @@ export const PreviewListingPageComponent = props => {
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  // Helper to get visible images (filter out hidden ones)
+  const getVisibleImages = useCallback((images) => {
+    if (!images || !Array.isArray(images)) return [];
+    return images.filter(img => {
+      const imgId = img.imageId || img.id;
+      const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+      const isHidden = hiddenImageIds.has(imgUuid);
+      return !isHidden;
+    });
+  }, [hiddenImageIds]);
+
+  // Helper to get all images including hidden ones (for restoration)
+  const getAllImages = () => {
+    return currentListing.images || [];
   };
 
   const handleImageDelete = async (imageId, imageIndex) => {
@@ -848,25 +1270,48 @@ export const PreviewListingPageComponent = props => {
       return;
     }
 
-    setDeletingImageId(imageToDelete.uuid);
     setShowDeleteImageDialog(false);
     
     try {
-      console.log('🗑️  Deleting image:', imageToDelete.uuid);
-      // Pass current images array directly since listing might be a draft
-      await onDeleteImage(listingId, imageToDelete, listing.images || [], config);
-      console.log('✅ Image deleted successfully');
-
-      // Adjust selected index if needed
-      if (selectedImageIndex >= listing.images.length - 1) {
-        setSelectedImageIndex(Math.max(0, listing.images.length - 2));
+      // imageToDelete is the image ID object (UUID), extract UUID directly
+      const imgUuid = imageToDelete.uuid || (typeof imageToDelete === 'string' ? imageToDelete : imageToDelete.toString());
+      
+      console.log('🗑️  Hiding image - imageToDelete:', imageToDelete);
+      console.log('🗑️  Hiding image - imgUuid:', imgUuid);
+      console.log('🗑️  Current hiddenImageIds:', Array.from(hiddenImageIds));
+      
+      if (!imgUuid) {
+        console.error('❌ Cannot hide image: UUID is missing');
+        throw new Error('Image UUID is missing');
       }
+      
+      // Hide image instead of deleting it
+      setHiddenImageIds(prev => {
+        const newSet = new Set([...prev, imgUuid]);
+        console.log('📋 New hidden images set:', Array.from(newSet));
+        return newSet;
+      });
+      
+      // Track that sensitive fields (images) have changed
+      setHasSensitiveFieldsChanged(true);
+      // Save flag to privateData
+      await saveSensitiveFieldsModified(true);
+
+      // Adjust selected index if needed - use a timeout to ensure state is updated
+      setTimeout(() => {
+        const visibleImages = getVisibleImages(currentListing.images || []);
+        console.log('👁️  Visible images after hide:', visibleImages.length);
+        console.log('👁️  All images:', currentListing.images?.length);
+        if (selectedImageIndex >= visibleImages.length - 1) {
+          setSelectedImageIndex(Math.max(0, visibleImages.length - 2));
+        }
+      }, 0);
     } catch (error) {
-      console.error('❌ Failed to delete image:', error);
+      console.error('❌ Failed to hide image:', error);
       setNotificationTitle(
         intl.formatMessage(
           { id: 'PreviewListingPage.deleteError' },
-          { defaultMessage: 'Failed to delete image. Please try again.' }
+          { defaultMessage: 'Failed to hide image. Please try again.' }
         )
       );
       setNotificationMessage('');
@@ -951,13 +1396,7 @@ export const PreviewListingPageComponent = props => {
     (hasRequirements(stripeAccountData, 'past_due') ||
       hasRequirements(stripeAccountData, 'currently_due'));
 
-
-  // Check if listing exists and is in draft state
-  const isDraft = currentListingState === LISTING_STATE_DRAFT;
   const listingNotFound = listingFetched && !currentListing.id;
-  
-  // Use draft path parameter or listing state to determine if it's a draft
-  const isDraftMode = isDraftPath || isDraft;
   
   // Redirect to correct URL based on listing state
   useEffect(() => {
@@ -1036,7 +1475,51 @@ export const PreviewListingPageComponent = props => {
     history.push(listingPath);
   }, [currentListing, listingId, routeConfiguration, history]);
 
-  const handlePublish = useCallback(() => {
+  const handleDeleteDraft = useCallback(async () => {
+    if (!isDraftMode || !listingId) {
+      return;
+    }
+
+    // Show confirmation dialog instead of window.confirm
+    setShowDeleteDraftDialog(true);
+  }, [isDraftMode, listingId]);
+
+  const handleConfirmDeleteDraft = useCallback(async () => {
+    if (!isDraftMode || !listingId) {
+      return;
+    }
+
+    setShowDeleteDraftDialog(false);
+    setDeleteDraftInProgress(true);
+    try {
+      await onDeleteDraft(listingId);
+      // Redirect to new listing creation page after successful deletion
+      history.push('/l/new');
+    } catch (error) {
+      console.error('Failed to delete draft:', error);
+      setNotificationTitle(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.deleteDraftErrorTitle' },
+          { defaultMessage: 'Errore' }
+        )
+      );
+      setNotificationMessage(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.deleteDraftError' },
+          { defaultMessage: 'Impossibile eliminare l\'annuncio. Riprova più tardi.' }
+        )
+      );
+      setNotificationType('error');
+    } finally {
+      setDeleteDraftInProgress(false);
+    }
+  }, [isDraftMode, listingId, intl, history, onDeleteDraft]);
+
+  const handleCancelDeleteDraft = useCallback(() => {
+    setShowDeleteDraftDialog(false);
+  }, []);
+
+  const handlePublish = useCallback(async () => {
     // Prevent multiple publish attempts
     if (hasPublished || isCreatingStripeAccount) {
       return;
@@ -1055,6 +1538,44 @@ export const PreviewListingPageComponent = props => {
       );
       history.push(listingPath);
       return;
+    }
+
+    // Verify changes before publishing if sensitive fields have changed
+    if (hasSensitiveFieldsChanged) {
+      const verification = await verifyChangesBeforePublish();
+      if (!verification.isValid) {
+        // Show error notification
+        setNotificationTitle(
+          intl.formatMessage(
+            { id: 'PreviewListingPage.verificationErrorTitle' },
+            { defaultMessage: 'Le modifiche non sono coerenti con la categoria originale' }
+          )
+        );
+        setNotificationMessage(verification.error || verificationError?.message || '');
+        setNotificationType('error');
+        return; // Don't publish if verification fails
+      }
+    }
+
+    // Delete hidden images permanently before publishing
+    if (hiddenImageIds.size > 0) {
+      const allImages = getAllImages();
+      for (const hiddenId of hiddenImageIds) {
+        const hiddenImage = allImages.find(img => {
+          const imgId = img.imageId || img.id;
+          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+          return imgUuid === hiddenId;
+        });
+        if (hiddenImage) {
+          try {
+            await onDeleteImage(listingId, hiddenImage, allImages, config);
+          } catch (error) {
+            console.error('Failed to delete hidden image before publish:', error);
+          }
+        }
+      }
+      // Clear hidden images set after deletion
+      setHiddenImageIds(new Set());
     }
 
     const listingTypeConfig = getListingTypeConfig(currentListing, null, config);
@@ -1133,6 +1654,9 @@ export const PreviewListingPageComponent = props => {
     onPublishListingDraft,
     handleSuccessfulPublish,
     intl,
+    hasSensitiveFieldsChanged,
+    verifyChangesBeforePublish,
+    verificationError,
   ]);
 
   useEffect(() => {
@@ -2271,6 +2795,10 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
+  // Calculate visible images - must be before any early returns to maintain hook order
+  // getVisibleImages is already a useCallback, so it will recalculate when hiddenImageIds changes
+  const visibleImages = getVisibleImages(currentListing.images || []);
+
   // Show loading while fetching
   if (!listingFetched) {
     return (
@@ -2310,9 +2838,6 @@ export const PreviewListingPageComponent = props => {
   );
   const listing = currentListing;
 
-  // Debug: Log listing data as structured JSON
-  console.log('📋 Preview listing data:', JSON.stringify(listing, null, 2));
-
   const handleNotificationClose = () => {
     setNotificationTitle(null);
     setNotificationMessage(null);
@@ -2338,6 +2863,14 @@ export const PreviewListingPageComponent = props => {
         duration={5000}
         onClose={handleNotificationClose}
       />
+      
+      {/* Loading Overlay during verification */}
+      {isVerifying && (
+        <LoadingOverlay
+          titleId="PreviewListingPage.verifyingTitle"
+        />
+      )}
+      
       <LayoutSingleColumn topbar={<TopbarContainer />} footer={null}>
         <div className={css.root}>
           <div className={css.container}>
@@ -2354,12 +2887,29 @@ export const PreviewListingPageComponent = props => {
               {/* Main Content - Images and Title Side by Side */}
               <div className={css.mainContent}>
                 {/* Images Gallery */}
-                {listing.images && listing.images.length > 0 && (
+                {visibleImages && visibleImages.length > 0 && (
                   <div className={css.imagesSection}>
+                    {/* Reset to original link - shown when verification fails */}
+                    {verificationError && verificationError.result && verificationError.result.isValid === false && isDraftMode && (
+                      <div className={css.resetToOriginalContainer}>
+                        <button
+                          type="button"
+                          onClick={handleResetToOriginal}
+                          className={css.resetToOriginalLink}
+                          disabled={updatingListing}
+                        >
+                          <FormattedMessage
+                            id="PreviewListingPage.resetToOriginal"
+                            defaultMessage="Ripristina allo stato originale"
+                          />
+                        </button>
+                      </div>
+                    )}
                     {/* Main Image */}
                     <div className={css.mainImageWrapper}>
                       {(() => {
-                        const mainImage = listing.images[selectedImageIndex];
+                        const mainImage = visibleImages[selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex];
+                        if (!mainImage) return null;
                         const variants = mainImage?.attributes?.variants || {};
                         // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
                         const imageUrl =
@@ -2405,7 +2955,7 @@ export const PreviewListingPageComponent = props => {
                             </label>
                           </div>
                         )}
-                        {listing.images.map((image, index) => {
+                        {visibleImages.map((image, index) => {
                           const variants = image.attributes?.variants || {};
                           // Use scaled variants to preserve original aspect ratio (CSS handles the cropping for thumbnails)
                           const imageUrl =
@@ -2413,13 +2963,15 @@ export const PreviewListingPageComponent = props => {
                             variants['scaled-medium']?.url ||
                             variants['listing-card-2x']?.url ||
                             variants['listing-card']?.url;
-                          const isDeleting = deletingImageId === image.id?.uuid;
-                          const isLastImage = listing.images.length === 1;
+                          const imgId = image.imageId || image.id;
+                          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+                          const isDeleting = deletingImageId === imgUuid;
+                          const isLastImage = visibleImages.length === 1;
                           const isDisabled = isDeleting || isLastImage;
 
                           return (
                             <div
-                              key={image.id?.uuid || index}
+                              key={imgUuid || index}
                               className={`${css.thumbnail} ${
                                 index === selectedImageIndex ? css.thumbnailActive : ''
                               } ${isDeleting ? css.thumbnailDeleting : ''}`}
@@ -2443,7 +2995,7 @@ export const PreviewListingPageComponent = props => {
                                         setShowDeleteImageTooltipIndex(index);
                                         setTimeout(() => setShowDeleteImageTooltipIndex(null), 3000);
                                       } else {
-                                        handleImageDelete(image.id, index);
+                                        handleImageDelete(image.id || image.imageId, index);
                                       }
                                     }}
                                     disabled={isDisabled}
@@ -3291,6 +3843,18 @@ export const PreviewListingPageComponent = props => {
 
             {/* Action Buttons */}
             <div className={css.actions}>
+              {isDraftMode && (
+                <SecondaryButton
+                  onClick={handleDeleteDraft}
+                  inProgress={deleteDraftInProgress}
+                  className={css.deleteButton}
+                >
+                  <FormattedMessage
+                    id="PreviewListingPage.deleteDraftButton"
+                    defaultMessage="Elimina annuncio"
+                  />
+                </SecondaryButton>
+              )}
               <PrimaryButton onClick={handlePublish} inProgress={publishInProgress}>
                 {publishInProgress ? (
                   isDraftMode ? (
@@ -4469,7 +5033,7 @@ export const PreviewListingPageComponent = props => {
         </Modal>
 
         {/* Image Lightbox Modal with Prev/Next Navigation */}
-        {showImageModal && listing.images && listing.images.length > 0 && (
+        {showImageModal && visibleImages && visibleImages.length > 0 && (
           <div className={css.imageModalOverlay} onClick={handleCloseImageModal}>
             <div className={css.imageModalContent} onClick={e => e.stopPropagation()}>
               <button className={css.imageModalClose} onClick={handleCloseImageModal}>
@@ -4477,7 +5041,7 @@ export const PreviewListingPageComponent = props => {
               </button>
 
               {/* Previous Button */}
-              {listing.images.length > 1 && (
+              {visibleImages.length > 1 && (
                 <button className={css.imageModalPrev} onClick={handlePrevImage}>
                   ‹
                 </button>
@@ -4485,7 +5049,8 @@ export const PreviewListingPageComponent = props => {
 
               {/* Current Image */}
               {(() => {
-                const mainImage = listing.images[selectedImageIndex];
+                const mainImage = visibleImages[selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex];
+                if (!mainImage) return null;
                 const variants = mainImage?.attributes?.variants || {};
                 // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
                 const imageUrl =
@@ -4507,7 +5072,7 @@ export const PreviewListingPageComponent = props => {
               })()}
 
               {/* Next Button */}
-              {listing.images.length > 1 && (
+              {visibleImages.length > 1 && (
                 <button className={css.imageModalNext} onClick={handleNextImage}>
                   ›
                 </button>
@@ -4515,7 +5080,7 @@ export const PreviewListingPageComponent = props => {
 
               {/* Image Counter */}
               <div className={css.imageModalCounter}>
-                {selectedImageIndex + 1} / {listing.images.length}
+                {selectedImageIndex + 1} / {visibleImages.length}
               </div>
             </div>
           </div>
@@ -4553,6 +5118,48 @@ export const PreviewListingPageComponent = props => {
             </div>
           </div>
         </Modal>
+
+      {/* Delete Draft Confirmation Dialog */}
+      {showDeleteDraftDialog && (
+        <div className={css.dialogOverlay}>
+          <div className={css.dialogBox}>
+            <h3 className={css.dialogTitle}>
+              <FormattedMessage
+                id="PreviewListingPage.deleteDraftDialogTitle"
+                defaultMessage="Elimina annuncio"
+              />
+            </h3>
+            <p className={css.dialogMessage}>
+              <FormattedMessage
+                id="PreviewListingPage.deleteDraftConfirm"
+                defaultMessage="Sei sicuro di voler eliminare questo annuncio in bozza? Questa azione non può essere annullata."
+              />
+            </p>
+            <div className={css.dialogButtons}>
+              <button
+                type="button"
+                onClick={handleCancelDeleteDraft}
+                className={css.dialogSecondaryButton}
+                disabled={deleteDraftInProgress}
+              >
+                <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Annulla" />
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteDraft}
+                className={css.dialogPrimaryButton}
+                disabled={deleteDraftInProgress}
+              >
+                {deleteDraftInProgress ? (
+                  <FormattedMessage id="PreviewListingPage.deleting" defaultMessage="Eliminazione..." />
+                ) : (
+                  <FormattedMessage id="PreviewListingPage.deleteButton" defaultMessage="Elimina" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </LayoutSingleColumn>
     </Page>
   );
@@ -4634,6 +5241,7 @@ const mapDispatchToProps = dispatch => ({
   onManageDisableScrolling: (componentId, disableScrolling) =>
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
   onPublishListingDraft: listingId => dispatch(requestPublishListingDraft(listingId)),
+  onDeleteDraft: listingId => dispatch(requestDeleteDraft(listingId)),
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
