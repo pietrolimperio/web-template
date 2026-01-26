@@ -82,7 +82,6 @@
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
-  width: min-content;
 }
 
 .breadcrumbItem:hover {
