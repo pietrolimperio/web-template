@@ -2345,7 +2345,7 @@ export const PreviewListingPageComponent = props => {
               <FormattedMessage id={isDraft ? "PreviewListingPage.heading" : "PreviewListingPage.headingEdit"} />
             </h1>
             <p className={css.description}>
-              <FormattedMessage id={isDraft ? "PreviewListingPage.description" : "PreviewListingPage.descriptionEdit"} />
+              <FormattedMessage id={isDraft ? "PreviewListingPage.descriptionEditDraft" : "PreviewListingPage.descriptionEdit"} />
             </p>
 
             {/* Preview Content */}
