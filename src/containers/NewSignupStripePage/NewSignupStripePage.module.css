@@ -408,6 +408,27 @@
   margin: 0;
 }
 
+/* Resend / fix email helpers (same UX as ModalMissingInformation) */
+.verificationBottomWrapper {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.verificationHelperText {
+  composes: marketplaceModalHelperText from global;
+}
+
+.verificationHelperLink {
+  composes: a from global;
+  composes: marketplaceModalHelperLink from global;
+}
+
+.verificationError {
+  composes: marketplaceModalPasswordMargins from global;
+  color: var(--colorFail);
+  margin-top: 12px;
+}
+
 /* Retry Stripe Container */
 .retryStripeContainer {
   display: flex;

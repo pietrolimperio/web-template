@@ -12,13 +12,13 @@ import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import * as validators from '../../util/validators';
 import { propTypes } from '../../util/types';
 import { ensureCurrentUser } from '../../util/data';
-import { isSignupEmailTakenError } from '../../util/errors';
+import { isSignupEmailTakenError, isTooManyEmailVerificationRequestsError } from '../../util/errors';
 import { createResourceLocatorString } from '../../util/routes';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
 import { signup, authenticationInProgress } from '../../ducks/auth.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
-import { fetchCurrentUser } from '../../ducks/user.duck';
+import { fetchCurrentUser, sendVerificationEmail } from '../../ducks/user.duck';
 import {
   createStripeAccount,
   getStripeConnectAccountLink,
@@ -40,6 +40,7 @@ import {
   FieldSelect,
   FieldCheckbox,
   NamedLink,
+  InlineTextButton,
   IconSpinner,
 } from '../../components';
 
@@ -124,6 +125,9 @@ export const NewSignupStripePageComponent = ({
   onFetchStripeAccount,
   onVerifyEmail,
   onFetchCurrentUser,
+  onResendVerificationEmail,
+  sendVerificationEmailInProgress = false,
+  sendVerificationEmailError = null,
   params,
   history,
 }) => {
@@ -920,6 +924,25 @@ export const NewSignupStripePageComponent = ({
   // Render verification pending screen
   if (step === STEP_VERIFICATION) {
     const displayEmail = signupEmail || user.attributes?.email;
+    const hasPendingVerificationToken =
+      typeof window !== 'undefined' && !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
+
+    const resendEmailLink = (
+      <InlineTextButton rootClassName={css.verificationHelperLink} onClick={onResendVerificationEmail}>
+        <FormattedMessage id="ModalMissingInformation.resendEmailLinkText" />
+      </InlineTextButton>
+    );
+
+    const fixEmailLink = (
+      <NamedLink className={css.verificationHelperLink} name="ContactDetailsPage">
+        <FormattedMessage id="ModalMissingInformation.fixEmailLinkText" />
+      </NamedLink>
+    );
+
+    const resendErrorTranslationId = isTooManyEmailVerificationRequestsError(sendVerificationEmailError)
+      ? 'ModalMissingInformation.resendFailedTooManyRequests'
+      : 'ModalMissingInformation.resendFailed';
+
     return (
       <Page
         title={schemaTitle}
@@ -958,6 +981,33 @@ export const NewSignupStripePageComponent = ({
                     <FormattedMessage id="NewSignupStripePage.verificationHelp" />
                   </p>
                 </div>
+
+                {/* If this is the linear flow (no pending token stored), show the same resend/fix helpers as the modal */}
+                {!hasPendingVerificationToken ? (
+                  <>
+                    {sendVerificationEmailError ? (
+                      <p className={css.verificationError}>
+                        <FormattedMessage id={resendErrorTranslationId} />
+                      </p>
+                    ) : null}
+
+                    <div className={css.verificationBottomWrapper}>
+                      <p className={css.verificationHelperText}>
+                        {sendVerificationEmailInProgress ? (
+                          <FormattedMessage id="ModalMissingInformation.sendingEmail" />
+                        ) : (
+                          <FormattedMessage
+                            id="ModalMissingInformation.resendEmail"
+                            values={{ resendEmailLink }}
+                          />
+                        )}
+                      </p>
+                      <p className={css.verificationHelperText}>
+                        <FormattedMessage id="ModalMissingInformation.fixEmail" values={{ fixEmailLink }} />
+                      </p>
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
@@ -1417,7 +1467,7 @@ NewSignupStripePageComponent.propTypes = {
 
 const mapStateToProps = state => {
   const { isAuthenticated, signupError } = state.auth;
-  const { currentUser } = state.user;
+  const { currentUser, sendVerificationEmailInProgress, sendVerificationEmailError } = state.user;
   const {
     stripeAccount,
     stripeAccountFetched,
@@ -1432,6 +1482,8 @@ const mapStateToProps = state => {
     currentUser,
     isAuthenticated,
     signupError,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
     scrollingDisabled: isScrollingDisabled(state),
     stripeAccount,
     stripeAccountFetched,
@@ -1450,6 +1502,7 @@ const mapDispatchToProps = dispatch => ({
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
   onVerifyEmail: token => dispatch(verifyEmail(token)),
   onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
+  onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
 });
 
 const NewSignupStripePage = compose(
