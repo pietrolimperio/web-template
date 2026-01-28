@@ -976,12 +976,6 @@ export const NewSignupStripePageComponent = ({
                   <FormattedMessage id="NewSignupStripePage.verificationInstructions" />
                 </p>
 
-                <div className={css.verificationHelp}>
-                  <p className={css.verificationHelpText}>
-                    <FormattedMessage id="NewSignupStripePage.verificationHelp" />
-                  </p>
-                </div>
-
                 {/* If this is the linear flow (no pending token stored), show the same resend/fix helpers as the modal */}
                 {!hasPendingVerificationToken ? (
                   <>
