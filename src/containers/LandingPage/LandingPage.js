@@ -131,10 +131,10 @@ export const LandingPageComponent = props => {
 
           if (company.representative) {
             firstName = company.representative.first_name || companyName;
-            lastName = company.representative.last_name || '';
+            lastName = company.representative.last_name || 'Company'; // Sharetribe SDK requires lastName
           } else {
             firstName = companyName;
-            lastName = '';
+            lastName = 'Company'; // Sharetribe SDK requires lastName even for companies
           }
 
           if (company.tax_id_provided) {

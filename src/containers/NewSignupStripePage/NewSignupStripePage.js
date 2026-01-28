@@ -575,10 +575,10 @@ export const NewSignupStripePageComponent = ({
 
         if (company.representative) {
           firstName = company.representative.first_name || companyName;
-          lastName = company.representative.last_name || '';
+          lastName = company.representative.last_name || 'Company'; // Sharetribe SDK requires lastName
         } else {
           firstName = companyName;
-          lastName = '';
+          lastName = 'Company'; // Sharetribe SDK requires lastName even for companies
         }
 
         if (company.tax_id_provided) {
@@ -692,7 +692,7 @@ export const NewSignupStripePageComponent = ({
     let finalFirstName, finalLastName;
     if (customerType === 'company' && companyName) {
       finalFirstName = companyName;
-      finalLastName = '';
+      finalLastName = 'Company'; // Sharetribe SDK requires lastName even for companies
     } else {
       finalFirstName = firstName || email.split('@')[0];
       finalLastName = lastName || 'User';
