@@ -5,6 +5,9 @@ import { IconEmailAttention, InlineTextButton, NamedLink, PrimaryButton } from '
 
 import css from './ModalMissingInformation.module.css';
 
+// One-shot flag to allow automatic redirect to Stripe exactly once (consumed in NewSignupStripePage)
+const AUTO_STRIPE_REDIRECT_ONCE_KEY = 'autoStripeRedirectOnce';
+
 const EmailReminder = props => {
   const {
     className,
@@ -97,6 +100,11 @@ const EmailReminder = props => {
             name="SignupPage"
             state={{ completeStripeOnboarding: true }}
             className={css.ctaButtonPrimary}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem(AUTO_STRIPE_REDIRECT_ONCE_KEY, '1');
+              }
+            }}
           >
             <FormattedMessage id="ModalMissingInformation.completeStripeCta" />
           </NamedLink>

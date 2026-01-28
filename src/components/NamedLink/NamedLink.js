@@ -49,6 +49,7 @@ export const NamedLink = withRouter(props => {
     name,
     params = {}, // pathParams
     title,
+    onClick,
     // Link props
     to = {},
     children,
@@ -76,6 +77,7 @@ export const NamedLink = withRouter(props => {
     className: classNames(className, { [activeClassName]: active }),
     style,
     title,
+    onClick,
   };
 
   return (
