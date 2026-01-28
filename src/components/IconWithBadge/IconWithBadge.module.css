@@ -1,0 +1,50 @@
+@import '../../styles/customMediaQueries.css';
+
+.root {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.icon {
+  font-size: 24px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  /* Dimensions */
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+
+  /* Position */
+  position: absolute;
+  top: -2px;
+  right: -4px;
+
+  /* Style: red dot */
+  background-color: var(--colorFail);
+
+  animation-name: notificationPop;
+  animation-duration: 0.1s;
+  animation-delay: 0.1s;
+  animation-fill-mode: forwards;
+
+  animation-timing-function: ease-in;
+  opacity: 0;
+  transform: scale(0);
+}
+
+@keyframes notificationPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

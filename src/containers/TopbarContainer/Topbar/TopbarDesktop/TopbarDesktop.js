@@ -5,7 +5,7 @@ import { FormattedMessage } from '../../../../util/reactIntl';
 import { ACCOUNT_SETTINGS_PAGES } from '../../../../routing/routeConfiguration';
 import {
   Avatar,
-  IconBell,
+  IconWithBadge,
   InlineTextButton,
   LinkedLogo,
   LocaleSelector,
@@ -42,12 +42,14 @@ const LoginLink = () => {
 };
 
 const InboxLink = ({ notificationCount, inboxTab }) => {
-  const notificationDot = notificationCount > 0 ? <div className={css.notificationDot} /> : null;
   return (
     <NamedLink className={css.iconLink} name="InboxPage" params={{ tab: inboxTab }}>
       <span className={css.iconLinkWrapper}>
-        <IconBell className={css.bellIcon} />
-        {notificationDot}
+        <IconWithBadge
+          iconClassName="fa-regular fa-message"
+          notificationCount={notificationCount}
+          iconRootClassName={css.bellIcon}
+        />
       </span>
     </NamedLink>
   );
