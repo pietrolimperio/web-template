@@ -1135,61 +1135,6 @@ export const NewSignupStripePageComponent = ({
                (pendingStripeOnboarding === true || (!privateDataLoaded && userFetchAttempted)) &&
                (returnedFromStripeFailure || !returnURLType) ? (
                 <div className={css.retryStripeContainer}>
-                  {/* Read-only name fields - BEFORE email */}
-                  {userPublicData?.customerType === 'company' ? (
-                    <div className={css.readOnlyField}>
-                      <label className={css.readOnlyLabel}>
-                        <FormattedMessage id="NewSignupStripePage.companyNameLabel" />
-                      </label>
-                      <div className={css.readOnlyValue}>
-                        {user.attributes?.profile?.firstName || ''}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={css.readOnlyFieldsRow}>
-                      <div className={css.readOnlyField}>
-                        <label className={css.readOnlyLabel}>
-                          <FormattedMessage id="NewSignupStripePage.firstNameLabel" />
-                        </label>
-                        <div className={css.readOnlyValue}>
-                          {user.attributes?.profile?.firstName || ''}
-                        </div>
-                      </div>
-                      <div className={css.readOnlyField}>
-                        <label className={css.readOnlyLabel}>
-                          <FormattedMessage id="NewSignupStripePage.lastNameLabel" />
-                        </label>
-                        <div className={css.readOnlyValue}>
-                          {user.attributes?.profile?.lastName || ''}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Read-only email */}
-                  <div className={css.readOnlyField}>
-                    <label className={css.readOnlyLabel}>
-                      <FormattedMessage id="NewSignupStripePage.emailLabel" />
-                    </label>
-                    <div className={css.readOnlyValue}>
-                      {user.attributes?.email || ''}
-                    </div>
-                  </div>
-
-                  {/* Read-only country */}
-                  <div className={css.readOnlyField}>
-                    <label className={css.readOnlyLabel}>
-                      <FormattedMessage id="NewSignupStripePage.countryLabel" />
-                    </label>
-                    <div className={css.readOnlyValue}>
-                      {(() => {
-                        const countryCode = userPublicData?.country || 'IT';
-                        const countryObj = SUPPORTED_COUNTRIES.find(c => c.code === countryCode);
-                        return countryObj ? countryObj.name : countryCode;
-                      })()}
-                    </div>
-                  </div>
-
                   {/* Info box */}
                   <div className={css.infoBox}>
                     <FormattedMessage 
