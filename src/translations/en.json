@@ -1765,6 +1765,8 @@
   "NewSignupStripePage.verificationInstructions": "Check your inbox and click the verification link to activate your account.",
   "NewSignupStripePage.verificationHelp": "Didn't receive the email? Check your spam folder or contact support.",
   "NewSignupStripePage.stripeOnboardingFailed": "Stripe verification was not completed. Please try again.",
+  "NewSignupStripePage.registrationIncomplete": "Registration is incomplete. The following mandatory fields are missing: {missingFields}. Complete Stripe verification to continue.",
+  "NewSignupStripePage.stripeOnboardingIncomplete": "Stripe verification is incomplete. Complete the verification to continue.",
   "NewSignupStripePage.sessionExpired": "Your session has expired. Please start the registration again.",
   "NewSignupStripePage.userCreationFailed": "Error creating your account. Please try again.",
   "NewSignupStripePage.stripeSetupFailed": "Error setting up Stripe. Please try again.",

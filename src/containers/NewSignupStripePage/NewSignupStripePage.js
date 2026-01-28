@@ -358,6 +358,34 @@ export const NewSignupStripePageComponent = ({
     }
   }, [isAuthenticated, currentUserLoaded, privateDataLoaded, userFetchAttempted, onFetchCurrentUser]);
 
+  // Effect: If user lands on /signup as authenticated and pendingStripeOnboarding is true,
+  // do NOT auto-redirect to Stripe unless they came from EmailVerificationPage (token in sessionStorage)
+  // or completeStripeOnboarding is explicitly set. Otherwise, keep them on the page and show review UI.
+  useEffect(() => {
+    const hasPendingVerificationToken =
+      typeof window !== 'undefined' && !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
+
+    if (
+      isAuthenticated &&
+      currentUserLoaded &&
+      privateDataLoaded &&
+      pendingStripeOnboarding === true &&
+      !returnedFromStripeSuccess &&
+      !returnedFromStripeFailure &&
+      step === STEP_FORM &&
+      !returnURLType && // Not a Stripe return URL
+      history.location?.pathname === '/signup'
+    ) {
+      console.log('📝 Authenticated user landed on /signup with pendingStripeOnboarding=true');
+
+      // If the user came from EmailVerificationPage (token stored) or we have explicit completeStripeOnboarding,
+      // we allow the auto-redirect effect to proceed. Otherwise, keep them here for review.
+      if (!hasPendingVerificationToken && completeStripeOnboarding !== true) {
+        setErrorMessage(intl.formatMessage({ id: 'NewSignupStripePage.stripeOnboardingIncomplete' }));
+      }
+    }
+  }, [isAuthenticated, currentUserLoaded, privateDataLoaded, pendingStripeOnboarding, returnedFromStripeSuccess, returnedFromStripeFailure, step, returnURLType, history, intl, completeStripeOnboarding]);
+
   const schemaTitle = intl.formatMessage(
     { id: 'NewSignupStripePage.schemaTitle' },
     { marketplaceName }
@@ -475,9 +503,18 @@ export const NewSignupStripePageComponent = ({
   };
 
       // Effect: If authenticated user needs to complete Stripe onboarding, start the process
-      // This handles users who verified email before completing Stripe
+      // IMPORTANT: auto-redirect to Stripe is allowed only when:
+      // - user explicitly came with completeStripeOnboarding=true (from verify-email / landing), OR
+      // - user has a pending verification token in sessionStorage (came from EmailVerificationPage)
+      // Otherwise, user must click the CTA (review/confirmation UX), even on /signup.
       useEffect(() => {
+        const allowAutoRedirect =
+          completeStripeOnboarding === true ||
+          (typeof window !== 'undefined' &&
+            !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY));
+
         if (
+          allowAutoRedirect &&
           isAuthenticated && 
           currentUserLoaded && 
           privateDataLoaded &&
@@ -488,14 +525,67 @@ export const NewSignupStripePageComponent = ({
           !returnedFromStripeFailure && // Don't redirect if we're returning from Stripe failure
           !processingStripeReturn // Don't redirect if we're processing Stripe return
         ) {
-          console.log('📝 Authenticated user needs to complete Stripe onboarding');
+          console.log('📝 Authenticated user needs to complete Stripe onboarding (auto-redirect allowed)');
           // Get customer type from user's profile publicData
           const userCustomerType = user.attributes?.profile?.publicData?.customerType || 'individual';
           setCustomerType(userCustomerType);
           setReturningUserStripeInitiated(true);
           proceedToStripeSetup();
         }
-      }, [isAuthenticated, currentUserLoaded, privateDataLoaded, pendingStripeOnboarding, completeStripeOnboarding, step, returningUserStripeInitiated, returnedFromStripeSuccess, returnedFromStripeFailure, processingStripeReturn]);
+      }, [isAuthenticated, currentUserLoaded, privateDataLoaded, pendingStripeOnboarding, completeStripeOnboarding, step, returningUserStripeInitiated, returnedFromStripeSuccess, returnedFromStripeFailure, processingStripeReturn, history]);
+
+  /**
+   * Validate that all mandatory Stripe data is present
+   * Mandatory fields:
+   * - Individual: firstName, lastName, phone, email, dateOfBirth, address
+   * - Company: companyName, phone, email, address
+   */
+  const validateMandatoryStripeData = (stripeAccountData, userEmail) => {
+    if (!stripeAccountData) {
+      return { isValid: false, missingFields: ['stripeAccountData'] };
+    }
+
+    const missingFields = [];
+
+    // IMPORTANT:
+    // If Stripe requirements are not met, the account is not enabled yet
+    // (e.g. missing document verification). In that case, treat it as NOT a success.
+    const eventuallyDue = stripeAccountData.requirements?.eventually_due;
+    if (Array.isArray(eventuallyDue) && eventuallyDue.length > 0) {
+      // We don't need to list every requirement in UI; just mark as incomplete.
+      missingFields.push('stripeRequirements');
+      return { isValid: false, missingFields };
+    }
+    
+    if (stripeAccountData.business_type === 'individual' && stripeAccountData.individual) {
+      const individual = stripeAccountData.individual;
+      if (!individual.first_name) missingFields.push('firstName');
+      if (!individual.last_name) missingFields.push('lastName');
+      if (!individual.phone) missingFields.push('phone');
+      if (!userEmail) missingFields.push('email');
+      if (!individual.dob || !individual.dob.year || !individual.dob.month || !individual.dob.day) {
+        missingFields.push('dateOfBirth');
+      }
+      if (!individual.address || !individual.address.line1 || !individual.address.city || !individual.address.postal_code) {
+        missingFields.push('address');
+      }
+    } else if (stripeAccountData.business_type === 'company' && stripeAccountData.company) {
+      const company = stripeAccountData.company;
+      if (!company.name) missingFields.push('companyName');
+      if (!company.phone && !stripeAccountData.business_profile?.support_phone) missingFields.push('phone');
+      if (!userEmail) missingFields.push('email');
+      if (!company.address || !company.address.line1 || !company.address.city || !company.address.postal_code) {
+        missingFields.push('address');
+      }
+    } else {
+      return { isValid: false, missingFields: ['business_type'] };
+    }
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
+  };
 
   /**
    * Update user profile with data from Stripe account
@@ -507,6 +597,27 @@ export const NewSignupStripePageComponent = ({
     try {
       const stripeAccountData = stripeAccount?.attributes?.stripeAccountData;
       console.log('📝 Stripe account data:', stripeAccountData);
+      
+      const userEmail = user.attributes?.email;
+      
+      // Validate mandatory data (Caso 3: Skip o dati incompleti)
+      const validation = validateMandatoryStripeData(stripeAccountData, userEmail);
+      
+      if (!validation.isValid) {
+        console.log('❌ Mandatory Stripe data missing:', validation.missingFields);
+        // Change location to /signup/failure with error message
+        setErrorMessage(
+          intl.formatMessage(
+            { id: 'NewSignupStripePage.registrationIncomplete' },
+            { missingFields: validation.missingFields.join(', ') }
+          )
+        );
+        // Update history to /signup/failure
+        history.replace(`/signup/failure`);
+        setStep(STEP_FORM);
+        setProcessingStripeReturn(false);
+        return;
+      }
       
       if (!stripeAccountData) {
         console.log('⚠️ No stripeAccountData found, marking for later update');
@@ -634,17 +745,75 @@ export const NewSignupStripePageComponent = ({
       // Reset processing flag since we've completed the Stripe return flow
       setProcessingStripeReturn(false);
 
-      // Check for pending email verification and verify now
+      // Check for pending email verification and verify now (Caso 1: Completamento corretto)
+      const hadPendingToken = !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
       await verifyPendingEmail();
 
-      // Clear stored data and show verification
+      // Clear stored data
       sessionStorage.removeItem(SIGNUP_DATA_KEY);
+
+      // Fetch updated user data to check email verification status
+      await onFetchCurrentUser({ enforce: true });
+      
+      // Wait a bit for Redux to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Check if we should redirect to LandingPage:
+      // 1. If we verified a token (hadPendingToken and token was removed)
+      // 2. OR if email is already verified on Sharetribe
+      const updatedUser = ensureCurrentUser(currentUser);
+      const emailVerified = updatedUser.attributes?.emailVerified;
+      const tokenWasVerified = hadPendingToken && !sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
+      
+      if (tokenWasVerified || emailVerified) {
+        // Email verified (either via token or already verified) - redirect to LandingPage
+        console.log('✅ Email verified (token verified or already verified), redirecting to LandingPage');
+        const userName = updatedUser.attributes?.profile?.firstName || updatedUser.attributes?.email?.split('@')[0];
+        const userEmail = updatedUser.attributes?.email;
+        // Use history.push to redirect to LandingPage with state
+        history.push({
+          pathname: '/',
+          state: { 
+            emailVerification: 'success', 
+            userName, 
+            userEmail 
+          }
+        });
+        return;
+      }
+
+      // Email not verified yet - show verification screen
       setStep(STEP_VERIFICATION);
     } catch (error) {
       console.error('❌ Error updating user from Stripe data:', error);
       // Even if update fails, try to verify email and show verification - user is created
+      const hadPendingToken = !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
       await verifyPendingEmail();
       sessionStorage.removeItem(SIGNUP_DATA_KEY);
+      
+      // Fetch updated user data to check email verification status
+      await onFetchCurrentUser({ enforce: true });
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedUser = ensureCurrentUser(currentUser);
+      const emailVerified = updatedUser.attributes?.emailVerified;
+      const tokenWasVerified = hadPendingToken && !sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
+      
+      if (tokenWasVerified || emailVerified) {
+        console.log('✅ Email verified (token verified or already verified), redirecting to LandingPage');
+        const userName = updatedUser.attributes?.profile?.firstName || updatedUser.attributes?.email?.split('@')[0];
+        const userEmail = updatedUser.attributes?.email;
+        history.push({
+          pathname: '/',
+          state: { 
+            emailVerification: 'success', 
+            userName, 
+            userEmail 
+          }
+        });
+        return;
+      }
+      
       setStep(STEP_VERIFICATION);
     }
   };
@@ -897,7 +1066,17 @@ export const NewSignupStripePageComponent = ({
               )}
 
               {/* Simplified retry form for authenticated users who need to complete Stripe */}
-              {isAuthenticated && currentUserLoaded && (pendingStripeOnboarding || (!privateDataLoaded && userFetchAttempted)) ? (
+              {/* Show read-only form if:
+                  - User is authenticated
+                  - Has pendingStripeOnboarding (or privateData not loaded yet)
+                  - Step is FORM
+                  - Either returned from Stripe failure OR no returnURLType (back button case)
+              */}
+              {isAuthenticated && 
+               currentUserLoaded && 
+               step === STEP_FORM &&
+               (pendingStripeOnboarding === true || (!privateDataLoaded && userFetchAttempted)) &&
+               (returnedFromStripeFailure || !returnURLType) ? (
                 <div className={css.retryStripeContainer}>
                   {/* Read-only name fields - BEFORE email */}
                   {userPublicData?.customerType === 'company' ? (

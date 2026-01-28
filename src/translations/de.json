@@ -1760,6 +1760,8 @@
   "NewSignupStripePage.verificationInstructions": "Überprüfen Sie Ihren Posteingang und klicken Sie auf den Bestätigungslink.",
   "NewSignupStripePage.verificationHelp": "E-Mail nicht erhalten? Überprüfen Sie Ihren Spam-Ordner.",
   "NewSignupStripePage.stripeOnboardingFailed": "Die Stripe-Verifizierung wurde nicht abgeschlossen. Bitte versuchen Sie es erneut.",
+  "NewSignupStripePage.registrationIncomplete": "Die Registrierung ist unvollständig. Die folgenden Pflichtfelder fehlen: {missingFields}. Vervollständigen Sie die Stripe-Verifizierung, um fortzufahren.",
+  "NewSignupStripePage.stripeOnboardingIncomplete": "Die Stripe-Verifizierung ist unvollständig. Vervollständigen Sie die Verifizierung, um fortzufahren.",
   "NewSignupStripePage.sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte starten Sie die Registrierung erneut.",
   "NewSignupStripePage.userCreationFailed": "Fehler beim Erstellen Ihres Kontos. Bitte versuchen Sie es erneut.",
   "NewSignupStripePage.stripeSetupFailed": "Fehler bei der Stripe-Einrichtung. Bitte versuchen Sie es erneut.",

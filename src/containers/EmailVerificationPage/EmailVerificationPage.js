@@ -93,7 +93,7 @@ export const EmailVerificationPageComponent = props => {
   const user = ensureCurrentUser(currentUser);
   const { email, emailVerified, pendingEmail, profile } = user.attributes || {};
   const name = profile?.firstName;
-  
+
   // Access privateData from profile (pendingStripeOnboarding is only in privateData)
   const profilePrivateData = profile?.privateData;
   

@@ -1760,6 +1760,8 @@
   "NewSignupStripePage.verificationInstructions": "Revisa tu bandeja de entrada y haz clic en el enlace de verificación.",
   "NewSignupStripePage.verificationHelp": "¿No recibiste el correo? Revisa tu carpeta de spam.",
   "NewSignupStripePage.stripeOnboardingFailed": "La verificación de Stripe no se completó. Por favor, inténtalo de nuevo.",
+  "NewSignupStripePage.registrationIncomplete": "El registro está incompleto. Faltan los siguientes campos obligatorios: {missingFields}. Completa la verificación de Stripe para continuar.",
+  "NewSignupStripePage.stripeOnboardingIncomplete": "La verificación de Stripe está incompleta. Completa la verificación para continuar.",
   "NewSignupStripePage.sessionExpired": "Tu sesión ha expirado. Por favor, reinicia el registro.",
   "NewSignupStripePage.userCreationFailed": "Error al crear tu cuenta. Por favor, inténtalo de nuevo.",
   "NewSignupStripePage.stripeSetupFailed": "Error al configurar Stripe. Por favor, inténtalo de nuevo.",

@@ -1746,6 +1746,8 @@
   "NewSignupStripePage.verificationInstructions": "Controlla la tua casella di posta e clicca sul link di verifica per attivare il tuo account.",
   "NewSignupStripePage.verificationHelp": "Non hai ricevuto l'email? Controlla la cartella spam o contatta l'assistenza.",
   "NewSignupStripePage.stripeOnboardingFailed": "La verifica con Stripe non è stata completata. Riprova.",
+  "NewSignupStripePage.registrationIncomplete": "La registrazione non è completa. Mancano i seguenti dati obbligatori: {missingFields}. Completa la verifica Stripe per continuare.",
+  "NewSignupStripePage.stripeOnboardingIncomplete": "La verifica Stripe non è stata completata. Completa la verifica per continuare.",
   "NewSignupStripePage.sessionExpired": "La sessione è scaduta. Ricomincia la registrazione.",
   "NewSignupStripePage.userCreationFailed": "Errore nella creazione dell'account. Riprova.",
   "NewSignupStripePage.stripeSetupFailed": "Errore nella configurazione di Stripe. Riprova.",
