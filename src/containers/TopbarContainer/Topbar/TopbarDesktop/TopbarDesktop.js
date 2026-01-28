@@ -6,8 +6,6 @@ import { ACCOUNT_SETTINGS_PAGES } from '../../../../routing/routeConfiguration';
 import {
   Avatar,
   IconBell,
-  IconHelp,
-  IconUser,
   InlineTextButton,
   LinkedLogo,
   LocaleSelector,
@@ -59,7 +57,7 @@ const GenericAvatarLink = () => {
   return (
     <NamedLink className={css.iconLink} name="LoginPage">
       <span className={css.iconLinkWrapper}>
-        <IconUser className={css.userIcon} />
+        <i className="fa-regular fa-user" />
       </span>
     </NamedLink>
   );
@@ -74,7 +72,7 @@ const AboutLink = ({ intl }) => {
       title={intl.formatMessage({ id: 'TopbarDesktop.aboutLink' })}
     >
       <span className={css.iconLinkWrapper}>
-        <IconHelp className={css.helpIcon} />
+        <i className="fa-solid fa-question" />
       </span>
     </NamedLink>
   );
