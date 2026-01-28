@@ -13,19 +13,15 @@ import { fetchCurrentUser } from '../../ducks/user.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 import {
   Page,
-  ResponsiveBackgroundImageContainer,
   NamedRedirect,
-  LayoutSingleColumn,
   IconSpinner,
 } from '../../components';
-
-import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
-import FooterContainer from '../../containers/FooterContainer/FooterContainer';
-
-import EmailVerificationForm from './EmailVerificationForm/EmailVerificationForm';
 import { PENDING_VERIFICATION_TOKEN_KEY } from './EmailVerificationPage.duck';
 
 import css from './EmailVerificationPage.module.css';
+
+// One-shot flag to allow automatic redirect to Stripe exactly once (when coming from EmailVerificationPage)
+const AUTO_STRIPE_REDIRECT_ONCE_KEY = 'autoStripeRedirectOnce';
 
 /**
   Parse verification token from URL
@@ -182,6 +178,8 @@ export const EmailVerificationPageComponent = props => {
       if (token) {
         sessionStorage.setItem(PENDING_VERIFICATION_TOKEN_KEY, token);
       }
+      // Allow NewSignupStripePage to auto-start Stripe exactly once
+      sessionStorage.setItem(AUTO_STRIPE_REDIRECT_ONCE_KEY, '1');
       setRedirectTarget({ name: 'SignupPage', state: { completeStripeOnboarding: true } });
       setShouldRedirect(true);
       setVerificationAttempted(true);
@@ -234,101 +232,46 @@ export const EmailVerificationPageComponent = props => {
     return <NamedRedirect name={redirectTarget.name} state={redirectTarget.state} />;
   }
 
-  // Show loading while processing or fetching user data
-  // Also show error if max retries reached
-  if (user.id && (emailVerificationInProgress || !verificationAttempted || userFetchInProgress || (profilePrivateData === undefined && userFetchAttempted))) {
-    const loadingMessage = userFetchInProgress || (profilePrivateData === undefined && userFetchAttempted)
+  // PASS-THROUGH UI: always show a minimal white page with spinner while logic runs.
+  // Also show an error if max retries reached and privateData is still unavailable.
+  const showError =
+    user.id &&
+    fetchRetryCount >= MAX_FETCH_RETRIES &&
+    profilePrivateData === undefined &&
+    !userFetchInProgress;
+
+  const loadingMessageId =
+    userFetchInProgress || (profilePrivateData === undefined && userFetchAttempted)
       ? 'EmailVerificationPage.loadingUserData'
       : 'EmailVerificationPage.verifying';
-    
-    const showError = fetchRetryCount >= MAX_FETCH_RETRIES && profilePrivateData === undefined && !userFetchInProgress;
-    
-    return (
-      <Page
-        title={intl.formatMessage({ id: 'EmailVerificationPage.title' })}
-        scrollingDisabled={scrollingDisabled}
-        referrer="origin"
-      >
-        <LayoutSingleColumn
-          mainColumnClassName={css.layoutWrapperMain}
-          topbar={<TopbarContainer />}
-          footer={<FooterContainer />}
-        >
-          <ResponsiveBackgroundImageContainer
-            className={css.root}
-            childrenWrapperClassName={css.contentContainer}
-            as="section"
-            image={config.branding.brandImage}
-            sizes="100%"
-            useOverlay
-          >
-            <div className={css.content}>
-              <div className={css.loadingContainer}>
-                {!showError && <IconSpinner />}
-                <p>
-                  {showError ? (
-                    <>
-                      <FormattedMessage 
-                        id="EmailVerificationPage.fetchError" 
-                        defaultMessage="Impossibile caricare i dati utente. Per favore aggiorna la pagina." 
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <FormattedMessage 
-                        id={loadingMessage} 
-                        defaultMessage={userFetchInProgress ? "Caricamento dati utente..." : "Verifying your email..."} 
-                      />
-                      {userFetchInProgress && fetchRetryCount > 0 && (
-                        <span> ({fetchRetryCount}/{MAX_FETCH_RETRIES})</span>
-                      )}
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          </ResponsiveBackgroundImageContainer>
-        </LayoutSingleColumn>
-      </Page>
-    );
-  }
 
   return (
     <Page
-      title={intl.formatMessage({
-        id: 'EmailVerificationPage.title',
-      })}
+      title={intl.formatMessage({ id: 'EmailVerificationPage.title' })}
       scrollingDisabled={scrollingDisabled}
       referrer="origin"
     >
-      <LayoutSingleColumn
-        mainColumnClassName={css.layoutWrapperMain}
-        topbar={<TopbarContainer />}
-        footer={<FooterContainer />}
-      >
-        <ResponsiveBackgroundImageContainer
-          className={css.root}
-          childrenWrapperClassName={css.contentContainer}
-          as="section"
-          image={config.branding.brandImage}
-          sizes="100%"
-          useOverlay
-        >
-          <div className={css.content}>
-            {user.id ? (
-              <EmailVerificationForm
-                initialValues={initialValues}
-                onSubmit={submitVerification}
-                currentUser={user}
-                inProgress={emailVerificationInProgress}
-                verificationError={verificationError}
+      <div className={css.loadingContainer}>
+        {!showError && <IconSpinner />}
+        <p>
+          {showError ? (
+            <FormattedMessage
+              id="EmailVerificationPage.fetchError"
+              defaultMessage="Impossibile caricare i dati utente. Per favore aggiorna la pagina."
+            />
+          ) : (
+            <>
+              <FormattedMessage
+                id={loadingMessageId}
+                defaultMessage={userFetchInProgress ? 'Caricamento dati utente...' : 'Verifica in corso...'}
               />
-            ) : (
-              <FormattedMessage id="EmailVerificationPage.loadingUserInformation" />
-            )}
-          </div>
-        </ResponsiveBackgroundImageContainer>
-      </LayoutSingleColumn>
+              {userFetchInProgress && fetchRetryCount > 0 ? (
+                <span>{` (${fetchRetryCount}/${MAX_FETCH_RETRIES})`}</span>
+              ) : null}
+            </>
+          )}
+        </p>
+      </div>
     </Page>
   );
 };

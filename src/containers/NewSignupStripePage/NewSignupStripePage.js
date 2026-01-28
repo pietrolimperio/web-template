@@ -29,6 +29,9 @@ import { verify as verifyEmail } from '../../ducks/emailVerification.duck';
 import { PENDING_VERIFICATION_TOKEN_KEY } from '../EmailVerificationPage/EmailVerificationPage.duck';
 import { composeValidators } from '../../util/validators';
 
+// One-shot flag to allow automatic redirect to Stripe exactly once (when coming from EmailVerificationPage)
+const AUTO_STRIPE_REDIRECT_ONCE_KEY = 'autoStripeRedirectOnce';
+
 import {
   Page,
   Form,
@@ -359,11 +362,11 @@ export const NewSignupStripePageComponent = ({
   }, [isAuthenticated, currentUserLoaded, privateDataLoaded, userFetchAttempted, onFetchCurrentUser]);
 
   // Effect: If user lands on /signup as authenticated and pendingStripeOnboarding is true,
-  // do NOT auto-redirect to Stripe unless they came from EmailVerificationPage (token in sessionStorage)
+  // do NOT auto-redirect to Stripe unless they came from EmailVerificationPage AND the one-shot flag is present,
   // or completeStripeOnboarding is explicitly set. Otherwise, keep them on the page and show review UI.
   useEffect(() => {
-    const hasPendingVerificationToken =
-      typeof window !== 'undefined' && !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
+    const hasAutoStripeRedirectOnce =
+      typeof window !== 'undefined' && !!sessionStorage.getItem(AUTO_STRIPE_REDIRECT_ONCE_KEY);
 
     if (
       isAuthenticated &&
@@ -380,7 +383,7 @@ export const NewSignupStripePageComponent = ({
 
       // If the user came from EmailVerificationPage (token stored) or we have explicit completeStripeOnboarding,
       // we allow the auto-redirect effect to proceed. Otherwise, keep them here for review.
-      if (!hasPendingVerificationToken && completeStripeOnboarding !== true) {
+      if (!hasAutoStripeRedirectOnce && completeStripeOnboarding !== true) {
         setErrorMessage(intl.formatMessage({ id: 'NewSignupStripePage.stripeOnboardingIncomplete' }));
       }
     }
@@ -505,13 +508,13 @@ export const NewSignupStripePageComponent = ({
       // Effect: If authenticated user needs to complete Stripe onboarding, start the process
       // IMPORTANT: auto-redirect to Stripe is allowed only when:
       // - user explicitly came with completeStripeOnboarding=true (from verify-email / landing), OR
-      // - user has a pending verification token in sessionStorage (came from EmailVerificationPage)
+      // - the one-shot flag is present (set by EmailVerificationPage) -> consumed here before redirect
       // Otherwise, user must click the CTA (review/confirmation UX), even on /signup.
       useEffect(() => {
         const allowAutoRedirect =
           completeStripeOnboarding === true ||
           (typeof window !== 'undefined' &&
-            !!sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY));
+            !!sessionStorage.getItem(AUTO_STRIPE_REDIRECT_ONCE_KEY));
 
         if (
           allowAutoRedirect &&
@@ -526,6 +529,10 @@ export const NewSignupStripePageComponent = ({
           !processingStripeReturn // Don't redirect if we're processing Stripe return
         ) {
           console.log('📝 Authenticated user needs to complete Stripe onboarding (auto-redirect allowed)');
+          // Consume the one-shot flag so back-button won't trigger another auto-redirect
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem(AUTO_STRIPE_REDIRECT_ONCE_KEY);
+          }
           // Get customer type from user's profile publicData
           const userCustomerType = user.attributes?.profile?.publicData?.customerType || 'individual';
           setCustomerType(userCustomerType);
