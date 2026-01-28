@@ -573,13 +573,9 @@ export const NewSignupStripePageComponent = ({
         companyName = company.name || '';
         phoneNumber = company.phone || stripeAccountData.business_profile?.support_phone || '';
 
-        if (company.representative) {
-          firstName = company.representative.first_name || companyName;
-          lastName = company.representative.last_name || 'Company'; // Sharetribe SDK requires lastName
-        } else {
-          firstName = companyName;
-          lastName = 'Company'; // Sharetribe SDK requires lastName even for companies
-        }
+        // Always use companyName as firstName and 'Company' as lastName
+        firstName = companyName;
+        lastName = 'Company'; // Sharetribe SDK requires lastName even for companies
 
         if (company.tax_id_provided) {
           vatNumber = 'PROVIDED_TO_STRIPE';
@@ -616,6 +612,14 @@ export const NewSignupStripePageComponent = ({
       if (taxId) privateDataUpdate.taxId = taxId;
       if (vatNumber) privateDataUpdate.vatNumber = vatNumber;
       if (companyName) privateDataUpdate.companyName = companyName;
+      
+      // Store company.representative in privateData if present
+      if (stripeAccountData.business_type === 'company' && stripeAccountData.company?.representative) {
+        privateDataUpdate.companyRepresentative = {
+          first_name: stripeAccountData.company.representative.first_name || '',
+          last_name: stripeAccountData.company.representative.last_name || '',
+        };
+      }
 
       updateParams.privateData = privateDataUpdate;
       
