@@ -15,6 +15,7 @@ const EmailReminder = props => {
   } = props;
 
   const email = user.id ? <span className={css.email}>{user.attributes.email}</span> : '';
+  const pendingStripeOnboarding = user?.attributes?.profile?.privateData?.pendingStripeOnboarding === true;
 
   const resendEmailLink = (
     <InlineTextButton rootClassName={css.helperLink} onClick={onResendVerificationEmail}>
@@ -39,47 +40,74 @@ const EmailReminder = props => {
     </p>
   ) : null;
 
+  const titleId = pendingStripeOnboarding
+    ? 'ModalMissingInformation.completeStripeTitle'
+    : 'ModalMissingInformation.verifyEmailTitle';
+
+  const textId = pendingStripeOnboarding
+    ? 'ModalMissingInformation.completeStripeText'
+    : 'ModalMissingInformation.verifyEmailText';
+
   return (
     <div className={className}>
       <IconEmailAttention className={css.modalIcon} />
       <p className={css.modalTitle}>
-        <FormattedMessage id="ModalMissingInformation.verifyEmailTitle" />
+        <FormattedMessage id={titleId} />
       </p>
       <p className={css.modalMessage}>
-        <FormattedMessage id="ModalMissingInformation.verifyEmailText" />
+        <FormattedMessage id={textId} />
       </p>
-      <p className={css.modalMessage}>
-        <FormattedMessage id="ModalMissingInformation.checkInbox" values={{ email }} />
-      </p>
+      {pendingStripeOnboarding ? (
+        <p className={css.modalMessage}>
+          <FormattedMessage id="ModalMissingInformation.completeStripePayoutsNote" />
+        </p>
+      ) : (
+        <p className={css.modalMessage}>
+          <FormattedMessage id="ModalMissingInformation.checkInbox" values={{ email }} />
+        </p>
+      )}
       {resendErrorMessage}
 
-      <div className={css.bottomWrapper}>
-        <p className={css.helperText}>
-          {sendVerificationEmailInProgress ? (
-            <FormattedMessage id="ModalMissingInformation.sendingEmail" />
-          ) : (
-            <FormattedMessage
-              id="ModalMissingInformation.resendEmail"
-              values={{ resendEmailLink }}
-            />
-          )}
-        </p>
-        <p className={css.helperText}>
-          <FormattedMessage id="ModalMissingInformation.fixEmail" values={{ fixEmailLink }} />
-        </p>
-      </div>
+      {pendingStripeOnboarding ? null : (
+        <div className={css.bottomWrapper}>
+          <p className={css.helperText}>
+            {sendVerificationEmailInProgress ? (
+              <FormattedMessage id="ModalMissingInformation.sendingEmail" />
+            ) : (
+              <FormattedMessage
+                id="ModalMissingInformation.resendEmail"
+                values={{ resendEmailLink }}
+              />
+            )}
+          </p>
+          <p className={css.helperText}>
+            <FormattedMessage id="ModalMissingInformation.fixEmail" values={{ fixEmailLink }} />
+          </p>
+        </div>
+      )}
 
       {/* CTA Buttons */}
       <div className={css.ctaButtons}>
         <NamedLink name="LandingPage" className={css.ctaButtonSecondary}>
           <FormattedMessage id="ModalMissingInformation.backToHome" />
         </NamedLink>
-        <PrimaryButton
-          onClick={() => window.location.reload()}
-          className={css.ctaButtonPrimary}
-        >
-          <FormattedMessage id="ModalMissingInformation.reload" />
-        </PrimaryButton>
+
+        {pendingStripeOnboarding ? (
+          <NamedLink
+            name="SignupPage"
+            state={{ completeStripeOnboarding: true }}
+            className={css.ctaButtonPrimary}
+          >
+            <FormattedMessage id="ModalMissingInformation.completeStripeCta" />
+          </NamedLink>
+        ) : (
+          <PrimaryButton
+            onClick={() => window.location.reload()}
+            className={css.ctaButtonPrimary}
+          >
+            <FormattedMessage id="ModalMissingInformation.reload" />
+          </PrimaryButton>
+        )}
       </div>
     </div>
   );
