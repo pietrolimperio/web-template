@@ -2889,8 +2889,8 @@ export const PreviewListingPageComponent = props => {
                 {/* Images Gallery */}
                 {visibleImages && visibleImages.length > 0 && (
                   <div className={css.imagesSection}>
-                    {/* Reset to original link - shown when verification fails */}
-                    {verificationError && verificationError.result && verificationError.result.isValid === false && isDraftMode && (
+                    {/* Reset to original link - shown when sensitive fields have changed */}
+                    {hasSensitiveFieldsChanged && isDraftMode && (
                       <div className={css.resetToOriginalContainer}>
                         <button
                           type="button"
