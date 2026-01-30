@@ -153,6 +153,7 @@ class ProductAPI {
    * @param {number} categoryConfidenceThreshold - Minimum confidence threshold for category (default: 70)
    * @param {number} subcategoryConfidenceThreshold - Minimum confidence threshold for subcategory (default: 70)
    * @param {number} thirdCategoryConfidenceThreshold - Minimum confidence threshold for third category (default: 70)
+   * @param {File[]} images - Optional array of product images (max 10 files, max 4MB per file)
    * @returns {Promise<Object>} Verification result with confidence scores and isValid flag
    */
   async verifyChanges(
@@ -160,19 +161,70 @@ class ProductAPI {
     newSnapshot,
     locale = this.locale,
     model = this.model,
-    categoryConfidenceThreshold = 70,
-    subcategoryConfidenceThreshold = 70,
-    thirdCategoryConfidenceThreshold = 70
+    images = null
   ) {
-    return await this.call('verify-changes', {
-      original,
-      new: newSnapshot,
-      locale,
-      model,
-      categoryConfidenceThreshold,
-      subcategoryConfidenceThreshold,
-      thirdCategoryConfidenceThreshold,
-    });
+    // If images are provided, use FormData; otherwise use JSON
+    if (images && images.length > 0) {
+      // Validate images
+      if (images.length > 10) {
+        throw new Error('Maximum 10 images allowed');
+      }
+
+      images.forEach(img => {
+        if (!this.isValidImage(img)) {
+          throw new Error(
+            `Invalid image: ${img.name}. Must be JPG, PNG, WebP, or HEIF and under 4MB`
+          );
+        }
+        // Check 4MB limit for verify-changes
+        const maxSize = 4 * 1024 * 1024; // 4MB
+        if (img.size > maxSize) {
+          throw new Error(`Image ${img.name} exceeds 4MB limit`);
+        }
+      });
+
+      const formData = new FormData();
+      
+      // Append JSON data FIRST (before images) - some servers parse FormData in order
+      const originalStr = JSON.stringify(original);
+      const newStr = JSON.stringify(newSnapshot);
+       
+      // Append JSON fields as plain strings
+      // Some servers can't read Blob fields when files are present, so use plain strings
+      formData.append('original', originalStr);
+      formData.append('new', newStr);
+      formData.append('locale', locale);
+      formData.append('model', model);
+      
+      // Append images AFTER JSON fields
+      images.forEach((img, index) => {
+        formData.append('images', img);
+      });
+
+      // Collect FormData entries (iterating over entries() consumes the FormData)
+      const formDataEntries = [];
+      for (const [key, value] of formData.entries()) {
+        formDataEntries.push([key, value]);
+      }
+      
+      // Recreate FormData with all entries in the same order
+      const formDataToSend = new FormData();
+      for (const [key, value] of formDataEntries) {
+        formDataToSend.append(key, value);
+      }
+      
+      return await this.call('verify-changes', formDataToSend);
+    } else {
+      // No images, use JSON format (backward compatible)
+      const payload = {
+        original,
+        new: newSnapshot,
+        locale,
+        model
+      };
+      
+      return await this.call('verify-changes', payload);
+    }
   }
 
   /**
@@ -189,11 +241,32 @@ class ProductAPI {
     console.log('🌐 [Product API] Base URL:', this.baseURL);
 
     try {
-      const response = await fetch(fullURL, {
+      const requestOptions = {
         method: 'POST',
         headers: isFormData ? {} : { 'Content-Type': 'application/json' },
         body: isFormData ? payload : JSON.stringify(payload),
-      });
+      };
+      if (isFormData && payload instanceof FormData) {
+        const formDataKeys = Array.from(payload.keys());
+        // Try to get values for non-file fields (this won't work for files)
+        for (const key of formDataKeys) {
+          const value = payload.get(key);
+          if (value instanceof File) {
+          } else {
+            const preview = typeof value === 'string' && value.length > 150 
+              ? value.substring(0, 150) + '...' 
+              : value;
+          }
+        }
+      } else {
+        const bodyPreview = typeof requestOptions.body === 'string' 
+          ? (requestOptions.body.length > 500 
+              ? requestOptions.body.substring(0, 500) + '...' 
+              : requestOptions.body)
+          : 'N/A';
+      }
+
+      const response = await fetch(fullURL, requestOptions);
 
       console.log('📡 [Product API] Response status:', response.status, response.statusText);
 
@@ -236,12 +309,109 @@ class ProductAPI {
    * @private
    */
   isValidImage(file) {
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB (for analyze endpoint)
 
     return validTypes.includes(file.type) && file.size <= maxSize;
   }
 }
+
+/**
+ * Convert image entity to File object by downloading from URL
+ * @param {Object} imageEntity - Image entity with variants
+ * @returns {Promise<File>} File object
+ */
+export const imageEntityToFile = async (imageEntity) => {
+  if (!imageEntity || !imageEntity.attributes || !imageEntity.attributes.variants) {
+    throw new Error('Invalid image entity');
+  }
+
+  const variants = imageEntity.attributes.variants;
+  
+  // Find the largest variant available (prefer scaled-large, scaled-xlarge, or largest by width)
+  const variantNames = Object.keys(variants);
+  let bestVariant = null;
+  let maxWidth = 0;
+
+  // Priority order: scaled-xlarge > scaled-large > scaled-medium > scaled-small > others
+  const priorityOrder = ['scaled-xlarge', 'scaled-large', 'scaled-medium', 'scaled-small'];
+  
+  for (const priorityName of priorityOrder) {
+    if (variants[priorityName]) {
+      bestVariant = variants[priorityName];
+      break;
+    }
+  }
+
+  // If no priority variant found, use the one with largest width
+  if (!bestVariant) {
+    for (const variantName of variantNames) {
+      const variant = variants[variantName];
+      if (variant && variant.width && variant.width > maxWidth) {
+        maxWidth = variant.width;
+        bestVariant = variant;
+      }
+    }
+  }
+
+  // Fallback to first available variant
+  if (!bestVariant && variantNames.length > 0) {
+    bestVariant = variants[variantNames[0]];
+  }
+
+  if (!bestVariant || !bestVariant.url) {
+    throw new Error('No valid image variant found');
+  }
+
+  // Download image from URL
+  const response = await fetch(bestVariant.url);
+  if (!response.ok) {
+    throw new Error(`Failed to download image: ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  
+  // Determine file extension from content type or URL
+  let extension = 'jpg';
+  const contentType = response.headers.get('content-type');
+  if (contentType) {
+    if (contentType.includes('png')) extension = 'png';
+    else if (contentType.includes('jpeg') || contentType.includes('jpg')) extension = 'jpg';
+    else if (contentType.includes('webp')) extension = 'webp';
+  } else {
+    // Try to get from URL
+    const urlMatch = bestVariant.url.match(/\.(jpg|jpeg|png|webp)/i);
+    if (urlMatch) {
+      extension = urlMatch[1].toLowerCase();
+    }
+  }
+
+  // Create File object
+  const fileName = `image-${Date.now()}.${extension}`;
+  const file = new File([blob], fileName, { type: blob.type || `image/${extension === 'jpg' ? 'jpeg' : extension}` });
+
+  return file;
+};
+
+/**
+ * Convert array of image entities to File objects
+ * @param {Object[]} imageEntities - Array of image entities
+ * @returns {Promise<File[]>} Array of File objects
+ */
+export const imageEntitiesToFiles = async (imageEntities) => {
+  if (!imageEntities || !Array.isArray(imageEntities) || imageEntities.length === 0) {
+    return [];
+  }
+
+  // Limit to 10 images
+  const limitedImages = imageEntities.slice(0, 10);
+  
+  // Convert all images in parallel
+  const filePromises = limitedImages.map(img => imageEntityToFile(img));
+  const files = await Promise.all(filePromises);
+  
+  return files;
+};
 
 // Singleton instance
 const productApiInstance = new ProductAPI();

@@ -83,7 +83,7 @@ import {
   requestDeleteDraft,
 } from '../EditListingPage/EditListingPage.duck';
 import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
-import productApiInstance, { createProductSnapshot } from '../../util/productApi';
+import productApiInstance, { createProductSnapshot, imageEntitiesToFiles } from '../../util/productApi';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
 import css from './PreviewListingPage.module.css';
@@ -648,11 +648,25 @@ export const PreviewListingPageComponent = props => {
           ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
           : DEFAULT_LOCALE;
 
-      // Call verify-changes API
+      // Convert visible images to files for verification
+      let imageFiles = null;
+      try {
+        if (visibleImages && visibleImages.length > 0) {
+          imageFiles = await imageEntitiesToFiles(visibleImages);
+        }
+      } catch (imageError) {
+        console.warn('⚠️ Failed to convert images to files, continuing without images:', imageError);
+        // Continue without images - backward compatible
+        imageFiles = null;
+      }
+
+      // Call verify-changes API with images if available
       const result = await productApiInstance.verifyChanges(
         originalSnapshot,
         newSnapshot,
-        locale
+        locale,
+        undefined, // model (use default)
+        imageFiles // images (optional)
       );
 
       if (!result.isValid) {
