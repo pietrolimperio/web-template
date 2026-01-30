@@ -1843,6 +1843,7 @@
   "PreviewListingPage.verificationError": "Les modifications ne sont pas cohérentes avec la catégorie d'origine. Faible confiance pour: {lowConfidences}. Il est recommandé de modifier le contenu pour le rendre plus cohérent ou de supprimer cette annonce et d'en créer une nouvelle avec des images et une catégorie plus appropriées.",
   "PreviewListingPage.verificationErrorNetwork": "Impossible de vérifier les modifications. Une erreur de connexion s'est produite. Veuillez réessayer plus tard ou supprimer cette annonce et en créer une nouvelle.",
   "PreviewListingPage.verifyingTitle": "Vérification des modifications...",
+  "PreviewListingPage.resettingTitle": "Réinitialisation...",
   "PreviewListingPage.deleteDraftButton": "Supprimer l'annonce",
   "PreviewListingPage.deleteDraftDialogTitle": "Supprimer l'annonce",
   "PreviewListingPage.deleteDraftConfirm": "Êtes-vous sûr de vouloir supprimer cette annonce en brouillon? Cette action ne peut pas être annulée.",

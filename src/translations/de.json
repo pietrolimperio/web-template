@@ -1843,6 +1843,7 @@
   "PreviewListingPage.verificationError": "Die Änderungen sind nicht konsistent mit der ursprünglichen Kategorie. Niedriges Vertrauen für: {lowConfidences}. Es wird empfohlen, den Inhalt zu ändern, um ihn konsistenter zu machen, oder diese Anzeige zu löschen und eine neue mit angemesseneren Bildern und Kategorie zu erstellen.",
   "PreviewListingPage.verificationErrorNetwork": "Änderungen können nicht überprüft werden. Ein Verbindungsfehler ist aufgetreten. Bitte versuchen Sie es später erneut oder löschen Sie diese Anzeige und erstellen Sie eine neue.",
   "PreviewListingPage.verifyingTitle": "Änderungen werden überprüft...",
+  "PreviewListingPage.resettingTitle": "Zurücksetzen...",
   "PreviewListingPage.deleteDraftButton": "Anzeige löschen",
   "PreviewListingPage.deleteDraftDialogTitle": "Anzeige löschen",
   "PreviewListingPage.deleteDraftConfirm": "Sind Sie sicher, dass Sie diese Entwurfsanzeige löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

@@ -828,6 +828,72 @@ export const PreviewListingPageComponent = props => {
 
     setUpdatingListing(true);
     try {
+      // Step 1: Refetch listing to get current state
+      await onFetchListing({ id: listingId }, config);
+      
+      // Step 2: Get original image UUIDs from the snapshot
+      const originalImageUuids = originalSnapshot?.images || [];
+      // Normalize original UUIDs to strings for comparison
+      const originalImageUuidsStr = originalImageUuids.map(uuid => String(uuid));
+      
+      // Step 3: Get current images after refetch
+      const allCurrentImages = getAllImages();
+      
+      // Step 4: Find images that need to be deleted (not in original snapshot)
+      const imagesToDeleteUuids = [];
+      allCurrentImages.forEach(img => {
+        const imgId = img.imageId || img.id;
+        const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+        const imgUuidStr = String(imgUuid);
+        if (!originalImageUuidsStr.includes(imgUuidStr)) {
+          imagesToDeleteUuids.push(imgUuidStr);
+        }
+      });
+      
+      // Step 5: Update hiddenImageIds in one operation:
+      // - Remove original images from hidden (show them)
+      // - Add new images to hidden (hide them before deletion)
+      setHiddenImageIds(prev => {
+        const newSet = new Set(prev);
+        // Remove original images from hidden (they should be visible)
+        allCurrentImages.forEach(img => {
+          const imgId = img.imageId || img.id;
+          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+          const imgUuidStr = String(imgUuid);
+          if (originalImageUuidsStr.includes(imgUuidStr)) {
+            // This is an original image, remove it from hidden
+            newSet.delete(imgUuidStr);
+          }
+        });
+        // Add new images to hidden (they will be deleted)
+        imagesToDeleteUuids.forEach(uuid => newSet.add(uuid));
+        return newSet;
+      });
+      
+      // Step 7: Delete the hidden images (non-original ones)
+      let imagesDeleted = 0;
+      for (const hiddenUuid of imagesToDeleteUuids) {
+        const imageToDelete = allCurrentImages.find(img => {
+          const imgId = img.imageId || img.id;
+          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+          return String(imgUuid) === hiddenUuid;
+        });
+        
+        if (imageToDelete) {
+          const imageIdToDelete = imageToDelete.imageId || imageToDelete.id;
+          try {
+            await onDeleteImage(listingId, imageIdToDelete, allCurrentImages, config);
+            imagesDeleted++;
+          } catch (error) {
+            console.error('❌ Failed to delete image:', hiddenUuid, error);
+          }
+        }
+      }
+      
+      // Step 8: Clear hiddenImageIds since we're restoring to original state
+      setHiddenImageIds(new Set());
+
+      // Step 9: Update listing with original values
       const publicData = currentListing.attributes?.publicData || {};
       const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
       
@@ -843,71 +909,6 @@ export const PreviewListingPageComponent = props => {
         },
       };
 
-      // Restore images: delete all images that are not in the original snapshot
-      // Get original image UUIDs from the snapshot (stored in privateData)
-      const originalImageUuids = originalSnapshot?.images || [];
-      console.log('📸 Original image UUIDs from snapshot:', originalImageUuids);
-      
-      // Delete images one by one, reloading the listing after each deletion
-      // to ensure we have the updated image list
-      let imagesDeleted = 0;
-      let maxIterations = 10; // Safety limit to prevent infinite loops
-      let iteration = 0;
-      
-      while (iteration < maxIterations) {
-        iteration++;
-        const allCurrentImages = getAllImages();
-        console.log('🔄 Iteration', iteration, '- Current images:', allCurrentImages.length);
-        
-        // Get all current image UUIDs (including hidden ones)
-        const currentImageUuids = allCurrentImages.map(img => {
-          const imgId = img.imageId || img.id;
-          return typeof imgId === 'object' ? imgId.uuid : imgId;
-        });
-        console.log('🔄 Current image UUIDs:', currentImageUuids);
-
-        // Find images that need to be deleted (not in original snapshot)
-        const imagesToDelete = allCurrentImages.filter(img => {
-          const imgId = img.imageId || img.id;
-          const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
-          const shouldDelete = !originalImageUuids.includes(imgUuid);
-          if (shouldDelete) {
-            console.log('🗑️  Image to delete:', imgUuid, 'not in original:', originalImageUuids);
-          }
-          return shouldDelete;
-        });
-        
-        if (imagesToDelete.length === 0) {
-          console.log('✅ No more images to delete');
-          break;
-        }
-        
-        // Delete the first image that needs to be deleted
-        const imageToDelete = imagesToDelete[0];
-        const imgId = imageToDelete.imageId || imageToDelete.id;
-        const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
-        
-        console.log('🗑️  Deleting image:', imgUuid);
-        try {
-          await onDeleteImage(listingId, imageToDelete, allCurrentImages, config);
-          imagesDeleted++;
-          
-          // Reload listing to get updated image list
-          await onFetchListing({ id: listingId }, config);
-          
-          // Small delay to ensure the deletion is processed
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          console.error('❌ Failed to delete image:', imgUuid, error);
-          break; // Stop if deletion fails
-        }
-      }
-      
-      console.log('✅ Deleted', imagesDeleted, 'images');
-
-      // Clear hiddenImageIds since we're restoring to original state
-      setHiddenImageIds(new Set());
-
       // Update privateData to reset sensitiveFieldsModified flag
       const privateData = currentListing.attributes?.privateData || {};
       const originalSnapshotFromPrivate = privateData.originalSnapshot;
@@ -922,7 +923,7 @@ export const PreviewListingPageComponent = props => {
         },
       }, config);
       
-      // Reload listing to see restored values
+      // Step 10: Final refetch to see restored values
       await onFetchListing({ id: listingId }, config);
       
       // Reset tracking state
@@ -1211,9 +1212,7 @@ export const PreviewListingPageComponent = props => {
 
     setUploadingImage(true);
     try {
-      console.log('📤 Uploading image:', file.name);
       await onUploadImage(listingId, file, config);
-      console.log('✅ Image uploaded successfully');
 
       // Track that sensitive fields (images) have changed
       setHasSensitiveFieldsChanged(true);
@@ -1271,47 +1270,57 @@ export const PreviewListingPageComponent = props => {
     }
 
     setShowDeleteImageDialog(false);
+    setDeletingImageId(imageToDelete);
     
-    try {
+    try { 
       // imageToDelete is the image ID object (UUID), extract UUID directly
       const imgUuid = imageToDelete.uuid || (typeof imageToDelete === 'string' ? imageToDelete : imageToDelete.toString());
       
-      console.log('🗑️  Hiding image - imageToDelete:', imageToDelete);
-      console.log('🗑️  Hiding image - imgUuid:', imgUuid);
-      console.log('🗑️  Current hiddenImageIds:', Array.from(hiddenImageIds));
-      
       if (!imgUuid) {
-        console.error('❌ Cannot hide image: UUID is missing');
+        console.error('❌ Cannot delete image: UUID is missing');
         throw new Error('Image UUID is missing');
       }
       
-      // Hide image instead of deleting it
-      setHiddenImageIds(prev => {
-        const newSet = new Set([...prev, imgUuid]);
-        console.log('📋 New hidden images set:', Array.from(newSet));
-        return newSet;
-      });
+      // Check if image is in original snapshot
+      const originalImageUuids = originalSnapshot?.images || [];
+      const isOriginalImage = originalImageUuids.includes(imgUuid);
       
-      // Track that sensitive fields (images) have changed
-      setHasSensitiveFieldsChanged(true);
-      // Save flag to privateData
-      await saveSensitiveFieldsModified(true);
+      if (isOriginalImage) {
+        // Image is in original snapshot: hide it instead of deleting
+        setHiddenImageIds(prev => {
+          const newSet = new Set([...prev, imgUuid]);
+          return newSet;
+        });
+        
+        // Track that sensitive fields (images) have changed
+        setHasSensitiveFieldsChanged(true);
+        // Save flag to privateData
+        await saveSensitiveFieldsModified(true);
+      } else {
+        // Image was added later: delete it permanently
+        const allImages = getAllImages();
+        
+        // imageToDelete is already the image ID (can be object or string)
+        // Pass it directly to onDeleteImage which will extract the UUID
+        await onDeleteImage(listingId, imageToDelete, allImages, config);
+        
+        // Reload listing to get updated image list
+        await onFetchListing({ id: listingId }, config);
+      }
 
       // Adjust selected index if needed - use a timeout to ensure state is updated
       setTimeout(() => {
         const visibleImages = getVisibleImages(currentListing.images || []);
-        console.log('👁️  Visible images after hide:', visibleImages.length);
-        console.log('👁️  All images:', currentListing.images?.length);
         if (selectedImageIndex >= visibleImages.length - 1) {
           setSelectedImageIndex(Math.max(0, visibleImages.length - 2));
         }
       }, 0);
     } catch (error) {
-      console.error('❌ Failed to hide image:', error);
+      console.error('❌ Failed to delete image:', error);
       setNotificationTitle(
         intl.formatMessage(
           { id: 'PreviewListingPage.deleteError' },
-          { defaultMessage: 'Failed to hide image. Please try again.' }
+          { defaultMessage: 'Failed to delete image. Please try again.' }
         )
       );
       setNotificationMessage('');
@@ -1541,6 +1550,7 @@ export const PreviewListingPageComponent = props => {
     }
 
     // Verify changes before publishing if sensitive fields have changed
+    let verificationPassed = true;
     if (hasSensitiveFieldsChanged) {
       const verification = await verifyChangesBeforePublish();
       if (!verification.isValid) {
@@ -1555,10 +1565,11 @@ export const PreviewListingPageComponent = props => {
         setNotificationType('error');
         return; // Don't publish if verification fails
       }
+      verificationPassed = true;
     }
 
-    // Delete hidden images permanently before publishing
-    if (hiddenImageIds.size > 0) {
+    // Delete hidden images permanently only after verifyChanges gives positive outcome
+    if (verificationPassed && hiddenImageIds.size > 0) {
       const allImages = getAllImages();
       for (const hiddenId of hiddenImageIds) {
         const hiddenImage = allImages.find(img => {
@@ -1574,6 +1585,8 @@ export const PreviewListingPageComponent = props => {
           }
         }
       }
+      // Reload listing to get updated image list after deletions
+      await onFetchListing({ id: listingId }, config);
       // Clear hidden images set after deletion
       setHiddenImageIds(new Set());
     }
@@ -2634,7 +2647,6 @@ export const PreviewListingPageComponent = props => {
 
       // Create new exceptions
       if (newExceptions.length > 0) {
-        console.log('Creating new exceptions:', newExceptions.length);
         for (const exc of newExceptions) {
           try {
             const dates = exc.dates;
@@ -2657,13 +2669,6 @@ export const PreviewListingPageComponent = props => {
               end.setHours(23, 0, 0, 0); // 23:00:00 to satisfy API requirements
             }
 
-            console.log('Creating exception:', {
-              listingId: listingIdForSDK,
-              start: start.toISOString(),
-              end: end.toISOString(),
-              seats: 0,
-            });
-
             const result = await sdk.availabilityExceptions.create({
               listingId: listingIdForSDK,
               start: start.toISOString(),
@@ -2671,7 +2676,6 @@ export const PreviewListingPageComponent = props => {
               seats: 0,
             });
             
-            console.log('Exception created successfully:', result);
           } catch (createError) {
             console.error('Failed to create exception:', exc, createError);
             // Show error to user
@@ -2868,6 +2872,13 @@ export const PreviewListingPageComponent = props => {
       {isVerifying && (
         <LoadingOverlay
           titleId="PreviewListingPage.verifyingTitle"
+        />
+      )}
+      
+      {/* Loading Overlay during reset */}
+      {updatingListing && (
+        <LoadingOverlay
+          titleId="PreviewListingPage.resettingTitle"
         />
       )}
       
@@ -3714,17 +3725,7 @@ export const PreviewListingPageComponent = props => {
                       
                       // Use geocoded location if geolocation is not available
                       const mapCenter = normalizedGeolocation || geocodedLocation;
-                      
-                      // Debug log (commented out to reduce console noise)
-                      // if (process.env.NODE_ENV === 'development') {
-                      //   console.log('🗺️ Map debug:', {
-                      //     geolocation,
-                      //     normalizedGeolocation,
-                      //     geocodedLocation,
-                      //     mapCenter,
-                      //     addressString,
-                      //   });
-                      // }
+                
 
                       return (
                         <div className={css.mapSection}>

@@ -1836,6 +1836,7 @@
   "PreviewListingPage.verificationError": "The changes are not consistent with the original category. Low confidence for: {lowConfidences}. It is recommended to modify the content to make it more consistent or to delete this listing and create a new one with more appropriate images and category.",
   "PreviewListingPage.verificationErrorNetwork": "Unable to verify changes. A connection error occurred. Please try again later or delete this listing and create a new one.",
   "PreviewListingPage.verifyingTitle": "Verifying changes...",
+  "PreviewListingPage.resettingTitle": "Resetting...",
   "PreviewListingPage.deleteDraftButton": "Delete listing",
   "PreviewListingPage.deleteDraftDialogTitle": "Delete listing",
   "PreviewListingPage.deleteDraftConfirm": "Are you sure you want to delete this draft listing? This action cannot be undone.",

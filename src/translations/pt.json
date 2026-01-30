@@ -1843,6 +1843,7 @@
   "PreviewListingPage.verificationError": "As alterações não são consistentes com a categoria original. Baixa confiança para: {lowConfidences}. É recomendado modificar o conteúdo para torná-lo mais consistente ou excluir este anúncio e criar um novo com imagens e categoria mais apropriadas.",
   "PreviewListingPage.verificationErrorNetwork": "Não foi possível verificar as alterações. Ocorreu um erro de conexão. Por favor, tente novamente mais tarde ou exclua este anúncio e crie um novo.",
   "PreviewListingPage.verifyingTitle": "Verificando alterações...",
+  "PreviewListingPage.resettingTitle": "Redefinindo...",
   "PreviewListingPage.deleteDraftButton": "Excluir anúncio",
   "PreviewListingPage.deleteDraftDialogTitle": "Excluir anúncio",
   "PreviewListingPage.deleteDraftConfirm": "Tem certeza de que deseja excluir este anúncio em rascunho? Esta ação não pode ser desfeita.",

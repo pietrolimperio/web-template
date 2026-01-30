@@ -1847,6 +1847,7 @@
   "PreviewListingPage.verificationError": "Si consiglia di modificare il contenuto per renderlo più coerente o di eliminare questo annuncio e crearne uno nuovo",
   "PreviewListingPage.verificationErrorNetwork": "Impossibile verificare le modifiche. Si è verificato un errore di connessione. Riprova più tardi o elimina questo annuncio e crearne uno nuovo.",
   "PreviewListingPage.verifyingTitle": "Verifica modifiche in corso...",
+  "PreviewListingPage.resettingTitle": "Ripristino in corso...",
   "PreviewListingPage.deleteDraftButton": "Elimina annuncio",
   "PreviewListingPage.deleteDraftDialogTitle": "Elimina annuncio",
   "PreviewListingPage.deleteDraftConfirm": "Sei sicuro di voler eliminare questo annuncio in bozza? Questa azione non può essere annullata.",
