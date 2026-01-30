@@ -334,7 +334,7 @@ const QuestionModal = ({
                 type="button"
                 onClick={handlePrevious}
                 disabled={isFirstQuestion || isRefining}
-                className={css.secondaryButton}
+                className={css.marketplaceTextButton}
               >
                 ← <FormattedMessage id="QuestionModal.previousButton" defaultMessage="Previous" />
               </button>
@@ -344,7 +344,7 @@ const QuestionModal = ({
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className={css.secondaryButton}
+                  className={css.skipButton}
                   disabled={isRefining}
                 >
                   <FormattedMessage id="QuestionModal.skipButton" defaultMessage="Skip" />
@@ -352,7 +352,7 @@ const QuestionModal = ({
                 <button
                   type="button"
                   onClick={handleSkipAll}
-                  className={css.secondaryButton}
+                  className={css.skipAllButton}
                   disabled={isRefining}
                 >
                   <FormattedMessage id="QuestionModal.skipAllButton" defaultMessage="Skip All" />

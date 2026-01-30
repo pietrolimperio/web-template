@@ -341,6 +341,71 @@
   cursor: not-allowed;
 }
 
+.marketplaceTextButton {
+  padding: 12px 20px;
+  background-color: transparent;
+  color: var(--marketplaceColor);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.marketplaceTextButton:hover:not(:disabled) {
+  background-color: transparent;
+  opacity: 0.8;
+}
+
+.marketplaceTextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skipButton {
+  padding: 12px 24px;
+  background-color: var(--marketplaceColorSecondary);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skipButton:hover:not(:disabled) {
+  background-color: var(--marketplaceColorSecondaryDark);
+}
+
+.skipButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skipAllButton {
+  padding: 12px 20px;
+  background-color: transparent;
+  color: var(--matterColor);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skipAllButton:hover:not(:disabled) {
+  color: var(--marketplaceColor);
+  background-color: transparent;
+}
+
+.skipAllButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Loading Overlay */
 .loadingOverlay {
   position: fixed;
