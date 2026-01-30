@@ -264,6 +264,44 @@ export const mapProductToListingData = (productAnalysis, config) => {
     calendarAvailability,
   } = productAnalysis;
 
+  // Normalize condition to always use English values
+  const normalizeCondition = (conditionValue) => {
+    if (!conditionValue) return 'Used';
+    const normalized = String(conditionValue).trim();
+    // Map common variations to standard English values
+    const conditionMap = {
+      'new': 'New',
+      'like new': 'Like New',
+      'like-new': 'Like New',
+      'likenew': 'Like New',
+      'used': 'Used',
+      'refurbished': 'Refurbished',
+      'refurb': 'Refurbished',
+    };
+    const lowerNormalized = normalized.toLowerCase();
+    return conditionMap[lowerNormalized] || normalized;
+  };
+
+  // Normalize brand: always include it in publicData, even if "N/A"
+  const normalizeBrand = (brandValue) => {
+    if (!brandValue) return 'N/A';
+    const normalized = String(brandValue).trim();
+    // If brand is empty, return "N/A", otherwise return normalized value
+    if (normalized === '') {
+      return 'N/A';
+    }
+    // Normalize "N/A" variations to standard "N/A"
+    if (normalized.toLowerCase() === 'n/a' || 
+        normalized.toLowerCase() === 'na' ||
+        normalized.toLowerCase() === 'n.a.') {
+      return 'N/A';
+    }
+    return normalized;
+  };
+
+  const normalizedCondition = normalizeCondition(fields.condition);
+  const normalizedBrand = normalizeBrand(fields.brand);
+
   // Map to Sharetribe structure
   const listingData = {
     title: fields.title || 'Untitled',
@@ -275,8 +313,8 @@ export const mapProductToListingData = (productAnalysis, config) => {
       ...(categoryId != null && { categoryId: categoryId }),
       ...(subcategoryId != null && { subcategoryId: subcategoryId }),
       ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId }),
-      brand: fields.brand || '',
-      condition: fields.condition || 'Used',
+      brand: normalizedBrand, // Always include brand, even if "N/A"
+      condition: normalizedCondition,
       // Map weight and dimensions from API (same keys in publicData)
       ...(fields.weight != null && fields.weight !== '' && { weight: fields.weight }),
       ...(fields.dimensions != null && fields.dimensions !== '' && { dimensions: fields.dimensions }),

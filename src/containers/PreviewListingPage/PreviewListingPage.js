@@ -753,11 +753,39 @@ export const PreviewListingPageComponent = props => {
           currency: currentListing.attributes?.price?.currency || config.currency || 'EUR',
         };
       } else if (fieldName === 'brand' || fieldName === 'condition') {
-        // Update publicData for brand and condition
+        // Normalize condition to always use English values
+        let normalizedValue = value;
+        if (fieldName === 'condition') {
+          const conditionMap = {
+            'new': 'New',
+            'like new': 'Like New',
+            'like-new': 'Like New',
+            'likenew': 'Like New',
+            'used': 'Used',
+            'refurbished': 'Refurbished',
+            'refurb': 'Refurbished',
+          };
+          const lowerValue = String(value).trim().toLowerCase();
+          normalizedValue = conditionMap[lowerValue] || String(value).trim();
+        } else if (fieldName === 'brand') {
+          // Normalize brand: always include it in publicData, even if "N/A"
+          const normalizedBrand = String(value).trim();
+          if (normalizedBrand === '') {
+            normalizedValue = 'N/A';
+          } else if (normalizedBrand.toLowerCase() === 'n/a' || 
+                     normalizedBrand.toLowerCase() === 'na' ||
+                     normalizedBrand.toLowerCase() === 'n.a.') {
+            normalizedValue = 'N/A';
+          } else {
+            normalizedValue = normalizedBrand;
+          }
+        }
+        
+        // Update publicData for brand and condition (always include brand, even if "N/A")
         updateData.id = listingId;
         updateData.publicData = {
           ...currentListing.attributes?.publicData,
-          [fieldName]: value,
+          [fieldName]: normalizedValue,
         };
       }
 
@@ -3206,7 +3234,20 @@ export const PreviewListingPageComponent = props => {
                       ) : (
                         <span className={css.detailValue}>
                           {(() => {
-                            const condition = fieldValues.condition || listing.attributes?.publicData?.condition || 'Used';
+                            // Normalize condition to ensure it uses English values
+                            const rawCondition = fieldValues.condition || listing.attributes?.publicData?.condition || 'Used';
+                            const conditionMap = {
+                              'new': 'New',
+                              'like new': 'Like New',
+                              'like-new': 'Like New',
+                              'likenew': 'Like New',
+                              'used': 'Used',
+                              'refurbished': 'Refurbished',
+                              'refurb': 'Refurbished',
+                            };
+                            const lowerCondition = String(rawCondition).trim().toLowerCase();
+                            const condition = conditionMap[lowerCondition] || String(rawCondition).trim();
+                            
                             let conditionKey = 'PreviewListingPage.condition.used';
                             if (condition === 'New') {
                               conditionKey = 'PreviewListingPage.condition.new';
@@ -3231,51 +3272,64 @@ export const PreviewListingPageComponent = props => {
                       )}
                     </div>
 
-                    {/* Brand Field */}
-                    <div className={css.detailItem}>
-                      <span className={css.detailLabel}>
-                        <FormattedMessage id="PreviewListingPage.brand" defaultMessage="Brand" />:
-                      </span>
-                      {editingField === 'brand' && isDraftMode ? (
-                        <div className={css.detailEditWrapper}>
-                          <input
-                            type="text"
-                            value={fieldValues.brand || listing.attributes?.publicData?.brand || ''}
-                            onChange={e => handleChangeField('brand', e.target.value)}
-                            className={css.detailInput}
-                            autoFocus
-                          />
-                          <div className={css.editActions}>
-                            <button
-                              onClick={() => handleSaveField('brand')}
-                              className={css.saveButton}
-                              disabled={updatingListing}
-                            >
-                              <FormattedMessage id="PreviewListingPage.saveButton" />
-                            </button>
-                            <button
-                              onClick={() => handleCancelEdit('brand')}
-                              className={css.cancelButton}
-                              disabled={updatingListing}
-                            >
-                              <FormattedMessage id="PreviewListingPage.cancelButton" />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className={css.detailValue}>
-                          {fieldValues.brand || listing.attributes?.publicData?.brand || ''}
-                          {isDraftMode && (
-                            <button onClick={() => handleEditField('brand')} className={css.editLink}>
-                              <FormattedMessage
-                                id="PreviewListingPage.editLink"
-                                defaultMessage="edit"
+                    {/* Brand Field - Only show if brand exists and is not "N/A" */}
+                    {(() => {
+                      const brandValue = fieldValues.brand || listing.attributes?.publicData?.brand || '';
+                      const normalizedBrand = brandValue.trim();
+                      const isBrandValid = normalizedBrand && 
+                                         normalizedBrand.toLowerCase() !== 'n/a' && 
+                                         normalizedBrand.toLowerCase() !== 'na' &&
+                                         normalizedBrand.toLowerCase() !== 'n.a.';
+                      
+                      if (!isBrandValid) return null;
+                      
+                      return (
+                        <div className={css.detailItem}>
+                          <span className={css.detailLabel}>
+                            <FormattedMessage id="PreviewListingPage.brand" defaultMessage="Brand" />:
+                          </span>
+                          {editingField === 'brand' && isDraftMode ? (
+                            <div className={css.detailEditWrapper}>
+                              <input
+                                type="text"
+                                value={fieldValues.brand || listing.attributes?.publicData?.brand || ''}
+                                onChange={e => handleChangeField('brand', e.target.value)}
+                                className={css.detailInput}
+                                autoFocus
                               />
-                            </button>
+                              <div className={css.editActions}>
+                                <button
+                                  onClick={() => handleSaveField('brand')}
+                                  className={css.saveButton}
+                                  disabled={updatingListing}
+                                >
+                                  <FormattedMessage id="PreviewListingPage.saveButton" />
+                                </button>
+                                <button
+                                  onClick={() => handleCancelEdit('brand')}
+                                  className={css.cancelButton}
+                                  disabled={updatingListing}
+                                >
+                                  <FormattedMessage id="PreviewListingPage.cancelButton" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className={css.detailValue}>
+                              {fieldValues.brand || listing.attributes?.publicData?.brand || ''}
+                              {isDraftMode && (
+                                <button onClick={() => handleEditField('brand')} className={css.editLink}>
+                                  <FormattedMessage
+                                    id="PreviewListingPage.editLink"
+                                    defaultMessage="edit"
+                                  />
+                                </button>
+                              )}
+                            </span>
                           )}
-                        </span>
-                      )}
-                    </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Details Section - Key Features Below Title */}
