@@ -2900,7 +2900,7 @@ export const PreviewListingPageComponent = props => {
                         >
                           <FormattedMessage
                             id="PreviewListingPage.resetToOriginal"
-                            defaultMessage="Ripristina allo stato originale"
+                            defaultMessage="Ripristina annuncio originale"
                           />
                         </button>
                       </div>

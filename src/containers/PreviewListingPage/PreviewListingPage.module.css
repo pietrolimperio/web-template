@@ -150,8 +150,8 @@
 }
 
 .resetToOriginalLink:hover:not(:disabled) {
-  background-color: var(--marketplaceColorSecondaryDark);
-  border-color: var(--marketplaceColorSecondaryDark);
+  background-color: var(--marketplaceColorDark);
+  border-color: var(--marketplaceColorDark);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
