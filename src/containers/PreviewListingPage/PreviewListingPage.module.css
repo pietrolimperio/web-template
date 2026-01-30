@@ -215,8 +215,7 @@
 }
 
 .thumbnail:hover {
-  border-color: var(--marketplaceColor);
-  transform: scale(1.05);
+  border-color: var(--marketplaceColor);;
 }
 
 .thumbnailActive {
