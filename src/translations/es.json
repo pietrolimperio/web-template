@@ -1794,6 +1794,7 @@
   "PreviewListingPage.verificationNeededMessage": "Tu cuenta de Stripe requiere verificación adicional. Por favor completa el proceso de verificación para comenzar a recibir pagos.",
   "PreviewListingPage.editLink": "editar",
   "PreviewListingPage.cannotDeleteLastImage": "Agrega una nueva imagen antes de eliminar esta. Cada anuncio debe tener al menos una imagen.",
+  "PreviewListingPage.replaceImage": "Reemplazar imagen {index}",
   "PreviewListingPage.regenerateLink": "regenerar",
   "PreviewListingPage.regenerating": "regenerando...",
   "PreviewListingPage.modifyLink": "modificar",

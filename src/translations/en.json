@@ -1847,6 +1847,7 @@
   "PreviewListingPage.resetErrorTitle": "Error",
   "PreviewListingPage.resetError": "Unable to restore original state. Please try again later.",
   "PreviewListingPage.deleteImage": "Delete image {index}",
+  "PreviewListingPage.replaceImage": "Replace image {index}",
   "PreviewListingPage.deleteImageConfirm": "Are you sure you want to delete this image?",
   "PreviewListingPage.deleteImageWarning": "This action cannot be undone.",
   "PreviewListingPage.deleteButton": "Delete",

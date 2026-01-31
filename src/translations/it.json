@@ -1804,6 +1804,7 @@
   "PreviewListingPage.invalidImageType": "Sono supportate solo immagini PNG e JPEG.",
   "PreviewListingPage.uploadError": "Caricamento immagine fallito. Riprova.",
   "PreviewListingPage.deleteImage": "Elimina immagine {index}",
+  "PreviewListingPage.replaceImage": "Sostituisci immagine {index}",
   "PreviewListingPage.deleteImageConfirm": "Sei sicuro di voler eliminare questa immagine?",
   "PreviewListingPage.deleteImageWarning": "Questa azione non può essere annullata.",
   "PreviewListingPage.deleteButton": "Elimina",

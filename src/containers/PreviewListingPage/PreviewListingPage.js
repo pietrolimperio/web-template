@@ -1282,6 +1282,82 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
+  const handleImageReplace = async (imageId, imageIndex, event) => {
+    // No image replacement for published listing
+    if (!isDraftMode) {
+      return;
+    }
+    
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      alert(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.invalidImageType' },
+          { defaultMessage: 'Only PNG and JPEG images are supported.' }
+        )
+      );
+      return;
+    }
+
+    setUploadingImage(true);
+    setDeletingImageId(imageId);
+    
+    try {
+      // Extract UUID from imageId
+      const imgUuid = imageId.uuid || (typeof imageId === 'string' ? imageId : imageId.toString());
+      
+      if (!imgUuid) {
+        console.error('❌ Cannot replace image: UUID is missing');
+        throw new Error('Image UUID is missing');
+      }
+
+      // Check if image is in original snapshot
+      const originalImageUuids = originalSnapshot?.images || [];
+      const isOriginalImage = originalImageUuids.includes(imgUuid);
+
+      // Upload the new image first
+      await onUploadImage(listingId, file, config);
+
+      // Then handle the old image
+      if (isOriginalImage) {
+        // Image is in original snapshot: hide it instead of deleting
+        setHiddenImageIds(prev => {
+          const newSet = new Set([...prev, imgUuid]);
+          return newSet;
+        });
+      } else {
+        // Image was added later: delete it permanently
+        const allImages = getAllImages();
+        await onDeleteImage(listingId, imageId, allImages, config);
+        // Reload listing to get updated image list
+        await onFetchListing({ id: listingId }, config);
+      }
+
+      // Track that sensitive fields (images) have changed
+      setHasSensitiveFieldsChanged(true);
+      // Save flag to privateData
+      await saveSensitiveFieldsModified(true);
+
+      // Reset the file input so the same file can be uploaded again if needed
+      event.target.value = '';
+    } catch (error) {
+      console.error('❌ Failed to replace image:', error);
+      alert(
+        intl.formatMessage(
+          { id: 'PreviewListingPage.uploadError' },
+          { defaultMessage: 'Failed to upload image. Please try again.' }
+        )
+      );
+    } finally {
+      setUploadingImage(false);
+      setDeletingImageId(null);
+    }
+  };
+
   // Helper to get visible images (filter out hidden ones)
   const getVisibleImages = useCallback((images) => {
     if (!images || !Array.isArray(images)) return [];
@@ -3058,50 +3134,98 @@ export const PreviewListingPageComponent = props => {
                                   className={css.thumbnailImage}
                                 />
                               </div>
-                              {/* Pulsante elimina immagine – solo in modalità bozza */}
+                              {/* Pulsante elimina/sostituisci immagine – solo in modalità bozza */}
                               {isDraftMode && (
                                 <div className={css.thumbnailDeleteButtonWrapper}>
-                                  <button
-                                    className={css.thumbnailDeleteButton}
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      if (isLastImage) {
-                                        // Mostra tooltip quando si prova a cancellare l'ultima immagine
-                                        setShowDeleteImageTooltipIndex(index);
-                                        setTimeout(() => setShowDeleteImageTooltipIndex(null), 3000);
-                                      } else {
+                                  {isLastImage ? (
+                                    // Se c'è solo un'immagine, mostra icona di update per sostituirla
+                                    <label 
+                                      className={css.thumbnailReplaceButton}
+                                      aria-label={intl.formatMessage(
+                                        { id: 'PreviewListingPage.replaceImage' },
+                                        { index: index + 1 }
+                                      )}
+                                    >
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={e => {
+                                          e.stopPropagation();
+                                          handleImageReplace(image.id || image.imageId, index, e);
+                                        }}
+                                        style={{ display: 'none' }}
+                                        disabled={uploadingImage || isDeleting}
+                                      />
+                                      {uploadingImage || isDeleting ? (
+                                        '⏳'
+                                      ) : (
+                                        <svg
+                                          className={css.updateIcon}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={1}
+                                            d="M4,12A8,8,0,0,1,18.93,8"
+                                          />
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M20,12A8,8,0,0,1,5.07,16"
+                                          />
+                                          <polyline
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            points="14 8 19 8 19 3"
+                                          />
+                                          <polyline
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            points="10 16 5 16 5 21"
+                                          />
+                                        </svg>
+                                      )}
+                                    </label>
+                                  ) : (
+                                    // Se ci sono più immagini, mostra icona di delete
+                                    <button
+                                      className={css.thumbnailDeleteButton}
+                                      onClick={e => {
+                                        e.stopPropagation();
                                         handleImageDelete(image.id || image.imageId, index);
-                                      }
-                                    }}
-                                    disabled={isDisabled}
-                                    aria-label={intl.formatMessage(
-                                      { id: 'PreviewListingPage.deleteImage' },
-                                      { index: index + 1 }
-                                    )}
-                                  >
-                                    {isDeleting ? (
-                                      '⏳'
-                                    ) : (
-                                      <svg
-                                        className={css.trashIcon}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                      </svg>
-                                    )}
-                                  </button>
-                                  {showDeleteImageTooltipIndex === index && isLastImage && (
-                                    <div className={css.deleteImageTooltip}>
-                                      <FormattedMessage id="PreviewListingPage.cannotDeleteLastImage" />
-                                    </div>
+                                      }}
+                                      disabled={isDisabled}
+                                      aria-label={intl.formatMessage(
+                                        { id: 'PreviewListingPage.deleteImage' },
+                                        { index: index + 1 }
+                                      )}
+                                    >
+                                      {isDeleting ? (
+                                        '⏳'
+                                      ) : (
+                                        <svg
+                                          className={css.trashIcon}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                          />
+                                        </svg>
+                                      )}
+                                    </button>
                                   )}
                                 </div>
                               )}
