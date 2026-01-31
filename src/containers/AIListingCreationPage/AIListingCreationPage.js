@@ -101,7 +101,6 @@ export const AIListingCreationPageComponent = ({
   const [errorType, setErrorType] = useState(null); // 'PROHIBITED_CATEGORY' or null
 
   const user = ensureCurrentUser(currentUser);
-  const emailVerified = user.attributes?.emailVerified || false;
 
   const parseSuggestedPrice = analysis => {
     const raw = analysis?.fields?.priceSuggestion;
@@ -685,15 +684,7 @@ export const AIListingCreationPageComponent = ({
             />
           )}
 
-          {/* Show content with opacity overlay if email not verified */}
-          <div
-            style={{
-              opacity: emailVerified ? 1 : 0.3,
-              pointerEvents: emailVerified ? 'auto' : 'none',
-            }}
-          >
-            {renderContent()}
-          </div>
+          {renderContent()}
         </div>
       </LayoutSingleColumn>
     </Page>

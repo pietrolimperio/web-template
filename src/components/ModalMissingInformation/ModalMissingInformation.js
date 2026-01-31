@@ -85,17 +85,13 @@ class ModalMissingInformation extends Component {
     // Is the current page whitelisted?
     const isPageWhitelisted = whitelistedPaths.includes(newLocation.pathname);
 
-    // Check if user is on the AI listing creation page
-    const isCreatingListing = newLocation.pathname === '/l/new';
-    
     // Track if path changes inside Page level component
     const pathChanged = newLocation.pathname !== this.props.location.pathname;
     const notRemindedYet =
       !this.state.showMissingInformationReminder && !this.state.hasSeenMissingInformationReminder;
 
     // Is the reminder already shown on current page
-    // For /create page, always show if needed (ignore hasSeenMissingInformationReminder)
-    const showOnPathChange = isCreatingListing || notRemindedYet || pathChanged;
+    const showOnPathChange = notRemindedYet || pathChanged;
 
     if (!isPageWhitelisted && showOnPathChange) {
       // Emails are sent when order is initiated
@@ -106,21 +102,12 @@ class ModalMissingInformation extends Component {
 
       const emailUnverified = !!currentUser.id && !currentUser.attributes.emailVerified;
       
-      // Show reminder if user has listings/orders OR is trying to create a new listing
-      const emailVerificationNeeded = (hasListingsOrOrders || isCreatingListing) && emailUnverified;
+      // Show reminder if user has listings/orders (but NOT when creating a new listing)
+      const emailVerificationNeeded = hasListingsOrOrders && emailUnverified;
 
       // Show reminder
       if (emailVerificationNeeded) {
-        // Always show and reset "seen" flag when on /create page
-        if (isCreatingListing) {
-          if (this.state.showMissingInformationReminder !== EMAIL_VERIFICATION || 
-              this.state.hasSeenMissingInformationReminder !== false) {
-            this.setState({ 
-              showMissingInformationReminder: EMAIL_VERIFICATION,
-              hasSeenMissingInformationReminder: false
-            });
-          }
-        } else if (this.state.showMissingInformationReminder !== EMAIL_VERIFICATION) {
+        if (this.state.showMissingInformationReminder !== EMAIL_VERIFICATION) {
           // Only update if not already showing
           this.setState({ 
             showMissingInformationReminder: EMAIL_VERIFICATION
@@ -129,15 +116,6 @@ class ModalMissingInformation extends Component {
       } else if (!emailVerificationNeeded && this.state.showMissingInformationReminder) {
         // Clear modal if email is now verified
         this.setState({ showMissingInformationReminder: null });
-      }
-    } else if (!isPageWhitelisted && isCreatingListing && this.state.showMissingInformationReminder !== EMAIL_VERIFICATION) {
-      // Additional check: if on /create page and modal not showing, check if it should be
-      const emailUnverified = !!currentUser.id && !currentUser.attributes.emailVerified;
-      if (emailUnverified) {
-        this.setState({ 
-          showMissingInformationReminder: EMAIL_VERIFICATION,
-          hasSeenMissingInformationReminder: false
-        });
       }
     }
   }
@@ -162,13 +140,7 @@ class ModalMissingInformation extends Component {
 
     const currentUserLoaded = user && user.id;
     
-    // Check if user is on the AI listing creation page - modal should be non-closable there
-    const isCreatingListing = location?.pathname === '/l/new';
-    const emailUnverified = currentUserLoaded && !user.attributes.emailVerified;
-    
-    // Force show modal on /create page if email is not verified
-    const shouldShowModal = this.state.showMissingInformationReminder === EMAIL_VERIFICATION ||
-                           (isCreatingListing && emailUnverified);
+    const shouldShowModal = this.state.showMissingInformationReminder === EMAIL_VERIFICATION;
     
     if (currentUserLoaded && isUserAuthorized(currentUser)) {
       if (shouldShowModal) {
@@ -184,25 +156,21 @@ class ModalMissingInformation extends Component {
       }
     }
     
-    const closeButtonMessage = !isCreatingListing ? (
+    const closeButtonMessage = (
       <FormattedMessage id="ModalMissingInformation.closeVerifyEmailReminder" />
-    ) : null;
+    );
 
     return (
       <Modal
         id="MissingInformationReminder"
         containerClassName={containerClassName}
         isOpen={shouldShowModal}
-        onClose={
-          isCreatingListing
-            ? () => {} // Non-closable on /create page
-            : () => {
-                this.setState({
-                  showMissingInformationReminder: null,
-                  hasSeenMissingInformationReminder: true,
-                });
-              }
-        }
+        onClose={() => {
+          this.setState({
+            showMissingInformationReminder: null,
+            hasSeenMissingInformationReminder: true,
+          });
+        }}
         usePortal
         onManageDisableScrolling={onManageDisableScrolling}
         closeButtonMessage={closeButtonMessage}

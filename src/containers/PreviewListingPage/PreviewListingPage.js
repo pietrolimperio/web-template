@@ -83,6 +83,8 @@ import {
   requestDeleteDraft,
 } from '../EditListingPage/EditListingPage.duck';
 import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
+import { sendVerificationEmail } from '../../ducks/user.duck';
+import EmailReminder from '../../components/ModalMissingInformation/EmailReminder';
 import productApiInstance, { createProductSnapshot, imageEntitiesToFiles } from '../../util/productApi';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
@@ -167,6 +169,9 @@ export const PreviewListingPageComponent = props => {
     getAccountLinkInProgress,
     createStripeAccountInProgress,
     onManageDisableScrolling,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
+    onResendVerificationEmail,
     params,
   } = props;
 
@@ -188,6 +193,7 @@ export const PreviewListingPageComponent = props => {
   const currentUserLoaded = !!ensuredCurrentUser.id;
 
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   // Pre-select country based on locale (e.g., 'IT' for 'it-IT')
   const [selectedCountry, setSelectedCountry] = useState(() => getCountryForLocale(intl.locale));
   const [isCreatingStripeAccount, setIsCreatingStripeAccount] = useState(false);
@@ -1591,6 +1597,13 @@ export const PreviewListingPageComponent = props => {
       return;
     }
 
+    // Check if user email is verified before publishing
+    const emailUnverified = currentUserLoaded && !ensuredCurrentUser.attributes?.emailVerified;
+    if (emailUnverified) {
+      setShowVerificationModal(true);
+      return;
+    }
+
     // Verify changes before publishing if sensitive fields have changed
     let verificationPassed = true;
     if (hasSensitiveFieldsChanged) {
@@ -1712,6 +1725,8 @@ export const PreviewListingPageComponent = props => {
     hasSensitiveFieldsChanged,
     verifyChangesBeforePublish,
     verificationError,
+    currentUserLoaded,
+    ensuredCurrentUser,
   ]);
 
   useEffect(() => {
@@ -1730,6 +1745,13 @@ export const PreviewListingPageComponent = props => {
         });
     }
   }, [returnedFromStripe, isCheckingStripeStatus, onFetchStripeAccount]);
+
+  // Close verification modal when email is verified
+  useEffect(() => {
+    if (currentUserLoaded && ensuredCurrentUser.attributes?.emailVerified && showVerificationModal) {
+      setShowVerificationModal(false);
+    }
+  }, [currentUserLoaded, ensuredCurrentUser.attributes?.emailVerified, showVerificationModal]);
 
   // Separate effect to handle auto-publish after account data is loaded
   // Use a ref to track if we've already attempted to publish to prevent loops
@@ -4004,6 +4026,22 @@ export const PreviewListingPageComponent = props => {
           </div>
         </Modal>
 
+        {/* Email Verification Modal */}
+        <Modal
+          id="PreviewListingPage.verificationModal"
+          isOpen={showVerificationModal}
+          onClose={() => setShowVerificationModal(false)}
+          onManageDisableScrolling={onManageDisableScrolling}
+          usePortal
+        >
+          <EmailReminder
+            user={ensuredCurrentUser}
+            onResendVerificationEmail={onResendVerificationEmail}
+            sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+            sendVerificationEmailError={sendVerificationEmailError}
+          />
+        </Modal>
+
         {/* Price Modification Modal */}
         <Modal
           id="PreviewListingPage.priceModal"
@@ -5252,6 +5290,9 @@ PreviewListingPageComponent.propTypes = {
   onFetchStripeAccount: func.isRequired,
   getAccountLinkInProgress: bool,
   createStripeAccountInProgress: bool,
+  sendVerificationEmailInProgress: bool,
+  sendVerificationEmailError: propTypes.error,
+  onResendVerificationEmail: func.isRequired,
   params: shape({
     id: string.isRequired,
     returnURLType: string,
@@ -5273,7 +5314,11 @@ const createSlug = title => {
 };
 
 const mapStateToProps = state => {
-  const { currentUser } = state.user;
+  const { 
+    currentUser,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
+  } = state.user;
   const { publishListingError, publishInProgress } = state.EditListingPage;
   const {
     getAccountLinkInProgress,
@@ -5300,6 +5345,8 @@ const mapStateToProps = state => {
     getAccountLinkInProgress,
     getAccountLinkError,
     createStripeAccountInProgress,
+    sendVerificationEmailInProgress,
+    sendVerificationEmailError,
   };
 };
 
@@ -5314,6 +5361,7 @@ const mapDispatchToProps = dispatch => ({
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
+  onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
   onUploadImage: (listingId, imageFile, config) =>
     dispatch((dispatch, getState, sdk) => {
       const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
