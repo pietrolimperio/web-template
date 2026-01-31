@@ -3679,6 +3679,7 @@ export const PreviewListingPageComponent = props => {
                       readOnly={true}
                       availableFrom={currentListing.attributes?.publicData?.availableFrom}
                       availableUntil={currentListing.attributes?.publicData?.availableUntil}
+                      onMonthsContainerClick={() => setShowAvailabilityModal(true)}
                     />
                   </div>
 
@@ -3872,7 +3873,9 @@ export const PreviewListingPageComponent = props => {
                               className={css.priceCard}
                               style={{
                                 borderColor: config.branding?.marketplaceColor || '#4A90E2',
+                                cursor: 'pointer',
                               }}
+                              onClick={() => setShowPriceModal(true)}
                             >
                               <div className={css.priceCardPrice}>
                                 {formatPrice(defaultPrice)}
@@ -3892,7 +3895,9 @@ export const PreviewListingPageComponent = props => {
                                 className={css.priceCard}
                                 style={{
                                   borderColor: config.branding?.marketplaceColor || '#4A90E2',
+                                  cursor: 'pointer',
                                 }}
+                                onClick={() => setShowPriceModal(true)}
                               >
                                 <div className={css.priceCardPrice}>
                                   {variant.type === 'duration' && variant.percentageDiscount != null ? (

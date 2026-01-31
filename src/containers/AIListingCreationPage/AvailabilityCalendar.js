@@ -21,6 +21,7 @@ const AvailabilityCalendar = ({
   availableUntil = null, // End date of availability range
   singleMonth = false, // If true, always show only one month regardless of screen size
   autoSelectDates = true, // If false, calendar starts without any dates selected
+  onMonthsContainerClick = null, // Optional click handler for monthsContainer
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -432,14 +433,27 @@ const AvailabilityCalendar = ({
                   date.getTime() === hoveredDate.getTime() && 
                   rangeStart && rangeEnd && !selectingRange;
 
+                // Handle click: if readOnly and onMonthsContainerClick is provided, use it; otherwise use normal date click
+                const handleDayClick = (e) => {
+                  if (readOnly && onMonthsContainerClick) {
+                    e.preventDefault();
+                    onMonthsContainerClick(e);
+                  } else {
+                    handleDateClick(date);
+                  }
+                };
+
+                // Determine if button should be disabled
+                const isDayDisabled = isPast || isDisabled || (readOnly && !onMonthsContainerClick);
+
                 return (
                   <button
                     key={dayIdx}
                     type="button"
-                    onClick={() => handleDateClick(date)}
+                    onClick={handleDayClick}
                     onMouseEnter={() => handleDateHover(date)}
                     onMouseLeave={handleDateLeave}
-                    disabled={isPast || isDisabled || readOnly}
+                    disabled={isDayDisabled}
                     className={classNames(css.day, {
                       [css.daySelected]: isSelected && !isStart && !isEnd && !inRange,
                       [css.dayRangeStart]: isStart && !isSingleDay,
@@ -454,6 +468,7 @@ const AvailabilityCalendar = ({
                       [css.dayReadOnly]: readOnly,
                       [css.dayHoverClear]: isHoveredWithRange,
                     })}
+                    style={readOnly && onMonthsContainerClick && !isDayDisabled ? { cursor: 'pointer' } : undefined}
                   >
                     {day}
                   </button>
@@ -492,7 +507,20 @@ const AvailabilityCalendar = ({
         </button>
       </div>
 
-      <div className={css.monthsContainer}>
+      <div 
+        className={css.monthsContainer}
+        onClick={(e) => {
+          // Don't trigger if clicking on a button (day buttons will handle their own clicks, nav buttons, etc.)
+          if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            return;
+          }
+          // Trigger the handler if clicking on the container background or month container areas
+          if (onMonthsContainerClick) {
+            onMonthsContainerClick(e);
+          }
+        }}
+        style={onMonthsContainerClick ? { cursor: 'pointer' } : undefined}
+      >
         {renderMonth(0)}
         {!singleMonth && isLargeScreen && renderMonth(1)}
       </div>
