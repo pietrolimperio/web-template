@@ -8,7 +8,8 @@ import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE } from '../config/localeConfig';
 const PRODUCT_API_BASE_URL =
 process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api';
 const DEFAULT_MODELS = ['gemini-2.5-flash'];
-//const DEFAULT_MODELS = ['gemini-2.5-flash', 'gpt-5', 'claude-4.5-sonnet'];
+//const DEFAULT_MODELS =['gemini-2.5-flash','gemini-2.5-pro','gemini-3-flash-preview','gemini-2.5-flash-lite','claude-4.5-sonnet','claude-3-haiku','gpt-5.2','gpt-5.2-mini','grok-4-fast-reasoning','sonar-pro','sonar-reasoning'];
+const DEFAULT_PROMPT_VERSION = 'v2'; // Default prompt version: 'v1' (originale) or 'v2' (ottimizzato, default)
 
 /**
  * Product API Client Class
@@ -32,9 +33,10 @@ class ProductAPI {
    * Tries models in order, falling back to next model on error
    * @param {File[]} images - Array of image files (1-10)
    * @param {string} locale - Language locale (it-IT, fr-FR, es-ES, etc.) - defaults to current locale
+   * @param {string} promptVersion
    * @returns {Promise<ProductAnalysis>}
    */
-  async analyze(images, locale = this.locale) {
+  async analyze(images, locale = this.locale, promptVersion = DEFAULT_PROMPT_VERSION) {
     if (!images || images.length === 0) {
       throw new Error('At least one image is required');
     }
@@ -60,6 +62,7 @@ class ProductAPI {
         images.forEach(img => formData.append('images', img));
         formData.append('model', model);
         formData.append('locale', locale);
+        formData.append('promptVersion', promptVersion);
 
         const result = await this.call('analyze', formData);
         // Save the successful model for subsequent calls (refine, regenerate, etc.)
@@ -86,9 +89,10 @@ class ProductAPI {
    * @param {string} params.locale - Language locale (e.g., "en-US")
    * @param {number} params.totalQuestionsAsked - Total questions asked so far
    * @param {number} params.roundNumber - Current refinement round
+   * @param {string} params.promptVersion
    * @returns {Promise<ProductAnalysis>}
    */
-  async refine({ previousAnalysis, answers, locale = this.locale, totalQuestionsAsked, roundNumber }) {
+  async refine({ previousAnalysis, answers, locale = this.locale, totalQuestionsAsked, roundNumber, promptVersion = DEFAULT_PROMPT_VERSION }) {
     return await this.call('refine', {
       previousAnalysis,
       answers,
@@ -96,6 +100,7 @@ class ProductAPI {
       model: this.model,
       totalQuestionsAsked,
       roundNumber,
+      promptVersion,
     });
   }
 
@@ -103,14 +108,17 @@ class ProductAPI {
    * Regenerate a specific field
    * @param {Object} productAnalysis - Current analysis
    * @param {string} fieldName - Field to regenerate
+   * @param {string} locale - Language locale (default: current locale)
+   * @param {string} promptVersion
    * @returns {Promise<{fieldName: string, newValue: any}>}
    */
-  async regenerate(productAnalysis, fieldName, locale = this.locale) {
+  async regenerate(productAnalysis, fieldName, locale = this.locale, promptVersion = DEFAULT_PROMPT_VERSION) {
     return await this.call('regenerate-field', {
       productAnalysis,
       fieldName,
       locale,
       model: this.model,
+      promptVersion,
     });
   }
 
@@ -120,15 +128,17 @@ class ProductAPI {
    * @param {string} fromLocale - Source locale
    * @param {string} toLocale - Target locale
    * @param {string} category - Product category
+   * @param {string} promptVersion
    * @returns {Promise<Object>}
    */
-  async translate(fields, fromLocale, toLocale, category) {
+  async translate(fields, fromLocale, toLocale, category, promptVersion = DEFAULT_PROMPT_VERSION) {
     return await this.call('translate-fields', {
       fields,
       fromLocale,
       toLocale,
       category,
       model: this.model,
+      promptVersion,
     });
   }
 
@@ -150,10 +160,8 @@ class ProductAPI {
    * @param {Object} newSnapshot - New product snapshot after modifications
    * @param {string} locale - Locale code (default: current locale)
    * @param {string} model - AI model to use (default: current model)
-   * @param {number} categoryConfidenceThreshold - Minimum confidence threshold for category (default: 70)
-   * @param {number} subcategoryConfidenceThreshold - Minimum confidence threshold for subcategory (default: 70)
-   * @param {number} thirdCategoryConfidenceThreshold - Minimum confidence threshold for third category (default: 70)
    * @param {File[]} images - Optional array of product images (max 10 files, max 4MB per file)
+   * @param {string} promptVersion
    * @returns {Promise<Object>} Verification result with confidence scores and isValid flag
    */
   async verifyChanges(
@@ -161,7 +169,8 @@ class ProductAPI {
     newSnapshot,
     locale = this.locale,
     model = this.model,
-    images = null
+    images = null,
+    promptVersion = DEFAULT_PROMPT_VERSION
   ) {
     // If images are provided, use FormData; otherwise use JSON
     if (images && images.length > 0) {
@@ -195,6 +204,7 @@ class ProductAPI {
       formData.append('new', newStr);
       formData.append('locale', locale);
       formData.append('model', model);
+      formData.append('promptVersion', promptVersion);
       
       // Append images AFTER JSON fields
       images.forEach((img, index) => {
@@ -220,7 +230,8 @@ class ProductAPI {
         original,
         new: newSnapshot,
         locale,
-        model
+        model,
+        promptVersion
       };
       
       return await this.call('verify-changes', payload);
