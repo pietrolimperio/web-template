@@ -1832,6 +1832,7 @@
   "PreviewListingPage.goToConfiguration": "Zur Konfiguration",
   "PreviewListingPage.guestDescription": "Melden Sie sich an, um die Anzeige zu bearbeiten und zu veröffentlichen. ",
   "PreviewListingPage.loginLink": "Anmelden",
+  "PreviewListingPage.guestTooltip": "Melden Sie sich an, um dieses Feld zu bearbeiten",
   "PreviewListingPage.condition": "Zustand",
   "PreviewListingPage.brand": "Marke",
   "PreviewListingPage.condition.new": "Neu",

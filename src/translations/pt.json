@@ -1832,6 +1832,7 @@
   "PreviewListingPage.goToConfiguration": "Ir para Configuração",
   "PreviewListingPage.guestDescription": "Faça login para editar o anúncio e publicá-lo. ",
   "PreviewListingPage.loginLink": "Entrar",
+  "PreviewListingPage.guestTooltip": "Faça login para editar este campo",
   "PreviewListingPage.condition": "Condição",
   "PreviewListingPage.brand": "Marca",
   "PreviewListingPage.condition.new": "Novo",

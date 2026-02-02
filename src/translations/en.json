@@ -1881,6 +1881,7 @@
   "PreviewListingPage.goToConfiguration": "Go to Configuration",
   "PreviewListingPage.guestDescription": "Login to edit the listing and publish it. ",
   "PreviewListingPage.loginLink": "Login",
+  "PreviewListingPage.guestTooltip": "Login to edit this field",
   "Categories.constructionEquipment&Tools": "Construction Equipment & Tools",
   "Categories.drillsAndScrewdrivers": "Drills and Screwdrivers",
   "Categories.rotaryHammer": "Rotary Hammer",

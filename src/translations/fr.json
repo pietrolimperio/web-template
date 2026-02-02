@@ -1832,6 +1832,7 @@
   "PreviewListingPage.goToConfiguration": "Aller à la Configuration",
   "PreviewListingPage.guestDescription": "Connectez-vous pour modifier l'annonce et la publier. ",
   "PreviewListingPage.loginLink": "Se connecter",
+  "PreviewListingPage.guestTooltip": "Connectez-vous pour modifier ce champ",
   "PreviewListingPage.condition": "État",
   "PreviewListingPage.brand": "Marque",
   "PreviewListingPage.condition.new": "Neuf",

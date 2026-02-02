@@ -1836,6 +1836,7 @@
   "PreviewListingPage.goToConfiguration": "Vai alla Configurazione",
   "PreviewListingPage.guestDescription": " per modificare l'inserzione e pubblicarla. ",
   "PreviewListingPage.loginLink": "Accedi",
+  "PreviewListingPage.guestTooltip": "Accedi per modificare questo campo",
   "PreviewListingPage.condition": "Condizione",
   "PreviewListingPage.brand": "Marca",
   "PreviewListingPage.condition.new": "Nuovo",
