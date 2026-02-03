@@ -1939,8 +1939,19 @@ export const PreviewListingPageComponent = props => {
       return;
     }
 
-    // If guest user, redirect to login with flag to create draft after authentication
-    if (isGuest || !currentUserLoaded) {
+    // If authenticated but not verified: show verification modal (same as /l/edit)
+    // This applies to both guest preview and regular draft - user must verify email before publishing
+    const emailUnverified = currentUserLoaded && !ensuredCurrentUser.attributes?.emailVerified;
+    if (emailUnverified) {
+      if (isGuestPreview) {
+        setGuestListingPendingPublish();
+      }
+      setShowVerificationModal(true);
+      return;
+    }
+
+    // If guest user (not authenticated), redirect to login with flag to create draft after authentication
+    if (!currentUserLoaded || !currentUser?.id) {
       setGuestListingPendingPublish();
       const loginPath = createResourceLocatorString(
         'LoginPage',
@@ -1967,13 +1978,6 @@ export const PreviewListingPageComponent = props => {
         {}
       );
       history.push(listingPath);
-      return;
-    }
-
-    // Check if user email is verified before publishing
-    const emailUnverified = currentUserLoaded && !ensuredCurrentUser.attributes?.emailVerified;
-    if (emailUnverified) {
-      setShowVerificationModal(true);
       return;
     }
 
@@ -2098,8 +2102,10 @@ export const PreviewListingPageComponent = props => {
     hasSensitiveFieldsChanged,
     verifyChangesBeforePublish,
     verificationError,
+    currentUser,
     currentUserLoaded,
     ensuredCurrentUser,
+    isGuestPreview,
   ]);
 
   useEffect(() => {
