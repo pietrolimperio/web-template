@@ -15,6 +15,7 @@ import { createResourceLocatorString, findRouteByRouteName } from '../../util/ro
 import { isScrollingDisabled, manageDisableScrolling } from '../../ducks/ui.duck';
 import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 import { geocodeAddress, getCountryForLocale } from '../../util/maps';
+import devLog from '../../util/devLog';
 
 // Helper function to delete image from listing
 const deleteImageFromListing = (currentImages, imageUuid, listingId, config, sdk, dispatch) => {
@@ -902,8 +903,8 @@ export const PreviewListingPageComponent = props => {
       const newSnapshot = createProductSnapshot(listingWithVisibleImages);
 
       // Log snapshots before calling verifyChanges
-      console.log('📸 Original Snapshot:', JSON.stringify(originalSnapshot, null, 2));
-      console.log('📸 New Snapshot:', JSON.stringify(newSnapshot, null, 2));
+      devLog('📸 Original Snapshot:', JSON.stringify(originalSnapshot, null, 2));
+      devLog('📸 New Snapshot:', JSON.stringify(newSnapshot, null, 2));
 
       // Get locale
       const locale =

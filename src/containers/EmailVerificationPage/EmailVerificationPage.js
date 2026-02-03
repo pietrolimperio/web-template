@@ -19,6 +19,7 @@ import {
   IconSpinner,
 } from '../../components';
 import { PENDING_VERIFICATION_TOKEN_KEY } from './EmailVerificationPage.duck';
+import devLog from '../../util/devLog';
 
 import css from './EmailVerificationPage.module.css';
 
@@ -107,25 +108,25 @@ export const EmailVerificationPageComponent = props => {
   useEffect(() => {
     // Only trigger if we need to fetch and haven't exceeded max retries
     if (user.id && profilePrivateData === undefined && !userFetchInProgress && fetchRetryCount < MAX_FETCH_RETRIES) {
-      console.log(`📧 profilePrivateData undefined, forcing user fetch (attempt ${fetchRetryCount + 1}/${MAX_FETCH_RETRIES})...`);
+      devLog(`📧 profilePrivateData undefined, forcing user fetch (attempt ${fetchRetryCount + 1}/${MAX_FETCH_RETRIES})...`);
       setUserFetchAttempted(true);
       setUserFetchInProgress(true);
       
       onFetchCurrentUser({ enforce: true })
         .then(() => {
-          console.log('✅ User fetch completed, waiting for Redux to update...');
+          devLog('✅ User fetch completed, waiting for Redux to update...');
           // Wait a bit for Redux to update
           setTimeout(() => {
             // If we haven't exceeded retries, retry (the effect will check if profilePrivateData is available)
             if (fetchRetryCount < MAX_FETCH_RETRIES - 1) {
-              console.log(`⚠️ Will retry fetch (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
+              devLog(`⚠️ Will retry fetch (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
               setUserFetchInProgress(false);
               // Increment retry count to trigger retry
               setTimeout(() => {
                 setFetchRetryCount(prev => prev + 1);
               }, FETCH_RETRY_DELAY);
             } else {
-              console.log('⚠️ Max retries reached, profilePrivateData still undefined');
+              devLog('⚠️ Max retries reached, profilePrivateData still undefined');
               setUserFetchInProgress(false);
             }
           }, FETCH_RETRY_DELAY);
@@ -133,7 +134,7 @@ export const EmailVerificationPageComponent = props => {
         .catch(err => {
           console.error('❌ User fetch failed:', err);
           if (fetchRetryCount < MAX_FETCH_RETRIES - 1) {
-            console.log(`⚠️ Fetch failed, will retry (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
+            devLog(`⚠️ Fetch failed, will retry (attempt ${fetchRetryCount + 2}/${MAX_FETCH_RETRIES})...`);
             setUserFetchInProgress(false);
             // Increment retry count to trigger retry
             setTimeout(() => {
@@ -154,18 +155,18 @@ export const EmailVerificationPageComponent = props => {
     // CRITICAL: Do NOT proceed with verification if we don't have profilePrivateData yet
     // We need to be sure about the Stripe onboarding status
     if (profilePrivateData === undefined && userFetchAttempted) {
-      console.log('📧 Waiting for profilePrivateData to be available before proceeding...');
+      devLog('📧 Waiting for profilePrivateData to be available before proceeding...');
       return;
     }
 
     // If fetch is in progress, wait
     if (userFetchInProgress) {
-      console.log('📧 User fetch in progress, waiting...');
+      devLog('📧 User fetch in progress, waiting...');
       return;
     }
 
     // Debug logging
-    console.log('📧 EmailVerificationPage effect - checking conditions:', {
+    devLog('📧 EmailVerificationPage effect - checking conditions:', {
       userId: user.id,
       pendingStripeOnboarding,
       emailVerified,
@@ -180,7 +181,7 @@ export const EmailVerificationPageComponent = props => {
     // If Stripe onboarding is pending, redirect to complete it first
     // Token is already stored in sessionStorage by loadData
     if (pendingStripeOnboarding === true) {
-      console.log('📧 Stripe onboarding pending - redirecting to complete Stripe first');
+      devLog('📧 Stripe onboarding pending - redirecting to complete Stripe first');
       // Ensure token is stored
       if (token) {
         sessionStorage.setItem(PENDING_VERIFICATION_TOKEN_KEY, token);
@@ -195,12 +196,12 @@ export const EmailVerificationPageComponent = props => {
 
     // If email is already verified, check if there's a pending guest listing
     if (emailVerified && !pendingEmail) {
-      console.log('📧 Email already verified');
+      devLog('📧 Email already verified');
       
       // If there's a pending guest listing, let useGuestListingAfterAuth handle the redirect
       // Don't redirect to landing page - the hook will redirect to preview page after creating draft
       if (isGuestListingPendingPublish()) {
-        console.log('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
+        devLog('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
         // Don't set redirect - let the hook handle it
         setVerificationAttempted(true);
         return;
@@ -219,18 +220,18 @@ export const EmailVerificationPageComponent = props => {
     // Verify the email now (no pending Stripe)
     // Only proceed if we have profilePrivateData available (we're sure about the status)
     if (token && !emailVerificationInProgress && profilePrivateData !== undefined) {
-      console.log('📧 Verifying email now (pendingStripeOnboarding is false or undefined, and we have profilePrivateData)...');
+      devLog('📧 Verifying email now (pendingStripeOnboarding is false or undefined, and we have profilePrivateData)...');
       setVerificationAttempted(true);
       submitVerification({ verificationToken: token })
         .then(() => {
-          console.log('✅ Email verified successfully');
+          devLog('✅ Email verified successfully');
           // Clear token from sessionStorage
           sessionStorage.removeItem(PENDING_VERIFICATION_TOKEN_KEY);
           
           // If there's a pending guest listing, let useGuestListingAfterAuth handle the redirect
           // Don't redirect to landing page - the hook will redirect to preview page after creating draft
           if (isGuestListingPendingPublish()) {
-            console.log('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
+            devLog('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
             // Don't set redirect - let the hook handle it after user data is refreshed
             // The hook will trigger when emailVerified becomes true
             return;
@@ -252,7 +253,7 @@ export const EmailVerificationPageComponent = props => {
           setShouldRedirect(true);
         });
     } else if (token && profilePrivateData === undefined) {
-      console.log('📧 Cannot verify email yet - profilePrivateData not available');
+      devLog('📧 Cannot verify email yet - profilePrivateData not available');
     }
   }, [user.id, user.attributes?.profile?.privateData, pendingStripeOnboarding, emailVerified, pendingEmail, token, verificationAttempted, emailVerificationInProgress, userFetchAttempted, userFetchInProgress, profilePrivateData, fetchRetryCount]);
 

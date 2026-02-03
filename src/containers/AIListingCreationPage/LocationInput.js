@@ -3,6 +3,7 @@ import { FormattedMessage } from '../../util/reactIntl';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
 import { useConfiguration } from '../../context/configurationContext';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
+import devLog from '../../util/devLog';
 import css from './LocationInput.module.css';
 
 // Get country code for location search based on locale
@@ -105,21 +106,21 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
 
   // Initialize location from user data
   useEffect(() => {
-    console.log('🔍 LocationInput useEffect - Starting prefill logic');
-    console.log('currentUser received:', currentUser);
+    devLog('🔍 LocationInput useEffect - Starting prefill logic');
+    devLog('currentUser received:', currentUser);
 
     if (currentUser && currentUser.attributes && currentUser.attributes.profile) {
-      console.log('✅ currentUser.attributes.profile exists');
+      devLog('✅ currentUser.attributes.profile exists');
       const profile = currentUser.attributes.profile;
       const privateData = profile.privateData || {};
       const publicData = profile.publicData || {};
 
-      console.log('privateData:', privateData);
-      console.log('publicData:', publicData);
+      devLog('privateData:', privateData);
+      devLog('publicData:', publicData);
 
       // Check for user address in privateData (from signup)
       if (privateData.address) {
-        console.log('✅ Found privateData.address:', privateData.address);
+        devLog('✅ Found privateData.address:', privateData.address);
         const userAddress = privateData.address;
 
         // Build full address string
@@ -130,11 +131,11 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
           userAddress.country,
         ].filter(Boolean);
         const fullAddress = addressParts.join(', ');
-        console.log('📝 Built full address:', fullAddress);
+        devLog('📝 Built full address:', fullAddress);
 
         // Check if user has geolocation
         if (userAddress.geolocation) {
-          console.log('✅ Geolocation found:', userAddress.geolocation);
+          devLog('✅ Geolocation found:', userAddress.geolocation);
           const userLocation = {
             address: fullAddress,
             origin: {
@@ -142,11 +143,11 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
               lng: userAddress.geolocation.lng,
             },
           };
-          console.log('🎯 Setting location with geolocation:', userLocation);
+          devLog('🎯 Setting location with geolocation:', userLocation);
           setLocation(userLocation);
           setAddress(fullAddress);
         } else if (fullAddress) {
-          console.log('⚠️  No geolocation, but setting address:', fullAddress);
+          devLog('⚠️  No geolocation, but setting address:', fullAddress);
           // No geolocation but has address - try to geocode it
           setAddress(fullAddress);
           
@@ -155,13 +156,13 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
           geocodeAddress(fullAddress, searchCountry)
             .then(geolocation => {
               if (geolocation) {
-                console.log('✅ Geocoded address successfully:', geolocation);
+                devLog('✅ Geocoded address successfully:', geolocation);
                 setLocation({
                   address: fullAddress,
                   origin: geolocation,
                 });
               } else {
-                console.log('⚠️  Could not geocode address');
+                devLog('⚠️  Could not geocode address');
                 // Set location without geolocation - user can still continue
                 setLocation({
                   address: fullAddress,
@@ -182,31 +183,31 @@ const LocationInput = ({ onComplete, onBack, isSubmitting, currentUser }) => {
       }
       // Fallback: Check legacy location data in publicData
       else if (publicData.location && publicData.location.lat && publicData.location.lng) {
-        console.log('✅ Found legacy publicData.location:', publicData.location);
+        devLog('✅ Found legacy publicData.location:', publicData.location);
         const legacyLocation = {
           address:
             publicData.location.address || `${publicData.location.lat}, ${publicData.location.lng}`,
           origin: { lat: publicData.location.lat, lng: publicData.location.lng },
         };
-        console.log('🎯 Setting location from legacy data:', legacyLocation);
+        devLog('🎯 Setting location from legacy data:', legacyLocation);
         setLocation(legacyLocation);
         setAddress(legacyLocation.address);
       } else {
-        console.log('❌ No address data found in privateData or publicData');
+        devLog('❌ No address data found in privateData or publicData');
       }
     } else {
-      console.log('❌ currentUser, attributes, or profile not available');
-      if (!currentUser) console.log('  - currentUser is null/undefined');
+      devLog('❌ currentUser, attributes, or profile not available');
+      if (!currentUser) devLog('  - currentUser is null/undefined');
       if (currentUser && !currentUser.attributes)
-        console.log('  - currentUser.attributes is missing');
+        devLog('  - currentUser.attributes is missing');
       if (currentUser && currentUser.attributes && !currentUser.attributes.profile)
-        console.log('  - currentUser.attributes.profile is missing');
+        devLog('  - currentUser.attributes.profile is missing');
     }
   }, [currentUser]);
 
   // Handle location selection from autocomplete
   const handleLocationChange = selectedLocation => {
-    console.log('Location selected:', selectedLocation);
+    devLog('Location selected:', selectedLocation);
     setLocation(selectedLocation);
     setAddress(selectedLocation?.address || '');
     setError(null);

@@ -18,6 +18,7 @@ import { fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
 import { updateProfile } from '../ProfileSettingsPage/ProfileSettingsPage.duck';
 import { verify as verifyEmail } from '../../ducks/emailVerification.duck';
 import { PENDING_VERIFICATION_TOKEN_KEY } from '../EmailVerificationPage/EmailVerificationPage.duck';
+import devLog from '../../util/devLog';
 
 const PageBuilder = loadable(() =>
   import(/* webpackChunkName: "PageBuilder" */ '../PageBuilder/PageBuilder')
@@ -57,7 +58,7 @@ export const LandingPageComponent = props => {
   const isPendingStripe = emailVerificationStatus === 'pending-stripe';
   
   if ((isEmailVerificationSuccess || isPendingStripe) && pendingStripeOnboarding && user.id) {
-    console.log('⚠️ User needs to complete Stripe onboarding, redirecting...');
+    devLog('⚠️ User needs to complete Stripe onboarding, redirecting...');
     return (
       <NamedRedirect 
         name="SignupPage" 
@@ -74,7 +75,7 @@ export const LandingPageComponent = props => {
       user.id && 
       !stripeUpdateAttempted
     ) {
-      console.log('📝 stripeDataUpdatePending detected after email verification, fetching Stripe account...');
+      devLog('📝 stripeDataUpdatePending detected after email verification, fetching Stripe account...');
       setStripeUpdateAttempted(true);
       onFetchStripeAccount();
     }
@@ -86,11 +87,11 @@ export const LandingPageComponent = props => {
       const stripeAccountData = stripeAccount?.attributes?.stripeAccountData;
       
       if (!stripeAccountData) {
-        console.log('⚠️ Still no stripeAccountData available');
+        devLog('⚠️ Still no stripeAccountData available');
         return;
       }
 
-      console.log('📝 Stripe account data retrieved, updating user profile...');
+      devLog('📝 Stripe account data retrieved, updating user profile...');
 
       try {
         // Extract data based on business type
@@ -176,18 +177,18 @@ export const LandingPageComponent = props => {
 
         updateParams.privateData = privateDataUpdate;
 
-        console.log('📝 Updating user with Stripe data:', updateParams);
+        devLog('📝 Updating user with Stripe data:', updateParams);
         await onUpdateProfile(updateParams);
-        console.log('✅ User profile updated successfully with Stripe data');
+        devLog('✅ User profile updated successfully with Stripe data');
 
         // Verify email if there was a pending token
         const pendingToken = sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
         if (pendingToken) {
-          console.log('📧 Found pending verification token, verifying email now...');
+          devLog('📧 Found pending verification token, verifying email now...');
           try {
             await onVerifyEmail(pendingToken);
             sessionStorage.removeItem(PENDING_VERIFICATION_TOKEN_KEY);
-            console.log('✅ Email verified successfully');
+            devLog('✅ Email verified successfully');
           } catch (verifyErr) {
             console.error('❌ Failed to verify email:', verifyErr);
           }

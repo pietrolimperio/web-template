@@ -8,6 +8,7 @@
 
 import * as Sentry from '@sentry/browser';
 import appSettings from '../config/settings';
+import devLog from './devLog';
 
 const ingoreErrorsMap = {
   ['ResizeObserver loop limit exceeded']: true, // Some exotic browsers seems to emit these.
@@ -58,7 +59,7 @@ export const clearUserId = () => {
 
 const printAPIErrorsAsConsoleTable = apiErrors => {
   if (apiErrors != null && apiErrors.length > 0 && typeof console.table === 'function') {
-    console.log('Errors returned by Marketplace API call:');
+    devLog('Errors returned by Marketplace API call:');
     console.table(apiErrors.map(err => ({ status: err.status, code: err.code, ...err.meta })));
   }
 };

@@ -4,10 +4,11 @@
  */
 
 import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE } from '../config/localeConfig';
+import devLog from './devLog';
 
 const PRODUCT_API_BASE_URL =
 process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api';
-const DEFAULT_MODELS = ['gemini-2.5-flash'];
+const DEFAULT_MODELS = ['claude-4.5-sonnet'];
 //const DEFAULT_MODELS =['gemini-2.5-flash','gemini-2.5-pro','gemini-3-flash-preview','gemini-2.5-flash-lite','claude-4.5-sonnet','claude-3-haiku','gpt-5.2','gpt-5.2-mini','grok-4-fast-reasoning','sonar-pro','sonar-reasoning'];
 const DEFAULT_PROMPT_VERSION = 'v2'; // Default prompt version: 'v1' (originale) or 'v2' (ottimizzato, default)
 
@@ -247,9 +248,9 @@ class ProductAPI {
     const fullURL = `${this.baseURL}/${endpoint}`;
 
     // Debug logging
-    console.log('🔍 [Product API] Calling:', fullURL);
-    console.log('📦 [Product API] Payload type:', isFormData ? 'FormData' : 'JSON');
-    console.log('🌐 [Product API] Base URL:', this.baseURL);
+    devLog('🔍 [Product API] Calling:', fullURL);
+    devLog('📦 [Product API] Payload type:', isFormData ? 'FormData' : 'JSON');
+    devLog('🌐 [Product API] Base URL:', this.baseURL);
 
     try {
       const requestOptions = {
@@ -305,7 +306,7 @@ class ProductAPI {
       }
 
       const data = await response.json();
-      console.log('✅ [Product API] Success:', data);
+      devLog('✅ [Product API] Success:', data);
       return data;
     } catch (error) {
       console.error(`❌ [Product API Error - ${endpoint}]:`, error.message);

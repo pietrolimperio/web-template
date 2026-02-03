@@ -22,6 +22,7 @@ import { timeSlotsPerDate } from '../../../util/generators';
 import { bookingDateRequired } from '../../../util/validators';
 import { FieldSingleDatePicker, FieldSelect } from '../../../components';
 
+import devLog from '../../../util/devLog';
 import {
   TODAY,
   isToday,
@@ -672,7 +673,7 @@ const FieldDateAndTimeInput = props => {
       const [startMonth, endMonth] = getMonthlyFetchRange(monthlyTimeSlots, tz);
       const lastFetchedMonth = new Date(endMonth.getTime() - 1);
 
-      console.log(
+      devLog(
         `Fetched months: ${monthIdString(startMonth, tz)} ... ${monthIdString(
           lastFetchedMonth,
           tz

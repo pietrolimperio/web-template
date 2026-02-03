@@ -25,6 +25,7 @@ import {
   getInclusiveEndDate,
   getExclusiveEndDate,
 } from '../availability.helpers';
+import devLog from '../../../../../util/devLog';
 
 import css from './ExceptionDateRange.module.css';
 
@@ -203,12 +204,12 @@ const ExceptionDateRange = props => {
       // This side effect just prints debug data into the console.log feed.
       // Note: endMonth is exclusive end time of the range.
       const lastFetchedMonth = new Date(endMonth.getTime() - 1);
-      console.log(
+      devLog(
         `Fetched months: ${monthIdString(startMonth)} ... ${monthIdString(lastFetchedMonth)}`,
         '\nExceptions found:',
         allExceptions
       );
-      console.log('Dates with availability info:', availableDates);
+      devLog('Dates with availability info:', availableDates);
     }
   }, [currentMonth]);
 

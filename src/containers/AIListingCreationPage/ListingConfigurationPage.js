@@ -8,6 +8,7 @@ import { Map, AddressCascadingDropdowns } from '../../components';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import classNames from 'classnames';
+import devLog from '../../util/devLog';
 import css from './ListingConfigurationPage.module.css';
 
 const { LatLng } = sdkTypes;
@@ -111,26 +112,26 @@ const ListingConfigurationPage = ({
 
   // Initialize location from user data
   useEffect(() => {
-    console.log('🔍 ListingConfigurationPage - Location Tab - Starting prefill logic');
-    console.log('currentUser received:', currentUser);
+    devLog('🔍 ListingConfigurationPage - Location Tab - Starting prefill logic');
+    devLog('currentUser received:', currentUser);
 
     if (currentUser && currentUser.attributes && currentUser.attributes.profile) {
-      console.log('✅ currentUser.attributes.profile exists');
+      devLog('✅ currentUser.attributes.profile exists');
       const profile = currentUser.attributes.profile;
       const privateData = profile.privateData || {};
       const publicData = profile.publicData || {};
 
-      console.log('privateData:', privateData);
-      console.log('publicData:', publicData);
+      devLog('privateData:', privateData);
+      devLog('publicData:', publicData);
 
       // Check for user address in privateData (from signup)
       if (privateData.address) {
-        console.log('✅ Found privateData.address:', privateData.address);
+        devLog('✅ Found privateData.address:', privateData.address);
         const userAddress = privateData.address;
 
         // Check if user has geolocation
         if (userAddress.geolocation) {
-          console.log('✅ Geolocation found:', userAddress.geolocation);
+          devLog('✅ Geolocation found:', userAddress.geolocation);
           const userGeolocation = new LatLng(
             userAddress.geolocation.lat,
             userAddress.geolocation.lng
@@ -140,7 +141,7 @@ const ListingConfigurationPage = ({
 
         // Pre-fill manual address fields if available
         if (userAddress.addressLine1 || userAddress.city) {
-          console.log('📋 Prefilling manual address fields');
+          devLog('📋 Prefilling manual address fields');
 
           // Parse addressLine1 to separate street and street number
           let street = userAddress.addressLine1 || '';
@@ -152,7 +153,7 @@ const ListingConfigurationPage = ({
             if (match) {
               street = match[1].trim();
               streetNumber = match[2].trim();
-              console.log(`📋 Parsed address: street="${street}", number="${streetNumber}"`);
+              devLog(`📋 Parsed address: street="${street}", number="${streetNumber}"`);
             }
           }
 
@@ -167,7 +168,7 @@ const ListingConfigurationPage = ({
           });
 
           // Enable search and show full form to display prefilled fields
-          console.log('✅ Enabling full form to display prefilled data from profile');
+          devLog('✅ Enabling full form to display prefilled data from profile');
           setShowAddressSearch(true);
           setShowFullForm(true);
           setAddressFromAutocomplete(true); // Treat profile data as if from autocomplete
@@ -176,22 +177,22 @@ const ListingConfigurationPage = ({
       }
       // Fallback: Check legacy location data in publicData
       else if (publicData.location && publicData.location.lat && publicData.location.lng) {
-        console.log('✅ Found legacy publicData.location:', publicData.location);
+        devLog('✅ Found legacy publicData.location:', publicData.location);
         const userGeolocation = new LatLng(publicData.location.lat, publicData.location.lng);
         setGeolocation(userGeolocation);
-        console.log(
+        devLog(
           '🎯 Set geolocation from legacy data (manual address fields left empty for user to fill)'
         );
       } else {
-        console.log('❌ No address data found in privateData or publicData');
+        devLog('❌ No address data found in privateData or publicData');
       }
     } else {
-      console.log('❌ currentUser, attributes, or profile not available');
-      if (!currentUser) console.log('  - currentUser is null/undefined');
+      devLog('❌ currentUser, attributes, or profile not available');
+      if (!currentUser) devLog('  - currentUser is null/undefined');
       if (currentUser && !currentUser.attributes)
-        console.log('  - currentUser.attributes is missing');
+        devLog('  - currentUser.attributes is missing');
       if (currentUser && currentUser.attributes && !currentUser.attributes.profile)
-        console.log('  - currentUser.attributes.profile is missing');
+        devLog('  - currentUser.attributes.profile is missing');
     }
   }, [currentUser]);
 
@@ -1317,14 +1318,14 @@ const ListingConfigurationPage = ({
                   name: 'location',
                   value: locationAutocompleteValue,
                   onChange: value => {
-                    console.log('LocationAutocompleteInput onChange:', value);
+                    devLog('LocationAutocompleteInput onChange:', value);
                     setLocationAutocompleteValue(value);
 
                     // When user selects from autocomplete
                     if (value && value.selectedPlace) {
                       const place = value.selectedPlace;
-                      console.log('Selected place:', place);
-                      console.log('Place components:', {
+                      devLog('Selected place:', place);
+                      devLog('Place components:', {
                         street: place.street,
                         streetNumber: place.streetNumber,
                         city: place.city,

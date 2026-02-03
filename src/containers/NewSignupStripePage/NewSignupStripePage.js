@@ -28,6 +28,7 @@ import {
 import { updateProfile } from '../ProfileSettingsPage/ProfileSettingsPage.duck';
 import { verify as verifyEmail } from '../../ducks/emailVerification.duck';
 import { PENDING_VERIFICATION_TOKEN_KEY } from '../EmailVerificationPage/EmailVerificationPage.duck';
+import devLog from '../../util/devLog';
 import { composeValidators } from '../../util/validators';
 
 // One-shot flag to allow automatic redirect to Stripe exactly once (when coming from EmailVerificationPage)
@@ -176,7 +177,7 @@ export const NewSignupStripePageComponent = ({
     window.scrollTo(0, 0);
 
     // Check if we're returning from Stripe
-    console.log('🔄 Mount effect - checking return from Stripe:', {
+    devLog('🔄 Mount effect - checking return from Stripe:', {
       returnURLType,
       returnedFromStripeSuccess,
       returnedFromStripeFailure,
@@ -186,7 +187,7 @@ export const NewSignupStripePageComponent = ({
     
     if (returnedFromStripeSuccess || returnedFromStripeFailure) {
       const storedData = sessionStorage.getItem(SIGNUP_DATA_KEY);
-      console.log('🔄 Stored signup data:', storedData);
+      devLog('🔄 Stored signup data:', storedData);
       
       if (storedData) {
         const data = JSON.parse(storedData);
@@ -194,20 +195,20 @@ export const NewSignupStripePageComponent = ({
         setSignupEmail(data.email);
         
         if (returnedFromStripeSuccess) {
-          console.log('✅ Returned from Stripe SUCCESS, fetching account...');
+          devLog('✅ Returned from Stripe SUCCESS, fetching account...');
           setProcessingStripeReturn(true); // Set flag to prevent other effects from interfering
           setStep(STEP_PROCESSING);
           // Fetch the Stripe account data
           onFetchStripeAccount();
         } else {
           // Stripe failure - show form with retry option
-          console.log('❌ Returned from Stripe FAILURE - showing retry option');
+          devLog('❌ Returned from Stripe FAILURE - showing retry option');
           setStep(STEP_FORM);
           setErrorMessage(intl.formatMessage({ id: 'NewSignupStripePage.stripeOnboardingFailed' }));
         }
       } else if (isAuthenticated && currentUserLoaded) {
         // User is authenticated but no stored data - reconstruct from user data
-        console.log('⚠️ No stored data but user authenticated');
+        devLog('⚠️ No stored data but user authenticated');
         const userPublicData = user.attributes?.profile?.publicData || {};
         setCustomerType(userPublicData.customerType || 'individual');
         
@@ -221,7 +222,7 @@ export const NewSignupStripePageComponent = ({
           setErrorMessage(intl.formatMessage({ id: 'NewSignupStripePage.stripeOnboardingFailed' }));
         }
       } else {
-        console.log('❌ No stored data and not authenticated');
+        devLog('❌ No stored data and not authenticated');
         setStep(STEP_ERROR);
         setErrorMessage(intl.formatMessage({ id: 'NewSignupStripePage.sessionExpired' }));
       }
@@ -262,7 +263,7 @@ export const NewSignupStripePageComponent = ({
   useEffect(() => {
     const stripeAccountData = stripeAccount?.attributes?.stripeAccountData;
     
-    console.log('🔍 Update user effect - conditions:', {
+    devLog('🔍 Update user effect - conditions:', {
       step,
       isProcessingStep: step === STEP_PROCESSING,
       stripeAccountFetched,
@@ -275,22 +276,22 @@ export const NewSignupStripePageComponent = ({
     if (step === STEP_PROCESSING && stripeAccountFetched && stripeAccount && isAuthenticated) {
       // Check if stripeAccountData is available
       if (stripeAccountData) {
-        console.log('✅ All conditions met with data, calling updateUserFromStripeData');
+        devLog('✅ All conditions met with data, calling updateUserFromStripeData');
         updateUserFromStripeData();
       } else if (fetchRetryCount < MAX_FETCH_RETRIES) {
         // Data not available yet, retry after delay
-        console.log(`⏳ stripeAccountData is null, retrying in ${FETCH_RETRY_DELAY}ms (attempt ${fetchRetryCount + 1}/${MAX_FETCH_RETRIES})`);
+        devLog(`⏳ stripeAccountData is null, retrying in ${FETCH_RETRY_DELAY}ms (attempt ${fetchRetryCount + 1}/${MAX_FETCH_RETRIES})`);
         const timeoutId = setTimeout(() => {
           setFetchRetryCount(prev => prev + 1);
           onFetchStripeAccount();
         }, FETCH_RETRY_DELAY);
         return () => clearTimeout(timeoutId);
       } else {
-        console.log('⚠️ Max retries reached, stripeAccountData still null. Proceeding without update.');
+        devLog('⚠️ Max retries reached, stripeAccountData still null. Proceeding without update.');
         updateUserFromStripeData(); // Will skip update due to null data
       }
     } else if (step === STEP_PROCESSING) {
-      console.log('⚠️ In STEP_PROCESSING but missing:', {
+      devLog('⚠️ In STEP_PROCESSING but missing:', {
         stripeAccountFetched: !stripeAccountFetched ? 'MISSING' : 'OK',
         stripeAccount: !stripeAccount ? 'MISSING' : 'OK',
         isAuthenticated: !isAuthenticated ? 'MISSING' : 'OK',
@@ -323,7 +324,7 @@ export const NewSignupStripePageComponent = ({
   const privateDataLoaded = userPrivateData !== undefined;
 
   // Debug logging
-  console.log('🔐 NewSignupStripePage - Auth check:', {
+  devLog('🔐 NewSignupStripePage - Auth check:', {
     isAuthenticated,
     currentUserLoaded,
     privateDataLoaded,
@@ -350,7 +351,7 @@ export const NewSignupStripePageComponent = ({
     !completeStripeOnboarding;
 
   if (shouldRedirectAuthenticatedUser) {
-    console.log('➡️ Redirecting authenticated user to home (Stripe completed)');
+    devLog('➡️ Redirecting authenticated user to home (Stripe completed)');
     // User is already logged in and has completed Stripe - redirect to home
     return <Redirect to="/" />;
   }
@@ -364,7 +365,7 @@ export const NewSignupStripePageComponent = ({
   // Effect: Force fetch current user when privateData is not loaded
   useEffect(() => {
     if (isAuthenticated && currentUserLoaded && !privateDataLoaded && !userFetchAttempted) {
-      console.log('📝 privateData not loaded, forcing user fetch...');
+      devLog('📝 privateData not loaded, forcing user fetch...');
       setUserFetchAttempted(true);
       onFetchCurrentUser({ enforce: true });
     }
@@ -388,7 +389,7 @@ export const NewSignupStripePageComponent = ({
       !returnURLType && // Not a Stripe return URL
       history.location?.pathname === '/signup'
     ) {
-      console.log('📝 Authenticated user landed on /signup with pendingStripeOnboarding=true');
+      devLog('📝 Authenticated user landed on /signup with pendingStripeOnboarding=true');
 
       // If the user came from EmailVerificationPage (token stored) or we have explicit completeStripeOnboarding,
       // we allow the auto-redirect effect to proceed. Otherwise, keep them here for review.
@@ -434,7 +435,7 @@ export const NewSignupStripePageComponent = ({
           timestamp: Date.now(),
         };
         sessionStorage.setItem(SIGNUP_DATA_KEY, JSON.stringify(signupData));
-        console.log('📝 Created sessionStorage data for returning user:', signupData);
+        devLog('📝 Created sessionStorage data for returning user:', signupData);
       }
 
       // Create Stripe Connect account
@@ -449,7 +450,7 @@ export const NewSignupStripePageComponent = ({
         ? `https://test-marketplace.com${profilePath}?mode=storefront`
         : `${cleanRootURL}${profilePath}?mode=storefront`;
 
-      console.log('🔧 Stripe Setup Debug:', {
+      devLog('🔧 Stripe Setup Debug:', {
         rootURL,
         cleanRootURL,
         isLocalhost,
@@ -537,7 +538,7 @@ export const NewSignupStripePageComponent = ({
           !returnedFromStripeFailure && // Don't redirect if we're returning from Stripe failure
           !processingStripeReturn // Don't redirect if we're processing Stripe return
         ) {
-          console.log('📝 Authenticated user needs to complete Stripe onboarding (auto-redirect allowed)');
+          devLog('📝 Authenticated user needs to complete Stripe onboarding (auto-redirect allowed)');
           // Consume the one-shot flag so back-button won't trigger another auto-redirect
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem(AUTO_STRIPE_REDIRECT_ONCE_KEY);
@@ -607,12 +608,12 @@ export const NewSignupStripePageComponent = ({
    * Update user profile with data from Stripe account
    */
   const updateUserFromStripeData = async () => {
-    console.log('📝 updateUserFromStripeData called');
+    devLog('📝 updateUserFromStripeData called');
     setStep(STEP_UPDATING_USER);
 
     try {
       const stripeAccountData = stripeAccount?.attributes?.stripeAccountData;
-      console.log('📝 Stripe account data:', stripeAccountData);
+      devLog('📝 Stripe account data:', stripeAccountData);
       
       const userEmail = user.attributes?.email;
       
@@ -620,7 +621,7 @@ export const NewSignupStripePageComponent = ({
       const validation = validateMandatoryStripeData(stripeAccountData, userEmail);
       
       if (!validation.isValid) {
-        console.log('❌ Mandatory Stripe data missing:', validation.missingFields);
+        devLog('❌ Mandatory Stripe data missing:', validation.missingFields);
         // Change location to /signup/failure with error message
         setErrorMessage(
           intl.formatMessage(
@@ -636,7 +637,7 @@ export const NewSignupStripePageComponent = ({
       }
       
       if (!stripeAccountData) {
-        console.log('⚠️ No stripeAccountData found, marking for later update');
+        devLog('⚠️ No stripeAccountData found, marking for later update');
         // No additional data from Stripe, but mark onboarding as complete
         // Set stripeDataUpdatePending: true to retry update after email verification
         try {
@@ -646,7 +647,7 @@ export const NewSignupStripePageComponent = ({
               stripeDataUpdatePending: true, // Flag to retry fetching Stripe data after email verification
             },
           });
-          console.log('✅ Marked stripeDataUpdatePending for later retry');
+          devLog('✅ Marked stripeDataUpdatePending for later retry');
         } catch (err) {
           console.error('Failed to update pendingStripeOnboarding:', err);
         }
@@ -752,11 +753,11 @@ export const NewSignupStripePageComponent = ({
       
       // No need to update publicData.pendingStripeOnboarding (it's only in privateData now)
 
-      console.log('📝 Update params to send:', updateParams);
+      devLog('📝 Update params to send:', updateParams);
 
       // Update user profile
       const updateResult = await onUpdateProfile(updateParams);
-      console.log('✅ Profile update result:', updateResult);
+      devLog('✅ Profile update result:', updateResult);
 
       // Reset processing flag since we've completed the Stripe return flow
       setProcessingStripeReturn(false);
@@ -783,7 +784,7 @@ export const NewSignupStripePageComponent = ({
       
       if (tokenWasVerified || emailVerified) {
         // Email verified (either via token or already verified) - redirect to LandingPage
-        console.log('✅ Email verified (token verified or already verified), redirecting to LandingPage');
+        devLog('✅ Email verified (token verified or already verified), redirecting to LandingPage');
         const userName = updatedUser.attributes?.profile?.firstName || updatedUser.attributes?.email?.split('@')[0];
         const userEmail = updatedUser.attributes?.email;
         // Use history.push to redirect to LandingPage with state
@@ -816,7 +817,7 @@ export const NewSignupStripePageComponent = ({
       const tokenWasVerified = hadPendingToken && !sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
       
       if (tokenWasVerified || emailVerified) {
-        console.log('✅ Email verified (token verified or already verified), redirecting to LandingPage');
+        devLog('✅ Email verified (token verified or already verified), redirecting to LandingPage');
         const userName = updatedUser.attributes?.profile?.firstName || updatedUser.attributes?.email?.split('@')[0];
         const userEmail = updatedUser.attributes?.email;
         history.push({
@@ -841,11 +842,11 @@ export const NewSignupStripePageComponent = ({
   const verifyPendingEmail = async () => {
     const pendingToken = sessionStorage.getItem(PENDING_VERIFICATION_TOKEN_KEY);
     if (pendingToken) {
-      console.log('📧 Found pending verification token, verifying email now...');
+      devLog('📧 Found pending verification token, verifying email now...');
       try {
         await onVerifyEmail(pendingToken);
         sessionStorage.removeItem(PENDING_VERIFICATION_TOKEN_KEY);
-        console.log('✅ Email verified successfully');
+        devLog('✅ Email verified successfully');
       } catch (err) {
         console.error('❌ Failed to verify email:', err);
         // Don't block the flow if verification fails

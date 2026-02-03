@@ -6,6 +6,7 @@ import { Switch, Route, withRouter } from 'react-router-dom';
 import { useRouteConfiguration } from '../context/routeConfigurationContext';
 import { propTypes } from '../util/types';
 import * as log from '../util/log';
+import devLog from '../util/devLog';
 import { canonicalRoutePath } from '../util/routes';
 import { useConfiguration } from '../context/configurationContext';
 
@@ -39,7 +40,7 @@ const callLoadData = props => {
       .then(() => {
         if (props.logLoadDataCalls) {
           // This gives good input for debugging issues on live environments, but with test it's not needed.
-          console.log(`loadData success for ${name} route`);
+          devLog(`loadData success for ${name} route`);
         }
       })
       .catch(e => {

@@ -27,6 +27,7 @@ import {
   IconSpinner,
   TimeRange,
 } from '../../../../../components';
+import devLog from '../../../../../util/devLog';
 
 import {
   endOfAvailabilityExceptionRange,
@@ -413,13 +414,13 @@ const WeeklyCalendar = props => {
         const formattedStart = intl.formatDate(start, formattingOptions);
         const formattedEnd = intl.formatDate(end, formattingOptions);
         const availabilityEmoji = available ? '✅' : '🚫';
-        console.log('          ', availabilityEmoji, formattedStart, ' - ', formattedEnd);
+        devLog('          ', availabilityEmoji, formattedStart, ' - ', formattedEnd);
       };
 
-      console.log('\n\n%cDaily availability ranges:', 'font-weight: bold;');
+      devLog('\n\n%cDaily availability ranges:', 'font-weight: bold;');
       Object.keys(availableDates).forEach(d => {
         const weekday = intl.formatDate(availableDates[d]?.ranges?.[0]?.start, { weekday: 'long' });
-        console.log(`\n${d} ${weekday}`);
+        devLog(`\n${d} ${weekday}`);
         availableDates[d].ranges.map(r => {
           formatRange(r.start, r.end, r.seats > 0, timeZone);
         });

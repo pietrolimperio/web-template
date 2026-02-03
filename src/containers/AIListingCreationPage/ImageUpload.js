@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ExifReader from 'exifreader';
 import { useIntl } from '../../util/reactIntl';
+import devLog from '../../util/devLog';
 import css from './ImageUpload.module.css';
 
 // 🔧 TESTING FLAG: Set REACT_APP_SKIP_EXIF_VALIDATION=true in .env to skip EXIF validation
@@ -134,7 +135,7 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
   const validateImageEXIF = async (file, intl) => {
     // Skip validation if testing flag is enabled
     if (SKIP_EXIF_VALIDATION) {
-      console.log('⚠️ EXIF validation skipped (testing mode enabled)');
+      devLog('⚠️ EXIF validation skipped (testing mode enabled)');
       return { valid: true };
     }
 

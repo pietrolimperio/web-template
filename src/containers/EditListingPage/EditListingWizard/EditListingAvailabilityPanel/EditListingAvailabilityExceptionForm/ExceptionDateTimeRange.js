@@ -31,6 +31,7 @@ import {
   handleMonthClick,
   getMonthlyFetchRange,
 } from '../availability.helpers';
+import devLog from '../../../../../util/devLog';
 
 import css from './ExceptionDateTimeRange.module.css';
 
@@ -342,12 +343,12 @@ const ExceptionDateTimeRange = props => {
   useEffect(() => {
     if (appSettings.dev && appSettings.verbose) {
       // This side effect just prints debug data into the console.log feed.
-      console.log(
+      devLog(
         `Fetched months: ${monthIdString(startMonth)} - exclusive(${monthIdString(endMonth)})`,
         '\nExceptions found:',
         allExceptions
       );
-      console.log('Dates with availability info:', availableDates);
+      devLog('Dates with availability info:', availableDates);
     }
   }, [currentMonth]);
 

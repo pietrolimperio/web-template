@@ -26,6 +26,7 @@ import { Form, PrimaryButton, FieldDateRangePicker, FieldSelect, H6 } from '../.
 import EstimatedCustomerBreakdownMaybe from '../EstimatedCustomerBreakdownMaybe';
 
 import FetchLineItemsError from '../FetchLineItemsError/FetchLineItemsError.js';
+import devLog from '../../../util/devLog';
 
 import css from './BookingDatesForm.module.css';
 
@@ -578,9 +579,9 @@ export const BookingDatesForm = props => {
       const timeSlotsData = timeSlotsPerDate(currentMonth, nextMonth, allTimeSlots, tz);
       const [startMonth, endMonth] = getMonthlyFetchRange(monthlyTimeSlots, tz);
       const lastFetchedMonth = new Date(endMonth.getTime() - 1);
-      console.log(monthIdString(lastFetchedMonth, tz));
+      devLog(monthIdString(lastFetchedMonth, tz));
 
-      console.log(
+      devLog(
         `Fetched months: ${monthIdString(startMonth, tz)} ... ${monthIdString(
           lastFetchedMonth,
           tz

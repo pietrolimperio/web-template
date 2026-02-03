@@ -1,6 +1,8 @@
+import devLog from '../util/devLog';
+
 export class LoggingAnalyticsHandler {
   trackPageView(url) {
-    console.log('Analytics page view:', url);
+    devLog('Analytics page view:', url);
   }
 }
 

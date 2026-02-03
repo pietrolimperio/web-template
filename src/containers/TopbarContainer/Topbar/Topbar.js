@@ -20,6 +20,7 @@ import {
   ModalMissingInformation,
 } from '../../../components';
 import { getSearchPageResourceLocatorStringParams } from '../../SearchPage/SearchPage.shared';
+import devLog from '../../../util/devLog';
 
 import MenuIcon from './MenuIcon';
 import SearchIcon from './SearchIcon';
@@ -221,7 +222,7 @@ const TopbarComponent = props => {
         window.location = path;
       }
 
-      console.log('logged out'); // eslint-disable-line
+      devLog('logged out');
     });
   };
 

@@ -17,6 +17,7 @@ import {
   LISTING_PAGE_PARAM_TYPE_DRAFT,
   LISTING_PAGE_PARAM_TYPE_NEW,
 } from '../../../util/urlHelpers';
+import devLog from '../../../util/devLog';
 import { createResourceLocatorString } from '../../../util/routes';
 import {
   SCHEMA_TYPE_ENUM,
@@ -556,7 +557,7 @@ class EditListingWizard extends Component {
         .reverse()
         .find(t => tabsStatus[t]);
 
-      console.log(
+      devLog(
         `You tried to access an EditListingWizard tab (${selectedTab}), which was not yet activated.`
       );
       return <NamedRedirect name="EditListingPage" params={{ ...params, tab: nearestActiveTab }} />;

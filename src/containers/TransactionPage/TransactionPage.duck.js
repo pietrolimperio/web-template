@@ -13,6 +13,7 @@ import {
 import { isTransactionsTransitionInvalidTransition, storableError } from '../../util/errors';
 import { transactionLineItems, transitionPrivileged } from '../../util/api';
 import * as log from '../../util/log';
+import devLog from '../../util/devLog';
 import {
   updatedEntities,
   denormalisedEntities,
@@ -580,7 +581,7 @@ export const fetchTransaction = (id, txRole, config) => (dispatch, getState, sdk
           fetchMonthlyTimeSlots(dispatch, listing);
         }
       } catch (error) {
-        console.log(`transaction process (${processName}) was not recognized`);
+        devLog(`transaction process (${processName}) was not recognized`);
       }
 
       return response;
@@ -618,7 +619,7 @@ const refreshTransactionEntity = (sdk, txId, dispatch) => {
     })
     .catch(e => {
       // refresh failed, but we don't act upon it.
-      console.log('error', e);
+      devLog('error', e);
     });
 };
 
