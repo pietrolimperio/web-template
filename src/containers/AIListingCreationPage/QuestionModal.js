@@ -49,14 +49,23 @@ const QuestionModal = ({
   const isFirstQuestion = safeIndex === 0;
   const isLastQuestion = safeIndex === questions.length - 1;
 
+  // Slider options can be at question.min/max/step or question.options.min/max/step (API format)
+  const getSliderOptions = question => ({
+    min: question.min ?? question.options?.min ?? 0,
+    max: question.max ?? question.options?.max ?? 100,
+    step: question.step ?? question.options?.step ?? 1,
+    unit: question.unit ?? question.options?.unit ?? '',
+  });
+
   // Calculate initial slider value, rounded to the nearest step
   // e.g., for years (step=1): 2009.5 → 2010, for shoe sizes (step=0.5): 41.5 → 41.5
   // If defaultValue is provided, use it; otherwise use midpoint
   const getInitialSliderValue = question => {
-    const step = question.step ?? 1;
+    const { min, max, step } = getSliderOptions(question);
     // Use defaultValue if provided (e.g., from priceSuggestion), otherwise use midpoint
-    const baseValue = question.defaultValue !== undefined ? question.defaultValue : (question.min + question.max) / 2;
-    return Math.round(baseValue / step) * step;
+    const baseValue = question.defaultValue !== undefined ? question.defaultValue : (min + max) / 2;
+    const value = Math.round(baseValue / step) * step;
+    return Number.isFinite(value) ? value : min;
   };
 
   const handleSelectAnswer = value => {
@@ -77,7 +86,10 @@ const QuestionModal = ({
   };
 
   const handleSliderChange = value => {
-    setAnswers({ ...answers, [currentQuestion.id]: parseFloat(value) });
+    const num = parseFloat(value);
+    if (Number.isFinite(num)) {
+      setAnswers({ ...answers, [currentQuestion.id]: num });
+    }
   };
 
   const handleOtherSubmit = () => {
@@ -164,8 +176,12 @@ const QuestionModal = ({
 
   const currentAnswer = answers[currentQuestion.id];
   const isOtherSelected = currentAnswer === 'other';
-  const inputValue =
+  const rawInputValue =
     currentAnswer !== undefined ? currentAnswer : currentQuestion.defaultValue ?? '';
+  const inputValue =
+    typeof rawInputValue === 'number' && !Number.isFinite(rawInputValue)
+      ? ''
+      : rawInputValue;
 
   return (
     <>
@@ -267,44 +283,44 @@ const QuestionModal = ({
               </div>
             )}
 
-            {currentQuestion.type === 'slider' && (
-              <div className={css.sliderContainer}>
-                <div className={css.sliderValue}>
-                  <span className={css.sliderValueNumber}>
-                    {currentAnswer !== undefined
-                      ? currentAnswer
-                      : getInitialSliderValue(currentQuestion)}
-                  </span>
-                  {currentQuestion.unit && (
-                    <span className={css.sliderValueUnit}>{currentQuestion.unit}</span>
-                  )}
+            {currentQuestion.type === 'slider' && (() => {
+              const sliderOpts = getSliderOptions(currentQuestion);
+              const displayValue =
+                currentAnswer !== undefined
+                  ? currentAnswer
+                  : getInitialSliderValue(currentQuestion);
+              const safeValue = Number.isFinite(displayValue) ? displayValue : sliderOpts.min;
+              return (
+                <div className={css.sliderContainer}>
+                  <div className={css.sliderValue}>
+                    <span className={css.sliderValueNumber}>{safeValue}</span>
+                    {sliderOpts.unit && (
+                      <span className={css.sliderValueUnit}>{sliderOpts.unit}</span>
+                    )}
+                  </div>
+                  <input
+                    type="range"
+                    min={sliderOpts.min}
+                    max={sliderOpts.max}
+                    step={sliderOpts.step}
+                    value={safeValue}
+                    onChange={e => handleSliderChange(e.target.value)}
+                    className={css.slider}
+                    disabled={isRefining}
+                  />
+                  <div className={css.sliderLabels}>
+                    <span>
+                      {sliderOpts.min}
+                      {sliderOpts.unit && ` ${sliderOpts.unit}`}
+                    </span>
+                    <span>
+                      {sliderOpts.max}
+                      {sliderOpts.unit && ` ${sliderOpts.unit}`}
+                    </span>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min={currentQuestion.min}
-                  max={currentQuestion.max}
-                  step={currentQuestion.step ?? 1}
-                  value={
-                    currentAnswer !== undefined
-                      ? currentAnswer
-                      : getInitialSliderValue(currentQuestion)
-                  }
-                  onChange={e => handleSliderChange(e.target.value)}
-                  className={css.slider}
-                  disabled={isRefining}
-                />
-                <div className={css.sliderLabels}>
-                  <span>
-                    {currentQuestion.min}
-                    {currentQuestion.unit && ` ${currentQuestion.unit}`}
-                  </span>
-                  <span>
-                    {currentQuestion.max}
-                    {currentQuestion.unit && ` ${currentQuestion.unit}`}
-                  </span>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {currentQuestion.type === 'input' && (
               <div className={css.inputContainer}>
