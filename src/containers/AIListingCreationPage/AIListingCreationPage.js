@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { bool, func, shape } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
@@ -25,6 +25,11 @@ import productApiInstance, {
 } from '../../util/productApi';
 
 import { createListingDraft, updateListing } from './AIListingCreationPage.duck';
+import {
+  saveGuestListingData,
+  loadGuestListingData,
+  clearGuestListingData,
+} from '../../util/guestListingStorage';
 
 import css from './AIListingCreationPage.module.css';
 
@@ -57,6 +62,7 @@ const STEP_SAVING = 'saving';
 
 export const AIListingCreationPageComponent = ({
   currentUser = null,
+  isAuthenticated = false,
   createListingDraftInProgress,
   createListingDraftError = null,
   onCreateListingDraft,
@@ -68,6 +74,9 @@ export const AIListingCreationPageComponent = ({
 
   // 🔧 TESTING MODE: Set to true to skip directly to location step
   const TEST_MODE_LOCATION = false;
+
+  // Check if user is guest (not authenticated)
+  const isGuest = !isAuthenticated || !currentUser?.id;
 
   // State management
   const [step, setStep] = useState(TEST_MODE_LOCATION ? STEP_PRICE_QUESTION : STEP_UPLOAD);
@@ -101,6 +110,98 @@ export const AIListingCreationPageComponent = ({
   const [errorType, setErrorType] = useState(null); // 'PROHIBITED_CATEGORY' or null
 
   const user = ensureCurrentUser(currentUser);
+
+  // Load saved guest listing data on mount if guest
+  useEffect(() => {
+    if (isGuest) {
+      const savedData = loadGuestListingData();
+      if (savedData) {
+        // Check if all required data is available (wizard completed)
+        // Required: productAnalysis, pricingData, availabilityData, images, and listingData
+        // Location is optional (can be added later)
+        const hasProductAnalysis = !!savedData.productAnalysis;
+        const hasPricingData = savedData.pricingData !== null && savedData.pricingData !== undefined;
+        const hasAvailabilityData = savedData.availabilityData !== null && savedData.availabilityData !== undefined;
+        const hasImages = savedData.images && Array.isArray(savedData.images) && savedData.images.length > 0;
+        const hasListingData = !!savedData.listingData;
+        
+        const hasAllData = hasProductAnalysis && 
+                          hasPricingData && 
+                          hasAvailabilityData && 
+                          hasImages &&
+                          hasListingData;
+        
+        if (hasAllData) {
+          // All data available, redirect directly to guest preview
+          history.push('/l/guest-preview-listing');
+          return;
+        }
+        
+        // Restore state from saved data
+        if (savedData.images && savedData.images.length > 0) {
+          setUploadedImages(savedData.images);
+          // Recreate preview URLs
+          const previews = savedData.images.map(file => URL.createObjectURL(file));
+          setImagePreviewUrls(previews);
+        }
+        if (savedData.productAnalysis) {
+          setProductAnalysis(savedData.productAnalysis);
+        }
+        if (savedData.pricingData) {
+          setPricingData(savedData.pricingData);
+        }
+        if (savedData.availabilityData) {
+          setAvailabilityData(savedData.availabilityData);
+        }
+        if (savedData.locationData) {
+          setLocationData(savedData.locationData);
+        }
+        // Determine step based on what data is available
+        if (savedData.productAnalysis) {
+          if (savedData.pricingData) {
+            // Has pricing but missing other data, show price question
+            setStep(STEP_PRICE_QUESTION);
+          } else {
+            setStep(STEP_PRICE_QUESTION);
+          }
+        } else if (savedData.images && savedData.images.length > 0) {
+          setStep(STEP_UPLOAD);
+        }
+      }
+    }
+  }, [isGuest, history]);
+
+  // Save data to storage whenever it changes (ONLY for guest users)
+  // IMPORTANT: Only save after refine - never after analyze (raw analysis before questions)
+  // Steps STEP_CATEGORIES, STEP_PRICE_QUESTION, STEP_SAVING indicate we have refined data
+  // (or went straight to categories when there were no questions)
+  useEffect(() => {
+    const isDefinitelyGuest = !isAuthenticated && !currentUser?.id;
+    const stepsAfterRefine = [STEP_CATEGORIES, STEP_PRICE_QUESTION, STEP_SAVING];
+
+    if (
+      isDefinitelyGuest &&
+      productAnalysis &&
+      stepsAfterRefine.includes(step)
+    ) {
+      const listingData = buildListingDraftPayload(
+        productAnalysis,
+        pricingData || { price: parseSuggestedPrice(productAnalysis), priceVariationsEnabled: false, priceVariants: [] },
+        availabilityData || buildDefaultAvailability(),
+        locationData || buildDefaultLocation()
+      );
+      saveGuestListingData(
+        listingData,
+        uploadedImages,
+        productAnalysis,
+        pricingData,
+        availabilityData,
+        locationData
+      );
+    }
+    // NOTE: We do NOT clear guest data here when user becomes authenticated
+    // Data will be cleared in useGuestListingAfterAuth only after draft is created
+  }, [isAuthenticated, currentUser?.id, productAnalysis, pricingData, availabilityData, locationData, uploadedImages, step]);
 
   const parseSuggestedPrice = analysis => {
     const raw = analysis?.fields?.priceSuggestion;
@@ -271,6 +372,25 @@ export const AIListingCreationPageComponent = ({
         effectiveLocation
       );
 
+      // If guest user, save to storage and redirect to guest preview
+      // Double check that user is actually a guest (not authenticated)
+      if (isGuest && !isAuthenticated && !currentUser?.id) {
+        // Save all data to storage
+        saveGuestListingData(
+          listingData,
+          uploadedImages,
+          productAnalysis,
+          effectivePricing,
+          effectiveAvailability,
+          effectiveLocation
+        );
+        // Note: We do NOT set the flag here - it will be set only when user tries to publish
+        // Redirect to guest preview page
+        history.push('/l/guest-preview-listing');
+        return;
+      }
+
+      // Authenticated user: create draft as before
       const result = await onCreateListingDraft(listingData, config);
 
       if (result && result.data && result.data.data) {
@@ -302,8 +422,11 @@ export const AIListingCreationPageComponent = ({
   };
 
   // Handle image selection
-  const handleImagesSelected = files => {
+  const handleImagesSelected = (files, previewUrls) => {
     setUploadedImages(files);
+    if (previewUrls) {
+      setImagePreviewUrls(previewUrls);
+    }
     setError(null);
     setErrorType(null);
   };
@@ -455,9 +578,10 @@ export const AIListingCreationPageComponent = ({
     }
   };
 
-  // Handle cancel questions
+  // Handle cancel questions - user confirmed "Yes, Interrupt" on the popup
   const handleCancelQuestions = () => {
-      setStep(STEP_UPLOAD);
+    clearGuestListingData();
+    setStep(STEP_UPLOAD);
   };
 
   // Handle category modal completion
@@ -479,7 +603,7 @@ export const AIListingCreationPageComponent = ({
     setStep(STEP_PRICE_QUESTION);
   };
 
-  // Handle cancel categories
+  // Handle cancel categories - user confirmed "Yes, Interrupt" on the popup
   const handleCancelCategories = () => {
     clearGuestListingData();
     setStep(STEP_UPLOAD);
@@ -695,6 +819,7 @@ export const AIListingCreationPageComponent = ({
 
 AIListingCreationPageComponent.propTypes = {
   currentUser: propTypes.currentUser,
+  isAuthenticated: bool,
   createListingDraftInProgress: bool.isRequired,
   createListingDraftError: propTypes.error,
   onCreateListingDraft: func.isRequired,
@@ -707,6 +832,7 @@ AIListingCreationPageComponent.propTypes = {
 
 const mapStateToProps = state => {
   const { currentUser } = state.user;
+  const { isAuthenticated } = state;
   const {
     createListingDraftInProgress,
     createListingDraftError,
@@ -714,6 +840,7 @@ const mapStateToProps = state => {
 
   return {
     currentUser,
+    isAuthenticated,
     createListingDraftInProgress,
     createListingDraftError,
   };

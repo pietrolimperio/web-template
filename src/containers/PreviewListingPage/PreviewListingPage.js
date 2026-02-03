@@ -83,10 +83,17 @@ import {
   requestDeleteDraft,
 } from '../EditListingPage/EditListingPage.duck';
 import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
-import { sendVerificationEmail } from '../../ducks/user.duck';
+import { sendVerificationEmail, fetchCurrentUser } from '../../ducks/user.duck';
 import EmailReminder from '../../components/ModalMissingInformation/EmailReminder';
 import productApiInstance, { createProductSnapshot, imageEntitiesToFiles } from '../../util/productApi';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
+import {
+  loadGuestListingData,
+  setGuestListingPendingPublish,
+  isGuestListingPendingPublish,
+  clearGuestListingData,
+  clearGuestListingPendingPublish,
+} from '../../util/guestListingStorage';
 
 import css from './PreviewListingPage.module.css';
 
@@ -172,12 +179,80 @@ export const PreviewListingPageComponent = props => {
     sendVerificationEmailInProgress,
     sendVerificationEmailError,
     onResendVerificationEmail,
+    onFetchCurrentUser,
     params,
   } = props;
 
   const { id, returnURLType } = params;
   const listingId = id ? new UUID(id) : null;
-  const currentListing = ensureOwnListing(getListing(listingId));
+  
+  // Check if this is a guest preview page
+  const isGuestPreview = history?.location?.pathname === '/l/guest-preview-listing';
+  const isGuest = isGuestPreview || (!currentUser?.id);
+  
+  // Load guest listing data if guest preview
+  const [guestListingData, setGuestListingData] = useState(null);
+  const [guestImages, setGuestImages] = useState([]);
+  
+  useEffect(() => {
+    if (isGuestPreview) {
+      const saved = loadGuestListingData();
+      if (saved && saved.listingData) {
+        setGuestListingData(saved.listingData);
+        setGuestImages(saved.images || []);
+        // Mark as fetched for guest listings
+        setListingFetched(true);
+      } else {
+        // No saved data, redirect back to creation
+        // Don't set listingFetched to true to avoid showing error
+        history.push('/l/new');
+      }
+    }
+  }, [isGuestPreview, history]);
+  
+  // Create virtual listing from guest data
+  const guestListing = useMemo(() => {
+    if (!isGuestPreview || !guestListingData) return null;
+    
+    // Create a virtual listing object that matches the expected structure
+    return {
+      id: { uuid: 'guest-draft' },
+      type: 'ownListing',
+      attributes: {
+        ...guestListingData,
+        state: LISTING_STATE_DRAFT,
+        title: guestListingData.title || 'Draft Listing',
+        description: guestListingData.description || '',
+        price: guestListingData.price || { amount: 0, currency: 'EUR' },
+        publicData: guestListingData.publicData || {},
+        privateData: guestListingData.privateData || {},
+        availabilityPlan: guestListingData.availabilityPlan || null,
+      },
+      images: guestImages.map((file, index) => ({
+        id: { uuid: `guest-image-${index}` },
+        imageId: { uuid: `guest-image-${index}` },
+        type: 'image',
+        attributes: {
+          variants: {
+            'scaled-small': { url: URL.createObjectURL(file) },
+            'scaled-medium': { url: URL.createObjectURL(file) },
+            'scaled-large': { url: URL.createObjectURL(file) },
+          },
+        },
+      })),
+    };
+  }, [isGuestPreview, guestListingData, guestImages]);
+  
+  // For guest preview, always use guest listing (even if null during loading)
+  // For regular listings, use ensureOwnListing
+  const currentListing = isGuestPreview
+    ? (guestListing || {
+        id: { uuid: 'guest-draft-loading' },
+        type: 'ownListing',
+        attributes: { publicData: {}, state: LISTING_STATE_DRAFT },
+        images: [],
+      })
+    : ensureOwnListing(getListing(listingId));
   
   // Check if URL contains /draft parameter
   const isDraftPath = history?.location?.pathname?.includes('/draft') || false;
@@ -187,7 +262,8 @@ export const PreviewListingPageComponent = props => {
   const isDraft = currentListingState === LISTING_STATE_DRAFT;
   
   // Use draft path parameter or listing state to determine if it's a draft
-  const isDraftMode = isDraftPath || isDraft;
+  // Guest preview is always in draft mode
+  const isDraftMode = isGuestPreview || isDraftPath || isDraft;
 
   const ensuredCurrentUser = ensureCurrentUser(currentUser);
   const currentUserLoaded = !!ensuredCurrentUser.id;
@@ -216,6 +292,12 @@ export const PreviewListingPageComponent = props => {
   // Geocoded location state for addresses without geolocation
   const [geocodedLocation, setGeocodedLocation] = useState(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  
+  // Track if we've already tried to fetch user location for this listing
+  const [hasTriedFetchingUserLocation, setHasTriedFetchingUserLocation] = useState(false);
+  const [isFetchingUserForLocation, setIsFetchingUserForLocation] = useState(false);
+  // Prevent re-calling onUpdateListing for location (avoids infinite loop when dispatch triggers re-render)
+  const hasAttemptedLocationUpdateRef = useRef(false);
 
   // Image gallery state
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -326,19 +408,19 @@ export const PreviewListingPageComponent = props => {
   const [editingException, setEditingException] = useState(null);
   const [newVariant, setNewVariant] = useState({ dates: [] });
 
-  // Fetch listing data on mount
+  // Fetch listing data on mount (skip for guest preview)
   useEffect(() => {
-    if (listingId) {
+    if (listingId && !isGuestPreview) {
       onFetchListing({ id: listingId }, config)
         .then(() => setListingFetched(true))
         .catch(() => setListingFetched(true));
     }
-  }, [id]);
+  }, [id, isGuestPreview, onFetchListing, config]);
 
-  // Fetch availability exceptions when listing is loaded
+  // Fetch availability exceptions when listing is loaded (skip for guest preview)
   useEffect(() => {
     const fetchAvailabilityExceptions = async () => {
-      if (!currentListing.id || !listingFetched) return;
+      if (!currentListing.id || !listingFetched || isGuestPreview) return;
 
       try {
         // Create SDK instance
@@ -474,19 +556,33 @@ export const PreviewListingPageComponent = props => {
     fetchAvailabilityExceptions();
   }, [currentListing.id, listingFetched, config, currentListing.attributes?.publicData?.availableFrom, currentListing.attributes?.publicData?.availableUntil]);
 
+  // Track the last listing ID we initialized to avoid re-initializing on every render
+  const lastInitializedListingIdRef = useRef(null);
+  // Prevent re-calling onUpdateListing for snapshot (avoids infinite loop when dispatch triggers re-render)
+  const hasAttemptedSnapshotSaveRef = useRef(false);
+  
   // Initialize field values when listing is loaded
   useEffect(() => {
-    if (currentListing.id) {
-      setFieldValues({
+    const listingIdUuid = currentListing.id?.uuid || (typeof currentListing.id === 'string' ? currentListing.id : null);
+    
+    // Only initialize if this is a new listing (ID changed)
+    if (listingIdUuid && listingIdUuid !== lastInitializedListingIdRef.current) {
+      lastInitializedListingIdRef.current = listingIdUuid;
+      hasAttemptedSnapshotSaveRef.current = false;
+      
+      const newFieldValues = {
         title: currentListing.attributes?.title || '',
         description: currentListing.attributes?.description || '',
         price: currentListing.attributes?.price?.amount / 100 || 0,
         brand: currentListing.attributes?.publicData?.brand || '',
         condition: currentListing.attributes?.publicData?.condition || 'Used',
-      });
+      };
+      
+      setFieldValues(newFieldValues);
       
       // Load or create original snapshot when listing is loaded in draft mode
-      if (isDraftMode && !originalSnapshot) {
+      // Skip for guest preview (no real listing ID to update)
+      if (isDraftMode && !originalSnapshot && !isGuestPreview && listingId) {
         const privateData = currentListing.attributes?.privateData || {};
         const savedOriginalSnapshot = privateData.originalSnapshot;
         const sensitiveFieldsModified = privateData.sensitiveFieldsModified || false;
@@ -514,8 +610,9 @@ export const PreviewListingPageComponent = props => {
               });
             })(),
           });
-        } else {
-          // Create and save original snapshot for the first time
+        } else if (!hasAttemptedSnapshotSaveRef.current) {
+          // Create and save original snapshot for the first time (only once per listing)
+          hasAttemptedSnapshotSaveRef.current = true;
           const snapshot = createProductSnapshot(currentListing);
           setOriginalSnapshot(snapshot);
           
@@ -532,7 +629,7 @@ export const PreviewListingPageComponent = props => {
             images: currentListing.images || [],
           });
           
-          // Save original snapshot to privateData
+          // Save original snapshot to privateData (only for real listings, not guest preview)
           onUpdateListing('details', {
             id: listingId,
             privateData: {
@@ -547,9 +644,44 @@ export const PreviewListingPageComponent = props => {
         
         // Reset hidden images when loading a new listing
         setHiddenImageIds(new Set());
+      } else if (isDraftMode && !originalSnapshot && isGuestPreview) {
+        // For guest preview, just create the snapshot locally without saving to API
+        const snapshot = createProductSnapshot(currentListing);
+        setOriginalSnapshot(snapshot);
+        
+        // Save complete listing for restoration
+        setOriginalListing({
+          title: currentListing.attributes?.title || '',
+          description: currentListing.attributes?.description || '',
+          brand: currentListing.attributes?.publicData?.brand || '',
+          keyFeatures: (() => {
+            const publicData = currentListing.attributes?.publicData || {};
+            const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
+            return publicData[keyFeaturesFieldName] || [];
+          })(),
+          images: currentListing.images || [],
+        });
+        
+        // Reset hidden images when loading a new listing
+        setHiddenImageIds(new Set());
       }
     }
-  }, [currentListing.id, isDraftMode]);
+  }, [
+    currentListing.id?.uuid || (typeof currentListing.id === 'string' ? currentListing.id : null),
+    currentListing.attributes?.title,
+    currentListing.attributes?.description,
+    currentListing.attributes?.price?.amount,
+    currentListing.attributes?.publicData?.brand,
+    currentListing.attributes?.publicData?.condition,
+    currentListing.attributes?.privateData?.originalSnapshot,
+    currentListing.images?.length,
+    isDraftMode,
+    isGuestPreview,
+    listingId?.uuid || (typeof listingId === 'string' ? listingId : null),
+    originalSnapshot,
+    onUpdateListing,
+    config,
+  ]);
 
   // Fetch Stripe account data on page load if user is logged in
   // This ensures we have the full stripeAccountData (not just the ID reference)
@@ -610,8 +742,133 @@ export const PreviewListingPageComponent = props => {
     }
   }, [currentListing.attributes?.publicData?.location, intl.locale]);
 
+  // Reset flags when listing ID changes
+  useEffect(() => {
+    if (currentListing?.id) {
+      setHasTriedFetchingUserLocation(false);
+      hasAttemptedLocationUpdateRef.current = false;
+    }
+  }, [currentListing?.id?.uuid || currentListing?.id]);
+
+  // Check for location and fetch user data if missing
+  useEffect(() => {
+    // Skip for guest preview or if listing not loaded
+    if (isGuestPreview || !listingFetched || !currentListing?.id) {
+      return;
+    }
+
+    const location = currentListing.attributes?.publicData?.location;
+    const hasLocation = location && (
+      location.address || 
+      location.geolocation ||
+      (typeof location.address === 'object' && (location.address.address || location.address.city))
+    );
+
+    // If no location and user is authenticated, fetch user data to check for location
+    // Only try once per listing
+    if (!hasLocation && currentUserLoaded && onFetchCurrentUser && !hasTriedFetchingUserLocation) {
+      setHasTriedFetchingUserLocation(true);
+      setIsFetchingUserForLocation(true);
+      
+      // Fetch user with profile included
+      onFetchCurrentUser({ 
+        enforce: true,
+        callParams: { 
+          include: ['effectivePermissionSet', 'profileImage', 'stripeAccount', 'profile'] 
+        },
+        updateHasListings: false,
+        updateNotifications: false,
+      })
+        .catch(error => {
+          console.error('Failed to fetch current user for location prefill:', error);
+          setIsFetchingUserForLocation(false);
+        });
+    }
+  }, [listingFetched, currentListing?.id, currentListing?.attributes?.publicData?.location, currentUserLoaded, isGuestPreview, onFetchCurrentUser, hasTriedFetchingUserLocation]);
+
+  // Handle location update after user is fetched
+  useEffect(() => {
+    // Skip if not fetching or already has location
+    if (!isFetchingUserForLocation || isGuestPreview || !listingFetched || !currentListing?.id) {
+      return;
+    }
+
+    const location = currentListing.attributes?.publicData?.location;
+    const hasLocation = location && (
+      location.address || 
+      location.geolocation ||
+      (typeof location.address === 'object' && (location.address.address || location.address.city))
+    );
+
+    if (hasLocation) {
+      setIsFetchingUserForLocation(false);
+      return;
+    }
+
+    // Check if currentUser has been updated with profile data
+    const userAddress = currentUser?.attributes?.profile?.privateData?.address;
+    
+    if (userAddress && (userAddress.addressLine1 || userAddress.city || userAddress.postalCode)) {
+      // Only attempt once per listing to avoid infinite loop (dispatch triggers re-render)
+      if (hasAttemptedLocationUpdateRef.current) {
+        setIsFetchingUserForLocation(false);
+        return;
+      }
+      hasAttemptedLocationUpdateRef.current = true;
+
+      // Build location data from user profile
+      const addressParts = [
+        userAddress.addressLine1,
+        userAddress.city,
+        userAddress.postalCode,
+        userAddress.country,
+      ].filter(Boolean);
+      
+      const locationData = {
+        address: addressParts.join(', '),
+        ...(userAddress.addressLine1 && { addressLine1: userAddress.addressLine1 }),
+        ...(userAddress.addressLine2 && { addressLine2: userAddress.addressLine2 }),
+        ...(userAddress.city && { city: userAddress.city }),
+        ...(userAddress.state && { state: userAddress.state }),
+        ...(userAddress.postalCode && { postalCode: userAddress.postalCode }),
+        ...(userAddress.country && { country: userAddress.country }),
+      };
+
+      const updateData = {
+        id: currentListing.id,
+        publicData: {
+          ...currentListing.attributes.publicData,
+          location: locationData,
+          locationVisible: true, // Always set location as visible by default
+        },
+        ...(userAddress.geolocation && {
+          geolocation: {
+            lat: userAddress.geolocation.lat,
+            lng: userAddress.geolocation.lng,
+          },
+        }),
+      };
+
+      // Update listing with user's location
+      onUpdateListing('location', updateData, config)
+        .catch(error => {
+          console.error('Failed to update listing with user location:', error);
+        })
+        .finally(() => {
+          setIsFetchingUserForLocation(false);
+        });
+    } else {
+      setIsFetchingUserForLocation(false);
+    }
+  }, [isFetchingUserForLocation, currentUser, currentListing, isGuestPreview, listingFetched, onUpdateListing, config]);
+
   // Handler functions for editing
   const handleEditField = fieldName => {
+    // Disable editing for guest users
+    if (isGuestPreview) {
+      return;
+    }
+    
     // Evita la modifica di alcuni campi su annunci pubblicati (non draft)
     if (
       !isDraftMode &&
@@ -1239,6 +1496,11 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleImageUpload = async event => {
+    // Disable for guest users
+    if (isGuestPreview) {
+      return;
+    }
+    
     // Niente upload immagini se l'annuncio non è in bozza
     if (!isDraftMode) {
       return;
@@ -1283,6 +1545,11 @@ export const PreviewListingPageComponent = props => {
   };
 
   const handleImageReplace = async (imageId, imageIndex, event) => {
+    // Disable for guest users
+    if (isGuestPreview) {
+      return;
+    }
+    
     // No image replacement for published listing
     if (!isDraftMode) {
       return;
@@ -1529,11 +1796,17 @@ export const PreviewListingPageComponent = props => {
     (hasRequirements(stripeAccountData, 'past_due') ||
       hasRequirements(stripeAccountData, 'currently_due'));
 
-  const listingNotFound = listingFetched && !currentListing.id;
+  // For guest preview, listing always exists (it's virtual)
+  const listingNotFound = listingFetched && !isGuestPreview && !currentListing.id;
   
   // Redirect to correct URL based on listing state
+  // Skip this redirect for guest preview (no real listing ID)
   useEffect(() => {
-    if (listingFetched && currentListing.id && history?.location?.pathname) {
+    if (isGuestPreview) {
+      return; // Don't redirect guest preview pages
+    }
+    
+    if (listingFetched && currentListing.id && history?.location?.pathname && id) {
       const currentPath = history.location.pathname;
       const expectedPath = isDraft ? `/l/edit/${id}/draft` : `/l/edit/${id}`;
       
@@ -1542,7 +1815,7 @@ export const PreviewListingPageComponent = props => {
         history.replace(expectedPath);
       }
     }
-  }, [listingFetched, currentListing.id, isDraft, id, history]);
+  }, [listingFetched, currentListing.id, isDraft, id, history, isGuestPreview]);
 
   // Open availability modal automatically if query parameter is present
   useEffect(() => {
@@ -1609,13 +1882,21 @@ export const PreviewListingPageComponent = props => {
   }, [currentListing, listingId, routeConfiguration, history]);
 
   const handleDeleteDraft = useCallback(async () => {
+    // For guest preview, just clear localStorage
+    if (isGuestPreview) {
+      clearGuestListingData();
+      clearGuestListingPendingPublish();
+      history.push('/l/new');
+      return;
+    }
+
     if (!isDraftMode || !listingId) {
       return;
     }
 
     // Show confirmation dialog instead of window.confirm
     setShowDeleteDraftDialog(true);
-  }, [isDraftMode, listingId]);
+  }, [isDraftMode, listingId, isGuestPreview, clearGuestListingData, clearGuestListingPendingPublish, history]);
 
   const handleConfirmDeleteDraft = useCallback(async () => {
     if (!isDraftMode || !listingId) {
@@ -1655,6 +1936,22 @@ export const PreviewListingPageComponent = props => {
   const handlePublish = useCallback(async () => {
     // Prevent multiple publish attempts
     if (hasPublished || isCreatingStripeAccount) {
+      return;
+    }
+
+    // If guest user, redirect to login with flag to create draft after authentication
+    if (isGuest || !currentUserLoaded) {
+      setGuestListingPendingPublish();
+      const loginPath = createResourceLocatorString(
+        'LoginPage',
+        routeConfiguration,
+        {},
+        {}
+      );
+      history.push({
+        pathname: loginPath,
+        state: { from: '/l/guest-preview-listing' },
+      });
       return;
     }
 
@@ -3029,7 +3326,28 @@ export const PreviewListingPageComponent = props => {
               <FormattedMessage id={isDraft ? "PreviewListingPage.heading" : "PreviewListingPage.headingEdit"} />
             </h1>
             <p className={css.description}>
-              <FormattedMessage id={isDraft ? "PreviewListingPage.descriptionEditDraft" : "PreviewListingPage.descriptionEdit"} />
+              {isGuestPreview ? (
+                <>
+                                  <a 
+                    href={createResourceLocatorString('LoginPage', routeConfiguration, {}, {})}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Set flag so draft is created after login
+                      setGuestListingPendingPublish();
+                      history.push(createResourceLocatorString('LoginPage', routeConfiguration, {}, {}));
+                    }}
+                    style={{ color: config.branding?.marketplaceColor || '#4A90E2', textDecoration: 'underline' }}
+                  >
+                    <FormattedMessage id="PreviewListingPage.loginLink" defaultMessage="Login" />
+                  </a>
+                  <FormattedMessage 
+                    id="PreviewListingPage.guestDescription" 
+                    defaultMessage="Login to edit the listing and publish it. " 
+                  />
+                </>
+              ) : (
+                <FormattedMessage id={isDraft ? "PreviewListingPage.descriptionEditDraft" : "PreviewListingPage.descriptionEdit"} />
+              )}
             </p>
 
             {/* Preview Content */}
@@ -3091,8 +3409,8 @@ export const PreviewListingPageComponent = props => {
                     {/* Thumbnails - Horizontally scrollable, delete icons if more than 4 images */}
                     <div className={css.thumbnailsContainer}>
                       <div className={css.thumbnailsScroll}>
-                        {/* Upload New Image Button – solo in modalità bozza */}
-                        {isDraftMode && (
+                        {/* Upload New Image Button – solo in modalità bozza e non guest */}
+                        {isDraftMode && !isGuestPreview && (
                           <div className={css.thumbnail}>
                             <label className={css.uploadThumbnail}>
                               <input
@@ -3134,8 +3452,8 @@ export const PreviewListingPageComponent = props => {
                                   className={css.thumbnailImage}
                                 />
                               </div>
-                              {/* Pulsante elimina/sostituisci immagine – solo in modalità bozza */}
-                              {isDraftMode && (
+                              {/* Pulsante elimina/sostituisci immagine – solo in modalità bozza e non guest */}
+                              {isDraftMode && !isGuestPreview && (
                                 <div className={css.thumbnailDeleteButtonWrapper}>
                                   {isLastImage ? (
                                     // Se c'è solo un'immagine, mostra icona di update per sostituirla
@@ -3292,7 +3610,7 @@ export const PreviewListingPageComponent = props => {
                       defaultMessage="Description"
                     />
                   </h3>
-                  {editingField !== 'description' && isDraftMode && (
+                  {editingField !== 'description' && isDraftMode && !isGuestPreview && (
                     <button
                       onClick={() => handleEditField('description')}
                       className={css.modifyLink}
@@ -3420,7 +3738,7 @@ export const PreviewListingPageComponent = props => {
                               { id: conditionKey, defaultMessage: condition }
                             );
                           })()}
-                          {isDraftMode && (
+                          {isDraftMode && !isGuestPreview && (
                             <button onClick={() => handleEditField('condition')} className={css.editLink}>
                               <FormattedMessage
                                 id="PreviewListingPage.editLink"
@@ -3477,7 +3795,7 @@ export const PreviewListingPageComponent = props => {
                           ) : (
                             <span className={css.detailValue}>
                               {fieldValues.brand || listing.attributes?.publicData?.brand || ''}
-                              {isDraftMode && (
+                              {isDraftMode && !isGuestPreview && (
                                 <button onClick={() => handleEditField('brand')} className={css.editLink}>
                                   <FormattedMessage
                                     id="PreviewListingPage.editLink"
@@ -3531,7 +3849,7 @@ export const PreviewListingPageComponent = props => {
                               >
                                 <span className={css.keyFeatureBullet}></span>
                                 <span className={css.keyFeatureText}>{String(feature)}</span>
-                                {hoveredFeatureIndex === index && isDraftMode && (
+                                {hoveredFeatureIndex === index && isDraftMode && !isGuestPreview && (
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveKeyFeature(index)}
@@ -3547,7 +3865,7 @@ export const PreviewListingPageComponent = props => {
                           </ul>
                           
                           {/* Add Feature Link – solo per annunci in bozza */}
-                          {isDraftMode && (
+                          {isDraftMode && !isGuestPreview && (
                             showAddFeatureInput ? (
                               <div className={css.addFeatureInputWrapper}>
                                 <input
@@ -3644,7 +3962,7 @@ export const PreviewListingPageComponent = props => {
                       <>
                         <h2 className={css.listingTitle}>
                           {fieldValues.title || listing.attributes.title}
-                          {isDraftMode && (
+                          {isDraftMode && !isGuestPreview && (
                             <button onClick={() => handleEditField('title')} className={css.editLink}>
                               <FormattedMessage
                                 id="PreviewListingPage.editLink"
@@ -3661,8 +3979,11 @@ export const PreviewListingPageComponent = props => {
                   <div className={css.calendarSection}>
                     <div className={css.calendarHeader}>
                       <button
-                        onClick={() => setShowAvailabilityModal(true)}
+                        onClick={() => !isGuestPreview && setShowAvailabilityModal(true)}
                         className={css.modifyLink}
+                        disabled={isGuestPreview}
+                        style={isGuestPreview ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                        title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
                       >
                         <FormattedMessage
                           id="PreviewListingPage.modifyAvailabilityLink"
@@ -3679,7 +4000,7 @@ export const PreviewListingPageComponent = props => {
                       readOnly={true}
                       availableFrom={currentListing.attributes?.publicData?.availableFrom}
                       availableUntil={currentListing.attributes?.publicData?.availableUntil}
-                      onMonthsContainerClick={() => setShowAvailabilityModal(true)}
+                      onMonthsContainerClick={isGuestPreview ? null : () => setShowAvailabilityModal(true)}
                     />
                   </div>
 
@@ -3856,8 +4177,11 @@ export const PreviewListingPageComponent = props => {
                         <div className={css.priceSection}>
                           <div className={css.priceSectionHeader}>
                             <button
-                              onClick={() => setShowPriceModal(true)}
+                              onClick={() => !isGuestPreview && setShowPriceModal(true)}
                               className={css.modifyLink}
+                              disabled={isGuestPreview}
+                              style={isGuestPreview ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                              title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
                             >
                               <FormattedMessage
                                 id="PreviewListingPage.modifyPriceLink"
@@ -3873,9 +4197,11 @@ export const PreviewListingPageComponent = props => {
                               className={css.priceCard}
                               style={{
                                 borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                                cursor: 'pointer',
+                                cursor: isGuestPreview ? 'default' : 'pointer',
+                                opacity: isGuestPreview ? 0.7 : 1,
                               }}
-                              onClick={() => setShowPriceModal(true)}
+                              onClick={() => !isGuestPreview && setShowPriceModal(true)}
+                              title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
                             >
                               <div className={css.priceCardPrice}>
                                 {formatPrice(defaultPrice)}
@@ -3895,9 +4221,11 @@ export const PreviewListingPageComponent = props => {
                                 className={css.priceCard}
                                 style={{
                                   borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                                  cursor: 'pointer',
+                                  cursor: isGuestPreview ? 'default' : 'pointer',
+                                  opacity: isGuestPreview ? 0.7 : 1,
                                 }}
-                                onClick={() => setShowPriceModal(true)}
+                                onClick={() => !isGuestPreview && setShowPriceModal(true)}
+                                title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
                               >
                                 <div className={css.priceCardPrice}>
                                   {variant.type === 'duration' && variant.percentageDiscount != null ? (
@@ -4038,8 +4366,11 @@ export const PreviewListingPageComponent = props => {
                           <div className={css.mapEditLink}>
                             <button
                               type="button"
-                              onClick={() => setShowLocationModal(true)}
+                              onClick={() => !isGuestPreview && setShowLocationModal(true)}
                               className={css.modifyLink}
+                              disabled={isGuestPreview}
+                              style={isGuestPreview ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                              title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
                             >
                               <FormattedMessage
                                 id="PreviewListingPage.editAddress"
@@ -4050,6 +4381,36 @@ export const PreviewListingPageComponent = props => {
                         </div>
                       );
                     })()}
+
+                  {/* Add Location Link - shown when no location exists */}
+                  {!listing.attributes.publicData?.location && (
+                    <div className={css.mapSection}>
+                      <div className={css.noLocationSection}>
+                        <div className={css.noLocationMessage}>
+                          <span className={css.locationIcon}>📍</span>
+                          <FormattedMessage
+                            id="PreviewListingPage.noLocationMessage"
+                            defaultMessage="No location set for this listing"
+                          />
+                        </div>
+                        <div className={css.mapEditLink}>
+                          <button
+                            type="button"
+                            onClick={() => !isGuestPreview && setShowLocationModal(true)}
+                            className={css.modifyLink}
+                            disabled={isGuestPreview}
+                            style={isGuestPreview ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                            title={isGuestPreview ? intl.formatMessage({ id: 'PreviewListingPage.guestTooltip' }) : undefined}
+                          >
+                            <FormattedMessage
+                              id="PreviewListingPage.addLocation"
+                              defaultMessage="Add location"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -4063,7 +4424,7 @@ export const PreviewListingPageComponent = props => {
 
             {/* Action Buttons */}
             <div className={css.actions}>
-              {isDraftMode && (
+              {(isDraftMode || isGuestPreview) && (
                 <SecondaryButton
                   onClick={handleDeleteDraft}
                   inProgress={deleteDraftInProgress}
@@ -4083,7 +4444,7 @@ export const PreviewListingPageComponent = props => {
                     <FormattedMessage id="PreviewListingPage.savingButton" defaultMessage="Salvataggio..." />
                   )
                 ) : (
-                  isDraftMode ? (
+                  isDraftMode || isGuestPreview ? (
                     <FormattedMessage id="PreviewListingPage.publishButton" />
                   ) : (
                     <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Salva" />
@@ -5423,7 +5784,7 @@ PreviewListingPageComponent.propTypes = {
   sendVerificationEmailError: propTypes.error,
   onResendVerificationEmail: func.isRequired,
   params: shape({
-    id: string.isRequired,
+    id: string, // Optional for guest preview
     returnURLType: string,
   }).isRequired,
   history: shape({
@@ -5491,6 +5852,7 @@ const mapDispatchToProps = dispatch => ({
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
   onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
+  onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
   onUploadImage: (listingId, imageFile, config) =>
     dispatch((dispatch, getState, sdk) => {
       const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});

@@ -18,6 +18,7 @@ import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
 import { signup, authenticationInProgress } from '../../ducks/auth.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { useGuestListingAfterAuth } from '../../util/useGuestListingAfterAuth';
 import {
   autocompleteSearchRequired,
   autocompletePlaceSelected,
@@ -273,6 +274,7 @@ export const NewSignupPageComponent = ({
   sendVerificationEmailInProgress = false,
   sendVerificationEmailError = null,
   onResendVerificationEmail,
+  dispatch,
 }) => {
   const config = useConfiguration();
   const intl = useIntl();
@@ -305,6 +307,9 @@ export const NewSignupPageComponent = ({
     setMounted(true);
     window.scrollTo(0, 0);
   }, []);
+
+  // Handle guest listing creation after authentication
+  useGuestListingAfterAuth(isAuthenticated, currentUser, dispatch);
 
   // Scroll to error message when it appears
   useEffect(() => {
@@ -1222,6 +1227,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => ({
   submitSignup: params => dispatch(signup(params)),
+  dispatch,
 });
 
 const NewSignupPage = compose(

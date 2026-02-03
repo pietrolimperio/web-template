@@ -11,6 +11,8 @@ import { ensureCurrentUser } from '../../util/data';
 import { verify } from '../../ducks/emailVerification.duck';
 import { fetchCurrentUser } from '../../ducks/user.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { isGuestListingPendingPublish } from '../../util/guestListingStorage';
+import { useGuestListingAfterAuth } from '../../util/useGuestListingAfterAuth';
 import {
   Page,
   NamedRedirect,
@@ -72,7 +74,12 @@ export const EmailVerificationPageComponent = props => {
     verificationError,
     location,
     onFetchCurrentUser,
+    isAuthenticated,
+    dispatch,
   } = props;
+  
+  // Use hook to handle guest listing creation after email verification
+  useGuestListingAfterAuth(isAuthenticated, currentUser, dispatch);
 
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
@@ -186,9 +193,20 @@ export const EmailVerificationPageComponent = props => {
       return;
     }
 
-    // If email is already verified, just redirect
+    // If email is already verified, check if there's a pending guest listing
     if (emailVerified && !pendingEmail) {
       console.log('📧 Email already verified');
+      
+      // If there's a pending guest listing, let useGuestListingAfterAuth handle the redirect
+      // Don't redirect to landing page - the hook will redirect to preview page after creating draft
+      if (isGuestListingPendingPublish()) {
+        console.log('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
+        // Don't set redirect - let the hook handle it
+        setVerificationAttempted(true);
+        return;
+      }
+      
+      // No pending guest listing, redirect to landing page as usual
       setRedirectTarget({ 
         name: 'LandingPage', 
         state: { emailVerification: 'success', userName: name, userEmail: email } 
@@ -208,6 +226,17 @@ export const EmailVerificationPageComponent = props => {
           console.log('✅ Email verified successfully');
           // Clear token from sessionStorage
           sessionStorage.removeItem(PENDING_VERIFICATION_TOKEN_KEY);
+          
+          // If there's a pending guest listing, let useGuestListingAfterAuth handle the redirect
+          // Don't redirect to landing page - the hook will redirect to preview page after creating draft
+          if (isGuestListingPendingPublish()) {
+            console.log('📧 Guest listing pending - will be handled by useGuestListingAfterAuth hook');
+            // Don't set redirect - let the hook handle it after user data is refreshed
+            // The hook will trigger when emailVerified becomes true
+            return;
+          }
+          
+          // No pending guest listing, redirect to landing page as usual
           setRedirectTarget({ 
             name: 'LandingPage', 
             state: { emailVerification: 'success', userName: name, userEmail: email } 
@@ -279,12 +308,14 @@ export const EmailVerificationPageComponent = props => {
 const mapStateToProps = state => {
   const { currentUser } = state.user;
   const { isVerified, verificationError, verificationInProgress } = state.emailVerification;
+  const { isAuthenticated } = state.auth;
   return {
     isVerified,
     verificationError,
     emailVerificationInProgress: verificationInProgress,
     currentUser,
     scrollingDisabled: isScrollingDisabled(state),
+    isAuthenticated,
   };
 };
 
@@ -293,6 +324,7 @@ const mapDispatchToProps = dispatch => ({
     return dispatch(verify(verificationToken));
   },
   onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
+  dispatch, // Add dispatch for useGuestListingAfterAuth
 });
 
 // Note: it is important that the withRouter HOC is **outside** the

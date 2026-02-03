@@ -13,6 +13,8 @@ import { ensureCurrentUser } from '../../util/data';
 
 import { login, authenticationInProgress } from '../../ducks/auth.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { useGuestListingAfterAuth } from '../../util/useGuestListingAfterAuth';
+import { isGuestListingPendingPublish } from '../../util/guestListingStorage';
 
 import { Page, Form, PrimaryButton, FieldTextInput, NamedLink, IconSpinner } from '../../components';
 
@@ -31,6 +33,7 @@ export const NewLoginPageComponent = props => {
     loginError,
     scrollingDisabled,
     submitLogin,
+    dispatch,
   } = props;
 
   const config = useConfiguration();
@@ -45,12 +48,17 @@ export const NewLoginPageComponent = props => {
   const user = ensureCurrentUser(currentUser);
   const currentUserLoaded = !!user.id;
 
+  // Handle guest listing creation after authentication
+  useGuestListingAfterAuth(isAuthenticated, currentUser, dispatch);
+
   // Get redirect location from state
   const from = location.state?.from || null;
 
-  // Redirect if already authenticated
-  const shouldRedirectToFrom = isAuthenticated && from;
-  const shouldRedirectToLandingPage = isAuthenticated && currentUserLoaded;
+  // Check if there's a pending guest listing publish
+  // If so, don't redirect to from - let useGuestListingAfterAuth handle it
+  const hasPendingGuestPublish = isGuestListingPendingPublish();
+  const shouldRedirectToFrom = isAuthenticated && from && !hasPendingGuestPublish;
+  const shouldRedirectToLandingPage = isAuthenticated && currentUserLoaded && !hasPendingGuestPublish;
 
   if (!mounted && shouldRedirectToLandingPage) {
     return (
@@ -237,6 +245,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => ({
   submitLogin: ({ email, password }) => dispatch(login(email, password)),
+  dispatch, // Add dispatch to props for useGuestListingAfterAuth
 });
 
 const NewLoginPage = compose(

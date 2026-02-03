@@ -156,6 +156,12 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       loadData: pageDataLoadingAPI.ListingPage.loadData,
     },
     {
+      path: '/l/guest-preview-listing',
+      name: 'GuestPreviewListingPage',
+      auth: false, // Allow guest users to preview
+      component: PreviewListingPage,
+    },
+    {
       path: '/l/:slug/:id',
       name: 'ProductPage',
       ...authForPrivateMarketplace,
@@ -189,8 +195,7 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
     {
       path: '/l/new',
       name: 'AIListingCreationPage',
-      auth: true,
-      authPage: 'LoginPage',
+      auth: false, // Allow guest users to start creating listings
       component: AIListingCreationPage,
       loadData: pageDataLoadingAPI.AIListingCreationPage.loadData,
     },

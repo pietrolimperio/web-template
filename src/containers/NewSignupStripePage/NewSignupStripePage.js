@@ -19,6 +19,7 @@ import { DEFAULT_LOCALE } from '../../config/localeConfig';
 import { signup, authenticationInProgress } from '../../ducks/auth.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 import { fetchCurrentUser, sendVerificationEmail } from '../../ducks/user.duck';
+import { useGuestListingAfterAuth } from '../../util/useGuestListingAfterAuth';
 import {
   createStripeAccount,
   getStripeConnectAccountLink,
@@ -130,6 +131,7 @@ export const NewSignupStripePageComponent = ({
   sendVerificationEmailError = null,
   params,
   history,
+  dispatch,
 }) => {
   const config = useConfiguration();
   const routes = useRouteConfiguration();
@@ -164,6 +166,9 @@ export const NewSignupStripePageComponent = ({
 
   const user = ensureCurrentUser(currentUser);
   const currentUserLoaded = !!user.id;
+
+  // Handle guest listing creation after authentication
+  useGuestListingAfterAuth(isAuthenticated, currentUser, dispatch);
 
   // Initialize on mount
   useEffect(() => {
@@ -1437,11 +1442,13 @@ const mapDispatchToProps = dispatch => ({
   submitSignup: params => dispatch(signup(params)),
   onUpdateProfile: params => dispatch(updateProfile(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
+  dispatch, // Add dispatch to props for useGuestListingAfterAuth
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
   onVerifyEmail: token => dispatch(verifyEmail(token)),
   onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
   onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
+  dispatch,
 });
 
 const NewSignupStripePage = compose(
