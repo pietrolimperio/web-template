@@ -51,10 +51,12 @@ const QuestionModal = ({
 
   // Calculate initial slider value, rounded to the nearest step
   // e.g., for years (step=1): 2009.5 → 2010, for shoe sizes (step=0.5): 41.5 → 41.5
+  // If defaultValue is provided, use it; otherwise use midpoint
   const getInitialSliderValue = question => {
     const step = question.step ?? 1;
-    const midpoint = (question.min + question.max) / 2;
-    return Math.round(midpoint / step) * step;
+    // Use defaultValue if provided (e.g., from priceSuggestion), otherwise use midpoint
+    const baseValue = question.defaultValue !== undefined ? question.defaultValue : (question.min + question.max) / 2;
+    return Math.round(baseValue / step) * step;
   };
 
   const handleSelectAnswer = value => {

@@ -537,6 +537,7 @@ export const AIListingCreationPageComponent = ({
       min: Math.max(0, suggested / 2),
       max: suggested * 2,
       step: 0.5,
+      defaultValue: suggested, // Use priceSuggestion as initial value
     };
 
     switch (step) {
