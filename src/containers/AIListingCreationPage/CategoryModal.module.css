@@ -180,3 +180,97 @@
     width: 100%;
   }
 }
+
+/* Cancel Confirmation Dialog */
+.dialogOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s;
+}
+
+.dialogBox {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.dialogTitle {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--matterColor);
+  text-align: center;
+}
+
+.dialogMessage {
+  margin: 0 0 24px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--matterColorAnti);
+}
+
+.dialogButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.dialogSecondaryButton,
+.dialogPrimaryButton {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialogSecondaryButton {
+  background-color: var(--matterColorNegative);
+  color: var(--matterColor);
+}
+
+.dialogSecondaryButton:hover {
+  background-color: var(--matterColorBright);
+}
+
+.dialogPrimaryButton {
+  background-color: var(--marketplaceColor);
+  color: white;
+}
+
+.dialogPrimaryButton:hover {
+  background-color: var(--marketplaceColorDark);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

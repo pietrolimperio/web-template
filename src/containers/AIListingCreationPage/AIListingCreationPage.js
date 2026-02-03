@@ -481,6 +481,7 @@ export const AIListingCreationPageComponent = ({
 
   // Handle cancel categories
   const handleCancelCategories = () => {
+    clearGuestListingData();
     setStep(STEP_UPLOAD);
   };
 

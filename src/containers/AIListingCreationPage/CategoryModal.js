@@ -112,6 +112,7 @@ const CategoryModal = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCatId);
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(initialSubId);
   const [selectedThirdCategoryId, setSelectedThirdCategoryId] = useState(initialThirdId);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Reset subcategory when category changes (except on initial load)
   const prevCategoryRef = useRef(initialCatId);
@@ -183,8 +184,17 @@ const CategoryModal = ({
     onComplete(categoriesData);
   };
 
-  const handleCancel = () => {
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelDialog(false);
     onCancel();
+  };
+
+  const handleCancelDialogClose = () => {
+    setShowCancelDialog(false);
   };
 
   const canContinue = selectedCategoryId && selectedSubcategoryId;
@@ -294,7 +304,7 @@ const CategoryModal = ({
           <button
             type="button"
             className={css.cancelButton}
-            onClick={handleCancel}
+            onClick={handleCancelClick}
           >
             <FormattedMessage
               id="CategoryModal.cancel"
@@ -314,6 +324,45 @@ const CategoryModal = ({
           </button>
         </div>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      {showCancelDialog && (
+        <div className={css.dialogOverlay}>
+          <div className={css.dialogBox}>
+            <h3 className={css.dialogTitle}>
+              <FormattedMessage
+                id="QuestionModal.cancelDialogTitle"
+                defaultMessage="Interrupt Listing Creation?"
+              />
+            </h3>
+            <p className={css.dialogMessage}>
+              <FormattedMessage
+                id="QuestionModal.cancelDialogMessage"
+                defaultMessage="If you continue, the listing creation process will be interrupted and you will return to the first step with your previously loaded images. All answers will be lost."
+              />
+            </p>
+            <div className={css.dialogButtons}>
+              <button
+                type="button"
+                onClick={handleCancelDialogClose}
+                className={css.dialogSecondaryButton}
+              >
+                <FormattedMessage id="QuestionModal.cancelDialogStay" defaultMessage="Stay" />
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                className={css.dialogPrimaryButton}
+              >
+                <FormattedMessage
+                  id="QuestionModal.cancelDialogConfirm"
+                  defaultMessage="Yes, Interrupt"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
