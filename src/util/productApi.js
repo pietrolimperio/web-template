@@ -484,6 +484,9 @@ export const mapProductToListingData = (productAnalysis, config) => {
   const normalizedCondition = normalizeCondition(fields.condition);
   const normalizedBrand = normalizeBrand(fields.brand);
 
+  // restFields excludes: title, brand, condition, longDescription, priceSuggestion, weight, dimensions, shortDescription, key_features, tags
+  const { title, brand, condition, longDescription, priceSuggestion, weight, dimensions, priceNew, ...restFields } = fields;
+
   // Map to Sharetribe structure
   const listingData = {
     title: fields.title || 'Untitled',
@@ -497,16 +500,12 @@ export const mapProductToListingData = (productAnalysis, config) => {
       ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId }),
       brand: normalizedBrand, // Always include brand, even if "N/A"
       condition: normalizedCondition,
+      estimatedPriceNew: fields.priceNew,
       // Map weight and dimensions from API (same keys in publicData)
       ...(fields.weight != null && fields.weight !== '' && { weight: fields.weight }),
       ...(fields.dimensions != null && fields.dimensions !== '' && { dimensions: fields.dimensions }),
-      // Add all other fields as custom extended data (excluding priceSuggestion)
-      ...Object.keys(fields).reduce((acc, key) => {
-        if (!['title', 'brand', 'condition', 'longDescription', 'priceSuggestion', 'weight', 'dimensions', 'priceNew'].includes(key)) {
-          acc[`ai_${key}`] = fields[key];
-        }
-        return acc;
-      }, {}),
+      // Add all other fields as custom extended data
+      ...restFields,
     },
     privateData: {
       aiGenerated: true,
@@ -575,13 +574,20 @@ export const mapListingToProductData = listing => {
   const subcategoryId = publicData?.subcategoryId ?? null;
   const thirdCategoryId = publicData?.thirdCategoryId ?? null;
 
-  // Extract AI fields
-  const aiFields = {};
-  Object.keys(publicData || {}).forEach(key => {
-    if (key.startsWith('ai_')) {
-      aiFields[key.replace('ai_', '')] = publicData[key];
-    }
-  });
+  // Extract custom fields (all publicData except standard fields)
+  const {
+    category: _cat,
+    subcategory: _subcat,
+    thirdCategory: _thirdCat,
+    categoryId: _catId,
+    subcategoryId: _subcatId,
+    thirdCategoryId: _thirdCatId,
+    brand: _brand,
+    condition: _cond,
+    weight: _weight,
+    dimensions: _dims,
+    ...customFields
+  } = publicData || {};
 
   return {
     category,
@@ -600,7 +606,7 @@ export const mapListingToProductData = listing => {
       longDescription: description || '',
       weight: publicData?.weight,
       dimensions: publicData?.dimensions,
-      ...aiFields,
+      ...customFields,
     },
   };
 };
@@ -637,20 +643,9 @@ export const isValidProductAnalysis = analysis => {
 export const createProductSnapshot = listing => {
   const { title, description, publicData } = listing.attributes || {};
   
-  // Extract key features from publicData (they might be stored as ai_keyFeatures or similar)
-  const keyFeatures = [];
-  Object.keys(publicData || {}).forEach(key => {
-    if (key.startsWith('ai_') && Array.isArray(publicData[key])) {
-      // Check if it's a keyFeatures array
-      const fieldName = key.replace('ai_', '');
-      if (fieldName.toLowerCase().includes('feature') || fieldName.toLowerCase().includes('key')) {
-        keyFeatures.push(...publicData[key]);
-      }
-    }
-  });
-  
-  // Also check for non-prefixed keyFeatures fields
-  const keyFeaturesFieldNames = ['AI_KeyFeatures', 'ai_KeyFeatures', 'ai_keyFeatures', 'keyFeatures'];
+  // Extract key features from publicData (keyFeatures or key_features)
+  let keyFeatures = [];
+  const keyFeaturesFieldNames = ['keyFeatures', 'key_features'];
   for (const fieldName of keyFeaturesFieldNames) {
     if (publicData?.[fieldName] && Array.isArray(publicData[fieldName])) {
       keyFeatures.push(...publicData[fieldName]);

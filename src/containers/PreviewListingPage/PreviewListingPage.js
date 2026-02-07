@@ -1119,11 +1119,9 @@ export const PreviewListingPageComponent = props => {
 
   // Helper to get key features field name
   const getKeyFeaturesFieldName = (publicData) => {
-    return publicData.AI_KeyFeatures ? 'AI_KeyFeatures' :
-           publicData.ai_KeyFeatures ? 'ai_KeyFeatures' :
-           publicData.ai_keyFeatures ? 'ai_keyFeatures' :
-           publicData.keyFeatures ? 'keyFeatures' :
-           'AI_KeyFeatures'; // default
+    return publicData.keyFeatures ? 'keyFeatures' :
+           publicData.key_features ? 'key_features' :
+           'keyFeatures'; // default
   };
 
   // Reset listing to original state
@@ -3828,21 +3826,17 @@ export const PreviewListingPageComponent = props => {
                       // Try different possible field names
                       const publicData = listing.attributes?.publicData || {};
                       const keyFeatures = 
-                        publicData.AI_KeyFeatures ||
-                        publicData.ai_KeyFeatures ||
-                        publicData.ai_keyFeatures ||
                         publicData.keyFeatures ||
+                        publicData.key_features ||
                         [];
                       
                       const keyFeaturesArray = Array.isArray(keyFeatures) ? keyFeatures : [];
                       
                       // Get the field name for updates
                       const keyFeaturesFieldName = 
-                        publicData.AI_KeyFeatures ? 'AI_KeyFeatures' :
-                        publicData.ai_KeyFeatures ? 'ai_KeyFeatures' :
-                        publicData.ai_keyFeatures ? 'ai_keyFeatures' :
                         publicData.keyFeatures ? 'keyFeatures' :
-                        'AI_KeyFeatures';
+                        publicData.key_features ? 'key_features' :
+                        'keyFeatures';
                       
                       return (
                         <div className={css.keyFeaturesListContainer}>

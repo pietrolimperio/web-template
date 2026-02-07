@@ -1069,10 +1069,8 @@ export const ProductPageComponent = props => {
                   {/* Key Features */}
                   {(() => {
                     const keyFeatures = 
-                      publicData.AI_KeyFeatures ||
-                      publicData.ai_KeyFeatures ||
-                      publicData.ai_keyFeatures ||
                       publicData.keyFeatures ||
+                      publicData.key_features ||
                       [];
                     
                     const keyFeaturesArray = Array.isArray(keyFeatures) ? keyFeatures : [];
