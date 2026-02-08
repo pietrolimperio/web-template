@@ -8,7 +8,7 @@ import devLog from './devLog';
 
 const PRODUCT_API_BASE_URL =
 process.env.REACT_APP_PRODUCT_API_URL || 'http://localhost:3001/api';
-const DEFAULT_MODELS = ['claude-4.5-sonnet'];
+const DEFAULT_MODELS = ['gemini-2.5-flash', 'claude-4.5-sonnet'];
 //const DEFAULT_MODELS =['gemini-2.5-flash','gemini-2.5-pro','gemini-3-flash-preview','gemini-2.5-flash-lite','claude-4.5-sonnet','claude-3-haiku','gpt-5.2','gpt-5.2-mini','grok-4-fast-reasoning','sonar-pro','sonar-reasoning'];
 const DEFAULT_PROMPT_VERSION = 'v3';
 
