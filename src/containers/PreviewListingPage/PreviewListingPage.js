@@ -311,7 +311,6 @@ export const PreviewListingPageComponent = props => {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [showLocationTooltip, setShowLocationTooltip] = useState(false);
   
   // Image deletion confirmation dialog state
   const [showDeleteImageDialog, setShowDeleteImageDialog] = useState(false);
@@ -377,24 +376,21 @@ export const PreviewListingPageComponent = props => {
   const [priceVariantError, setPriceVariantError] = useState(null);
   const previousPercentageDiscountRef = useRef(50);
 
-  // Location visibility
-  const [locationVisible, setLocationVisible] = useState(
-    currentListing.attributes?.publicData?.locationVisible || false
-  );
+  // Location visibility (always true, button hidden)
+  const [locationVisible, setLocationVisible] = useState(true);
   const [handByHandAvailable, setHandByHandAvailable] = useState(
     currentListing.attributes?.publicData?.handByHandAvailable || false
   );
 
-  // Update location visibility state when listing data changes
+  // Update location visibility state when listing data changes (locationVisible always true)
   useEffect(() => {
     if (currentListing.attributes?.publicData) {
-      const newLocationVisible = currentListing.attributes.publicData.locationVisible || false;
       const newHandByHandAvailable = currentListing.attributes.publicData.handByHandAvailable || false;
       
-      setLocationVisible(newLocationVisible);
+      setLocationVisible(true);
       setHandByHandAvailable(newHandByHandAvailable);
     }
-  }, [currentListing.attributes?.publicData?.locationVisible, currentListing.attributes?.publicData?.handByHandAvailable, currentListing.id]);
+  }, [currentListing.attributes?.publicData?.handByHandAvailable, currentListing.id]);
 
   // Availability exceptions state
   const [availabilityExceptions, setAvailabilityExceptions] = useState([]);
@@ -1415,44 +1411,6 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleLocationVisibleToggle = async (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    
-    // If trying to disable location visibility when handByHand is enabled, show tooltip
-    if (handByHandAvailable && locationVisible) {
-      setShowLocationTooltip(true);
-      setTimeout(() => setShowLocationTooltip(false), 3000);
-      return;
-    }
-
-    if (!listingId) {
-      console.error('Listing ID is missing');
-      return;
-    }
-
-    const newValue = !locationVisible;
-    const previousValue = locationVisible;
-    setLocationVisible(newValue);
-
-    try {
-      await onUpdateListing(
-        'location', // tab name
-        {
-          id: listingId,
-          publicData: {
-            ...currentListing.attributes?.publicData,
-            locationVisible: newValue,
-          },
-        },
-        config
-      );
-    } catch (error) {
-      console.error('Failed to update location visibility:', error);
-      setLocationVisible(previousValue); // Revert on error
-    }
-  };
-
   const handleHandByHandToggle = async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -1464,14 +1422,8 @@ export const PreviewListingPageComponent = props => {
 
     const newValue = !handByHandAvailable;
     const previousHandByHandValue = handByHandAvailable;
-    const previousLocationVisibleValue = locationVisible;
-    
-    setHandByHandAvailable(newValue);
 
-    // If enabling hand-by-hand, also enable location visible
-    if (newValue) {
-      setLocationVisible(true);
-    }
+    setHandByHandAvailable(newValue);
 
     try {
       await onUpdateListing(
@@ -1481,16 +1433,14 @@ export const PreviewListingPageComponent = props => {
           publicData: {
             ...currentListing.attributes?.publicData,
             handByHandAvailable: newValue,
-            ...(newValue ? { locationVisible: true } : {}),
+            locationVisible: true, // Always true
           },
         },
         config
       );
     } catch (error) {
       console.error('Failed to update hand-by-hand availability:', error);
-      // Revert both values on error
       setHandByHandAvailable(previousHandByHandValue);
-      setLocationVisible(previousLocationVisibleValue);
     }
   };
 
@@ -2917,7 +2867,7 @@ export const PreviewListingPageComponent = props => {
         address: addressFromDropdowns,
       };
 
-      // Update location and options
+      // Update location and options (locationVisible always true)
       await onUpdateListing(
         'location',
         {
@@ -2925,7 +2875,7 @@ export const PreviewListingPageComponent = props => {
           publicData: {
             ...currentListing.attributes?.publicData,
             location: locationData,
-            locationVisible: modalLocationVisible,
+            locationVisible: true,
             handByHandAvailable: modalHandByHandAvailable,
           },
         },
@@ -2933,7 +2883,7 @@ export const PreviewListingPageComponent = props => {
       );
 
       // Update local state
-      setLocationVisible(modalLocationVisible);
+      setLocationVisible(true);
       setHandByHandAvailable(modalHandByHandAvailable);
 
       // Refresh listing
@@ -4277,29 +4227,9 @@ export const PreviewListingPageComponent = props => {
 
                       return (
                         <div className={css.mapSection}>
-                          {/* Location Visibility Toggles - above the map */}
+                          {/* Location Visibility Toggles - above the map (Location visible button hidden, always true) */}
                           <div className={css.locationToggles}>
                             <div className={css.toggleRow}>
-                              <button
-                                type="button"
-                                className={`${css.toggleButton} ${locationVisible ? css.toggleActive : ''}`}
-                                onClick={handleLocationVisibleToggle}
-                                disabled={updatingListing}
-                                style={locationVisible ? { backgroundColor: config.branding?.marketplaceColor || '#4A90E2', borderColor: config.branding?.marketplaceColor || '#4A90E2' } : {}}
-                              >
-                                <FormattedMessage
-                                  id="PreviewListingPage.locationVisible"
-                                  defaultMessage="Location visible"
-                                />
-                                {showLocationTooltip && (
-                                  <span className={css.toggleTooltip}>
-                                    <FormattedMessage
-                                      id="PreviewListingPage.locationVisibleTooltip"
-                                      defaultMessage="Cannot hide location while hand-by-hand is enabled"
-                                    />
-                                  </span>
-                                )}
-                              </button>
                               <button
                                 type="button"
                                 className={`${css.toggleButton} ${handByHandAvailable ? css.toggleActive : ''}`}
