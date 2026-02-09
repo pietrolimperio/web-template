@@ -1,6 +1,7 @@
 import * as log from '../util/log';
 import * as purchaseProcess from './transactionProcessPurchase';
 import * as bookingProcess from './transactionProcessBooking';
+import * as instantBookingProcess from './transactionProcessInstantBooking';
 import * as inquiryProcess from './transactionProcessInquiry';
 import * as negotiationProcess from './transactionProcessNegotiation';
 
@@ -19,6 +20,7 @@ export const REQUEST = 'request'; // The unitType 'request' means that customer 
 // Then names of supported processes
 export const PURCHASE_PROCESS_NAME = 'default-purchase';
 export const BOOKING_PROCESS_NAME = 'default-booking';
+export const INSTANT_BOOKING_PROCESS_NAME = 'instant-booking';
 export const INQUIRY_PROCESS_NAME = 'default-inquiry';
 export const NEGOTIATION_PROCESS_NAME = 'default-negotiation';
 
@@ -46,6 +48,12 @@ const PROCESSES = [
     name: BOOKING_PROCESS_NAME,
     alias: `${BOOKING_PROCESS_NAME}/release-1`,
     process: bookingProcess,
+    unitTypes: [DAY, NIGHT, HOUR, FIXED],
+  },
+  {
+    name: INSTANT_BOOKING_PROCESS_NAME,
+    alias: `${INSTANT_BOOKING_PROCESS_NAME}/release-1`,
+    process: instantBookingProcess,
     unitTypes: [DAY, NIGHT, HOUR, FIXED],
   },
   {
@@ -225,6 +233,8 @@ export const resolveLatestProcessName = processName => {
     case 'flex-booking-default-process':
     case BOOKING_PROCESS_NAME:
       return BOOKING_PROCESS_NAME;
+    case INSTANT_BOOKING_PROCESS_NAME:
+      return INSTANT_BOOKING_PROCESS_NAME;
     case INQUIRY_PROCESS_NAME:
       return INQUIRY_PROCESS_NAME;
     case NEGOTIATION_PROCESS_NAME:
@@ -303,7 +313,7 @@ export const isPurchaseProcessAlias = processAlias => {
 export const isBookingProcess = processName => {
   const latestProcessName = resolveLatestProcessName(processName);
   const processInfo = PROCESSES.find(process => process.name === latestProcessName);
-  return [BOOKING_PROCESS_NAME].includes(processInfo?.name);
+  return [BOOKING_PROCESS_NAME, INSTANT_BOOKING_PROCESS_NAME].includes(processInfo?.name);
 };
 
 /**

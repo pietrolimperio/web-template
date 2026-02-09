@@ -12,7 +12,7 @@ import {
   getProcess,
   isBookingProcessAlias,
   resolveLatestProcessName,
-  BOOKING_PROCESS_NAME,
+  isBookingProcess,
   NEGOTIATION_PROCESS_NAME,
   PURCHASE_PROCESS_NAME,
 } from '../../transactions/transaction';
@@ -497,7 +497,7 @@ export const CheckoutPageWithPayment = props => {
     listingLink
   );
 
-  const isBooking = processName === BOOKING_PROCESS_NAME;
+  const isBooking = isBookingProcess(processName);
   const isPurchase = processName === PURCHASE_PROCESS_NAME;
   const isNegotiation = processName === NEGOTIATION_PROCESS_NAME;
 

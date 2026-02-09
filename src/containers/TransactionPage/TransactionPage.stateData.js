@@ -1,12 +1,14 @@
 import { bool, func, oneOf, shape, string } from 'prop-types';
 import {
   BOOKING_PROCESS_NAME,
+  INSTANT_BOOKING_PROCESS_NAME,
   INQUIRY_PROCESS_NAME,
   PURCHASE_PROCESS_NAME,
   NEGOTIATION_PROCESS_NAME,
   resolveLatestProcessName,
 } from '../../transactions/transaction';
 import { getStateDataForBookingProcess } from './TransactionPage.stateDataBooking.js';
+import { getStateDataForInstantBookingProcess } from './TransactionPage.stateDataInstantBooking.js';
 import { getStateDataForInquiryProcess } from './TransactionPage.stateDataInquiry.js';
 import { getStateDataForPurchaseProcess } from './TransactionPage.stateDataPurchase.js';
 import { getStateDataForNegotiationProcess } from './TransactionPage.stateDataNegotiation.js';
@@ -152,6 +154,8 @@ export const getStateData = (params, process) => {
     return getStateDataForPurchaseProcess(params, processInfo());
   } else if (processName === BOOKING_PROCESS_NAME) {
     return getStateDataForBookingProcess(params, processInfo());
+  } else if (processName === INSTANT_BOOKING_PROCESS_NAME) {
+    return getStateDataForInstantBookingProcess(params, processInfo());
   } else if (processName === INQUIRY_PROCESS_NAME) {
     return getStateDataForInquiryProcess(params, processInfo());
   } else if (processName === NEGOTIATION_PROCESS_NAME) {
