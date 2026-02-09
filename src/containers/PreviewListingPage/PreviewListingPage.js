@@ -382,15 +382,26 @@ export const PreviewListingPageComponent = props => {
     currentListing.attributes?.publicData?.handByHandAvailable || false
   );
 
+  // Confirm booking required: OFF = instant-booking, ON = default-booking (visible only for company users)
+  const transactionProcessAlias = currentListing?.attributes?.publicData?.transactionProcessAlias || '';
+  const initialConfirmBooking = transactionProcessAlias.startsWith('default-booking');
+  const [confirmBookingRequired, setConfirmBookingRequired] = useState(initialConfirmBooking);
+
   // Update location visibility state when listing data changes (locationVisible always true)
   useEffect(() => {
     if (currentListing.attributes?.publicData) {
       const newHandByHandAvailable = currentListing.attributes.publicData.handByHandAvailable || false;
-      
+
       setLocationVisible(true);
       setHandByHandAvailable(newHandByHandAvailable);
     }
   }, [currentListing.attributes?.publicData?.handByHandAvailable, currentListing.id]);
+
+  // Sync confirmBookingRequired when listing transactionProcessAlias changes
+  useEffect(() => {
+    const alias = currentListing?.attributes?.publicData?.transactionProcessAlias || '';
+    setConfirmBookingRequired(alias.startsWith('default-booking'));
+  }, [currentListing?.attributes?.publicData?.transactionProcessAlias, currentListing?.id]);
 
   // Availability exceptions state
   const [availabilityExceptions, setAvailabilityExceptions] = useState([]);
@@ -1441,6 +1452,40 @@ export const PreviewListingPageComponent = props => {
     } catch (error) {
       console.error('Failed to update hand-by-hand availability:', error);
       setHandByHandAvailable(previousHandByHandValue);
+    }
+  };
+
+  const handleConfirmBookingToggle = async (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    if (!listingId) {
+      console.error('Listing ID is missing');
+      return;
+    }
+
+    const newValue = !confirmBookingRequired;
+    const previousValue = confirmBookingRequired;
+
+    setConfirmBookingRequired(newValue);
+
+    const newTransactionProcessAlias = newValue ? 'default-booking/release-1' : 'instant-booking/release-1';
+
+    try {
+      await onUpdateListing(
+        'location',
+        {
+          id: listingId,
+          publicData: {
+            ...currentListing.attributes?.publicData,
+            transactionProcessAlias: newTransactionProcessAlias,
+          },
+        },
+        config
+      );
+    } catch (error) {
+      console.error('Failed to update confirm booking setting:', error);
+      setConfirmBookingRequired(previousValue);
     }
   };
 
@@ -4242,6 +4287,24 @@ export const PreviewListingPageComponent = props => {
                                   defaultMessage="Hand-by-hand available"
                                 />
                               </button>
+                              {currentUser?.attributes?.profile?.publicData?.customerType === 'company' && (
+                                <button
+                                  type="button"
+                                  className={`${css.toggleButton} ${confirmBookingRequired ? css.toggleActive : ''}`}
+                                  onClick={handleConfirmBookingToggle}
+                                  disabled={updatingListing}
+                                  title={intl.formatMessage({
+                                    id: 'PreviewListingPage.confirmBookingTooltip',
+                                    defaultMessage: 'Conferma la disponibilità di questo prodotto per ogni nuova richiesta di noleggio',
+                                  })}
+                                  style={confirmBookingRequired ? { backgroundColor: config.branding?.marketplaceColor || '#4A90E2', borderColor: config.branding?.marketplaceColor || '#4A90E2' } : {}}
+                                >
+                                  <FormattedMessage
+                                    id="PreviewListingPage.confirmBooking"
+                                    defaultMessage="Conferma noleggio"
+                                  />
+                                </button>
+                              )}
                             </div>
                           </div>
 

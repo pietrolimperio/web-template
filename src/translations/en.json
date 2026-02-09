@@ -1831,6 +1831,8 @@
   "PreviewListingPage.descriptionLabel": "Description",
   "PreviewListingPage.locationVisible": "Location visible",
   "PreviewListingPage.handByHand": "Hand-by-hand exchange available",
+  "PreviewListingPage.confirmBooking": "Confirm rental",
+  "PreviewListingPage.confirmBookingTooltip": "Confirm the availability of this product for each new rental request",
   "PreviewListingPage.locationVisibleTooltip": "Cannot hide location while hand-by-hand is enabled",
   "PreviewListingPage.enterValidPrice": "Please enter a valid price",
   "PreviewListingPage.enterValidPercentage": "Please enter a valid percentage discount (1-100)",

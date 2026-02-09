@@ -1840,6 +1840,8 @@
   "PreviewListingPage.availability": "Verfügbarkeit",
   "PreviewListingPage.locationVisible": "Standort sichtbar",
   "PreviewListingPage.handByHand": "Persönliche Übergabe verfügbar",
+  "PreviewListingPage.confirmBooking": "Mietbestätigung",
+  "PreviewListingPage.confirmBookingTooltip": "Bestätigen Sie die Verfügbarkeit dieses Produkts für jede neue Mietanfrage",
   "PreviewListingPage.locationVisibleTooltip": "Standort kann nicht ausgeblendet werden, während die persönliche Übergabe aktiviert ist",
   "PreviewListingPage.enterValidPrice": "Bitte geben Sie einen gültigen Preis ein",
   "PreviewListingPage.enterValidPercentage": "Bitte geben Sie einen gültigen Rabattprozentsatz ein (1-100)",

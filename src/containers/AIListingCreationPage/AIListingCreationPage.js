@@ -289,12 +289,15 @@ export const AIListingCreationPageComponent = ({
     // Map product data to Sharetribe listing format
     const listingData = mapProductToListingData(finalProductData, config);
 
-    // Add required fields
+    // Add required fields - company users get instant-booking by default, others get default-booking
+    const customerType = currentUser?.attributes?.profile?.publicData?.customerType;
+    const defaultTransactionProcess =
+      customerType === 'company' ? 'instant-booking/release-1' : 'default-booking/release-1';
     listingData.publicData = {
       ...listingData.publicData,
       listingType: 'daily-rental',
       unitType: 'day',
-      transactionProcessAlias: 'default-booking/release-1',
+      transactionProcessAlias: defaultTransactionProcess,
     };
 
     // Pricing

@@ -1812,6 +1812,8 @@
   "PreviewListingPage.descriptionLabel": "Descrizione",
   "PreviewListingPage.locationVisible": "Posizione visibile",
   "PreviewListingPage.handByHand": "Consegna a mano disponibile",
+  "PreviewListingPage.confirmBooking": "Conferma noleggio",
+  "PreviewListingPage.confirmBookingTooltip": "Conferma la disponibilità di questo prodotto per ogni nuova richiesta di noleggio",
   "PreviewListingPage.locationVisibleTooltip": "Non puoi nascondere la posizione mentre lo consegna a mano è attivo",
   "PreviewListingPage.enterValidPrice": "Inserisci un prezzo valido",
   "PreviewListingPage.enterValidPercentage": "Inserisci una percentuale di sconto valida (1-100)",

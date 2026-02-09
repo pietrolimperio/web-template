@@ -1840,6 +1840,8 @@
   "PreviewListingPage.availability": "Disponibilidade",
   "PreviewListingPage.locationVisible": "Localização visível",
   "PreviewListingPage.handByHand": "Troca pessoal disponível",
+  "PreviewListingPage.confirmBooking": "Confirmar aluguel",
+  "PreviewListingPage.confirmBookingTooltip": "Confirme a disponibilidade deste produto para cada nova solicitação de aluguel",
   "PreviewListingPage.locationVisibleTooltip": "Não é possível ocultar a localização enquanto a troca pessoal estiver ativada",
   "PreviewListingPage.enterValidPrice": "Por favor, insira um preço válido",
   "PreviewListingPage.enterValidPercentage": "Por favor, insira uma porcentagem de desconto válida (1-100)",
