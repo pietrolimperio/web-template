@@ -82,7 +82,7 @@
       [{:fn/timepoint [:time/first-entered-state :state/preauthorized]}
        {:fn/period ["P6D"]}]}
      {:fn/plus
-      [{:fn/timepoint [:time/booking-start]} {:fn/period ["P1D"]}]}
+      [{:fn/timepoint [:time/booking-start]} {:fn/period ["P2D"]}]}
      {:fn/timepoint [:time/booking-end]}]},
    :actions
    [{:name :action/calculate-full-refund}
@@ -95,7 +95,7 @@
   {:name :transition/complete,
    :at
    {:fn/plus
-    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P2D"]}]},
+    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P4D"]}]},
    :actions [{:name :action/stripe-create-payout}],
    :from :state/accepted,
    :to :state/delivered}
@@ -141,21 +141,21 @@
   {:name :transition/expire-review-period,
    :at
    {:fn/plus
-    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P7D"]}]},
+    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P14D"]}]},
    :actions [],
    :from :state/delivered,
    :to :state/reviewed}
   {:name :transition/expire-provider-review-period,
    :at
    {:fn/plus
-    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P7D"]}]},
+    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P14D"]}]},
    :actions [{:name :action/publish-reviews}],
    :from :state/reviewed-by-customer,
    :to :state/reviewed}
   {:name :transition/expire-customer-review-period,
    :at
    {:fn/plus
-    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P7D"]}]},
+    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P14D"]}]},
    :actions [{:name :action/publish-reviews}],
    :from :state/reviewed-by-provider,
    :to :state/reviewed}],
