@@ -831,17 +831,22 @@
 
 .toggleButton {
   padding: 10px 16px;
-  border: 2px solid var(--matterColorAnti);
+  border: 2px solid var(--marketplaceColor);
   background: white;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   color: var(--matterColor);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   position: relative;
   z-index: 1;
   pointer-events: auto;
+}
+
+.toggleButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .toggleButton:hover {
