@@ -6,10 +6,10 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
-import { camelize } from '../../util/string';
 import { propTypes } from '../../util/types';
 import { useIntl } from '../../util/reactIntl';
 import { ensureCurrentUser } from '../../util/data';
+import { DEFAULT_LOCALE, getLocalizedPageId } from '../../config/localeConfig';
 
 import { NotificationBanner, NamedRedirect } from '../../components';
 import FallbackPage from './FallbackPage';
@@ -23,6 +23,20 @@ import devLog from '../../util/devLog';
 const PageBuilder = loadable(() =>
   import(/* webpackChunkName: "PageBuilder" */ '../PageBuilder/PageBuilder')
 );
+
+/**
+ * Pick landing page data using the same localization logic as CMSPage:
+ * prefer localized asset (e.g. landing-page_it_it) then fallback to base (landing-page).
+ */
+const getLandingPageData = pageAssetsData => {
+  if (!pageAssetsData) return undefined;
+  const currentLocale =
+    typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE
+      : DEFAULT_LOCALE;
+  const localizedPageId = getLocalizedPageId(ASSET_NAME, currentLocale);
+  return pageAssetsData[localizedPageId]?.data ?? pageAssetsData[ASSET_NAME]?.data;
+};
 
 export const LandingPageComponent = props => {
   const { 
@@ -261,7 +275,7 @@ export const LandingPageComponent = props => {
         onClose={handleNotificationClose}
       />
       <PageBuilder
-        pageAssetsData={pageAssetsData?.[camelize(ASSET_NAME)]?.data}
+        pageAssetsData={getLandingPageData(pageAssetsData)}
         inProgress={inProgress}
         error={error}
         fallbackPage={<FallbackPage error={error} />}
