@@ -626,6 +626,8 @@
   "ProductPage.selectDates": "Daten auswählen",
   "ProductPage.youWontBeChargedInfo": "Dir wird noch nichts berechnet",
   "ProductPage.breadcrumbNavigation": "Breadcrumb-Navigation",
+  "ProductPage.couponApply": "Anwenden",
+  "ProductPage.couponRemove": "Entfernen",
   "ProductPage.handByHand": "Persönliche Übergabe verfügbar",
   "LoadableComponentErrorBoundaryPage.description": "Es sieht so aus, als müsste die App aktualisiert werden! Bitte aktualisiere die Seite oder kehre zu {link} zurück.",
   "LoadableComponentErrorBoundaryPage.heading": "Hoppla, wir konnten die Seite nicht abrufen.",

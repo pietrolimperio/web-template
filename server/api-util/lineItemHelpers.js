@@ -441,3 +441,121 @@ exports.getCustomerCommissionMaybe = (customerCommission, order, currency) => {
         },
       ];
 };
+
+/**
+ * Stub: Simulates external API call for shipping fee on booking.
+ * Returns random amount between min and max subunits to simulate variability.
+ * TODO: Replace with actual external shipping API call.
+ *
+ * @param {string} currency - Currency code
+ * @param {Object} orderData - Order data (bookingStart, bookingEnd, etc.)
+ * @returns {Money|null} Shipping fee or null
+ */
+exports.getShippingFeeForBookingStub = (currency, orderData) => {
+  // Stub: random fee between 500 and 5000 subunits (€5 - €50)
+  const minSubunits = 500;
+  const maxSubunits = 1000;
+  const randomAmount = Math.floor(
+    Math.random() * (maxSubunits - minSubunits + 1) + minSubunits
+  );
+  return new Money(randomAmount, currency);
+};
+
+/**
+ * Stub: Simulates external API/config for insurance fee on booking.
+ * Returns random amount between min and max subunits to simulate variability.
+ * TODO: Replace with actual insurance fee calculation (fixed config, API, etc.).
+ *
+ * @param {string} currency - Currency code
+ * @param {Object} orderData - Order data (bookingStart, bookingEnd, etc.)
+ * @returns {Money} Insurance fee
+ */
+exports.getInsuranceFeeForBookingStub = (currency, orderData) => {
+  // Stub: random fee between 300 and 2000 subunits (€3 - €20)
+  const minSubunits = 300;
+  const maxSubunits = 2000;
+  const randomAmount = Math.floor(
+    Math.random() * (maxSubunits - minSubunits + 1) + minSubunits
+  );
+  return new Money(randomAmount, currency);
+};
+
+/**
+ * Get insurance fee line item for booking. Always expected for booking transactions.
+ * Uses stub for variability when no fixed config is set.
+ *
+ * @param {Object} order - Base order line item
+ * @param {Object} publicData - Listing public data
+ * @param {string} currency - Currency code
+ * @param {Object} orderData - Full order data (for stub)
+ * @returns {Array} Insurance fee line item array
+ */
+exports.getInsuranceFeeMaybe = (order, publicData, currency, orderData) => {
+  const insuranceFeePercentage = publicData?.insuranceFeePercentage;
+  const insuranceFeeInSubunits = publicData?.insuranceFeeInSubunits;
+
+  if (insuranceFeeInSubunits != null && Number.isInteger(insuranceFeeInSubunits) && insuranceFeeInSubunits >= 0) {
+    return [
+      {
+        code: 'line-item/insurance-fee',
+        unitPrice: new Money(insuranceFeeInSubunits, currency),
+        quantity: 1,
+        includeFor: ['customer', 'provider'],
+      },
+    ];
+  }
+
+  if (insuranceFeePercentage != null && typeof insuranceFeePercentage === 'number' && insuranceFeePercentage >= 0) {
+    // Percentage of base order total
+    const baseTotal = exports.calculateTotalFromLineItems([order]);
+    return [
+      {
+        code: 'line-item/insurance-fee',
+        unitPrice: baseTotal,
+        percentage: insuranceFeePercentage,
+        includeFor: ['customer', 'provider'],
+      },
+    ];
+  }
+
+  // Stub: random fee when no config is set (simulates variability)
+  const insuranceFee = exports.getInsuranceFeeForBookingStub(currency, orderData);
+  return [
+    {
+      code: 'line-item/insurance-fee',
+      unitPrice: insuranceFee,
+      quantity: 1,
+      includeFor: ['customer', 'provider'],
+    },
+  ];
+};
+
+/**
+ * Stub: Get coupon discount line item. Validates coupon server-side.
+ * TODO: Replace with actual coupon validation (DB, external service).
+ *
+ * @param {string} couponCode - Coupon code from orderData
+ * @param {Object} order - Base order line item
+ * @param {Array} extraLineItems - Extra line items (shipping, insurance) to include in subtotal
+ * @param {string} currency - Currency code
+ * @returns {Array} Coupon discount line item array (negative value)
+ */
+exports.getCouponDiscountMaybe = (couponCode, order, extraLineItems, currency) => {
+  if (!couponCode || typeof couponCode !== 'string' || couponCode.trim() === '') {
+    return [];
+  }
+
+  // Stub: any non-empty code gives 10% discount on subtotal (TODO: real validation)
+  const allItems = [order, ...(extraLineItems || [])];
+  const subtotal = exports.calculateTotalFromLineItems(allItems);
+  const discountPercentage = 10;
+
+  return [
+    {
+      code: 'line-item/coupon-discount',
+      unitPrice: subtotal,
+      percentage: -discountPercentage,
+      includeFor: ['customer', 'provider'],
+    },
+  ];
+};

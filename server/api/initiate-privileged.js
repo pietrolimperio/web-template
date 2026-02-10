@@ -17,7 +17,7 @@ const getFullOrderData = (orderData, bodyParams, currency) => {
   const { offerInSubunits } = orderData || {};
   const transitionName = bodyParams.transition;
 
-  return isIntentionToMakeOffer(offerInSubunits, transitionName)
+  const merged = isIntentionToMakeOffer(offerInSubunits, transitionName)
     ? {
         ...orderData,
         ...bodyParams.params,
@@ -25,6 +25,17 @@ const getFullOrderData = (orderData, bodyParams, currency) => {
         offer: new Money(offerInSubunits, currency),
       }
     : { ...orderData, ...bodyParams.params };
+
+  // Flatten bookingDates for lineItems (expects bookingStart, bookingEnd at top level)
+  const { bookingDates } = merged;
+  if (bookingDates && (bookingDates.bookingStart || bookingDates.bookingEnd)) {
+    return {
+      ...merged,
+      bookingStart: merged.bookingStart || bookingDates.bookingStart,
+      bookingEnd: merged.bookingEnd || bookingDates.bookingEnd,
+    };
+  }
+  return merged;
 };
 
 const getMetadata = (orderData, transition) => {

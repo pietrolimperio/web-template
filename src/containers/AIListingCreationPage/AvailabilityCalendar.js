@@ -10,8 +10,8 @@ import css from './AvailabilityCalendar.module.css';
  * Allows date range selection or single date selection
  * All dates from today onwards are selected by default (unless autoSelectDates is false)
  */
-const AvailabilityCalendar = ({ 
-  selectedDates = [], 
+const AvailabilityCalendar = ({
+  selectedDates = [],
   onDatesChange,
   selectMode = 'range', // 'range' | 'exception' - determines if dates start selected or empty
   marketplaceColor = '#4A90E2',
@@ -22,6 +22,7 @@ const AvailabilityCalendar = ({
   singleMonth = false, // If true, always show only one month regardless of screen size
   autoSelectDates = true, // If false, calendar starts without any dates selected
   onMonthsContainerClick = null, // Optional click handler for monthsContainer
+  maxBookingDays = null, // If set (e.g. 80), range selection is capped to this many days (inclusive)
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -137,6 +138,15 @@ const AvailabilityCalendar = ({
     return compareDate < today;
   };
 
+  // When selecting a range, dates more than (maxBookingDays - 1) days after rangeStart cannot be chosen as end
+  const isDateBeyondMaxRange = (date) => {
+    if (!maxBookingDays || !selectingRange || !rangeStart) return false;
+    const startDay = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+    const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const daysDiff = Math.round((dateDay - startDay) / (24 * 60 * 60 * 1000));
+    return daysDiff >= maxBookingDays;
+  };
+
   const isDateDisabled = (date) => {
     // Check if date is in disabledDates array
     if (disabledDates.some(d => 
@@ -223,32 +233,46 @@ const AvailabilityCalendar = ({
   // Check if date would be in the preview range (when hovering during selection)
   const isInPreviewRange = (date) => {
     if (!selectingRange || !rangeStart || !hoveredDate) return false;
-    const start = rangeStart < hoveredDate ? rangeStart : hoveredDate;
-    const end = rangeStart < hoveredDate ? hoveredDate : rangeStart;
-    
-    // Only show preview if the date is within the range
+    let start = rangeStart < hoveredDate ? rangeStart : hoveredDate;
+    let end = rangeStart < hoveredDate ? hoveredDate : rangeStart;
+    if (maxBookingDays) {
+      const maxEnd = new Date(start);
+      maxEnd.setDate(maxEnd.getDate() + maxBookingDays - 1);
+      if (end > maxEnd) end = new Date(maxEnd);
+    }
     if (date < start || date > end) return false;
-    
-    // Check if the entire preview range would be valid (no disabled dates)
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateToCheck = new Date(d);
       dateToCheck.setHours(0, 0, 0, 0);
-      if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
-        return false;
-      }
+      if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) return false;
     }
-    
     return true;
   };
 
-  // Check if this would be the preview end date
+  // Check if this would be the preview end date (capped when maxBookingDays set)
   const isPreviewEnd = (date) => {
     if (!selectingRange || !rangeStart || !hoveredDate) return false;
-    return date.getTime() === hoveredDate.getTime() && date.getTime() !== rangeStart.getTime();
+    let end = rangeStart < hoveredDate ? hoveredDate : rangeStart;
+    if (maxBookingDays) {
+      const start = rangeStart < hoveredDate ? rangeStart : hoveredDate;
+      const maxEnd = new Date(start);
+      maxEnd.setDate(maxEnd.getDate() + maxBookingDays - 1);
+      if (end > maxEnd) end = new Date(maxEnd);
+    }
+    const sameDay =
+      date.getDate() === end.getDate() &&
+      date.getMonth() === end.getMonth() &&
+      date.getFullYear() === end.getFullYear();
+    const isStart =
+      date.getDate() === rangeStart.getDate() &&
+      date.getMonth() === rangeStart.getMonth() &&
+      date.getFullYear() === rangeStart.getFullYear();
+    return sameDay && !isStart;
   };
 
   const handleDateClick = (date) => {
     if (readOnly || isDateInPast(date) || isDateDisabled(date)) return;
+    if (maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date)) return;
 
     // If there's already a complete range and user clicks on any date, clear and start new selection
     if (rangeStart && rangeEnd && !selectingRange) {
@@ -271,14 +295,23 @@ const AvailabilityCalendar = ({
     } else {
       // Complete the range - check if all dates in range are available
       const start = rangeStart < date ? rangeStart : date;
-      const end = rangeStart < date ? date : rangeStart;
+      let end = rangeStart < date ? date : rangeStart;
+
+      // Cap range at maxBookingDays when set
+      if (maxBookingDays) {
+        const maxEnd = new Date(start);
+        maxEnd.setDate(maxEnd.getDate() + maxBookingDays - 1);
+        maxEnd.setHours(23, 59, 59, 999);
+        if (end > maxEnd) end = maxEnd;
+      }
+
       const range = [];
-      
+
       // Build the range and check for disabled dates
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const dateToCheck = new Date(d);
         dateToCheck.setHours(0, 0, 0, 0);
-        
+
         // If any date in the range is disabled, reject the selection
         if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
           // Reset to just the start date
@@ -287,15 +320,18 @@ const AvailabilityCalendar = ({
           setSelectingRange(true);
           return;
         }
-        
+
         range.push(new Date(d));
       }
-      
-      // All dates in range are available, complete the selection
-      setInternalSelectedDates(range);
-      onDatesChange(range);
+
+      // Cap at maxBookingDays (safety)
+      const finalRange =
+        maxBookingDays && range.length > maxBookingDays ? range.slice(0, maxBookingDays) : range;
+
+      setInternalSelectedDates(finalRange);
+      onDatesChange(finalRange);
       setRangeStart(start);
-      setRangeEnd(end);
+      setRangeEnd(finalRange.length > 0 ? finalRange[finalRange.length - 1] : end);
       setSelectingRange(false);
     }
   };
@@ -305,7 +341,13 @@ const AvailabilityCalendar = ({
       setHoveredDate(null);
       return;
     }
-    
+
+    // When maxBookingDays is set, don't show hover for dates beyond the allowed range
+    if (maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date)) {
+      setHoveredDate(null);
+      return;
+    }
+
     // If selecting a range, check if the hovered date would create a valid range
     if (selectingRange && rangeStart) {
       const start = rangeStart < date ? rangeStart : date;
@@ -443,8 +485,14 @@ const AvailabilityCalendar = ({
                   }
                 };
 
-                // Determine if button should be disabled
-                const isDayDisabled = isPast || isDisabled || (readOnly && !onMonthsContainerClick);
+                // Determine if button should be disabled (including beyond max range when selecting end date)
+                const isBeyondMax =
+                  maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date);
+                const isDayDisabled =
+                  isPast ||
+                  isDisabled ||
+                  isBeyondMax ||
+                  (readOnly && !onMonthsContainerClick);
 
                 return (
                   <button
@@ -463,7 +511,7 @@ const AvailabilityCalendar = ({
                       [css.dayPreview]: inPreview && selectingRange && !isStart,
                       [css.dayPreviewEnd]: previewEnd,
                       [css.dayDisabled]: isPast,
-                      [css.dayUnavailable]: isDisabled,
+                      [css.dayUnavailable]: isDisabled || isBeyondMax,
                       [css.dayToday]: isToday,
                       [css.dayReadOnly]: readOnly,
                       [css.dayHoverClear]: isHoveredWithRange,

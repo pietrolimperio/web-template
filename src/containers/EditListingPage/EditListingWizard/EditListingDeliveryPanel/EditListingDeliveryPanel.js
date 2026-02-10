@@ -37,7 +37,7 @@ const getInitialValues = props => {
   const location = publicData?.location || {};
   const { address, building } = location;
   const {
-    shippingEnabled,
+    shippingEnabled = true,
     pickupEnabled,
     shippingPriceInSubunitsOneItem,
     shippingPriceInSubunitsAdditionalItems,

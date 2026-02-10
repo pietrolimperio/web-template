@@ -65,6 +65,7 @@ const ListingConfigurationPage = ({
   // Location State
   const [locationVisible, setLocationVisible] = useState(true);
   const [handByHandAvailable, setHandByHandAvailable] = useState(false);
+  const [shippingEnabled, setShippingEnabled] = useState(true);
   const [showAddressSearch, setShowAddressSearch] = useState(false); // Track if user initiated search
   const [showFullForm, setShowFullForm] = useState(false); // Show full form after autocomplete selection
   const [showLocationTooltip, setShowLocationTooltip] = useState(false); // Show tooltip when trying to disable location
@@ -571,6 +572,7 @@ const ListingConfigurationPage = ({
       building: '',
       locationVisible,
       handByHandAvailable,
+      shippingEnabled,
       // Structured address fields
       addressLine1: addressLine1 || null,
       addressLine2: addressLine2,
@@ -1630,6 +1632,25 @@ const ListingConfigurationPage = ({
                 <FormattedMessage
                   id="ListingConfiguration.handByHand"
                   defaultMessage="Available for hand-by-hand exchange"
+                />
+              </button>
+              <button
+                type="button"
+                className={`${css.chipCard} ${shippingEnabled ? css.chipCardSelected : ''}`}
+                onClick={() => setShippingEnabled(!shippingEnabled)}
+                style={
+                  shippingEnabled
+                    ? {
+                        backgroundColor: marketplaceColor,
+                        borderColor: marketplaceColor,
+                        color: 'white',
+                      }
+                    : {}
+                }
+              >
+                <FormattedMessage
+                  id="ListingConfiguration.shippingEnabled"
+                  defaultMessage="Shipping available"
                 />
               </button>
             </div>

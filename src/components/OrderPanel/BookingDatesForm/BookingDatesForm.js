@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form as FinalForm } from 'react-final-form';
+import { Form as FinalForm, FormSpy } from 'react-final-form';
 import classNames from 'classnames';
 
 import appSettings from '../../../config/settings';
@@ -21,7 +21,14 @@ import { LINE_ITEM_DAY, propTypes } from '../../../util/types';
 import { timeSlotsPerDate } from '../../../util/generators';
 import { BOOKING_PROCESS_NAME } from '../../../transactions/transaction';
 
-import { Form, PrimaryButton, FieldDateRangePicker, FieldSelect, H6 } from '../../../components';
+import {
+  Form,
+  PrimaryButton,
+  FieldDateRangePicker,
+  FieldSelect,
+  FieldTextInput,
+  H6,
+} from '../../../components';
 
 import EstimatedCustomerBreakdownMaybe from '../EstimatedCustomerBreakdownMaybe';
 
@@ -344,9 +351,13 @@ const calculateLineItems = (
   isOwnListing,
   fetchLineItemsInProgress,
   onFetchTransactionLineItems,
-  seatsEnabled
+  seatsEnabled,
+  hasDeliveryMethodChoice
 ) => formValues => {
-  const { startDate, endDate, priceVariantName, seats } = formValues?.values || {};
+  const vals = formValues?.values || {};
+  const { bookingDates, priceVariantName, seats, deliveryMethod, couponCode } = vals;
+  const startDate = bookingDates?.startDate ?? vals.startDate;
+  const endDate = bookingDates?.endDate ?? vals.endDate;
 
   const priceVariantMaybe = priceVariantName ? { priceVariantName } : {};
   const seatCount = seats ? parseInt(seats, 10) : 1;
@@ -356,6 +367,8 @@ const calculateLineItems = (
     bookingEnd: endDate,
     ...priceVariantMaybe,
     ...(seatsEnabled && { seats: seatCount }),
+    ...(hasDeliveryMethodChoice && deliveryMethod && { deliveryMethod }),
+    ...(couponCode && couponCode.trim() && { couponCode: couponCode.trim() }),
   };
 
   if (startDate && endDate && !fetchLineItemsInProgress) {
@@ -538,6 +551,9 @@ export const BookingDatesForm = props => {
     priceVariantFieldComponent: PriceVariantFieldComponent,
     preselectedPriceVariant,
     isPublishedListing,
+    handByHandAvailable,
+    shippingEnabled,
+    pickupEnabled,
     ...rest
   } = props;
   const intl = useIntl();
@@ -548,6 +564,13 @@ export const BookingDatesForm = props => {
       : priceVariants.length === 1
       ? { initialValues: { priceVariantName: priceVariants?.[0]?.name } }
       : {};
+
+  const deliveryMethodInitialValue =
+    defaultDeliveryMethod && hasDeliveryMethodChoice ? { deliveryMethod: defaultDeliveryMethod } : {};
+  const mergedInitialValues = {
+    ...(initialValuesMaybe.initialValues || {}),
+    ...deliveryMethodInitialValue,
+  };
 
   const allTimeSlots = getAllTimeSlots(monthlyTimeSlots);
   const monthId = monthIdString(currentMonth);
@@ -594,17 +617,35 @@ export const BookingDatesForm = props => {
 
   const classes = classNames(rootClassName || css.root, className);
 
+  const hasDeliveryMethodChoice =
+    (handByHandAvailable && shippingEnabled) || (handByHandAvailable && pickupEnabled);
+  const defaultDeliveryMethod =
+    handByHandAvailable && !shippingEnabled && !pickupEnabled
+      ? 'hand-by-hand'
+      : shippingEnabled && !handByHandAvailable && !pickupEnabled
+      ? 'shipping'
+      : pickupEnabled && !handByHandAvailable && !shippingEnabled
+      ? 'pickup'
+      : handByHandAvailable
+      ? 'hand-by-hand'
+      : shippingEnabled
+      ? 'shipping'
+      : pickupEnabled
+      ? 'pickup'
+      : null;
+
   const onHandleFetchLineItems = calculateLineItems(
     listingId,
     isOwnListing,
     fetchLineItemsInProgress,
     onFetchTransactionLineItems,
-    seatsEnabled
+    seatsEnabled,
+    hasDeliveryMethodChoice
   );
 
   return (
     <FinalForm
-      {...initialValuesMaybe}
+      initialValues={mergedInitialValues}
       {...rest}
       unitPrice={unitPrice}
       render={formRenderProps => {
@@ -699,8 +740,33 @@ export const BookingDatesForm = props => {
         const isDaily = lineItemUnitType === LINE_ITEM_DAY;
         const submitDisabled = isPriceVariationsInUse && !isPublishedListing;
 
+        const deliveryMethod = values?.deliveryMethod || null;
+        const couponCode = values?.couponCode || '';
+
         return (
           <Form onSubmit={handleSubmit} className={classes} enforcePagePreloadFor="CheckoutPage">
+            <FormSpy
+              subscription={{ values: true }}
+              onChange={({ values: spyValues }) => {
+                const { deliveryMethod: dm, couponCode: cc } = spyValues || {};
+                if (
+                  (dm !== deliveryMethod || cc !== couponCode) &&
+                  startDate &&
+                  endDate &&
+                  !fetchLineItemsInProgress
+                ) {
+                  onHandleFetchLineItems({
+                    values: {
+                      ...spyValues,
+                      startDate,
+                      endDate,
+                      priceVariantName,
+                      seats: seatsEnabled ? spyValues?.seats : undefined,
+                    },
+                  });
+                }
+              }}
+            />
             {PriceVariantFieldComponent ? (
               <PriceVariantFieldComponent
                 priceVariants={priceVariants}
@@ -783,12 +849,15 @@ export const BookingDatesForm = props => {
                 if (seatsEnabled) {
                   formApi.change('seats', 1);
                 }
+                const formValues = formApi.getState().values;
                 onHandleFetchLineItems({
                   values: {
                     priceVariantName,
                     startDate,
                     endDate,
                     seats: seatsEnabled ? 1 : undefined,
+                    deliveryMethod: formValues?.deliveryMethod,
+                    couponCode: formValues?.couponCode,
                   },
                 });
               }}
@@ -806,9 +875,11 @@ export const BookingDatesForm = props => {
                   onHandleFetchLineItems({
                     values: {
                       priceVariantName,
-                      startDate: startDate,
-                      endDate: endDate,
+                      startDate,
+                      endDate,
                       seats: values,
+                      deliveryMethod,
+                      couponCode,
                     },
                   });
                 }}
@@ -824,8 +895,66 @@ export const BookingDatesForm = props => {
               </FieldSelect>
             ) : null}
 
+            {hasDeliveryMethodChoice && startDate && endDate ? (
+              <FieldSelect
+                name="deliveryMethod"
+                id={`${formId}.deliveryMethod`}
+                label={intl.formatMessage({ id: 'BookingDatesForm.deliveryMethodLabel' })}
+                className={css.fieldDeliveryMethod}
+                onChange={value => {
+                  onHandleFetchLineItems({
+                    values: {
+                      priceVariantName,
+                      startDate,
+                      endDate,
+                      seats: seatsEnabled ? values?.seats : undefined,
+                      deliveryMethod: value,
+                      couponCode,
+                    },
+                  });
+                }}
+              >
+                {handByHandAvailable ? (
+                  <option value="hand-by-hand">
+                    {intl.formatMessage({ id: 'BookingDatesForm.handByHandOption' })}
+                  </option>
+                ) : null}
+                {shippingEnabled ? (
+                  <option value="shipping">
+                    {intl.formatMessage({ id: 'BookingDatesForm.shippingOption' })}
+                  </option>
+                ) : null}
+                {pickupEnabled ? (
+                  <option value="pickup">
+                    {intl.formatMessage({ id: 'BookingDatesForm.pickupOption' })}
+                  </option>
+                ) : null}
+              </FieldSelect>
+            ) : null}
+
             {showEstimatedBreakdown ? (
               <div className={css.priceBreakdownContainer}>
+                <FieldTextInput
+                  id={`${formId}.couponCode`}
+                  name="couponCode"
+                  label={intl.formatMessage({ id: 'BookingDatesForm.couponCodeLabel' })}
+                  placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
+                  className={css.fieldCouponCode}
+                  type="text"
+                  autoComplete="off"
+                  onBlur={() => {
+                    onHandleFetchLineItems({
+                      values: {
+                        priceVariantName,
+                        startDate,
+                        endDate,
+                        seats: seatsEnabled ? values?.seats : undefined,
+                        deliveryMethod,
+                        couponCode: values?.couponCode,
+                      },
+                    });
+                  }}
+                />
                 <H6 as="h3" className={css.bookingBreakdownTitle}>
                   <FormattedMessage id="BookingDatesForm.priceBreakdownTitle" />
                 </H6>

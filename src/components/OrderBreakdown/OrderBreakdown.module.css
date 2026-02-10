@@ -37,10 +37,20 @@
 
 .bookingPeriodSectionLeft {
   text-align: left;
+  background-color: white;
+  padding: 18px;
+  border-radius: 30px;
+  border: 1px solid var(--marketplaceColor);
+  justify-items: center;
 }
 
 .bookingPeriodSectionRight {
   text-align: right;
+  background-color: white;
+  padding: 18px;
+  border-radius: 30px;
+  border: 1px solid var(--marketplaceColor);
+  justify-items: center;
 }
 
 .dayLabel {
@@ -123,6 +133,11 @@
 
 .totalLabel {
   composes: marketplaceSmallFontStyles from global;
+  font-size: 18px;
+}
+
+.lineItemTotal .totalPrice {
+  font-size: 18px;
 }
 
 .feeInfo {

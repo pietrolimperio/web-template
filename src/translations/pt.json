@@ -637,6 +637,8 @@
   "ProductPage.selectDates": "Selecione as datas",
   "ProductPage.youWontBeChargedInfo": "Você não será cobrado agora",
   "ProductPage.breadcrumbNavigation": "Navegação breadcrumb",
+  "ProductPage.couponApply": "Aplicar",
+  "ProductPage.couponRemove": "Remover",
   "ProductPage.handByHand": "Troca pessoal disponível",
   "LoadableComponentErrorBoundaryPage.description": "It looks like the app needs to be updated! Please refresh the page or go back to {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Oops, we couldn't fetch the page.",

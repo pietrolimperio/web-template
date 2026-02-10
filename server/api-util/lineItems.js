@@ -4,6 +4,9 @@ const {
   calculateShippingFee,
   getProviderCommissionMaybe,
   getCustomerCommissionMaybe,
+  getShippingFeeForBookingStub,
+  getInsuranceFeeMaybe,
+  getCouponDiscountMaybe,
 } = require('./lineItemHelpers');
 const { types } = require('sharetribe-flex-sdk');
 const { Money } = types;
@@ -241,11 +244,45 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
     includeFor: ['customer', 'provider'],
   };
 
+  // For booking: add shipping (when deliveryMethod === 'shipping'), insurance (always), coupon (if valid)
+  const deliveryMethod = orderData?.deliveryMethod;
+  const couponCode = orderData?.couponCode;
+  let bookingExtraLineItems = [];
+
+  if (isBookable) {
+    // Shipping fee: stub API returns random price when shipping selected
+    const shippingEnabled = publicData?.shippingEnabled ?? true;
+    if (deliveryMethod === 'shipping' && shippingEnabled) {
+      const shippingFee = getShippingFeeForBookingStub(currency, orderData);
+      if (shippingFee) {
+        bookingExtraLineItems.push({
+          code: 'line-item/shipping-fee',
+          unitPrice: shippingFee,
+          quantity: 1,
+          includeFor: ['customer', 'provider'],
+        });
+      }
+    }
+
+    // Insurance: always expected for booking (uses stub when no config)
+    bookingExtraLineItems = [
+      ...bookingExtraLineItems,
+      ...getInsuranceFeeMaybe(order, publicData, currency, orderData),
+    ];
+
+    // Coupon discount: applied to order + shipping + insurance
+    bookingExtraLineItems = [
+      ...bookingExtraLineItems,
+      ...getCouponDiscountMaybe(couponCode, order, bookingExtraLineItems, currency),
+    ];
+  }
+
   // Let's keep the base price (order) as first line item and provider and customer commissions as last.
   // Note: the order matters only if OrderBreakdown component doesn't recognize line-item.
   const lineItems = [
     order,
     ...extraLineItems,
+    ...bookingExtraLineItems,
     ...getProviderCommissionMaybe(providerCommission, order, currency),
     ...getCustomerCommissionMaybe(customerCommission, order, currency),
   ];

@@ -413,6 +413,47 @@
   font-size: 14px;
 }
 
+/* Delivery method toggle chips */
+.deliveryMethodSection {
+  margin: 16px 0;
+}
+
+.deliveryMethodLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--matterColor);
+  margin-bottom: 10px;
+}
+
+.deliveryMethodChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.deliveryChip {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--matterColorNegative);
+  border-radius: 24px;
+  background: var(--colorWhite);
+  color: var(--matterColor);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.deliveryChip:hover {
+  border-color: var(--marketplaceColor, #4a90e2);
+  background: rgba(var(--marketplaceColorRGB, 74, 144, 226), 0.05);
+}
+
+.deliveryChipSelected {
+  border-width: 2px;
+}
+
 /* Breakdown Section */
 .breakdownSection {
   margin-bottom: 24px;
@@ -431,6 +472,83 @@
   border: none;
   border-top: 1px solid var(--matterColorNegative);
   margin: 12px 0;
+}
+
+/* Breakdown skeleton (react-loading-skeleton) - layout and ensure animation visible */
+.breakdownSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 6px 0;
+  min-height: 220px;
+}
+
+.breakdownSkeleton .skeletonLine,
+.breakdownSkeleton .skeletonLineTotal {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 24px;
+}
+
+.breakdownSkeleton .skeletonLineTotal {
+  padding-top: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--matterColorNegative);
+  min-height: 28px;
+}
+
+/* Ensure react-loading-skeleton shimmer is visible (no clip, correct stacking) */
+.breakdownSkeleton :global(.react-loading-skeleton) {
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+/* Coupon code - above submit button */
+.couponSection {
+  margin-bottom: 18px;
+}
+
+.couponLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--matterColor);
+  margin-bottom: 8px;
+}
+
+.couponRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.couponInput {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--matterColorNegative);
+  border-radius: 8px;
+  background-color: var(--colorWhite);
+  color: var(--matterColor);
+}
+
+.couponApplyButton {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.couponApplyButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Submit Button */

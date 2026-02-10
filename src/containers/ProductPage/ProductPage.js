@@ -112,11 +112,14 @@ import SectionReviews from '../ListingPage/SectionReviews';
 import CustomListingFields from '../ListingPage/CustomListingFields';
 import EstimatedCustomerBreakdownMaybe from '../../components/OrderPanel/EstimatedCustomerBreakdownMaybe';
 import OwnerCard from './OwnerCard';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 import css from './ProductPage.module.css';
 
 const MIN_LENGTH_FOR_LONG_WORDS_IN_TITLE = 16;
 const TODAY = new Date();
+const MAX_BOOKING_DAYS = 80;
 
 const { UUID } = sdkTypes;
 
@@ -213,9 +216,25 @@ const BookingForm = props => {
   const currency = price?.currency || 'EUR';
   const marketplaceColor = config.branding?.marketplaceColor || '#4A90E2';
 
+  const handByHandAvailable = !!publicData?.handByHandAvailable;
+  const shippingEnabled = publicData?.shippingEnabled !== false;
+  const pickupEnabled = !!publicData?.pickupEnabled;
+  const hasDeliveryMethodChoice =
+    (handByHandAvailable && shippingEnabled) || (handByHandAvailable && pickupEnabled) || (shippingEnabled && pickupEnabled);
+  const defaultDeliveryMethod = shippingEnabled
+    ? 'shipping'
+    : handByHandAvailable
+    ? 'hand-by-hand'
+    : pickupEnabled
+    ? 'pickup'
+    : null;
+
   const [availableDates, setAvailableDates] = useState([]);
   const [disabledDates, setDisabledDates] = useState([]);
   const [calendarSelectedDates, setCalendarSelectedDates] = useState([]);
+  const [deliveryMethod, setDeliveryMethod] = useState(defaultDeliveryMethod);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
 
   // Fetch availability exceptions
@@ -298,28 +317,66 @@ const BookingForm = props => {
     fetchAvailability();
   }, [listing?.id, config.sdk?.clientId, publicData?.availableFrom, publicData?.availableUntil]);
 
-  const handleCalendarDatesChange = (dates) => {
-    setCalendarSelectedDates(dates);
-    
-    // Calculate line items when dates are selected
-    if (dates && dates.length >= 2) {
-      const startDate = dates[0];
-      const endDate = dates[dates.length - 1];
-      
-      // Add one day to end date for API (exclusive end)
-      const endDateForAPI = new Date(endDate);
-      endDateForAPI.setDate(endDateForAPI.getDate() + 1);
-      
-      const orderData = {
-        bookingStart: startDate,
-        bookingEnd: endDateForAPI,
-      };
+  const fetchLineItemsForDatesAndDelivery = (startDate, endDate, dm, coupon = couponCode) => {
+    const method = dm ?? deliveryMethod;
+    const endDateForAPI = new Date(endDate);
+    endDateForAPI.setDate(endDateForAPI.getDate() + 1);
 
-      onFetchTransactionLineItems({
-        orderData,
-        listingId: listing.id,
-        isOwnListing,
-      });
+    const orderData = {
+      bookingStart: startDate,
+      bookingEnd: endDateForAPI,
+      ...(method && { deliveryMethod: method }),
+      ...(coupon && coupon.trim() && { couponCode: coupon.trim() }),
+    };
+
+    onFetchTransactionLineItems({
+      orderData,
+      listingId: listing.id,
+      isOwnListing,
+    });
+  };
+
+  const handleApplyCoupon = () => {
+    if (calendarSelectedDates.length >= 2) {
+      fetchLineItemsForDatesAndDelivery(
+        calendarSelectedDates[0],
+        calendarSelectedDates[calendarSelectedDates.length - 1],
+        undefined,
+        couponCode
+      );
+      if (couponCode.trim()) setCouponApplied(true);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setCouponApplied(false);
+    if (calendarSelectedDates.length >= 2) {
+      fetchLineItemsForDatesAndDelivery(
+        calendarSelectedDates[0],
+        calendarSelectedDates[calendarSelectedDates.length - 1],
+        undefined,
+        ''
+      );
+    }
+  };
+
+  const handleCalendarDatesChange = (dates) => {
+    setCalendarSelectedDates(dates || []);
+
+    if (dates && dates.length >= 2) {
+      fetchLineItemsForDatesAndDelivery(dates[0], dates[dates.length - 1]);
+    }
+  };
+
+  const handleDeliveryMethodChange = (value) => {
+    setDeliveryMethod(value);
+    if (calendarSelectedDates.length >= 2) {
+      fetchLineItemsForDatesAndDelivery(
+        calendarSelectedDates[0],
+        calendarSelectedDates[calendarSelectedDates.length - 1],
+        value
+      );
     }
   };
 
@@ -348,6 +405,8 @@ const BookingForm = props => {
         startDate,
         endDate: endDateForAPI,
       },
+      ...(deliveryMethod && { deliveryMethod }),
+      ...(couponCode && couponCode.trim() && { couponCode: couponCode.trim() }),
     };
 
     onSubmit(bookingData);
@@ -361,6 +420,7 @@ const BookingForm = props => {
       }
     : null;
   const showEstimatedBreakdown = breakdownData && lineItems && !fetchLineItemsInProgress && !fetchLineItemsError;
+  const showBreakdownSkeleton = fetchLineItemsInProgress;
 
   return (
     <div className={css.bookingFormWrapper}>
@@ -382,25 +442,153 @@ const BookingForm = props => {
             availableUntil={publicData?.availableUntil}
             singleMonth={true}
             autoSelectDates={false}
+            maxBookingDays={MAX_BOOKING_DAYS}
           />
         )}
       </div>
 
-      {/* Estimated Breakdown */}
-      {showEstimatedBreakdown && (
+      {/* Delivery method toggle chips - when multiple options */}
+      {hasValidDates && hasDeliveryMethodChoice && (
+        <div className={css.deliveryMethodSection}>
+          <span className={css.deliveryMethodLabel}>
+            <FormattedMessage id="BookingDatesForm.deliveryMethodLabel" />
+          </span>
+          <div className={css.deliveryMethodChips}>
+            {shippingEnabled && (
+              <button
+                type="button"
+                className={`${css.deliveryChip} ${deliveryMethod === 'shipping' ? css.deliveryChipSelected : ''}`}
+                onClick={() => handleDeliveryMethodChange('shipping')}
+                style={
+                  deliveryMethod === 'shipping'
+                    ? {
+                        backgroundColor: marketplaceColor,
+                        borderColor: marketplaceColor,
+                        color: 'white',
+                      }
+                    : {}
+                }
+              >
+                {intl.formatMessage({ id: 'BookingDatesForm.shippingOption' })}
+              </button>
+            )}
+            {handByHandAvailable && (
+              <button
+                type="button"
+                className={`${css.deliveryChip} ${deliveryMethod === 'hand-by-hand' ? css.deliveryChipSelected : ''}`}
+                onClick={() => handleDeliveryMethodChange('hand-by-hand')}
+                style={
+                  deliveryMethod === 'hand-by-hand'
+                    ? {
+                        backgroundColor: marketplaceColor,
+                        borderColor: marketplaceColor,
+                        color: 'white',
+                      }
+                    : {}
+                }
+              >
+                {intl.formatMessage({ id: 'BookingDatesForm.handByHandOption' })}
+              </button>
+            )}
+            {pickupEnabled && (
+              <button
+                type="button"
+                className={`${css.deliveryChip} ${deliveryMethod === 'pickup' ? css.deliveryChipSelected : ''}`}
+                onClick={() => handleDeliveryMethodChange('pickup')}
+                style={
+                  deliveryMethod === 'pickup'
+                    ? {
+                        backgroundColor: marketplaceColor,
+                        borderColor: marketplaceColor,
+                        color: 'white',
+                      }
+                    : {}
+                }
+              >
+                {intl.formatMessage({ id: 'BookingDatesForm.pickupOption' })}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Estimated Breakdown - show skeleton when refetching line items */}
+      {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && (
         <div className={css.breakdownSection}>
           <H6 as="h3" className={css.breakdownTitle}>
             <FormattedMessage id="ProductPage.priceBreakdownTitle" defaultMessage="Riepilogo prezzo" />
           </H6>
           <hr className={css.breakdownDivider} />
-          <EstimatedCustomerBreakdownMaybe
-            breakdownData={breakdownData}
-            lineItems={lineItems}
-            timeZone={timeZone}
-            currency={currency}
-            marketplaceName={marketplaceName}
-            processName={BOOKING_PROCESS_NAME}
-          />
+          {showBreakdownSkeleton ? (
+            <div className={css.breakdownSkeleton} aria-busy="true" aria-live="polite">
+              <SkeletonTheme
+                baseColor="#e0e0e0"
+                highlightColor="#f0f0f0"
+                duration={1.4}
+                enableAnimation
+              >
+                {/* Match real breakdown: booking period, base, shipping, insurance, subtotal, total */}
+                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                  <div key={i} className={css.skeletonLine}>
+                    <Skeleton width="50%" height={20} />
+                    <Skeleton width="24%" height={20} />
+                  </div>
+                ))}
+                <div className={css.skeletonLineTotal}>
+                  <Skeleton width="22%" height={22} />
+                  <Skeleton width="30%" height={22} />
+                </div>
+              </SkeletonTheme>
+            </div>
+          ) : (
+            <EstimatedCustomerBreakdownMaybe
+              breakdownData={breakdownData}
+              lineItems={lineItems}
+              timeZone={timeZone}
+              currency={currency}
+              marketplaceName={marketplaceName}
+              processName={BOOKING_PROCESS_NAME}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Coupon code - only when breakdown is visible */}
+      {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && (
+        <div className={css.couponSection}>
+          <label htmlFor="productPage-couponCode" className={css.couponLabel}>
+            <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
+          </label>
+          <div className={css.couponRow}>
+            <input
+              id="productPage-couponCode"
+              type="text"
+              className={css.couponInput}
+              value={couponCode}
+              onChange={e => {
+                setCouponCode(e.target.value);
+                setCouponApplied(false);
+              }}
+              placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className={css.couponApplyButton}
+              onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
+              disabled={fetchLineItemsInProgress}
+              style={{
+                backgroundColor: marketplaceColor,
+                color: 'white',
+              }}
+            >
+              {couponApplied ? (
+                <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
+              ) : (
+                <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
+              )}
+            </button>
+          </div>
         </div>
       )}
 

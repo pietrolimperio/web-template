@@ -217,6 +217,7 @@ export const handleSubmit = parameters => values => {
     quantity: quantityRaw,
     seats: seatsRaw,
     deliveryMethod,
+    couponCode,
     ...otherOrderData
   } = values;
 
@@ -242,6 +243,7 @@ export const handleSubmit = parameters => values => {
   const seats = Number.parseInt(seatsRaw, 10);
   const seatsMaybe = Number.isInteger(seats) ? { seats } : {};
   const deliveryMethodMaybe = deliveryMethod ? { deliveryMethod } : {};
+  const couponCodeMaybe = couponCode && couponCode.trim() ? { couponCode: couponCode.trim() } : {};
 
   const initialValues = {
     listing,
@@ -251,6 +253,7 @@ export const handleSubmit = parameters => values => {
       ...quantityMaybe,
       ...seatsMaybe,
       ...deliveryMethodMaybe,
+      ...couponCodeMaybe,
       ...otherOrderData,
     },
     confirmPaymentError: null,

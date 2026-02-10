@@ -324,6 +324,7 @@ export const AIListingCreationPageComponent = ({
       };
       listingData.publicData.locationVisible = effectiveLocation.locationVisible ?? true;
       listingData.publicData.handByHandAvailable = effectiveLocation.handByHandAvailable ?? false;
+      listingData.publicData.shippingEnabled = effectiveLocation.shippingEnabled ?? true;
       if (effectiveLocation.geolocation) {
         listingData.geolocation = {
           lat: effectiveLocation.geolocation.lat,

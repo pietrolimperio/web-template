@@ -373,7 +373,7 @@ const OrderPanel = props => {
   const supportedProcessesInfo = getSupportedProcessesInfo();
   const isKnownProcess = supportedProcessesInfo.map(info => info.name).includes(processName);
 
-  const { pickupEnabled, shippingEnabled } = listing?.attributes?.publicData || {};
+  const { pickupEnabled, shippingEnabled, handByHandAvailable } = listing?.attributes?.publicData || {};
 
   const listingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
   const displayShipping = displayDeliveryShipping(listingTypeConfig);
@@ -529,6 +529,9 @@ const OrderPanel = props => {
             monthlyTimeSlots={monthlyTimeSlots}
             onFetchTimeSlots={onFetchTimeSlots}
             timeZone={timeZone}
+            handByHandAvailable={!!handByHandAvailable}
+            shippingEnabled={shippingEnabled !== false}
+            pickupEnabled={!!pickupEnabled}
             {...priceVariantsMaybe}
             {...sharedProps}
           />
@@ -538,7 +541,7 @@ const OrderPanel = props => {
             currentStock={currentStock}
             allowOrdersOfMultipleItems={allowOrdersOfMultipleItems}
             pickupEnabled={pickupEnabled && displayPickup}
-            shippingEnabled={shippingEnabled && displayShipping}
+            shippingEnabled={(shippingEnabled !== false) && displayShipping}
             displayDeliveryMethod={displayPickup || displayShipping}
             onContactUser={onContactUser}
             {...sharedProps}

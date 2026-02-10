@@ -626,6 +626,8 @@
   "ProductPage.selectDates": "Sélectionnez les dates",
   "ProductPage.youWontBeChargedInfo": "Vous ne serez pas débité maintenant",
   "ProductPage.breadcrumbNavigation": "Navigation fil d'Ariane",
+  "ProductPage.couponApply": "Appliquer",
+  "ProductPage.couponRemove": "Supprimer",
   "ProductPage.handByHand": "Échange en personne disponible",
   "LoadableComponentErrorBoundaryPage.description": "Il semble que l'application doive être mise à jour ! Veuillez actualiser la page ou revenir à {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Oups, nous n'avons pas pu récupérer la page.",
