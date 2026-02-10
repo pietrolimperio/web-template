@@ -1015,9 +1015,15 @@ export const ProductPageComponent = props => {
                                   <span className={css.breadcrumbSeparator}>›</span>
                                 </li>
                                 <li className={css.breadcrumbListItem}>
-                                  <span className={css.breadcrumbCurrent} aria-current="page">
+                                  <NamedLink
+                                    name="SearchPage"
+                                    to={{
+                                      search: `?keywords=${encodeURIComponent(publicData.thirdCategory)}`,
+                                    }}
+                                    className={css.breadcrumbItem}
+                                  >
                                     {getLocalizedCategoryName(intl, publicData.thirdCategory)}
-                                  </span>
+                                  </NamedLink>
                                 </li>
                               </>
                             )}
