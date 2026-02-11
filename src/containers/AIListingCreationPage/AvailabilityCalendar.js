@@ -476,26 +476,136 @@ const AvailabilityCalendar = ({
       year++;
     }
 
+    const daysInMonth = getDaysInMonth(month, year);
     const firstDay = getFirstDayOfMonth(month, year);
-    // Always show 5 weeks: first cell is the Sunday of the week containing the 1st (or earlier)
-    const firstDateInGrid = new Date(year, month, 1 - firstDay);
-    const WEEKS_COUNT = 5;
-    const DAYS_PER_WEEK = 7;
-    const totalCells = WEEKS_COUNT * DAYS_PER_WEEK;
+    const useFixedFiveWeeks = singleMonth || !isLargeScreen;
 
-    const allDays = [];
-    for (let i = 0; i < totalCells; i++) {
-      const date = new Date(firstDateInGrid);
-      date.setDate(date.getDate() + i);
-      date.setHours(0, 0, 0, 0);
-      const isCurrentMonth = date.getMonth() === month && date.getFullYear() === year;
-      allDays.push({ date, isCurrentMonth });
+    let weeks;
+    if (useFixedFiveWeeks) {
+      // Single-month view: always 5 weeks, fill with previous/next month days for consistent height
+      const firstDateInGrid = new Date(year, month, 1 - firstDay);
+      const WEEKS_COUNT = 5;
+      const DAYS_PER_WEEK = 7;
+      const totalCells = WEEKS_COUNT * DAYS_PER_WEEK;
+      const allDays = [];
+      for (let i = 0; i < totalCells; i++) {
+        const date = new Date(firstDateInGrid);
+        date.setDate(date.getDate() + i);
+        date.setHours(0, 0, 0, 0);
+        const isCurrentMonth = date.getMonth() === month && date.getFullYear() === year;
+        allDays.push({ date, isCurrentMonth });
+      }
+      weeks = [];
+      for (let w = 0; w < WEEKS_COUNT; w++) {
+        weeks.push(allDays.slice(w * DAYS_PER_WEEK, (w + 1) * DAYS_PER_WEEK));
+      }
+    } else {
+      // Two-month view: only current month days, empty cells for padding (no previous/next month days)
+      weeks = [];
+      let week = new Array(7).fill(null);
+      let dayCounter = 1;
+      for (let i = firstDay; i < 7 && dayCounter <= daysInMonth; i++) {
+        week[i] = dayCounter++;
+      }
+      weeks.push(week);
+      while (dayCounter <= daysInMonth) {
+        week = new Array(7).fill(null);
+        for (let i = 0; i < 7 && dayCounter <= daysInMonth; i++) {
+          week[i] = dayCounter++;
+        }
+        weeks.push(week);
+      }
     }
 
-    const weeks = [];
-    for (let w = 0; w < WEEKS_COUNT; w++) {
-      weeks.push(allDays.slice(w * DAYS_PER_WEEK, (w + 1) * DAYS_PER_WEEK));
-    }
+    const renderDayCell = (dayInfoOrDayNum) => {
+      const isFixedGrid = useFixedFiveWeeks;
+      const date = isFixedGrid
+        ? dayInfoOrDayNum.date
+        : new Date(year, month, dayInfoOrDayNum);
+      const isCurrentMonth = isFixedGrid ? dayInfoOrDayNum.isCurrentMonth : true;
+
+      if (!isFixedGrid && typeof dayInfoOrDayNum !== 'number') {
+        return null;
+      }
+
+      /* In single-month view, days of previous/next month are full buttons with availability (unavailable shown correctly) */
+      const dateNorm = isFixedGrid ? date : new Date(year, month, dayInfoOrDayNum);
+      dateNorm.setHours(0, 0, 0, 0);
+
+      const isPast = isDateInPast(dateNorm);
+      const isDisabled = isDateDisabled(dateNorm);
+      const isSelected = isDateSelected(dateNorm);
+      const isToday =
+        dateNorm.getFullYear() === today.getFullYear() &&
+        dateNorm.getMonth() === today.getMonth() &&
+        dateNorm.getDate() === today.getDate();
+      const isStart = isRangeStart(dateNorm);
+      const isEnd = isRangeEnd(dateNorm);
+      const inRange = isInRange(dateNorm);
+      const inPreview = isInPreviewRange(dateNorm);
+      const previewEnd = isPreviewEnd(dateNorm);
+      const isSingleDay = rangeStart && rangeEnd && rangeStart.getTime() === rangeEnd.getTime();
+      const isHoveredWithRange =
+        hoveredDate &&
+        dateNorm.getTime() === hoveredDate.getTime() &&
+        rangeStart &&
+        rangeEnd &&
+        !selectingRange;
+      const handleDayClick = (e) => {
+        if (readOnly && onMonthsContainerClick) {
+          e.preventDefault();
+          onMonthsContainerClick(e);
+        } else {
+          handleDateClick(dateNorm);
+        }
+      };
+      const isBeyondMax =
+        maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(dateNorm);
+      const tempBlocked =
+        !canBypassDisabled &&
+        selectingRange &&
+        rangeStart &&
+        firstDisabledAfterStart &&
+        dateNorm.getTime() > firstDisabledAfterStart.getTime();
+      const lockedUnavailable = !canBypassDisabled && isDisabled;
+      const isDayDisabled =
+        isPast ||
+        lockedUnavailable ||
+        tempBlocked ||
+        isBeyondMax ||
+        (readOnly && !onMonthsContainerClick);
+
+      return (
+        <button
+          key={dateNorm.getTime()}
+          type="button"
+          onClick={handleDayClick}
+          onMouseEnter={() => handleDateHover(dateNorm)}
+          onMouseLeave={handleDateLeave}
+          disabled={isDayDisabled}
+          className={classNames(css.day, {
+            [css.dayOtherMonth]: isFixedGrid && !isCurrentMonth,
+            [css.daySelected]: isSelected && !isStart && !isEnd && !inRange,
+            [css.dayRangeStart]: isStart && !isSingleDay,
+            [css.dayRangeEnd]: isEnd && !isSingleDay,
+            [css.daySingleSelected]: isSingleDay && isStart,
+            [css.dayInRange]: inRange,
+            [css.dayPreview]: inPreview && selectingRange && !isStart,
+            [css.dayPreviewEnd]: previewEnd,
+            [css.dayDisabled]: isPast,
+            [css.dayUnavailable]: isDisabled || isBeyondMax,
+            [css.dayUnavailableLocked]: lockedUnavailable || (!canBypassDisabled && isBeyondMax),
+            [css.dayTempUnavailable]: tempBlocked,
+            [css.dayToday]: isToday,
+            [css.dayReadOnly]: readOnly,
+            [css.dayHoverClear]: isHoveredWithRange,
+          })}
+          style={readOnly && onMonthsContainerClick && !isDayDisabled ? { cursor: 'pointer' } : undefined}
+        >
+          {dateNorm.getDate()}
+        </button>
+      );
+    };
 
     return (
       <div key={`${year}-${month}`} className={css.monthContainer}>
@@ -516,87 +626,14 @@ const AvailabilityCalendar = ({
         <div className={css.daysGrid}>
           {weeks.map((week, weekIdx) => (
             <div key={weekIdx} className={css.week}>
-              {week.map((dayInfo) => {
-                const { date, isCurrentMonth } = dayInfo;
-
-                const isPast = isDateInPast(date);
-                const isDisabled = isDateDisabled(date);
-                const isSelected = isDateSelected(date);
-                const isToday =
-                  date.getFullYear() === today.getFullYear() &&
-                  date.getMonth() === today.getMonth() &&
-                  date.getDate() === today.getDate();
-
-                const isStart = isRangeStart(date);
-                const isEnd = isRangeEnd(date);
-                const inRange = isInRange(date);
-                const inPreview = isInPreviewRange(date);
-                const previewEnd = isPreviewEnd(date);
-
-                const isSingleDay = rangeStart && rangeEnd && rangeStart.getTime() === rangeEnd.getTime();
-                const isHoveredWithRange =
-                  hoveredDate &&
-                  date.getTime() === hoveredDate.getTime() &&
-                  rangeStart &&
-                  rangeEnd &&
-                  !selectingRange;
-
-                const handleDayClick = (e) => {
-                  if (readOnly && onMonthsContainerClick) {
-                    e.preventDefault();
-                    onMonthsContainerClick(e);
-                  } else {
-                    handleDateClick(date);
-                  }
-                };
-
-                const isBeyondMax =
-                  maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date);
-                const tempBlocked =
-                  !canBypassDisabled &&
-                  selectingRange &&
-                  rangeStart &&
-                  firstDisabledAfterStart &&
-                  date.getTime() > firstDisabledAfterStart.getTime();
-                const lockedUnavailable = !canBypassDisabled && isDisabled;
-
-                const isDayDisabled =
-                  isPast ||
-                  lockedUnavailable ||
-                  tempBlocked ||
-                  isBeyondMax ||
-                  (readOnly && !onMonthsContainerClick);
-
-                return (
-                  <button
-                    key={date.getTime()}
-                    type="button"
-                    onClick={handleDayClick}
-                    onMouseEnter={() => handleDateHover(date)}
-                    onMouseLeave={handleDateLeave}
-                    disabled={isDayDisabled}
-                    className={classNames(css.day, {
-                      [css.dayOtherMonth]: !isCurrentMonth,
-                      [css.daySelected]: isSelected && !isStart && !isEnd && !inRange,
-                      [css.dayRangeStart]: isStart && !isSingleDay,
-                      [css.dayRangeEnd]: isEnd && !isSingleDay,
-                      [css.daySingleSelected]: isSingleDay && isStart,
-                      [css.dayInRange]: inRange,
-                      [css.dayPreview]: inPreview && selectingRange && !isStart,
-                      [css.dayPreviewEnd]: previewEnd,
-                      [css.dayDisabled]: isPast,
-                      [css.dayUnavailable]: isDisabled || isBeyondMax,
-                      [css.dayUnavailableLocked]: lockedUnavailable || (!canBypassDisabled && isBeyondMax),
-                      [css.dayTempUnavailable]: tempBlocked,
-                      [css.dayToday]: isToday,
-                      [css.dayReadOnly]: readOnly,
-                      [css.dayHoverClear]: isHoveredWithRange,
-                    })}
-                    style={readOnly && onMonthsContainerClick && !isDayDisabled ? { cursor: 'pointer' } : undefined}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
+              {week.map((dayInfoOrDayNum, dayIdx) => {
+                if (useFixedFiveWeeks) {
+                  return renderDayCell(dayInfoOrDayNum);
+                }
+                if (dayInfoOrDayNum === null) {
+                  return <div key={`${weekIdx}-${dayIdx}`} className={css.emptyDay} />;
+                }
+                return renderDayCell(dayInfoOrDayNum);
               })}
             </div>
           ))}
