@@ -325,16 +325,14 @@
 }
 
 .legend {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  justify-items: start;
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 6px;
   max-width: 100%;
-  overflow-x: auto;
-  flex-wrap: wrap;
   box-sizing: border-box;
 }
 
@@ -420,11 +418,6 @@
     font-size: 0.813rem;
   }
 
-  .legend {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
   .legendItem {
     font-size: 0.813rem;
   }
@@ -460,9 +453,6 @@
   }
 
   .legend {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
-    justify-items: start;
   }
 }
