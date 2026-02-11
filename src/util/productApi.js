@@ -20,6 +20,8 @@ class ProductAPI {
     this.baseURL = PRODUCT_API_BASE_URL;
     this.models = [...DEFAULT_MODELS];
     this.model = DEFAULT_MODELS[0]; // Default model for other methods (refine, regenerate, etc.)
+    /** @type {string | null} Token anonimo per API AI (solo in memoria, non in localStorage) */
+    this.anonToken = null;
     // Get current locale from localStorage (default: it-IT)
     // Safe for server-side rendering: check if localStorage is available
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
@@ -27,6 +29,28 @@ class ProductAPI {
     } else {
       this.locale = APP_DEFAULT_LOCALE;
     }
+  }
+
+  /**
+   * Ottiene un token anonimo dal backend (GET /api/session) se non già presente in memoria.
+   * Usato per autenticare le chiamate alle API AI senza richiedere login.
+   * @private
+   */
+  async ensureToken() {
+    if (this.anonToken) return;
+    const sessionURL = `${this.baseURL}/session`;
+    devLog('🔑 [Product API] Fetching anonymous token from /session');
+    const response = await fetch(sessionURL, { method: 'GET' });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Failed to get session token: ${response.status} - ${errText}`);
+    }
+    const data = await response.json();
+    if (!data?.token) {
+      throw new Error('Session response missing token');
+    }
+    this.anonToken = data.token;
+    devLog('🔑 [Product API] Token obtained');
   }
 
   /**
@@ -242,10 +266,21 @@ class ProductAPI {
   /**
    * Internal API call method
    * @private
+   * @param {string} endpoint - Endpoint path (analyze, refine, etc.)
+   * @param {FormData | Object} payload - Request body
+   * @param {boolean} isRetry - True se è un retry dopo 401
    */
-  async call(endpoint, payload) {
+  async call(endpoint, payload, isRetry = false) {
     const isFormData = payload instanceof FormData;
     const fullURL = `${this.baseURL}/${endpoint}`;
+
+    // Ottieni token anonimo prima di ogni richiesta AI (tranne /session, che non passa da call)
+    await this.ensureToken();
+
+    const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
+    if (this.anonToken) {
+      headers['Authorization'] = `Bearer ${this.anonToken}`;
+    }
 
     // Debug logging
     devLog('🔍 [Product API] Calling:', fullURL);
@@ -255,7 +290,7 @@ class ProductAPI {
     try {
       const requestOptions = {
         method: 'POST',
-        headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+        headers,
         body: isFormData ? payload : JSON.stringify(payload),
       };
       if (isFormData && payload instanceof FormData) {
@@ -281,6 +316,13 @@ class ProductAPI {
       const response = await fetch(fullURL, requestOptions);
 
       console.log('📡 [Product API] Response status:', response.status, response.statusText);
+
+      // 401: token scaduto – azzera, ottieni nuovo token, riprova una sola volta
+      if (response.status === 401 && !isRetry) {
+        this.anonToken = null;
+        devLog('🔑 [Product API] 401 – token expired, refreshing and retrying');
+        return this.call(endpoint, payload, true);
+      }
 
       if (!response.ok) {
         let errorMessage;
