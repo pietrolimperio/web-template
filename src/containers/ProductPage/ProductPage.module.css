@@ -583,12 +583,18 @@
 
 /* Description Section */
 .descriptionSection {
-  margin-top: 5px;
+  margin-top: 32px;
 }
 
 /* Details Section */
 .detailsSection {
   border-top: 1px solid var(--matterColorNegative);
+}
+
+@media (max-width: 767px) {
+  .detailsSection {
+    margin-top: 32px;
+  }
 }
 
 .sectionTitle {
