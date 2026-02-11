@@ -1607,6 +1607,7 @@
   "ListingConfiguration.errorMinLength": "Veuillez spécifier la durée minimale",
   "ListingConfiguration.errorSeasonalityDates": "Veuillez sélectionner des dates pour cette variante de prix",
   "AvailabilityCalendar.selectEndDate": "Cliquez sur une autre date pour compléter la plage",
+  "AvailabilityCalendar.resetSelection": "Réinitialiser la sélection",
   "AvailabilityCalendar.startEnd": "Début / Fin",
   "AvailabilityCalendar.inRange": "Dans la plage",
   "AvailabilityCalendar.selected": "Sélectionné",

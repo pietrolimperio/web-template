@@ -505,9 +505,21 @@ const getTimeSlotsOnDate = (dateRange, timeSlots, timeZone, minDurationStartingI
     );
 
     // Check if the time slot has enough duration to be considered
-    const startingInDay = timeSlotStartIsInsideDate ? timeSlotRange[0] : dayStart;
-    const hasEnoughDuration =
-      getMinutes(timeSlotRange[1] - startingInDay) >= minDurationStartingInDay;
+    const overlapStart = dayIsInsideTimeSlot
+      ? dayStart
+      : timeSlotStartIsInsideDate
+      ? timeSlotRange[0]
+      : dayStart;
+    const overlapEnd = dayIsInsideTimeSlot
+      ? dayEnd
+      : timeSlotEndIsInsideDate
+      ? timeSlotRange[1]
+      : dayEnd;
+    const overlapMinutes =
+      overlapEnd > overlapStart ? getMinutes(overlapEnd - overlapStart) : 0;
+    const dayDurationMinutes = getMinutes(dayEnd - dayStart);
+    const requiredDuration = Math.min(minDurationStartingInDay, dayDurationMinutes);
+    const hasEnoughDuration = overlapMinutes >= requiredDuration;
 
     // Pick slots that overlap with the 'day'.
     const overlapsWithDay =

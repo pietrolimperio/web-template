@@ -208,16 +208,33 @@
 .dayUnavailable {
   background: #ffe6e6;
   color: #cc0000;
-  cursor: not-allowed;
   opacity: 0.6;
   position: relative;
+}
+
+.dayUnavailableLocked {
+  cursor: not-allowed;
   pointer-events: none;
 }
 
-.dayUnavailable:hover {
+.dayUnavailableLocked:hover {
   transform: none !important;
   background: #ffe6e6 !important;
   opacity: 0.6 !important;
+}
+
+.dayTempUnavailable {
+  background: #fff2f2;
+  color: #d35400;
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dayTempUnavailable:hover {
+  transform: none !important;
+  background: #fff2f2 !important;
+  opacity: 0.65 !important;
 }
 
 .dayReadOnly {
@@ -267,6 +284,27 @@
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1rem;
+}
+
+.rangeIndicatorActions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.rangeIndicatorLink {
+  background: none;
+  border: none;
+  color: var(--marketplaceColor, #4A90E2);
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0;
+}
+
+.rangeIndicatorLink:hover {
+  text-decoration: none;
 }
 
 .legend {

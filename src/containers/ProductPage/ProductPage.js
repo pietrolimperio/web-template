@@ -12,7 +12,7 @@ import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { LISTING_STATE_PENDING_APPROVAL, LISTING_STATE_CLOSED, propTypes } from '../../util/types';
 import { getLocalizedCategoryName } from '../../util/string';
-import { types as sdkTypes, createInstance } from '../../util/sdkLoader';
+import { types as sdkTypes } from '../../util/sdkLoader';
 import {
   LISTING_PAGE_DRAFT_VARIANT,
   LISTING_PAGE_PENDING_APPROVAL_VARIANT,
@@ -94,6 +94,7 @@ import {
   setInitialValues,
   fetchTimeSlots,
   fetchTransactionLineItems,
+  fetchAvailabilityForCalendar,
 } from '../ListingPage/ListingPage.duck';
 
 import {
@@ -193,6 +194,7 @@ const BookingForm = props => {
     config,
     monthlyTimeSlots,
     onFetchTimeSlots,
+    onFetchAvailabilityForCalendar,
     onFetchTransactionLineItems,
     lineItems,
     fetchLineItemsInProgress,
@@ -237,85 +239,26 @@ const BookingForm = props => {
   const [couponApplied, setCouponApplied] = useState(false);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
 
-  // Fetch availability exceptions
+  // Fetch availability from timeslots (works for guests and owners)
   useEffect(() => {
-    const fetchAvailability = async () => {
-      if (!listing?.id) return;
+    if (!listing?.id || !onFetchAvailabilityForCalendar) return;
 
-      setIsLoadingAvailability(true);
-      try {
-        const sdk = createInstance({
-          clientId: config.sdk?.clientId || process.env.REACT_APP_SHARETRIBE_SDK_CLIENT_ID,
-        });
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-        const response = await sdk.availabilityExceptions.query({
-          listingId: listing.id,
-          start: today,
-          end: oneYearFromNow,
-        });
-
-        const exceptions = response.data.data || [];
-        
-        // Convert exceptions to disabled dates
-        const exceptionDates = [];
-        exceptions.forEach(exception => {
-          if (exception.attributes.seats === 0) {
-            const start = new Date(exception.attributes.start);
-            const end = new Date(exception.attributes.end);
-            const current = new Date(start);
-            current.setHours(0, 0, 0, 0);
-            end.setHours(0, 0, 0, 0);
-
-            while (current <= end) {
-              exceptionDates.push(new Date(current));
-              current.setDate(current.getDate() + 1);
-            }
-          }
-        });
-        setDisabledDates(exceptionDates);
-
-        // Calculate available dates
-        const available = [];
-        let rangeStart = today;
-        let rangeEnd = oneYearFromNow;
-
-        if (publicData?.availableFrom) {
-          const fromDate = new Date(publicData.availableFrom);
-          fromDate.setHours(0, 0, 0, 0);
-          if (fromDate > rangeStart) rangeStart = fromDate;
-        }
-
-        if (publicData?.availableUntil) {
-          const untilDate = new Date(publicData.availableUntil);
-          untilDate.setHours(23, 59, 59, 999);
-          if (untilDate < rangeEnd) rangeEnd = untilDate;
-        }
-
-        const currentDate = new Date(rangeStart);
-        while (currentDate <= rangeEnd) {
-          const dateObj = new Date(currentDate);
-          dateObj.setHours(0, 0, 0, 0);
-          const isException = exceptionDates.some(d => d.getTime() === dateObj.getTime());
-          if (!isException) {
-            available.push(dateObj);
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setAvailableDates(available);
-      } catch (error) {
-        console.error('Failed to fetch availability:', error);
-      } finally {
-        setIsLoadingAvailability(false);
-      }
+    const paddingOptions = {
+      unavailabilityPaddingStart: config?.listing?.unavailabilityPaddingStart ?? 0,
+      unavailabilityPaddingEnd: config?.listing?.unavailabilityPaddingEnd ?? 0,
     };
-
-    fetchAvailability();
-  }, [listing?.id, config.sdk?.clientId, publicData?.availableFrom, publicData?.availableUntil]);
+    setIsLoadingAvailability(true);
+    onFetchAvailabilityForCalendar(listing, paddingOptions)
+      .then(({ availableDates: available, disabledDates: disabled }) => {
+        setAvailableDates(available || []);
+        setDisabledDates(disabled || []);
+      })
+      .catch(() => {
+        setAvailableDates([]);
+        setDisabledDates([]);
+      })
+      .finally(() => setIsLoadingAvailability(false));
+  }, [listing?.id, onFetchAvailabilityForCalendar, config?.listing?.unavailabilityPaddingStart, config?.listing?.unavailabilityPaddingEnd]);
 
   const fetchLineItemsForDatesAndDelivery = (startDate, endDate, dm, coupon = couponCode) => {
     const method = dm ?? deliveryMethod;
@@ -694,6 +637,7 @@ export const ProductPageComponent = props => {
     onSendInquiry,
     onInitializeCardPaymentData,
     onFetchTimeSlots,
+    onFetchAvailabilityForCalendar,
     monthlyTimeSlots,
     onFetchTransactionLineItems,
     lineItems,
@@ -1290,6 +1234,7 @@ export const ProductPageComponent = props => {
                   {isBooking && !isClosed && (
                     <div id="mobile-booking-form" className={css.mobileBookingForm}>
                       <BookingForm
+                        onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
                         listing={currentListing}
                         isOwnListing={isOwnListing}
                         onSubmit={handleOrderSubmit}
@@ -1405,6 +1350,7 @@ export const ProductPageComponent = props => {
               {isBooking && !isClosed && (
                 <div className={css.desktopBookingForm}>
                   <BookingForm
+                    onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
                     listing={currentListing}
                     isOwnListing={isOwnListing}
                     onSubmit={handleOrderSubmit}
@@ -1619,6 +1565,8 @@ const mapDispatchToProps = dispatch => ({
   onInitializeCardPaymentData: () => dispatch(initializeCardPaymentData()),
   onFetchTimeSlots: (listingId, start, end, timeZone, options) =>
     dispatch(fetchTimeSlots(listingId, start, end, timeZone, options)),
+  onFetchAvailabilityForCalendar: (listing, options) =>
+    dispatch(fetchAvailabilityForCalendar(listing, options)),
   onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
 });
 

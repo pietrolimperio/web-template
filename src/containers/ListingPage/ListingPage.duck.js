@@ -13,6 +13,11 @@ import {
   monthIdString,
   stringifyDateToISO8601,
 } from '../../util/dates';
+import { generateMonths } from '../../util/generators';
+import {
+  timeSlotsToAvailableDisabledDates,
+  applyUnavailabilityPadding,
+} from '../../util/availabilityHelpers';
 import {
   hasPermissionToInitiateTransactions,
   hasPermissionToViewData,
@@ -454,6 +459,183 @@ export const sendInquiry = (listing, message) => (dispatch, getState, sdk) => {
       dispatch(sendInquiryError(storableError(e)));
       throw e;
     });
+};
+
+/**
+ * Fetches timeslots for the next 12 months and converts to availableDates/disabledDates.
+ * Works for guests and owners (uses timeslots API, not availability_exceptions).
+ *
+ * @param {Object} listing - Listing or ownListing entity
+ * @param {Object} options - Optional
+ * @param {number} options.unavailabilityPaddingStart - Extra days to mark unavailable before each booking (e.g. 1 for shipping prep)
+ * @param {number} options.unavailabilityPaddingEnd - Extra days to mark unavailable after each booking (e.g. 1 for return handling)
+ * @returns {Promise<{ availableDates: Date[], disabledDates: Date[] }>}
+ */
+export const fetchAvailabilityForCalendar = (listing, options = {}) => (dispatch, getState, sdk) => {
+  const {
+    unavailabilityPaddingStart = 0,
+    unavailabilityPaddingEnd = 0,
+    applyPadding = true,
+  } = options;
+  const hasWindow = typeof window !== 'undefined';
+  const { availabilityPlan, publicData } = listing?.attributes || {};
+  const tz = availabilityPlan?.timezone;
+
+  if (!hasWindow || !listing?.id || !tz) {
+    return Promise.resolve({ availableDates: [], disabledDates: [] });
+  }
+
+  const { unitType, priceVariants, startTimeInterval } = publicData || {};
+  const now = new Date();
+  const startOfToday = getStartOf(now, 'day', tz);
+  const isFixed = unitType === 'fixed';
+
+  const timeUnit = startTimeInterval
+    ? bookingTimeUnits[startTimeInterval]?.timeUnit
+    : unitType === 'hour'
+    ? 'hour'
+    : 'day';
+  const nextBoundary = findNextBoundary(now, 1, timeUnit, tz);
+
+  const rangeEnd = getStartOf(nextBoundary, 'month', tz, 12, 'months');
+  const months = generateMonths(startOfToday, rangeEnd, tz);
+
+  const variants = priceVariants || [];
+  const bookingLengthInMinutes = variants.reduce((min, priceVariant) => {
+    return Math.min(min, priceVariant.bookingLengthInMinutes);
+  }, Number.MAX_SAFE_INTEGER);
+
+  const minDurationStartingInInterval = isFixed ? bookingLengthInMinutes : 60;
+  const fallbackMinDuration =
+    timeUnit === 'day'
+      ? 24 * 60
+      : timeUnit === 'hour'
+      ? 60
+      : isFixed && bookingLengthInMinutes !== Number.MAX_SAFE_INTEGER
+      ? bookingLengthInMinutes
+      : minDurationStartingInInterval;
+  const minDurationStartingInDay =
+    bookingLengthInMinutes === Number.MAX_SAFE_INTEGER
+      ? fallbackMinDuration
+      : Math.max(5, bookingLengthInMinutes);
+
+  const getOptions = intervalAlign =>
+    ['fixed', 'hour'].includes(unitType)
+      ? {
+          extraQueryParams: {
+            intervalDuration: 'P1D',
+            intervalAlign,
+            maxPerInterval: 1,
+            minDurationStartingInInterval,
+            perPage: 31,
+            page: 1,
+          },
+        }
+      : null;
+
+  const fetchPromises = months.map((monthStart, i) => {
+    const monthEnd = getStartOf(monthStart, 'month', tz, 1, 'months');
+    const alignedEnd = isFixed
+      ? getStartOf(monthEnd, 'minute', tz, bookingLengthInMinutes, 'minutes')
+      : monthEnd;
+    // API rejects start more than 1 day in the past - use startOfToday (within limit) for first month
+    const fetchStart = i === 0 ? startOfToday : monthStart;
+    const align = i === 0 ? startOfToday : monthStart;
+    const opts = getOptions(align);
+    return dispatch(
+      fetchTimeSlots(listing.id, fetchStart, alignedEnd, tz, opts)
+    );
+  });
+
+  return Promise.all(fetchPromises)
+    .then(monthlyResults => {
+      const allTimeSlots = monthlyResults.flat();
+      const rangeStart = getStartOf(startOfToday, 'day', tz);
+      const endDate = new Date(rangeEnd);
+      endDate.setDate(endDate.getDate() - 1);
+
+      let availableDates;
+      let disabledDates;
+
+      if (allTimeSlots.length === 0) {
+        // No timeslot data (e.g. new listing) - default to all available like previous availability_exceptions behavior
+        let start = new Date(rangeStart);
+        let end = new Date(endDate);
+        if (publicData?.availableFrom) {
+          const fromDate = getStartOf(new Date(publicData.availableFrom), 'day', tz);
+          if (fromDate > start) start = fromDate;
+        }
+        if (publicData?.availableUntil) {
+          const untilDate = getStartOf(new Date(publicData.availableUntil), 'day', tz);
+          if (untilDate < end) end = new Date(untilDate);
+        }
+        availableDates = [];
+        if (start.getTime() <= end.getTime()) {
+          for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            availableDates.push(new Date(d));
+          }
+        }
+        disabledDates = [];
+      } else {
+        const result = timeSlotsToAvailableDisabledDates(
+          allTimeSlots,
+          rangeStart,
+          endDate,
+          publicData || {},
+          tz,
+          {
+            minDurationStartingInDay,
+          }
+        );
+        availableDates = result.availableDates;
+        disabledDates = result.disabledDates;
+      }
+
+      if (
+        applyPadding &&
+        (unavailabilityPaddingStart || unavailabilityPaddingEnd)
+      ) {
+        const padded = applyUnavailabilityPadding(
+          availableDates,
+          disabledDates,
+          unavailabilityPaddingStart,
+          unavailabilityPaddingEnd,
+          rangeStart,
+          endDate,
+          tz
+        );
+        availableDates = padded.availableDates;
+        disabledDates = padded.disabledDates;
+      }
+
+      return { availableDates, disabledDates };
+    })
+    .catch(() => ({ availableDates: [], disabledDates: [] }));
+};
+
+/**
+ * Fetches availability exceptions for the listing (owner only).
+ * Uses the authenticated SDK. For calendar display use fetchAvailabilityForCalendar instead.
+ *
+ * @param {Object} listing - Listing or ownListing entity
+ * @returns {Promise<Array>} availability exception entities
+ */
+export const fetchAvailabilityExceptionsForModal = listing => (dispatch, getState, sdk) => {
+  if (!listing?.id) return Promise.resolve([]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const oneYearFromNow = new Date();
+  oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+  return sdk.availabilityExceptions
+    .query({
+      listingId: listing.id,
+      start: today,
+      end: oneYearFromNow,
+    })
+    .then(response => response.data.data || [])
+    .catch(() => []);
 };
 
 // Helper function for loadData call.

@@ -83,6 +83,10 @@ import {
   requestUpdateListing,
   requestDeleteDraft,
 } from '../EditListingPage/EditListingPage.duck';
+import {
+  fetchAvailabilityForCalendar,
+  fetchAvailabilityExceptionsForModal,
+} from '../ListingPage/ListingPage.duck';
 import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
 import { sendVerificationEmail, fetchCurrentUser } from '../../ducks/user.duck';
 import EmailReminder from '../../components/ModalMissingInformation/EmailReminder';
@@ -181,6 +185,8 @@ export const PreviewListingPageComponent = props => {
     sendVerificationEmailError,
     onResendVerificationEmail,
     onFetchCurrentUser,
+    onFetchAvailabilityForCalendar,
+    onFetchAvailabilityExceptions,
     params,
   } = props;
 
@@ -425,144 +431,32 @@ export const PreviewListingPageComponent = props => {
     }
   }, [id, isGuestPreview, onFetchListing, config]);
 
-  // Fetch availability exceptions when listing is loaded (skip for guest preview)
+  // Fetch availability from timeslots for calendar display (works for guests and owners, skip for guest preview)
   useEffect(() => {
-    const fetchAvailabilityExceptions = async () => {
-      if (!currentListing.id || !listingFetched || isGuestPreview) return;
+    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityForCalendar) return;
 
-      try {
-        // Create SDK instance
-        const sdk = createInstance({
-          clientId: config.sdk?.clientId || process.env.REACT_APP_SHARETRIBE_SDK_CLIENT_ID,
-        });
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-        oneYearFromNow.setHours(23, 59, 59, 999);
-
-        const response = await sdk.availabilityExceptions.query({
-          listingId: currentListing.id,
-          start: today,
-          end: oneYearFromNow,
-        });
-
-        const exceptions = response.data.data || [];
-        setAvailabilityExceptions(exceptions);
-
-        // Convert exceptions to disabled dates (Date objects)
-        const exceptionDateObjects = [];
-        exceptions.forEach(exception => {
-          if (exception.attributes.seats === 0) {
-            // Unavailable exception
-            const start = new Date(exception.attributes.start);
-            const end = new Date(exception.attributes.end);
-            const currentDate = new Date(start);
-            currentDate.setHours(0, 0, 0, 0);
-            end.setHours(0, 0, 0, 0);
-
-            while (currentDate <= end) {
-              const dateObj = new Date(currentDate);
-              dateObj.setHours(0, 0, 0, 0);
-              // Check if date is not already in the array
-              const exists = exceptionDateObjects.some(d => 
-                d.getTime() === dateObj.getTime()
-              );
-              if (!exists) {
-                exceptionDateObjects.push(dateObj);
-              }
-              currentDate.setDate(currentDate.getDate() + 1);
-            }
-          }
-        });
-        setDisabledDates(exceptionDateObjects);
-
-        // Calculate available dates (respecting availableFrom/availableUntil if set, minus exceptions) as Date objects
-        const available = [];
-        
-        // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
-        let rangeStart = today;
-        let rangeEnd = oneYearFromNow;
-        
-        if (currentListing.attributes?.publicData?.availableFrom) {
-          const fromDate = new Date(currentListing.attributes.publicData.availableFrom);
-          fromDate.setHours(0, 0, 0, 0);
-          // Use the later of today or availableFrom
-          if (fromDate > rangeStart) {
-            rangeStart = fromDate;
-          }
-        }
-        
-        if (currentListing.attributes?.publicData?.availableUntil) {
-          const untilDate = new Date(currentListing.attributes.publicData.availableUntil);
-          untilDate.setHours(23, 59, 59, 999);
-          // Use the earlier of oneYearFromNow or availableUntil
-          if (untilDate < rangeEnd) {
-            rangeEnd = untilDate;
-          }
-        }
-        
-        const currentDate = new Date(rangeStart);
-        while (currentDate <= rangeEnd) {
-          const dateObj = new Date(currentDate);
-          dateObj.setHours(0, 0, 0, 0);
-          // Check if date is not in exceptions
-          const isException = exceptionDateObjects.some(d => 
-            d.getTime() === dateObj.getTime()
-          );
-          if (!isException) {
-            available.push(dateObj);
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setAvailableDates(available);
-      } catch (error) {
-        console.error('Failed to fetch availability exceptions:', error);
-        // If fetch fails, calculate available dates respecting availableFrom/availableUntil if set
-        const todayFallback = new Date();
-        todayFallback.setHours(0, 0, 0, 0);
-        const oneYearFromNowFallback = new Date();
-        oneYearFromNowFallback.setFullYear(oneYearFromNowFallback.getFullYear() + 1);
-        oneYearFromNowFallback.setHours(23, 59, 59, 999);
-        
-        // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
-        let rangeStart = todayFallback;
-        let rangeEnd = oneYearFromNowFallback;
-        
-        if (currentListing.attributes?.publicData?.availableFrom) {
-          const fromDate = new Date(currentListing.attributes.publicData.availableFrom);
-          fromDate.setHours(0, 0, 0, 0);
-          // Use the later of today or availableFrom
-          if (fromDate > rangeStart) {
-            rangeStart = fromDate;
-          }
-        }
-        
-        if (currentListing.attributes?.publicData?.availableUntil) {
-          const untilDate = new Date(currentListing.attributes.publicData.availableUntil);
-          untilDate.setHours(23, 59, 59, 999);
-          // Use the earlier of oneYearFromNow or availableUntil
-          if (untilDate < rangeEnd) {
-            rangeEnd = untilDate;
-          }
-        }
-        
-        const available = [];
-        const currentDate = new Date(rangeStart);
-        while (currentDate <= rangeEnd) {
-          const dateObj = new Date(currentDate);
-          dateObj.setHours(0, 0, 0, 0);
-          available.push(dateObj);
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setAvailableDates(available);
-        setDisabledDates([]);
-      }
+    const paddingOptions = {
+      unavailabilityPaddingStart: config?.listing?.unavailabilityPaddingStart ?? 0,
+      unavailabilityPaddingEnd: config?.listing?.unavailabilityPaddingEnd ?? 0,
+      applyPadding: false,
     };
+    onFetchAvailabilityForCalendar(currentListing, paddingOptions)
+      .then(({ availableDates: available, disabledDates: disabled }) => {
+        setAvailableDates(available || []);
+        setDisabledDates(disabled || []);
+      })
+      .catch(() => {
+        setAvailableDates([]);
+        setDisabledDates([]);
+      });
+  }, [currentListing.id, listingFetched, isGuestPreview, onFetchAvailabilityForCalendar, config?.listing?.unavailabilityPaddingStart, config?.listing?.unavailabilityPaddingEnd]);
 
-    fetchAvailabilityExceptions();
-  }, [currentListing.id, listingFetched, config, currentListing.attributes?.publicData?.availableFrom, currentListing.attributes?.publicData?.availableUntil]);
+  // Fetch availability exceptions for the edit modal (owner only - needed for add/remove exceptions UI)
+  useEffect(() => {
+    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityExceptions) return;
+
+    onFetchAvailabilityExceptions(currentListing).then(setAvailabilityExceptions);
+  }, [currentListing.id, listingFetched, isGuestPreview, onFetchAvailabilityExceptions]);
 
   // Track the last listing ID we initialized to avoid re-initializing on every render
   const lastInitializedListingIdRef = useRef(null);
@@ -5178,6 +5072,7 @@ export const PreviewListingPageComponent = props => {
                 disabledDates={getExceptionDatesForCalendar()}
                 availableFrom={currentListing.attributes?.publicData?.availableFrom}
                 availableUntil={currentListing.attributes?.publicData?.availableUntil}
+                ignoreDisabledDates
               />
             </div>
 
@@ -5847,6 +5742,10 @@ const mapDispatchToProps = dispatch => ({
   onFetchStripeAccount: () => dispatch(fetchStripeAccount()),
   onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
   onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
+  onFetchAvailabilityForCalendar: (listing, options) =>
+    dispatch(fetchAvailabilityForCalendar(listing, options)),
+  onFetchAvailabilityExceptions: listing =>
+    dispatch(fetchAvailabilityExceptionsForModal(listing)),
   onUploadImage: (listingId, imageFile, config) =>
     dispatch((dispatch, getState, sdk) => {
       const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});

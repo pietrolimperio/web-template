@@ -650,6 +650,7 @@ const ListingConfigurationPage = ({
             marketplaceColor={marketplaceColor}
             availableFrom={availableFrom}
             availableUntil={availableUntil}
+            ignoreDisabledDates
           />
         </div>
 

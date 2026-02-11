@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import classNames from 'classnames';
 import css from './AvailabilityCalendar.module.css';
@@ -23,6 +23,7 @@ const AvailabilityCalendar = ({
   autoSelectDates = true, // If false, calendar starts without any dates selected
   onMonthsContainerClick = null, // Optional click handler for monthsContainer
   maxBookingDays = null, // If set (e.g. 80), range selection is capped to this many days (inclusive)
+  ignoreDisabledDates = false, // If true, disabled dates are informational only
 }) => {
   const intl = useIntl();
   const today = new Date();
@@ -37,6 +38,39 @@ const AvailabilityCalendar = ({
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hoveredDate, setHoveredDate] = useState(null);
+
+  const canBypassDisabled = selectMode === 'exception' || ignoreDisabledDates;
+  const getDayKey = date => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+  const disabledDaySet = useMemo(() => {
+    if (!disabledDates || disabledDates.length === 0) {
+      return new Set();
+    }
+    return new Set(
+      disabledDates.map(d => {
+        const date = new Date(d);
+        date.setHours(0, 0, 0, 0);
+        return getDayKey(date);
+      })
+    );
+  }, [disabledDates]);
+
+  const firstDisabledAfterStart = useMemo(() => {
+    if (!selectingRange || !rangeStart || canBypassDisabled || !disabledDates || disabledDates.length === 0) {
+      return null;
+    }
+    const startTime = rangeStart.getTime();
+    let candidate = null;
+    disabledDates.forEach(d => {
+      const date = new Date(d);
+      date.setHours(0, 0, 0, 0);
+      const time = date.getTime();
+      if (time > startTime && (!candidate || time < candidate.getTime())) {
+        candidate = date;
+      }
+    });
+    return candidate;
+  }, [disabledDates, canBypassDisabled, rangeStart, selectingRange]);
 
   // Initialize with all future dates selected for default mode (up to 1 year)
   useEffect(() => {
@@ -147,13 +181,8 @@ const AvailabilityCalendar = ({
     return daysDiff >= maxBookingDays;
   };
 
-  const isDateDisabled = (date) => {
-    // Check if date is in disabledDates array
-    if (disabledDates.some(d => 
-      d.getFullYear() === date.getFullYear() &&
-      d.getMonth() === date.getMonth() &&
-      d.getDate() === date.getDate()
-    )) {
+  const isDateDisabled = date => {
+    if (disabledDaySet.has(getDayKey(date))) {
       return true;
     }
 
@@ -244,7 +273,13 @@ const AvailabilityCalendar = ({
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateToCheck = new Date(d);
       dateToCheck.setHours(0, 0, 0, 0);
-      if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) return false;
+      if (!canBypassDisabled) {
+        const afterFirstDisabled =
+          firstDisabledAfterStart && dateToCheck.getTime() > firstDisabledAfterStart.getTime();
+        if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck) || afterFirstDisabled) return false;
+      } else if (isDateInPast(dateToCheck)) {
+        return false;
+      }
     }
     return true;
   };
@@ -270,8 +305,16 @@ const AvailabilityCalendar = ({
     return sameDay && !isStart;
   };
 
-  const handleDateClick = (date) => {
-    if (readOnly || isDateInPast(date) || isDateDisabled(date)) return;
+  const handleDateClick = date => {
+    const dateIsDisabled = isDateDisabled(date);
+    const tempBlocked =
+      !canBypassDisabled &&
+      selectingRange &&
+      firstDisabledAfterStart &&
+      date.getTime() > firstDisabledAfterStart.getTime();
+
+    if (readOnly || isDateInPast(date)) return;
+    if (!canBypassDisabled && (dateIsDisabled || tempBlocked)) return;
     if (maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date)) return;
 
     // If there's already a complete range and user clicks on any date, clear and start new selection
@@ -312,13 +355,15 @@ const AvailabilityCalendar = ({
         const dateToCheck = new Date(d);
         dateToCheck.setHours(0, 0, 0, 0);
 
-        // If any date in the range is disabled, reject the selection
-        if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
-          // Reset to just the start date
-          setInternalSelectedDates([rangeStart]);
-          onDatesChange([rangeStart]);
-          setSelectingRange(true);
-          return;
+        if (!canBypassDisabled) {
+          const afterFirstDisabled =
+            firstDisabledAfterStart && dateToCheck.getTime() > firstDisabledAfterStart.getTime();
+          if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck) || afterFirstDisabled) {
+            setInternalSelectedDates([rangeStart]);
+            onDatesChange([rangeStart]);
+            setSelectingRange(true);
+            return;
+          }
         }
 
         range.push(new Date(d));
@@ -336,10 +381,21 @@ const AvailabilityCalendar = ({
     }
   };
 
-  const handleDateHover = (date) => {
-    if (readOnly || isDateInPast(date) || isDateDisabled(date)) {
+  const handleDateHover = date => {
+    if (readOnly || isDateInPast(date)) {
       setHoveredDate(null);
       return;
+    }
+
+    if (!canBypassDisabled) {
+      const tempBlocked =
+        selectingRange &&
+        firstDisabledAfterStart &&
+        date.getTime() > firstDisabledAfterStart.getTime();
+      if (isDateDisabled(date) || tempBlocked) {
+        setHoveredDate(null);
+        return;
+      }
     }
 
     // When maxBookingDays is set, don't show hover for dates beyond the allowed range
@@ -357,8 +413,14 @@ const AvailabilityCalendar = ({
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const dateToCheck = new Date(d);
         dateToCheck.setHours(0, 0, 0, 0);
-        if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck)) {
-          // Don't show hover preview if range would be invalid
+        if (!canBypassDisabled) {
+          const afterFirstDisabled =
+            firstDisabledAfterStart && dateToCheck.getTime() > firstDisabledAfterStart.getTime();
+          if (isDateDisabled(dateToCheck) || isDateInPast(dateToCheck) || afterFirstDisabled) {
+            setHoveredDate(null);
+            return;
+          }
+        } else if (isDateInPast(dateToCheck)) {
           setHoveredDate(null);
           return;
         }
@@ -370,6 +432,15 @@ const AvailabilityCalendar = ({
 
   const handleDateLeave = () => {
     setHoveredDate(null);
+  };
+
+  const resetSelection = () => {
+    setRangeStart(null);
+    setRangeEnd(null);
+    setSelectingRange(false);
+    setInternalSelectedDates([]);
+    setHoveredDate(null);
+    onDatesChange([]);
   };
 
   const navigateMonth = (direction) => {
@@ -488,9 +559,18 @@ const AvailabilityCalendar = ({
                 // Determine if button should be disabled (including beyond max range when selecting end date)
                 const isBeyondMax =
                   maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date);
+                const tempBlocked =
+                  !canBypassDisabled &&
+                  selectingRange &&
+                  rangeStart &&
+                  firstDisabledAfterStart &&
+                  date.getTime() > firstDisabledAfterStart.getTime();
+                const lockedUnavailable = !canBypassDisabled && isDisabled;
+
                 const isDayDisabled =
                   isPast ||
-                  isDisabled ||
+                  lockedUnavailable ||
+                  tempBlocked ||
                   isBeyondMax ||
                   (readOnly && !onMonthsContainerClick);
 
@@ -512,6 +592,8 @@ const AvailabilityCalendar = ({
                       [css.dayPreviewEnd]: previewEnd,
                       [css.dayDisabled]: isPast,
                       [css.dayUnavailable]: isDisabled || isBeyondMax,
+                      [css.dayUnavailableLocked]: lockedUnavailable || (!canBypassDisabled && isBeyondMax),
+                      [css.dayTempUnavailable]: tempBlocked,
                       [css.dayToday]: isToday,
                       [css.dayReadOnly]: readOnly,
                       [css.dayHoverClear]: isHoveredWithRange,
@@ -579,6 +661,16 @@ const AvailabilityCalendar = ({
             id="AvailabilityCalendar.selectEndDate" 
             defaultMessage="Click another date to complete the range" 
           />
+          {rangeStart && (
+            <div className={css.rangeIndicatorActions}>
+              <button type="button" className={css.rangeIndicatorLink} onClick={resetSelection}>
+                <FormattedMessage
+                  id="AvailabilityCalendar.resetSelection"
+                  defaultMessage="Reset selection"
+                />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

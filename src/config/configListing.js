@@ -3,6 +3,13 @@
 // Main configuration here is the extended data config //
 /////////////////////////////////////////////////////////
 
+/**
+ * Calendar unavailability padding - extra days to mark as unavailable around each booking.
+ * E.g. booking 20-25 Feb: paddingStart=1 adds 19 Feb (shipping), paddingEnd=1 adds 26 Feb (return).
+ */
+export const unavailabilityPaddingStart = 1;
+export const unavailabilityPaddingEnd = 1;
+
 // Note: The listingFields come from listingFields asset nowadays by default.
 //       To use this built-in configuration, you need to change the overwrite from configHelper.js
 //       (E.g. use mergeDefaultTypesAndFieldsForDebugging func)

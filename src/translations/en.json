@@ -1620,6 +1620,7 @@
   "ListingConfiguration.errorMinLength": "Please specify minimum length",
   "ListingConfiguration.errorSeasonalityDates": "Please select dates for this price variant",
   "AvailabilityCalendar.selectEndDate": "Click another date to complete the range",
+  "AvailabilityCalendar.resetSelection": "Reset selection",
   "AvailabilityCalendar.startEnd": "Start / End",
   "AvailabilityCalendar.inRange": "In Range",
   "AvailabilityCalendar.selected": "Selected",
