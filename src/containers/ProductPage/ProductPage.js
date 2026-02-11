@@ -370,8 +370,26 @@ const BookingForm = props => {
       {/* Availability Calendar */}
       <div className={css.calendarSection}>
         {isLoadingAvailability ? (
-          <div className={css.loadingCalendar}>
-            <FormattedMessage id="ProductPage.loadingAvailability" defaultMessage="Caricamento disponibilità..." />
+          <div className={css.calendarSkeleton} aria-busy="true" aria-live="polite">
+            <SkeletonTheme baseColor="#e0e0e0" highlightColor="#f0f0f0" duration={1.4} enableAnimation>
+              <div className={css.calendarSkeletonNav}>
+                <Skeleton circle width={40} height={40} />
+                <Skeleton circle width={40} height={40} />
+              </div>
+              <div className={css.calendarSkeletonMonth}>
+                <Skeleton width={140} height={24} />
+              </div>
+              <div className={css.calendarSkeletonDayNames}>
+                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                  <Skeleton key={i} width="100%" height={16} />
+                ))}
+              </div>
+              <div className={css.calendarSkeletonGrid}>
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <Skeleton key={i} circle width={36} height={36} />
+                ))}
+              </div>
+            </SkeletonTheme>
           </div>
         ) : (
           <AvailabilityCalendar

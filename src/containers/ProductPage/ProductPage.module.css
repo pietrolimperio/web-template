@@ -427,6 +427,38 @@
   font-size: 14px;
 }
 
+/* Calendar skeleton (loading state) */
+.calendarSkeleton {
+  padding: 1rem;
+  max-width: 400px;
+}
+
+.calendarSkeletonNav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendarSkeletonMonth {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.calendarSkeletonDayNames {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.calendarSkeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
 /* Delivery method toggle chips */
 .deliveryMethodSection {
   margin: 16px 0;
