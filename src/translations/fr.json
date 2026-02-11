@@ -746,6 +746,7 @@
   "NotFoundPage.description": "Nous ne trouvons pas la page que vous recherchez. Assurez-vous d'avoir saisi correctement l'URL ou essayez de rechercher {marketplaceName}.",
   "NotFoundPage.heading": "Navré, nous n'avons pas pu trouver cette page.",
   "NotFoundPage.title": "Page non trouvée",
+  "NotFoundPage.backToHome": "Retour à l'accueil",
   "NumberInput.decrementButton": "Augmenter la valeur de 1",
   "NumberInput.incrementButton": "Réduire la valeur de 1",
   "OrderBreakdown.baseUnitDay": "{unitPrice} x {quantity, number} {quantity, plural, one {jour} other {jours}}",

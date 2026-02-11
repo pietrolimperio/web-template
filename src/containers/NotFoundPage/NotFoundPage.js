@@ -10,7 +10,7 @@ import { createResourceLocatorString } from '../../util/routes';
 import { isMainSearchTypeKeywords } from '../../util/search';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 
-import { Heading, Page, LayoutSingleColumn } from '../../components';
+import { Heading, Page, LayoutSingleColumn, NamedLink } from '../../components';
 
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
 import FooterContainer from '../../containers/FooterContainer/FooterContainer';
@@ -58,18 +58,22 @@ export class NotFoundPageComponent extends Component {
         <LayoutSingleColumn topbar={<TopbarContainer />} footer={<FooterContainer />}>
           <div className={css.root}>
             <div className={css.content}>
-              <div className={css.number}>404</div>
               <Heading as="h1" rootClassName={css.heading}>
                 <FormattedMessage id="NotFoundPage.heading" />
               </Heading>
               <p className={css.description}>
                 <FormattedMessage id="NotFoundPage.description" values={{ marketplaceName }} />
               </p>
-              <SearchForm
-                className={css.searchForm}
-                isKeywordSearch={isKeywordSearch}
-                onSubmit={handleSearchSubmit}
-              />
+              <div className={css.searchAndButtonWrapper}>
+                <SearchForm
+                  className={css.searchForm}
+                  isKeywordSearch={isKeywordSearch}
+                  onSubmit={handleSearchSubmit}
+                />
+                <NamedLink name="LandingPage" className={css.homeButton}>
+                  <FormattedMessage id="NotFoundPage.backToHome" defaultMessage="Torna alla home" />
+                </NamedLink>
+              </div>
             </div>
           </div>
         </LayoutSingleColumn>

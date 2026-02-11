@@ -760,6 +760,7 @@
   "NotFoundPage.heading": "Sorry, we couldn't find that page.",
   "NotFoundPage.screenreader.search": "Search listings",
   "NotFoundPage.title": "Page not found",
+  "NotFoundPage.backToHome": "Voltar ao início",
   "NumberInput.decrementButton": "Decrement the value by one",
   "NumberInput.incrementButton": "Increment the value by one",
   "OrderBreakdown.baseUnitDay": "{unitPrice} x {quantity, number} {quantity, plural, one {day} other {days}}",
