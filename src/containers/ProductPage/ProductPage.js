@@ -491,47 +491,83 @@ const BookingForm = props => {
               currency={currency}
               marketplaceName={marketplaceName}
               processName={BOOKING_PROCESS_NAME}
+              childrenAfterBookingPeriod={
+                <div className={css.couponSection}>
+                  <label htmlFor="productPage-couponCode" className={css.couponLabel}>
+                    <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
+                  </label>
+                  <div className={css.couponRow}>
+                    <input
+                      id="productPage-couponCode"
+                      type="text"
+                      className={css.couponInput}
+                      value={couponCode}
+                      onChange={e => {
+                        setCouponCode(e.target.value);
+                        setCouponApplied(false);
+                      }}
+                      placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      className={css.couponApplyButton}
+                      onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
+                      disabled={fetchLineItemsInProgress}
+                      style={{
+                        backgroundColor: marketplaceColor,
+                        color: 'white',
+                      }}
+                    >
+                      {couponApplied ? (
+                        <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
+                      ) : (
+                        <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              }
             />
           )}
-        </div>
-      )}
-
-      {/* Coupon code - only when breakdown is visible */}
-      {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && (
-        <div className={css.couponSection}>
-          <label htmlFor="productPage-couponCode" className={css.couponLabel}>
-            <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
-          </label>
-          <div className={css.couponRow}>
-            <input
-              id="productPage-couponCode"
-              type="text"
-              className={css.couponInput}
-              value={couponCode}
-              onChange={e => {
-                setCouponCode(e.target.value);
-                setCouponApplied(false);
-              }}
-              placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              className={css.couponApplyButton}
-              onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
-              disabled={fetchLineItemsInProgress}
-              style={{
-                backgroundColor: marketplaceColor,
-                color: 'white',
-              }}
-            >
-              {couponApplied ? (
-                <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
-              ) : (
-                <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
-              )}
-            </button>
-          </div>
+          {/* Coupon code when skeleton is shown (when real breakdown is shown, coupon is inside OrderBreakdown after booking period) */}
+          {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && showBreakdownSkeleton && (
+            <div className={css.couponSection}>
+              <label htmlFor="productPage-couponCode-skeleton" className={css.couponLabel}>
+                <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
+              </label>
+              <div className={css.couponRow}>
+                <input
+                  id="productPage-couponCode-skeleton"
+                  type="text"
+                  className={css.couponInput}
+                  value={couponCode}
+                  onChange={e => {
+                    setCouponCode(e.target.value);
+                    setCouponApplied(false);
+                  }}
+                  placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className={css.couponApplyButton}
+                  onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
+                  disabled={fetchLineItemsInProgress}
+                  style={{
+                    backgroundColor: marketplaceColor,
+                    color: 'white',
+                  }}
+                >
+                  {couponApplied ? (
+                    <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
+                  ) : (
+                    <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

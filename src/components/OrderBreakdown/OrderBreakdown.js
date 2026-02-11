@@ -46,6 +46,7 @@ export const OrderBreakdownComponent = props => {
     currency,
     marketplaceName,
     intl,
+    renderAfterBookingPeriod,
   } = props;
 
   const isCustomer = userRole === 'customer';
@@ -116,6 +117,8 @@ export const OrderBreakdownComponent = props => {
         dateType={dateType}
         timeZone={timeZone}
       />
+
+      {renderAfterBookingPeriod?.()}
 
       <LineItemBasePriceMaybe lineItems={lineItems} code={lineItemUnitType} intl={intl} />
       <LineItemShippingFeeMaybe lineItems={lineItems} intl={intl} />
