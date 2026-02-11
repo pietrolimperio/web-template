@@ -274,6 +274,16 @@
   aspect-ratio: 1;
 }
 
+/* Days from previous/next month (always 5 weeks grid) – same behaviour as current month, subtle visual hint */
+.dayOtherMonth {
+  color: #6c757d;
+}
+
+.dayOtherMonth:hover:not(:disabled):not(.dayDisabled):not(.dayUnavailable):not(.dayRangeStart):not(.dayRangeEnd):not(.daySingleSelected) {
+  background: var(--marketplaceColorLight);
+  color: #cc0000 !important;
+}
+
 .rangeIndicator {
   text-align: center;
   padding: 0.75rem;

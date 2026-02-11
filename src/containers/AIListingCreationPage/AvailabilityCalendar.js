@@ -476,25 +476,25 @@ const AvailabilityCalendar = ({
       year++;
     }
 
-    const daysInMonth = getDaysInMonth(month, year);
     const firstDay = getFirstDayOfMonth(month, year);
-    const weeks = [];
-    let week = new Array(7).fill(null);
-    let dayCounter = 1;
+    // Always show 5 weeks: first cell is the Sunday of the week containing the 1st (or earlier)
+    const firstDateInGrid = new Date(year, month, 1 - firstDay);
+    const WEEKS_COUNT = 5;
+    const DAYS_PER_WEEK = 7;
+    const totalCells = WEEKS_COUNT * DAYS_PER_WEEK;
 
-    // Fill first week
-    for (let i = firstDay; i < 7 && dayCounter <= daysInMonth; i++) {
-      week[i] = dayCounter++;
+    const allDays = [];
+    for (let i = 0; i < totalCells; i++) {
+      const date = new Date(firstDateInGrid);
+      date.setDate(date.getDate() + i);
+      date.setHours(0, 0, 0, 0);
+      const isCurrentMonth = date.getMonth() === month && date.getFullYear() === year;
+      allDays.push({ date, isCurrentMonth });
     }
-    weeks.push(week);
 
-    // Fill remaining weeks
-    while (dayCounter <= daysInMonth) {
-      week = new Array(7).fill(null);
-      for (let i = 0; i < 7 && dayCounter <= daysInMonth; i++) {
-        week[i] = dayCounter++;
-      }
-      weeks.push(week);
+    const weeks = [];
+    for (let w = 0; w < WEEKS_COUNT; w++) {
+      weeks.push(allDays.slice(w * DAYS_PER_WEEK, (w + 1) * DAYS_PER_WEEK));
     }
 
     return (
@@ -516,37 +516,31 @@ const AvailabilityCalendar = ({
         <div className={css.daysGrid}>
           {weeks.map((week, weekIdx) => (
             <div key={weekIdx} className={css.week}>
-              {week.map((day, dayIdx) => {
-                if (day === null) {
-                  return <div key={dayIdx} className={css.emptyDay} />;
-                }
+              {week.map((dayInfo) => {
+                const { date, isCurrentMonth } = dayInfo;
 
-                const date = new Date(year, month, day);
-                date.setHours(0, 0, 0, 0);
                 const isPast = isDateInPast(date);
                 const isDisabled = isDateDisabled(date);
                 const isSelected = isDateSelected(date);
-                const isToday = 
+                const isToday =
                   date.getFullYear() === today.getFullYear() &&
                   date.getMonth() === today.getMonth() &&
                   date.getDate() === today.getDate();
 
-                // Skyscanner-style range classes
                 const isStart = isRangeStart(date);
                 const isEnd = isRangeEnd(date);
                 const inRange = isInRange(date);
                 const inPreview = isInPreviewRange(date);
                 const previewEnd = isPreviewEnd(date);
-                
-                // Check if this is a single-day selection (start equals end)
-                const isSingleDay = rangeStart && rangeEnd && rangeStart.getTime() === rangeEnd.getTime();
-                
-                // Hover state for clearing
-                const isHoveredWithRange = hoveredDate && 
-                  date.getTime() === hoveredDate.getTime() && 
-                  rangeStart && rangeEnd && !selectingRange;
 
-                // Handle click: if readOnly and onMonthsContainerClick is provided, use it; otherwise use normal date click
+                const isSingleDay = rangeStart && rangeEnd && rangeStart.getTime() === rangeEnd.getTime();
+                const isHoveredWithRange =
+                  hoveredDate &&
+                  date.getTime() === hoveredDate.getTime() &&
+                  rangeStart &&
+                  rangeEnd &&
+                  !selectingRange;
+
                 const handleDayClick = (e) => {
                   if (readOnly && onMonthsContainerClick) {
                     e.preventDefault();
@@ -556,7 +550,6 @@ const AvailabilityCalendar = ({
                   }
                 };
 
-                // Determine if button should be disabled (including beyond max range when selecting end date)
                 const isBeyondMax =
                   maxBookingDays && selectingRange && rangeStart && isDateBeyondMaxRange(date);
                 const tempBlocked =
@@ -576,13 +569,14 @@ const AvailabilityCalendar = ({
 
                 return (
                   <button
-                    key={dayIdx}
+                    key={date.getTime()}
                     type="button"
                     onClick={handleDayClick}
                     onMouseEnter={() => handleDateHover(date)}
                     onMouseLeave={handleDateLeave}
                     disabled={isDayDisabled}
                     className={classNames(css.day, {
+                      [css.dayOtherMonth]: !isCurrentMonth,
                       [css.daySelected]: isSelected && !isStart && !isEnd && !inRange,
                       [css.dayRangeStart]: isStart && !isSingleDay,
                       [css.dayRangeEnd]: isEnd && !isSingleDay,
@@ -600,7 +594,7 @@ const AvailabilityCalendar = ({
                     })}
                     style={readOnly && onMonthsContainerClick && !isDayDisabled ? { cursor: 'pointer' } : undefined}
                   >
-                    {day}
+                    {date.getDate()}
                   </button>
                 );
               })}
