@@ -53,6 +53,14 @@
   justify-items: center;
 }
 
+@media (max-width: 767px) {
+  .bookingPeriodSectionLeft,
+  .bookingPeriodSectionRight {
+    text-align: center;
+    width: 40%;
+  }
+}
+
 .dayLabel {
   composes: textSmall from global;
   margin: 0;
