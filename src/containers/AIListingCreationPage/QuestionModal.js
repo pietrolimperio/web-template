@@ -227,19 +227,29 @@ const QuestionModal = ({
 
             {currentQuestion.type === 'select' && (
               <div className={css.selectOptions}>
-                {currentQuestion.options?.map(option => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => handleSelectAnswer(option)}
-                    className={`${css.optionButton} ${
-                      currentAnswer === option ? css.optionButtonSelected : ''
-                    }`}
-                    disabled={isRefining}
-                  >
-                    {option}
-                  </button>
-                ))}
+                {currentQuestion.options?.map((option, index) => {
+                  const optionValue =
+                    typeof option === 'object' && option != null && 'value' in option
+                      ? option.value
+                      : option;
+                  const optionLabel =
+                    typeof option === 'object' && option != null && 'label' in option
+                      ? option.label
+                      : option;
+                  return (
+                    <button
+                      key={optionValue != null ? String(optionValue) : `opt-${index}`}
+                      type="button"
+                      onClick={() => handleSelectAnswer(optionValue)}
+                      className={`${css.optionButton} ${
+                        currentAnswer === optionValue ? css.optionButtonSelected : ''
+                      }`}
+                      disabled={isRefining}
+                    >
+                      {optionLabel}
+                    </button>
+                  );
+                })}
 
                 {/* "Other" option */}
                 <button
