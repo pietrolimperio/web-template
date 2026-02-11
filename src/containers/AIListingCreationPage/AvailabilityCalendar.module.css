@@ -297,17 +297,20 @@
 }
 
 .rangeIndicatorActions {
-  margin-top: 0.5rem;
+
   display: flex;
   justify-content: center;
+}
+
+.rangeIndicatorLink:hover {
+  color: var(--marketplaceColor);
 }
 
 .rangeIndicatorLink {
   background: none;
   border: none;
-  color: var(--marketplaceColor, #4A90E2);
-  cursor: pointer;
   text-decoration: underline;
+  cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0;
