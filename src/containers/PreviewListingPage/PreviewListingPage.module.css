@@ -32,6 +32,24 @@
   }
 }
 
+/* Loading skeleton (listing preview shape) */
+.loadingSkeleton {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.loadingSkeletonImage {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.loadingSkeletonContent {
+  padding: 0 8px;
+}
+
 .title {
   font-size: 32px;
   font-weight: 700;

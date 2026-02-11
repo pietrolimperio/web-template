@@ -75,6 +75,8 @@ import { LoadingPage } from '../ListingPage/ListingPage.shared';
 import AvailabilityCalendar from '../AIListingCreationPage/AvailabilityCalendar';
 import LocationAutocompleteInputImpl from '../../components/LocationAutocompleteInput/LocationAutocompleteInput';
 import LoadingOverlay from '../AIListingCreationPage/LoadingOverlay';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 import {
   requestPublishListingDraft,
@@ -3144,14 +3146,16 @@ export const PreviewListingPageComponent = props => {
         <LayoutSingleColumn topbar={<TopbarContainer />} footer={null}>
           <div className={css.root}>
             <div className={css.container}>
-              <div className={css.loadingContainer}>
-                <IconSpinner />
-                <p>
-                  <FormattedMessage
-                    id="PreviewListingPage.loading"
-                    defaultMessage="Loading listing..."
-                  />
-                </p>
+              <div className={css.loadingSkeleton} aria-busy="true" aria-live="polite">
+                <SkeletonTheme baseColor="#e0e0e0" highlightColor="#f0f0f0" duration={1.4} enableAnimation>
+                  <Skeleton className={css.loadingSkeletonImage} height={280} />
+                  <div className={css.loadingSkeletonContent}>
+                    <Skeleton width="60%" height={32} style={{ marginBottom: 16 }} />
+                    <Skeleton count={3} height={16} style={{ marginBottom: 8 }} />
+                    <Skeleton width="80%" height={16} style={{ marginBottom: 24 }} />
+                    <Skeleton width="40%" height={48} style={{ borderRadius: 8 }} />
+                  </div>
+                </SkeletonTheme>
               </div>
             </div>
           </div>
