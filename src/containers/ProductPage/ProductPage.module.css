@@ -220,6 +220,17 @@
 /* Action Bar */
 .actionBar {
   margin-bottom: 16px;
+  @media (max-width: 767px) {
+    position: fixed;
+    top: var(--topbarHeight);
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: calc(var(--zIndexTopbar) - 1);
+    padding: 0 12px;
+    box-sizing: border-box;
+    min-height: var(--productPageActionBarHeight, 52px);
+  }
 }
 
 /* Title */
@@ -869,8 +880,10 @@
 
 /* Responsive adjustments */
 @media (max-width: 767px) {
-  /* Show mobile header */
+  /* Show mobile header - padding-top reserves space for fixed action bar (same as --productPageActionBarHeight) */
   .mobileHeader {
+    --productPageActionBarHeight: 52px;
+    padding-top: var(--productPageActionBarHeight);
     display: block;
     margin-bottom: 24px;
   }
