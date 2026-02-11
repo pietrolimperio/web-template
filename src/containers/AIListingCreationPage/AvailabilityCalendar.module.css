@@ -279,6 +279,10 @@
   color: #6c757d;
 }
 
+.dayOtherMonth.daySelected {
+  color: white;
+}
+
 .dayOtherMonth:hover:not(:disabled):not(.dayDisabled):not(.dayUnavailable):not(.dayRangeStart):not(.dayRangeEnd):not(.daySingleSelected) {
   background: var(--marketplaceColorLight);
   color: #cc0000 !important;
