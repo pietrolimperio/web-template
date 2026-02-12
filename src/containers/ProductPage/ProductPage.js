@@ -108,6 +108,7 @@ import {
   handleSubmit,
 } from '../ListingPage/ListingPage.shared';
 import ActionBarMaybe from '../ListingPage/ActionBarMaybe';
+import InquiryForm from '../ListingPage/InquiryForm/InquiryForm';
 import SectionTextMaybe from '../ListingPage/SectionTextMaybe';
 import SectionReviews from '../ListingPage/SectionReviews';
 import CustomListingFields from '../ListingPage/CustomListingFields';
@@ -701,6 +702,8 @@ export const ProductPageComponent = props => {
     onResendVerificationEmail,
     sendVerificationEmailInProgress,
     sendVerificationEmailError,
+    sendInquiryInProgress,
+    sendInquiryError,
   } = props;
 
   const listingConfig = config.listing;
@@ -1456,6 +1459,26 @@ export const ProductPageComponent = props => {
             </div>
           </div>
         </div>
+
+        {/* Inquiry Modal - for Contatta button */}
+        <Modal
+          id="ProductPage.inquiry"
+          contentClassName={css.inquiryModalContent}
+          isOpen={isAuthenticated && inquiryModalOpen}
+          onClose={() => setInquiryModalOpen(false)}
+          usePortal
+          onManageDisableScrolling={onManageDisableScrolling}
+        >
+          <InquiryForm
+            className={css.inquiryForm}
+            submitButtonWrapperClassName={css.inquirySubmitButtonWrapper}
+            listingTitle={title}
+            authorDisplayName={authorDisplayName}
+            sendInquiryError={sendInquiryError}
+            onSubmit={onSubmitInquiry}
+            inProgress={sendInquiryInProgress}
+          />
+        </Modal>
 
         {/* Image Modal */}
         <Modal

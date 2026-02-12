@@ -1035,3 +1035,40 @@
   }
 }
 
+/* Inquiry Modal (Contatta button) */
+.inquiryModalContent {
+  flex-grow: 1;
+  display: flex;
+}
+
+.inquiryForm {
+  flex-grow: 1;
+  margin: 70px 0 100px 0;
+}
+
+@media (--viewportMedium) {
+  .inquiryForm {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    margin: 0;
+  }
+}
+
+.inquirySubmitButtonWrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px;
+  background-color: var(--colorWhite);
+}
+
+@media (--viewportMedium) {
+  .inquirySubmitButtonWrapper {
+    position: static;
+    padding: 0;
+    margin-top: auto;
+  }
+}
+

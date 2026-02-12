@@ -558,6 +558,24 @@ export const BookingDatesForm = props => {
   } = props;
   const intl = useIntl();
   const [currentMonth, setCurrentMonth] = useState(getStartOf(TODAY, 'month', timeZone));
+
+  const hasDeliveryMethodChoice =
+    (handByHandAvailable && shippingEnabled) || (handByHandAvailable && pickupEnabled);
+  const defaultDeliveryMethod =
+    handByHandAvailable && !shippingEnabled && !pickupEnabled
+      ? 'hand-by-hand'
+      : shippingEnabled && !handByHandAvailable && !pickupEnabled
+      ? 'shipping'
+      : pickupEnabled && !handByHandAvailable && !shippingEnabled
+      ? 'pickup'
+      : handByHandAvailable
+      ? 'hand-by-hand'
+      : shippingEnabled
+      ? 'shipping'
+      : pickupEnabled
+      ? 'pickup'
+      : null;
+
   const initialValuesMaybe =
     priceVariants.length > 1 && preselectedPriceVariant
       ? { initialValues: { priceVariantName: preselectedPriceVariant?.name } }
@@ -616,23 +634,6 @@ export const BookingDatesForm = props => {
   }, [currentMonth, currentMonthInProgress, nextMonthInProgress, timeZone, monthlyTimeSlots]);
 
   const classes = classNames(rootClassName || css.root, className);
-
-  const hasDeliveryMethodChoice =
-    (handByHandAvailable && shippingEnabled) || (handByHandAvailable && pickupEnabled);
-  const defaultDeliveryMethod =
-    handByHandAvailable && !shippingEnabled && !pickupEnabled
-      ? 'hand-by-hand'
-      : shippingEnabled && !handByHandAvailable && !pickupEnabled
-      ? 'shipping'
-      : pickupEnabled && !handByHandAvailable && !shippingEnabled
-      ? 'pickup'
-      : handByHandAvailable
-      ? 'hand-by-hand'
-      : shippingEnabled
-      ? 'shipping'
-      : pickupEnabled
-      ? 'pickup'
-      : null;
 
   const onHandleFetchLineItems = calculateLineItems(
     listingId,
