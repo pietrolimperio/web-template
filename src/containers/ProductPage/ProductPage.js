@@ -987,40 +987,35 @@ export const ProductPageComponent = props => {
 
             {/* Price */}
             {price && (
-              <div className={css.priceContainer}>
-                <div className={css.priceInfo}>
-                  <span className={css.price}>{formattedPrice}</span>
-                  <span className={css.perUnit}>
-                    <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
-                  </span>
+              <>
+                <div className={css.priceContainer}>
+                  <div className={css.priceInfo}>
+                    <span className={css.price}>{formattedPrice}</span>
+                    <span className={css.perUnit}>
+                      <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
+                    </span>
+                  </div>
                 </div>
                 {isBooking && !isClosed && (
-                  <PrimaryButton
-                    className={css.mobileRequestToBookButton}
+                  <button
+                    type="button"
+                    className={css.mobileRequestToBookLink}
                     onClick={() => {
-                      const bookingFormElement = document.getElementById('mobile-booking-form');
-                      if (bookingFormElement) {
-                        // Get navbar height (topbar)
-                        const topbarElement = document.querySelector('[class*="Topbar_container"]') || 
-                                             document.querySelector('[class*="TopbarDesktop"]') ||
-                                             document.querySelector('nav');
-                        const navbarHeight = topbarElement ? topbarElement.offsetHeight : 64;
-                        
-                        // Calculate scroll position with navbar offset
-                        const elementPosition = bookingFormElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
-                        
-                        window.scrollTo({
-                          top: offsetPosition,
-                          behavior: 'smooth'
-                        });
+                      const el = document.getElementById('mobile-booking-form');
+                      if (el) {
+                        const topbar = document.querySelector('[class*="Topbar_container"]') ||
+                                       document.querySelector('[class*="TopbarDesktop"]') ||
+                                       document.querySelector('nav');
+                        const navbarHeight = topbar ? topbar.offsetHeight : 64;
+                        const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                        window.scrollTo({ top: offset, behavior: 'smooth' });
                       }
                     }}
                   >
                     <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />
-                  </PrimaryButton>
+                  </button>
                 )}
-              </div>
+              </>
             )}
 
             {/* Author */}
@@ -1055,6 +1050,23 @@ export const ProductPageComponent = props => {
                   </div>
                 )}
               </div>
+              <button
+                type="button"
+                className={css.mobileViewOwnerCardLink}
+                onClick={() => {
+                  const el = document.getElementById('owner-card');
+                  if (el) {
+                    const topbar = document.querySelector('[class*="Topbar_container"]') ||
+                                   document.querySelector('[class*="TopbarDesktop"]') ||
+                                   document.querySelector('nav');
+                    const navbarHeight = topbar ? topbar.offsetHeight : 64;
+                    const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                    window.scrollTo({ top: offset, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <FormattedMessage id="ProductPage.viewOwnerCard" defaultMessage="Scheda proprietario" />
+              </button>
             </div>
           </div>
 
@@ -1313,7 +1325,8 @@ export const ProductPageComponent = props => {
                   )}
 
                   {/* Owner Card with location map */}
-                  <OwnerCard
+                  <div id="owner-card">
+                    <OwnerCard
                     author={ensuredAuthor}
                     authorReviews={authorReviews}
                     listing={currentListing}
@@ -1325,6 +1338,7 @@ export const ProductPageComponent = props => {
                     geocodedLocation={geocodedLocation}
                     isGeocoding={isGeocoding}
                   />
+                  </div>
 
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
