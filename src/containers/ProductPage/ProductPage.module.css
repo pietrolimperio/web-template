@@ -999,5 +999,41 @@
   .imageNavNext {
     right: 8px;
   }
+
+  /* Breadcrumb - nicer mobile view */
+  .breadcrumb {
+    margin-top: 20px;
+  }
+
+  .breadcrumbList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 4px;
+    font-size: 13px;
+    padding: 10px 14px;
+    background: var(--matterColorNegative);
+    border-radius: 8px;
+    align-items: center;
+  }
+
+  .breadcrumbListItem {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .breadcrumbSeparatorItem {
+    flex-shrink: 0;
+  }
+
+  .breadcrumbSeparator {
+    font-size: 12px;
+    opacity: 0.7;
+    margin: 0 2px;
+  }
+
+  .breadcrumbCurrent {
+    font-weight: 600;
+    color: var(--matterColor);
+  }
 }
 
