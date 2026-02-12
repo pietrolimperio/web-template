@@ -123,6 +123,22 @@
   color: var(--matterColor);
 }
 
+/* Verified line + contact button wrapper - side by side on mobile */
+.verifiedLineWrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (--viewportMedium) {
+  .verifiedLineWrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 /* Verified user line */
 .verifiedLine {
   display: flex;
@@ -196,8 +212,8 @@
 /* Contact button */
 .contactButton {
   margin-top: 8px;
+  min-height: 0;
   width: 100%;
-  max-width: 200px;
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 600;
@@ -208,6 +224,30 @@
 .contactButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Contact button next to verifiedLine on mobile only */
+.contactButtonMobile {
+  display: block;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: auto;
+  min-height: 0;
+}
+
+.contactButtonMobile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (--viewportMedium) {
+  .contactButtonMobile {
+    display: none;
+  }
 }
 
 /* Insurance notice */
@@ -324,11 +364,17 @@
   }
 
   .contactButton {
-    max-width: 100%;
+    display: none; /* On mobile, use contactButtonMobile next to verifiedLine */
   }
 
   .mapPreview {
     height: 180px;
     border-top: 1px solid var(--matterColorNegative);
+  }
+}
+
+@media (--viewportMedium) {
+  .contactButton {
+    display: block;
   }
 }

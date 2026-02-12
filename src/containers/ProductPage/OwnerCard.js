@@ -4,9 +4,9 @@ import { ensureUser, userDisplayNameAsString } from '../../util/data';
 import {
   AvatarLarge,
   NamedLink,
+  PrimaryButton,
   ReviewRating,
   Map,
-  // PrimaryButton, // Hidden for now
 } from '../../components';
 
 import css from './OwnerCard.module.css';
@@ -173,15 +173,26 @@ const OwnerCard = ({
           </div>
         </div>
 
-        {/* Verified user line - shown below avatar */}
-        {isVerified && (
-          <div className={css.verifiedLine}>
-            <span className={css.verifiedBadgeIcon}>✓</span>
-            <span className={css.verifiedText}>
-              <FormattedMessage id="OwnerCard.verifiedUser" defaultMessage="Utente verificato" />
-            </span>
-          </div>
-        )}
+        {/* Verified user line - on mobile, contact button sits next to it */}
+        <div className={css.verifiedLineWrapper}>
+          {isVerified && (
+            <div className={css.verifiedLine}>
+              <span className={css.verifiedBadgeIcon}>✓</span>
+              <span className={css.verifiedText}>
+                <FormattedMessage id="OwnerCard.verifiedUser" defaultMessage="Utente verificato" />
+              </span>
+            </div>
+          )}
+          {!isOwnListing && (
+            <PrimaryButton
+              className={css.contactButtonMobile}
+              onClick={handleContactClick}
+              style={{ backgroundColor: marketplaceColor }}
+            >
+              <FormattedMessage id="OwnerCard.contact" defaultMessage="Contatta" />
+            </PrimaryButton>
+          )}
+        </div>
 
         {/* Info badges */}
         <div className={css.infoBadges}>
@@ -236,16 +247,16 @@ const OwnerCard = ({
           </span>
         </div>
 
-        {/* Send message button - hidden for now */}
-        {/* {!isOwnListing && (
+        {/* Contact button - starts inquiry (desktop: below insurance) */}
+        {!isOwnListing && (
           <PrimaryButton
             className={css.contactButton}
             onClick={handleContactClick}
             style={{ backgroundColor: marketplaceColor }}
           >
-            <FormattedMessage id="OwnerCard.sendMessage" defaultMessage="Invia messaggio" />
+            <FormattedMessage id="OwnerCard.contact" defaultMessage="Contatta" />
           </PrimaryButton>
-        )} */}
+        )}
       </div>
 
       {/* Right side - Map preview */}
