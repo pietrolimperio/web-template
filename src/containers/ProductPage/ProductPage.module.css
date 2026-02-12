@@ -243,8 +243,6 @@
 /* Info Column */
 .infoColumn {
   width: 100%;
-  position: sticky;
-  top: 100px;
   align-self: flex-start;
 }
 
