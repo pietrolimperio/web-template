@@ -9,7 +9,8 @@
  * devLog('Debug info', obj, { forceInProd: true });  // logs also in prod
  */
 
-const isDevelopment = () => process.env.NODE_ENV === 'development';
+//const isDevelopment = () => process.env.NODE_ENV === 'development';
+const isDevelopment = () => true;
 
 /**
  * Logs arguments to console only in development, unless forceInProd is true.
