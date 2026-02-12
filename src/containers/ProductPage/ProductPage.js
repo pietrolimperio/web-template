@@ -962,7 +962,12 @@ export const ProductPageComponent = props => {
       <LayoutSingleColumn className={css.pageRoot} topbar={topbar} footer={<FooterContainer />}>
         <div className={css.contentWrapper}>
           {/* Mobile Header - ActionBar, Title, Price, Author (visible only on mobile) */}
-          <div className={css.mobileHeader}>
+          <div
+            className={classNames(
+              css.mobileHeader,
+              mounted && currentListing.id && isOwnListing && css.mobileHeaderWithActionBar
+            )}
+          >
             {/* Action Bar (for own listing) */}
             {mounted && currentListing.id && isOwnListing && (
               <ActionBarMaybe

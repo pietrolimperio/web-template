@@ -944,12 +944,16 @@
 
 /* Responsive adjustments */
 @media (max-width: 767px) {
-  /* Show mobile header - padding-top reserves space for fixed action bar (same as --productPageActionBarHeight) */
+  /* Show mobile header */
   .mobileHeader {
     --productPageActionBarHeight: 52px;
-    padding-top: var(--productPageActionBarHeight);
     display: block;
     margin-bottom: 24px;
+  }
+
+  /* Padding-top only when action bar is present (owner viewing own listing) */
+  .mobileHeaderWithActionBar {
+    padding-top: var(--productPageActionBarHeight);
   }
 
   .mobileHeader .priceContainer {
