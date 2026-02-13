@@ -179,6 +179,13 @@
   cursor: not-allowed;
 }
 
+@media (max-width: 767px) {
+  .resetToOriginalContainer {
+    justify-content: center;
+    margin-bottom: 0;
+  }
+}
+
 .mainImageWrapper {
   width: 100%;
   border-radius: 12px;
