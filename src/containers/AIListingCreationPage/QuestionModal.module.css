@@ -449,13 +449,28 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .overlay {
+    padding: 0;
+    overflow: hidden;
+    align-items: stretch;
+  }
+
   .modal {
     max-height: 100vh;
+    max-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .header {
     padding: 20px 16px;
+    flex-shrink: 0;
   }
 
   .title {
@@ -464,6 +479,10 @@
 
   .content {
     padding: 24px 16px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .question {
@@ -474,6 +493,7 @@
     padding: 16px;
     flex-direction: column;
     gap: 12px;
+    flex-shrink: 0;
   }
 
   .footerLeft,
