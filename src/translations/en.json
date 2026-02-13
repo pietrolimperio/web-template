@@ -647,6 +647,7 @@
   "ProductPage.couponApply": "Apply",
   "ProductPage.couponRemove": "Remove",
   "ProductPage.handByHand": "Hand-by-hand exchange available",
+  "ProductPage.minimumDurationRequired": "Minimum booking duration is {days} days",
   "LoadableComponentErrorBoundaryPage.description": "It looks like the app needs to be updated! Please refresh the page or go back to {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Oops, we couldn't fetch the page.",
   "LoadableComponentErrorBoundaryPage.landingPageLink": "landing page",

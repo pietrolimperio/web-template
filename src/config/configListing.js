@@ -10,6 +10,14 @@
 export const unavailabilityPaddingStart = 1;
 export const unavailabilityPaddingEnd = 1;
 
+/**
+ * Minimum booking duration in days. When set, users cannot request a booking
+ * for a period shorter than this. Prevents API errors when provider commission
+ * minimum is greater than the total for short bookings.
+ * Set to 0 to disable (no minimum).
+ */
+export const minimumBookingDays = 3;
+
 // Note: The listingFields come from listingFields asset nowadays by default.
 //       To use this built-in configuration, you need to change the overwrite from configHelper.js
 //       (E.g. use mergeDefaultTypesAndFieldsForDebugging func)

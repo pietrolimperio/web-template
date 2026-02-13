@@ -641,6 +641,7 @@
   "ProductPage.couponApply": "Aplicar",
   "ProductPage.couponRemove": "Remover",
   "ProductPage.handByHand": "Troca pessoal disponível",
+  "ProductPage.minimumDurationRequired": "A duração mínima de reserva é de {days} dias",
   "LoadableComponentErrorBoundaryPage.description": "It looks like the app needs to be updated! Please refresh the page or go back to {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Oops, we couldn't fetch the page.",
   "LoadableComponentErrorBoundaryPage.landingPageLink": "landing page",

@@ -633,6 +633,7 @@
   "ProductPage.couponApply": "Aplicar",
   "ProductPage.couponRemove": "Quitar",
   "ProductPage.handByHand": "Intercambio en persona disponible",
+  "ProductPage.minimumDurationRequired": "La duración mínima de reserva es de {days} días",
   "LoadableComponentErrorBoundaryPage.description": "¡Parece que es necesario actualizar la aplicación! Actualiza la página o regresa a {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "No pudimos obtener la página.",
   "LoadableComponentErrorBoundaryPage.landingPageLink": "Página principal",

@@ -113,6 +113,7 @@ import SectionTextMaybe from '../ListingPage/SectionTextMaybe';
 import SectionReviews from '../ListingPage/SectionReviews';
 import CustomListingFields from '../ListingPage/CustomListingFields';
 import EstimatedCustomerBreakdownMaybe from '../../components/OrderPanel/EstimatedCustomerBreakdownMaybe';
+import FetchLineItemsError from '../../components/OrderPanel/FetchLineItemsError/FetchLineItemsError';
 import OwnerCard from './OwnerCard';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -219,6 +220,8 @@ const BookingForm = props => {
   const currency = price?.currency || 'EUR';
   const marketplaceColor = config.branding?.marketplaceColor || '#4A90E2';
 
+  const unitType = publicData?.unitType || 'day';
+  const minimumBookingDays = config?.listing?.minimumBookingDays ?? 0;
   const handByHandAvailable = !!publicData?.handByHandAvailable;
   const shippingEnabled = publicData?.shippingEnabled !== false;
   const pickupEnabled = !!publicData?.pickupEnabled;
@@ -305,6 +308,17 @@ const BookingForm = props => {
     }
   };
 
+  const getBookingUnitsForDates = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diffMs = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    return unitType === 'night' ? diffDays : diffDays + 1;
+  };
+
   const handleCalendarDatesChange = (dates) => {
     setCalendarSelectedDates(dates || []);
 
@@ -324,12 +338,40 @@ const BookingForm = props => {
     }
   };
 
+  const hasValidDates = calendarSelectedDates.length >= 2;
+  const bookingUnits = hasValidDates
+    ? getBookingUnitsForDates(calendarSelectedDates[0], calendarSelectedDates[calendarSelectedDates.length - 1])
+    : 0;
+  const appliesToUnitType = unitType === 'day' || unitType === 'night';
+  const commissionMinFromError = fetchLineItemsError?.minimumBookingUnits;
+  const effectiveMinimum =
+    appliesToUnitType && (minimumBookingDays > 0 || commissionMinFromError > 0)
+      ? Math.max(minimumBookingDays || 0, commissionMinFromError || 0)
+      : 0;
+  const hasMinimumDuration =
+    !appliesToUnitType || effectiveMinimum === 0 || bookingUnits >= effectiveMinimum;
+  const canShowFullBookingUI =
+    hasValidDates && hasMinimumDuration && !fetchLineItemsError;
+  const breakdownData = hasValidDates
+    ? {
+        startDate: calendarSelectedDates[0],
+        endDate: calendarSelectedDates[calendarSelectedDates.length - 1],
+      }
+    : null;
+  const showEstimatedBreakdown =
+    canShowFullBookingUI &&
+    breakdownData &&
+    lineItems &&
+    !fetchLineItemsInProgress &&
+    !fetchLineItemsError;
+  const showBreakdownSkeleton = canShowFullBookingUI && fetchLineItemsInProgress;
+
   // Check if user is logged in but not verified
   const user = ensureCurrentUser(currentUser);
   const isUserUnverified = user.id && !user.attributes?.emailVerified;
 
   const handleFormSubmit = () => {
-    if (calendarSelectedDates.length < 2) return;
+    if (calendarSelectedDates.length < 2 || !canShowFullBookingUI) return;
 
     // If user is not verified, show email verification modal
     if (isUserUnverified && onResendVerificationEmail) {
@@ -355,16 +397,6 @@ const BookingForm = props => {
 
     onSubmit(bookingData);
   };
-
-  const hasValidDates = calendarSelectedDates.length >= 2;
-  const breakdownData = hasValidDates
-    ? {
-        startDate: calendarSelectedDates[0],
-        endDate: calendarSelectedDates[calendarSelectedDates.length - 1],
-      }
-    : null;
-  const showEstimatedBreakdown = breakdownData && lineItems && !fetchLineItemsInProgress && !fetchLineItemsError;
-  const showBreakdownSkeleton = fetchLineItemsInProgress;
 
   return (
     <div className={css.bookingFormWrapper}>
@@ -409,8 +441,26 @@ const BookingForm = props => {
         )}
       </div>
 
+      {/* Minimum duration message - when below minimum (config or commission-based) */}
+      {hasValidDates && !hasMinimumDuration && effectiveMinimum > 0 && (
+        <div className={css.minimumDurationMessage}>
+          <FormattedMessage
+            id="ProductPage.minimumDurationRequired"
+            defaultMessage="La prenotazione minima è di {days} giorni"
+            values={{ days: effectiveMinimum }}
+          />
+        </div>
+      )}
+
+      {/* Generic fetch error - when not the commission/minimum duration case */}
+      {fetchLineItemsError && !commissionMinFromError && (
+        <div className={css.minimumDurationMessage}>
+          <FetchLineItemsError error={fetchLineItemsError} />
+        </div>
+      )}
+
       {/* Delivery method toggle chips - when multiple options */}
-      {hasValidDates && hasDeliveryMethodChoice && (
+      {canShowFullBookingUI && hasDeliveryMethodChoice && (
         <div className={css.deliveryMethodSection}>
           <span className={css.deliveryMethodLabel}>
             <FormattedMessage id="BookingDatesForm.deliveryMethodLabel" />
@@ -475,7 +525,7 @@ const BookingForm = props => {
       )}
 
       {/* Estimated Breakdown - show skeleton when refetching line items */}
-      {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && (
+      {canShowFullBookingUI && (showEstimatedBreakdown || showBreakdownSkeleton) && (
         <div className={css.breakdownSection}>
           <H6 as="h3" className={css.breakdownTitle}>
             <FormattedMessage id="ProductPage.priceBreakdownTitle" defaultMessage="Riepilogo prezzo" />
@@ -550,7 +600,7 @@ const BookingForm = props => {
             />
           )}
           {/* Coupon code when skeleton is shown (when real breakdown is shown, coupon is inside OrderBreakdown after booking period) */}
-          {hasValidDates && (showEstimatedBreakdown || showBreakdownSkeleton) && showBreakdownSkeleton && (
+          {canShowFullBookingUI && (showEstimatedBreakdown || showBreakdownSkeleton) && showBreakdownSkeleton && (
             <div className={css.couponSection}>
               <label htmlFor="productPage-couponCode-skeleton" className={css.couponLabel}>
                 <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
@@ -594,7 +644,7 @@ const BookingForm = props => {
       <div className={css.submitButtonWrapper}>
         <PrimaryButton
           onClick={handleFormSubmit}
-          disabled={!hasValidDates || isOwnListing}
+          disabled={!canShowFullBookingUI || isOwnListing}
           inProgress={fetchLineItemsInProgress}
         >
           <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />

@@ -639,6 +639,7 @@
   "ProductPage.couponApply": "Applica",
   "ProductPage.couponRemove": "Rimuovi",
   "ProductPage.handByHand": "Consegna a mano disponibile",
+  "ProductPage.minimumDurationRequired": "La prenotazione minima per questo noleggio è di {days} giorni",
   "LoadableComponentErrorBoundaryPage.description": "Sembra che l’app debba essere aggiornata! Aggiorna la pagina o torna a {link}.",
   "LoadableComponentErrorBoundaryPage.heading": "Ops, non siamo riusciti a recuperare la pagina.",
   "LoadableComponentErrorBoundaryPage.landingPageLink": "pagina iniziale",

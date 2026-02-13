@@ -489,6 +489,17 @@
   gap: 0.25rem;
 }
 
+/* Minimum duration message */
+.minimumDurationMessage {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: rgba(var(--marketplaceColorRGB, 74, 144, 226), 0.08);
+  border: 1px solid rgba(var(--marketplaceColorRGB, 74, 144, 226), 0.25);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--matterColor);
+}
+
 /* Delivery method toggle chips */
 .deliveryMethodSection {
   margin: 16px 0;

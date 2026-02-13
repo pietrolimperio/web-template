@@ -394,6 +394,33 @@ exports.getProviderCommissionMaybe = (providerCommission, order, currency) => {
 };
 
 /**
+ * Calculate the minimum booking units (days/nights) required so that the base rental
+ * price meets or exceeds the provider's minimum commission. Used when the commission
+ * error is thrown to tell the client the minimum duration needed.
+ *
+ * @param {Object} listing - Listing entity with attributes.price and publicData.unitType
+ * @param {Object} orderData - Order data (unused for simple calculation)
+ * @param {number} minimumCommissionSubunits - Provider minimum commission in currency subunits
+ * @returns {number|null} Minimum units (days/nights) or null if not applicable
+ */
+exports.calculateMinimumBookingUnitsForCommission = (
+  listing,
+  orderData,
+  minimumCommissionSubunits
+) => {
+  const unitType = listing?.attributes?.publicData?.unitType;
+  if (!['day', 'night'].includes(unitType)) return null;
+
+  const priceAttribute = listing?.attributes?.price;
+  if (!priceAttribute || typeof priceAttribute.amount !== 'number') return null;
+  const pricePerUnitSubunits = priceAttribute.amount;
+  if (pricePerUnitSubunits <= 0) return null;
+
+  const minUnits = Math.ceil(minimumCommissionSubunits / pricePerUnitSubunits);
+  return Math.max(1, minUnits);
+};
+
+/**
  * Get customer commission
  * @param {Object} customerCommission object containing customer commission info
  * @param {Object} order object containing order line items

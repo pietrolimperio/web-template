@@ -630,6 +630,7 @@
   "ProductPage.couponApply": "Anwenden",
   "ProductPage.couponRemove": "Entfernen",
   "ProductPage.handByHand": "Persönliche Übergabe verfügbar",
+  "ProductPage.minimumDurationRequired": "Mindestbuchungsdauer: {days} Tage",
   "LoadableComponentErrorBoundaryPage.description": "Es sieht so aus, als müsste die App aktualisiert werden! Bitte aktualisiere die Seite oder kehre zu {link} zurück.",
   "LoadableComponentErrorBoundaryPage.heading": "Hoppla, wir konnten die Seite nicht abrufen.",
   "LoadableComponentErrorBoundaryPage.landingPageLink": "Landing Page",

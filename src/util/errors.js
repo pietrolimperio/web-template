@@ -340,12 +340,12 @@ export const isProviderCommissionBiggerThanMinPrice = error =>
 
 export const storableError = err => {
   const error = err || {};
-  const { name, message, status, statusText } = error;
+  const { name, message, status, statusText, minimumBookingUnits } = error;
   // Status, statusText, and data.errors are (possibly) added to the error object by SDK
   const apiErrors = responseAPIErrors(error);
 
   // Returned object is the same as prop type check in util/types -> error
-  return {
+  const storable = {
     type: 'error',
     name,
     message,
@@ -353,4 +353,8 @@ export const storableError = err => {
     statusText,
     apiErrors,
   };
+  if (minimumBookingUnits != null) {
+    storable.minimumBookingUnits = minimumBookingUnits;
+  }
+  return storable;
 };
