@@ -12,6 +12,21 @@ const DEFAULT_MODELS = ['gemini-2.5-flash', 'claude-4.5-sonnet'];
 //const DEFAULT_MODELS =['gemini-2.5-flash','gemini-2.5-pro','gemini-3-flash-preview','gemini-2.5-flash-lite','claude-4.5-sonnet','claude-3-haiku','gpt-5.2','gpt-5.2-mini','grok-4-fast-reasoning','sonar-pro','sonar-reasoning'];
 const DEFAULT_PROMPT_VERSION = 'v3';
 
+/** Key for Product API token in localStorage (used when backend persists session) */
+const PRODUCT_API_TOKEN_KEY = 'product_api_session_token';
+
+/**
+ * Clears Product API session/token from memory and localStorage.
+ * Call this when you get "Invalid or expired session" (e.g. after backend restart)
+ * to start fresh. Also exported for manual use: import { clearProductApiToken } from 'util/productApi'
+ */
+export function clearProductApiToken() {
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    localStorage.removeItem(PRODUCT_API_TOKEN_KEY);
+    devLog('🧹 [Product API] Cleared token from localStorage');
+  }
+}
+
 /**
  * Product API Client Class
  */
@@ -317,10 +332,11 @@ class ProductAPI {
 
       console.log('📡 [Product API] Response status:', response.status, response.statusText);
 
-      // 401: token scaduto – azzera, ottieni nuovo token, riprova una sola volta
+      // 401: token scaduto – azzera, pulisci localStorage, riprova una sola volta
       if (response.status === 401 && !isRetry) {
+        clearProductApiToken();
         this.anonToken = null;
-        devLog('🔑 [Product API] 401 – token expired, refreshing and retrying');
+        devLog('🔑 [Product API] 401 – token expired, clearing and retrying');
         return this.call(endpoint, payload, true);
       }
 
@@ -339,6 +355,17 @@ class ProductAPI {
         } catch {
           errorMessage = `API call failed with status ${response.status} - ${response.statusText}`;
         }
+
+        // Invalid/expired session (e.g. backend restarted) – clear token and retry once
+        const isSessionError =
+          /invalid or expired session|invalid.*expired.*session/i.test(errorMessage);
+        if (isSessionError && !isRetry) {
+          clearProductApiToken();
+          this.anonToken = null;
+          devLog('🔑 [Product API] Session invalid/expired, clearing token and retrying');
+          return this.call(endpoint, payload, true);
+        }
+
         console.error('❌ [Product API] Error response:', errorMessage);
         const apiError = new Error(errorMessage);
         if (errorCode) {
