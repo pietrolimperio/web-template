@@ -1020,6 +1020,28 @@ export const PreviewListingPageComponent = props => {
     setFieldValues({ ...fieldValues, [fieldName]: value });
   };
 
+  // Check if a sensitive/editable field has actually changed from its original value (for save button enable/disable)
+  const hasSensitiveFieldChanged = fieldName => {
+    const conditionMap = { 'new': 'New', 'like new': 'Like New', 'like-new': 'Like New', 'likenew': 'Like New', 'used': 'Used', 'refurbished': 'Refurbished', 'refurb': 'Refurbished' };
+    const current = (fieldValues[fieldName] ?? '').toString().trim();
+    let original = '';
+    if (fieldName === 'title') {
+      original = (currentListing?.attributes?.title ?? '').toString().trim();
+    } else if (fieldName === 'description') {
+      original = (currentListing?.attributes?.description ?? '').toString().trim();
+    } else if (fieldName === 'brand') {
+      original = (currentListing?.attributes?.publicData?.brand ?? '').toString().trim();
+    } else if (fieldName === 'condition') {
+      const raw = (currentListing?.attributes?.publicData?.condition ?? 'Used').toString().trim();
+      original = conditionMap[raw.toLowerCase()] || raw;
+      const currentNorm = conditionMap[current.toLowerCase()] || current;
+      return currentNorm !== original;
+    } else {
+      return true; // Unknown field: allow save
+    }
+    return current !== original;
+  };
+
   // Helper to get key features field name
   const getKeyFeaturesFieldName = (publicData) => {
     return publicData.keyFeatures ? 'keyFeatures' :
@@ -3533,7 +3555,7 @@ export const PreviewListingPageComponent = props => {
                         <button
                           onClick={() => handleSaveField('description')}
                           className={css.saveButton}
-                          disabled={updatingListing || !fieldValues.description}
+                          disabled={updatingListing || !fieldValues.description || !hasSensitiveFieldChanged('description')}
                         >
                           <FormattedMessage
                             id="PreviewListingPage.saveButton"
@@ -3594,7 +3616,7 @@ export const PreviewListingPageComponent = props => {
                             <button
                               onClick={() => handleSaveField('condition')}
                               className={css.saveButton}
-                              disabled={updatingListing}
+                              disabled={updatingListing || !hasSensitiveFieldChanged('condition')}
                             >
                               <FormattedMessage id="PreviewListingPage.saveButton" />
                             </button>
@@ -3677,7 +3699,7 @@ export const PreviewListingPageComponent = props => {
                                 <button
                                   onClick={() => handleSaveField('brand')}
                                   className={css.saveButton}
-                                  disabled={updatingListing}
+                                  disabled={updatingListing || !hasSensitiveFieldChanged('brand')}
                                 >
                                   <FormattedMessage id="PreviewListingPage.saveButton" />
                                 </button>
@@ -3839,7 +3861,7 @@ export const PreviewListingPageComponent = props => {
                           <button
                             onClick={() => handleSaveField('title')}
                             className={css.saveButton}
-                            disabled={updatingListing}
+                            disabled={updatingListing || !hasSensitiveFieldChanged('title')}
                           >
                             <FormattedMessage id="PreviewListingPage.saveButton" />
                           </button>
