@@ -2486,10 +2486,18 @@
     margin-bottom: 16px;
   }
 
-  /* Actions buttons */
+  /* Actions buttons - swap order: publish first, delete second on mobile */
   .actions {
     gap: 12px;
     padding: 0 16px;
+  }
+
+  .actions .publishButton {
+    order: 1;
+  }
+
+  .actions .deleteButton {
+    order: 2;
   }
 
   /* Price summary - flat */

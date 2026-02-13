@@ -4350,7 +4350,7 @@ export const PreviewListingPageComponent = props => {
                   />
                 </SecondaryButton>
               )}
-              <PrimaryButton onClick={handlePublish} inProgress={publishInProgress}>
+              <PrimaryButton onClick={handlePublish} inProgress={publishInProgress} className={css.publishButton}>
                 {publishInProgress ? (
                   isDraftMode ? (
                     <FormattedMessage id="PreviewListingPage.publishingButton" />
