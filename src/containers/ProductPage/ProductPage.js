@@ -115,6 +115,7 @@ import CustomListingFields from '../ListingPage/CustomListingFields';
 import EstimatedCustomerBreakdownMaybe from '../../components/OrderPanel/EstimatedCustomerBreakdownMaybe';
 import FetchLineItemsError from '../../components/OrderPanel/FetchLineItemsError/FetchLineItemsError';
 import OwnerCard from './OwnerCard';
+import { validateCoupon, isLeazBackendApiAvailable } from '../../util/leazBackendApi';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -241,6 +242,8 @@ const BookingForm = props => {
   const [deliveryMethod, setDeliveryMethod] = useState(defaultDeliveryMethod);
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
+  const [couponError, setCouponError] = useState(null);
+  const [couponValidating, setCouponValidating] = useState(false);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
 
   // Fetch availability from timeslots (works for guests and owners)
@@ -283,22 +286,58 @@ const BookingForm = props => {
     });
   };
 
-  const handleApplyCoupon = () => {
-    if (calendarSelectedDates.length >= 2) {
-      fetchLineItemsForDatesAndDelivery(
-        calendarSelectedDates[0],
-        calendarSelectedDates[calendarSelectedDates.length - 1],
-        undefined,
-        couponCode
-      );
-      if (couponCode.trim()) setCouponApplied(true);
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+
+    if (!isLeazBackendApiAvailable()) {
+      setCouponError('Coupon validation is not available');
+      return;
+    }
+
+    setCouponError(null);
+    setCouponValidating(true);
+
+    try {
+      const listingIdStr = listing?.id?.uuid ?? listing?.id ?? null;
+      if (!listingIdStr) {
+        setCouponError(intl.formatMessage({ id: 'ProductPage.couponError', defaultMessage: 'Errore durante la validazione del coupon' }));
+        return;
+      }
+      const locale = (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) || intl.locale || 'it';
+      const localeBase = locale.split('-')[0] || 'it';
+
+      const result = await validateCoupon({
+        code,
+        listingId: String(listingIdStr),
+        locale: localeBase,
+      });
+
+      if (result.valid) {
+        setCouponApplied(true);
+        if (canShowFullBookingUI) {
+          fetchLineItemsForDatesAndDelivery(
+            calendarSelectedDates[0],
+            calendarSelectedDates[calendarSelectedDates.length - 1],
+            undefined,
+            code
+          );
+        }
+      } else {
+        setCouponError(intl.formatMessage({ id: 'ProductPage.couponInvalid', defaultMessage: 'Codice coupon non valido' }));
+      }
+    } catch (e) {
+      setCouponError(e.message || intl.formatMessage({ id: 'ProductPage.couponError', defaultMessage: 'Errore durante la validazione del coupon' }));
+    } finally {
+      setCouponValidating(false);
     }
   };
 
   const handleRemoveCoupon = () => {
     setCouponCode('');
     setCouponApplied(false);
-    if (calendarSelectedDates.length >= 2) {
+    setCouponError(null);
+    if (canShowFullBookingUI) {
       fetchLineItemsForDatesAndDelivery(
         calendarSelectedDates[0],
         calendarSelectedDates[calendarSelectedDates.length - 1],
@@ -574,6 +613,7 @@ const BookingForm = props => {
                       onChange={e => {
                         setCouponCode(e.target.value);
                         setCouponApplied(false);
+                        setCouponError(null);
                       }}
                       placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
                       autoComplete="off"
@@ -582,19 +622,22 @@ const BookingForm = props => {
                       type="button"
                       className={css.couponApplyButton}
                       onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
-                      disabled={fetchLineItemsInProgress}
+                      disabled={fetchLineItemsInProgress || couponValidating}
                       style={{
                         backgroundColor: marketplaceColor,
                         color: 'white',
                       }}
                     >
-                      {couponApplied ? (
+                      {couponValidating ? (
+                        <FormattedMessage id="ProductPage.couponValidating" defaultMessage="Verifica..." />
+                      ) : couponApplied ? (
                         <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
                       ) : (
                         <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
                       )}
                     </button>
                   </div>
+                  {couponError && <p className={css.couponError}>{couponError}</p>}
                 </div>
               }
             />
@@ -622,19 +665,22 @@ const BookingForm = props => {
                   type="button"
                   className={css.couponApplyButton}
                   onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
-                  disabled={fetchLineItemsInProgress}
+                  disabled={fetchLineItemsInProgress || couponValidating}
                   style={{
                     backgroundColor: marketplaceColor,
                     color: 'white',
                   }}
                 >
-                  {couponApplied ? (
+                  {couponValidating ? (
+                    <FormattedMessage id="ProductPage.couponValidating" defaultMessage="Verifica..." />
+                  ) : couponApplied ? (
                     <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
                   ) : (
                     <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
                   )}
                 </button>
               </div>
+              {couponError && <p className={css.couponError}>{couponError}</p>}
             </div>
           )}
         </div>
