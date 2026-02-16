@@ -74,7 +74,6 @@ const LocationPredictionsList = props => {
         )}
         key={predictionId}
         onTouchStart={e => {
-          e.preventDefault();
           onSelectStart(getTouchCoordinates(e.nativeEvent));
         }}
         onMouseDown={e => {
@@ -82,11 +81,9 @@ const LocationPredictionsList = props => {
           onSelectStart();
         }}
         onTouchMove={e => {
-          e.preventDefault();
           onSelectMove(getTouchCoordinates(e.nativeEvent));
         }}
-        onTouchEnd={e => {
-          e.preventDefault();
+        onTouchEnd={() => {
           onSelectEnd(prediction);
         }}
         onMouseUp={e => {
@@ -274,9 +271,13 @@ class LocationAutocompleteInputImplementation extends Component {
       selectedPlace: null,
     });
 
-    // Clear highlighted prediction since the input value changed and
-    // results will change as well
-    this.setState({ highlightedIndex: -1 });
+    // When user modifies/clears a selected address without blurring, inputHasFocus may still be
+    // false from finalizeSelection. Restore it so predictions dropdown shows when they type again.
+    // Also clear highlighted prediction since the input value changed.
+    this.setState(prev => ({
+      inputHasFocus: newValue ? true : prev.inputHasFocus,
+      highlightedIndex: -1,
+    }));
 
     if (!newValue) {
       // No need to fetch predictions on empty input

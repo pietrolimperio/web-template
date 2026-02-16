@@ -182,9 +182,16 @@ class GeocoderMapbox {
     // Extract detailed address components from Mapbox response
     const extractAddressComponents = prediction => {
       const context = prediction.context || [];
+      const props = prediction.properties || {};
 
-      // Extract from context array
-      const postalCode = context.find(c => c.id?.startsWith('postcode.'))?.text || '';
+      // Extract postal code - Mapbox may use postcode in context (id: "postcode.xxx") or place_type
+      const postalCodeFromContext = context.find(c => c.id?.startsWith('postcode.'))?.text
+        || context.find(c => c.place_type?.includes('postcode'))?.text;
+      const postalCodeFromProps = props.postcode || props.postal_code || props.postalCode;
+      // Fallback: parse from place_name (e.g. "Via X 1, 20121 Milano, MI, Italia" - Italian CAP)
+      const postalCodeFromPlaceName = (prediction.place_name || '').match(/\b(\d{5})\b/)?.[1] || '';
+      const postalCode =
+        postalCodeFromContext || postalCodeFromProps || postalCodeFromPlaceName || '';
       const city = context.find(c => c.id?.startsWith('place.'))?.text || '';
       const region = context.find(c => c.id?.startsWith('region.'));
       const country = context.find(c => c.id?.startsWith('country.'))?.text || '';

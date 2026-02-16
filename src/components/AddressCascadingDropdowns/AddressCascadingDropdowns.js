@@ -299,6 +299,14 @@ const AddressCascadingDropdowns = ({
   // Track initialization
   const [initialized, setInitialized] = useState(false);
 
+  // Sync postalCode when initialPostalCode changes (e.g. from address autocomplete selection)
+  useEffect(() => {
+    const val = initialPostalCode || '';
+    if (postalCode !== val) {
+      setPostalCode(val);
+    }
+  }, [initialPostalCode]);
+
   // Load countries on mount
   useEffect(() => {
     const loadCountries = async () => {

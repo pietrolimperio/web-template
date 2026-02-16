@@ -108,6 +108,7 @@ bottom of the container.
     transition: var(--transitionStyleButton);
     margin: 0; /* Remove the double white space */
     line-height: 24px;
+    touch-action: none; /* Prevent passive listener conflict when selecting on touch devices */
     /* keep horizontal space stable when hovering */
     border-left: 6px solid transparent;
 
