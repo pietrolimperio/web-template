@@ -223,6 +223,30 @@ export const getPreviousMonth = date => {
 };
 
 /**
+ * Get the first day of the next year (same month and day).
+ *
+ * @param {Date} date
+ * @returns the same date in the next year
+ */
+export const getNextYear = date => {
+  const newDate = new Date(date);
+  newDate.setFullYear(newDate.getFullYear() + 1);
+  return newDate;
+};
+
+/**
+ * Get the first day of the previous year (same month and day).
+ *
+ * @param {Date} date
+ * @returns the same date in the previous year
+ */
+export const getPreviousYear = date => {
+  const newDate = new Date(date);
+  newDate.setFullYear(newDate.getFullYear() - 1);
+  return newDate;
+};
+
+/**
  * Get the start of the day.
  *
  * Note: We trust that JavaScript returns the correct moment.

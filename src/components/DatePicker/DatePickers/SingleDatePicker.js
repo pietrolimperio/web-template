@@ -5,6 +5,15 @@ import classNames from 'classnames';
 import { OutsideClickHandler } from '../../../components';
 
 import { getISODateString, getStartOfDay, isValidDateString } from './DatePicker.helpers';
+
+// Auto-insert "/" when typing DD/MM/YYYY: after 2 digits (day), after 4 digits (month)
+const formatWithAutoSlash = str => {
+  const digits = str.replace(/\D/g, '');
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return digits + (digits.length === 2 ? '/' : '');
+  if (digits.length <= 4) return digits.slice(0, 2) + '/' + digits.slice(2) + (digits.length === 4 ? '/' : '');
+  return digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4, 8);
+};
 import DatePicker from './DatePicker';
 
 import css from './SingleDatepicker.module.css';
@@ -13,12 +22,14 @@ const dateFormatOptions = {
   weekday: 'short',
   month: 'short',
   day: 'numeric',
+  year: 'numeric',
 };
 
 export const SingleDatePicker = props => {
   const intl = useIntl();
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const justClosedRef = useRef(false);
   const [dateData, setDateData] = useState({
     date: props.value || null,
     formatted: props.value ? intl.formatDate(props.value, dateFormatOptions) : '',
@@ -64,12 +75,17 @@ export const SingleDatePicker = props => {
       : {};
 
   const handleChange = value => {
-    const startOfDay = getStartOfDay(value);
-    setDateData({ date: startOfDay, formatted: intl.formatDate(startOfDay, dateFormatOptions) });
+    const startOfDay = value ? getStartOfDay(value) : null;
+    setDateData({
+      date: startOfDay,
+      formatted: startOfDay ? intl.formatDate(startOfDay, dateFormatOptions) : '',
+    });
+    justClosedRef.current = true;
     setIsOpen(false);
 
     if (element.current) {
-      element.current.querySelector('input').focus();
+      const inputEl = element.current.querySelector('input');
+      if (inputEl) inputEl.focus();
     }
 
     if (onChange) {
@@ -81,21 +97,21 @@ export const SingleDatePicker = props => {
     const inputStr = e.target.value;
     if (!inputStr) {
       setDateData({ date: null, formatted: inputStr });
+      if (onChange) onChange(null);
       return;
     }
 
-    if (isValidDateString(inputStr)) {
-      const d = new Date(inputStr);
-      if (isDayBlocked(d)) {
-        setDateData({ date: dateData.date, formatted: '' });
-        return;
-      } else {
-        setDateData({ date: d, formatted: intl.formatDate(d, dateFormatOptions) });
-        return;
-      }
+    const formattedWithSlash = formatWithAutoSlash(inputStr);
+
+    if (isValidDateString(formattedWithSlash)) {
+      const d = getStartOfDay(new Date(formattedWithSlash));
+      setDateData({ date: d, formatted: intl.formatDate(d, dateFormatOptions) });
+      setIsOpen(false);
+      if (onChange) onChange(d);
+      return;
     }
 
-    setDateData({ date: dateData.date, formatted: inputStr });
+    setDateData({ date: dateData.date, formatted: formattedWithSlash });
   };
 
   const handleBlur = () => {
@@ -124,11 +140,22 @@ export const SingleDatePicker = props => {
     }
   };
 
+  const handleFocus = () => {
+    if (justClosedRef.current) {
+      justClosedRef.current = false;
+      return;
+    }
+    if (!props.disabled && !readOnly) {
+      setIsOpen(true);
+    }
+  };
+
   const disabled = props.disabled;
   const inputProps = {
     type: 'text',
     onChange: handleOnChangeOnInput,
     onKeyDown: handleOnKeyDownOnInput,
+    onFocus: handleFocus,
     ...(readOnly ? { readOnly } : {}),
     ...(disabled ? { disabled } : {}),
   };
@@ -157,7 +184,9 @@ export const SingleDatePicker = props => {
             <DatePicker
               range={false}
               showMonthStepper={true}
+              hasFocusOnMount={false}
               onChange={handleChange}
+              onDaySelect={() => setIsOpen(false)}
               isDayBlocked={isDayBlocked}
               value={dateData.date}
               {...startDateMaybe}

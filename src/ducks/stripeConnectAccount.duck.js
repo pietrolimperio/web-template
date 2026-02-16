@@ -165,6 +165,14 @@ export const createStripeAccount = params => (dispatch, getState, sdk) => {
     businessProfileMCC,
     businessProfileURL,
     stripePublishableKey,
+    // Prefill data for Stripe onboarding (accelerates verification)
+    firstName,
+    lastName,
+    email,
+    phone,
+    dateOfBirth,
+    address,
+    companyName,
   } = params;
   const stripe = window.Stripe(stripePublishableKey);
 
@@ -179,6 +187,48 @@ export const createStripeAccount = params => (dispatch, getState, sdk) => {
     business_type: accountType,
     tos_shown_and_accepted: true,
   };
+
+  // Prefill individual or company data in the account token to accelerate Stripe onboarding
+  if (accountType === 'individual') {
+    if (firstName || lastName || email || phone || dateOfBirth || address) {
+      accountInfo.individual = {};
+      if (firstName) accountInfo.individual.first_name = firstName;
+      if (lastName) accountInfo.individual.last_name = lastName;
+      if (email) accountInfo.individual.email = email;
+      if (phone) accountInfo.individual.phone = phone;
+      if (dateOfBirth) {
+        const d = new Date(dateOfBirth);
+        if (!isNaN(d.getTime())) {
+          accountInfo.individual.dob = {
+            day: d.getDate(),
+            month: d.getMonth() + 1,
+            year: d.getFullYear(),
+          };
+        }
+      }
+      if (address && (address.line1 || address.city || address.postal_code)) {
+        accountInfo.individual.address = {};
+        if (address.line1) accountInfo.individual.address.line1 = address.line1;
+        if (address.line2) accountInfo.individual.address.line2 = address.line2;
+        if (address.city) accountInfo.individual.address.city = address.city;
+        if (address.state) accountInfo.individual.address.state = address.state;
+        if (address.postal_code) accountInfo.individual.address.postal_code = address.postal_code;
+        if (address.country) accountInfo.individual.address.country = address.country;
+      }
+    }
+  } else if (accountType === 'company' && companyName) {
+    accountInfo.company = { name: companyName };
+    if (phone) accountInfo.company.phone = phone;
+    if (address && (address.line1 || address.city || address.postal_code)) {
+      accountInfo.company.address = {};
+      if (address.line1) accountInfo.company.address.line1 = address.line1;
+      if (address.line2) accountInfo.company.address.line2 = address.line2;
+      if (address.city) accountInfo.company.address.city = address.city;
+      if (address.state) accountInfo.company.address.state = address.state;
+      if (address.postal_code) accountInfo.company.address.postal_code = address.postal_code;
+      if (address.country) accountInfo.company.address.country = address.country;
+    }
+  }
 
   dispatch(stripeAccountCreateRequest());
 

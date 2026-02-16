@@ -23,8 +23,11 @@ const DatePickerHeader = props => {
     showMonthStepper,
     showPreviousMonthStepper,
     showNextMonthStepper,
+    showYearStepper,
     nextMonth,
     previousMonth,
+    nextYear,
+    previousYear,
     disabled,
     intl,
   } = props;
@@ -48,6 +51,18 @@ const DatePickerHeader = props => {
       <span aria-atomic="true" aria-live="polite" className={css.hidden}>
         {getTitle()}
       </span>
+
+      {showYearStepper ? (
+        <button
+          aria-label={intl.formatMessage({ id: 'DatePicker.screenreader.previousYearButton' })}
+          className={css.previousYearButton}
+          disabled={disabled}
+          onClick={previousYear}
+          type="button"
+        >
+          <span className={css.yearArrowIcon}>«</span>
+        </button>
+      ) : null}
 
       {showMonthStepper && showPreviousMonthStepper ? (
         <button
@@ -81,6 +96,18 @@ const DatePickerHeader = props => {
         </button>
       ) : showMonthStepper ? (
         <span className={css.nextMonthSpacer}></span>
+      ) : null}
+
+      {showYearStepper ? (
+        <button
+          aria-label={intl.formatMessage({ id: 'DatePicker.screenreader.nextYearButton' })}
+          className={css.nextYearButton}
+          disabled={disabled}
+          onClick={nextYear}
+          type="button"
+        >
+          <span className={css.yearArrowIcon}>»</span>
+        </button>
       ) : null}
     </div>
   );

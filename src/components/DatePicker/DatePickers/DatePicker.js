@@ -42,8 +42,10 @@ import {
   getLocalizedWeekDays,
   getNextDay,
   getNextMonth,
+  getNextYear,
   getPreviousDay,
   getPreviousMonth,
+  getPreviousYear,
   getStartOfDay,
   isDateInRange,
   isSameDay,
@@ -285,12 +287,14 @@ const DatePicker = props => {
     showMonthStepper = true,
     showPreviousMonthStepper = true,
     showNextMonthStepper = true,
+    showYearStepper = false,
     showTodayButton = false,
     startDate = getISODateString(new Date()),
     startDateOffset, // () => false,
     endDateOffset, // () => false,
     value,
     onChange,
+    onDaySelect,
     onMonthChange,
     isDayBlocked = () => false,
     isBlockedBetween = () => false,
@@ -347,6 +351,9 @@ const DatePicker = props => {
   const onCurrentValueChange = value => {
     setCurrentValue(value);
 
+    if (onDaySelect) {
+      onDaySelect();
+    }
     if (onChange) {
       onChange(value);
     }
@@ -417,12 +424,7 @@ const DatePicker = props => {
 
       onCurrentValueChange(newValue);
     } else {
-      // Don't allow selecting the same day.
-      // This relies on assumption that date points to the same time of day. (00:00)
-      if (isSameDay(currentValue, date)) {
-        return;
-      }
-
+      // Allow selecting the same day - triggers onChange so parent can close picker
       onCurrentValueChange(date);
     }
   };
@@ -433,6 +435,14 @@ const DatePicker = props => {
 
   const previousMonth = () => {
     slide(-1);
+  };
+
+  const nextYear = () => {
+    updateCurrentDate(getNextYear(currentDate));
+  };
+
+  const previousYear = () => {
+    updateCurrentDate(getPreviousYear(currentDate));
   };
 
   const onShowToday = () => {
@@ -587,8 +597,11 @@ const DatePicker = props => {
           showMonthStepper={showMonthStepper}
           showPreviousMonthStepper={showPreviousMonthStepper}
           showNextMonthStepper={showNextMonthStepper}
+          showYearStepper={showYearStepper}
           nextMonth={nextMonth}
           previousMonth={previousMonth}
+          nextYear={nextYear}
+          previousYear={previousYear}
           disabled={disabled}
           intl={intl}
         />

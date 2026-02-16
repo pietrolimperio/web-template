@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { withRouter, Redirect } from 'react-router-dom';
 import { Form as FinalForm } from 'react-final-form';
 import classNames from 'classnames';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 import { useConfiguration } from '../../context/configurationContext';
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
@@ -15,6 +16,7 @@ import { ensureCurrentUser } from '../../util/data';
 import { isSignupEmailTakenError, isTooManyEmailVerificationRequestsError } from '../../util/errors';
 import { createResourceLocatorString } from '../../util/routes';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
+import { types as sdkTypes } from '../../util/sdkLoader';
 
 import { signup, authenticationInProgress } from '../../ducks/auth.duck';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
@@ -29,10 +31,128 @@ import { updateProfile } from '../ProfileSettingsPage/ProfileSettingsPage.duck';
 import { verify as verifyEmail } from '../../ducks/emailVerification.duck';
 import { PENDING_VERIFICATION_TOKEN_KEY } from '../EmailVerificationPage/EmailVerificationPage.duck';
 import devLog from '../../util/devLog';
-import { composeValidators } from '../../util/validators';
+import {
+  composeValidators,
+  autocompleteSearchRequired,
+  autocompletePlaceSelected,
+} from '../../util/validators';
+import { getISODateString } from '../../components/DatePicker/DatePickers/DatePicker.helpers';
 
 // One-shot flag to allow automatic redirect to Stripe exactly once (when coming from EmailVerificationPage)
 const AUTO_STRIPE_REDIRECT_ONCE_KEY = 'autoStripeRedirectOnce';
+
+const { LatLng } = sdkTypes;
+const identity = v => v;
+
+// Phone number validation using libphonenumber-js
+const phoneNumberValid = (message, phonePrefix) => value => {
+  if (!value) return null;
+  try {
+    const fullNumber = `${phonePrefix}${value}`;
+    return isValidPhoneNumber(fullNumber) ? null : message;
+  } catch (error) {
+    return message;
+  }
+};
+
+// Date of birth validation - not in the future
+const dateNotInFuture = message => value => {
+  if (!value) return null;
+  const today = new Date();
+  const selectedDate = new Date(value);
+  if (isNaN(selectedDate.getTime())) return message;
+  return selectedDate > today ? message : null;
+};
+
+// Format/parse for date of birth: form stores "YYYY-MM-DD", FieldSingleDatePicker uses { date: Date }
+const formatDateOfBirth = v => (v ? { date: new Date(v) } : null);
+const parseDateOfBirth = v => (v?.date ? getISODateString(v.date) : null);
+
+// isOutsideRange for birth date: only allow past dates (from 120 years ago to today)
+const BIRTH_DATE_MIN_YEARS_AGO = 120;
+const isBirthDateOutsideRange = day => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDate = new Date(today);
+  minDate.setFullYear(minDate.getFullYear() - BIRTH_DATE_MIN_YEARS_AGO);
+  return day > today || day < minDate;
+};
+
+// Age validation (18+ years old)
+// Street number: numbers only, or numbers + single letter, or only "snc" (case insensitive)
+const STREET_NUMBER_REGEX = /^(\d+[a-zA-Z]?|snc)$/i;
+const streetNumberValid = message => value => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return STREET_NUMBER_REGEX.test(trimmed) ? null : message;
+};
+
+const ageAtLeast18 = message => value => {
+  if (!value) return null;
+  const today = new Date();
+  const birthDate = new Date(value);
+  if (isNaN(birthDate.getTime())) return null;
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+  return age >= 18 ? null : message;
+};
+
+// Phone prefixes by country (flag images from flagcdn.com)
+const PHONE_PREFIXES = [
+  { code: '+1', country: 'US' },
+  { code: '+44', country: 'GB' },
+  { code: '+49', country: 'DE' },
+  { code: '+33', country: 'FR' },
+  { code: '+39', country: 'IT' },
+  { code: '+34', country: 'ES' },
+  { code: '+351', country: 'PT' },
+  { code: '+31', country: 'NL' },
+  { code: '+32', country: 'BE' },
+  { code: '+43', country: 'AT' },
+  { code: '+41', country: 'CH' },
+];
+
+const getDefaultPhonePrefix = locale => {
+  const baseLocale = locale ? locale.split('-')[0].toLowerCase() : 'en';
+  const localeMap = { en: '+44', de: '+49', fr: '+33', it: '+39', es: '+34', pt: '+351' };
+  return localeMap[baseLocale] || '+39';
+};
+
+const getCountryForLocale = locale => {
+  const baseLocale = locale ? locale.split('-')[0].toLowerCase() : 'en';
+  const countryMap = { en: 'GB', de: 'DE', fr: 'FR', it: 'IT', es: 'ES', pt: 'PT' };
+  return countryMap[baseLocale] || 'IT';
+};
+
+const geocodeAddress = async (addressData, countryCode) => {
+  const { street, streetNumber, city, state, country, postalCode } = addressData;
+  if (typeof window === 'undefined' || !window.mapboxgl || !window.mapboxSdk || !window.mapboxgl.accessToken) {
+    return null;
+  }
+  const addressParts = [street, streetNumber, city, state, country, postalCode].filter(Boolean);
+  if (addressParts.length === 0) return null;
+  const query = addressParts.join(', ');
+  try {
+    const client = window.mapboxSdk({ accessToken: window.mapboxgl.accessToken });
+    const queryParams = { limit: 1, types: 'address' };
+    if (countryCode) queryParams.country = countryCode.toLowerCase();
+    const request = client.createRequest({
+      method: 'GET',
+      path: '/geocoding/v5/mapbox.places/:query.json',
+      params: { query },
+      query: queryParams,
+    });
+    const response = await request.send();
+    if (response.body?.features?.length > 0) {
+      const [lng, lat] = response.body.features[0].center || [];
+      if (lat && lng) return new LatLng(lat, lng);
+    }
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+  }
+  return null;
+};
 
 import {
   Page,
@@ -41,9 +161,14 @@ import {
   FieldTextInput,
   FieldSelect,
   FieldCheckbox,
+  FieldSingleDatePicker,
+  FieldPhonePrefixSelect,
   NamedLink,
   InlineTextButton,
   IconSpinner,
+  IconLocation,
+  FieldLocationAutocompleteInput,
+  AddressCascadingDropdowns,
 } from '../../components';
 
 import logoImage from '../../assets/logo.png';
@@ -56,7 +181,7 @@ const STRIPE_ONBOARDING_RETURN_URL_FAILURE = 'failure';
 // Session storage key for temporary signup data
 const SIGNUP_DATA_KEY = 'stripe_signup_pending_data';
 
-// Supported countries for Stripe
+// Supported countries for Stripe (country derived from address)
 const SUPPORTED_COUNTRIES = [
   { code: 'IT', name: 'Italia' },
   { code: 'DE', name: 'Germania' },
@@ -69,6 +194,20 @@ const SUPPORTED_COUNTRIES = [
   { code: 'NL', name: 'Paesi Bassi' },
   { code: 'CH', name: 'Svizzera' },
 ];
+
+// Map country names (from Mapbox/geocoder) to ISO codes for Stripe
+const COUNTRY_NAME_TO_ISO = {
+  italy: 'IT', italia: 'IT',
+  germany: 'DE', germania: 'DE', deutschland: 'DE',
+  france: 'FR', francia: 'FR', frankreich: 'FR',
+  spain: 'ES', spagna: 'ES', espana: 'ES', españa: 'ES',
+  'united kingdom': 'GB', 'regno unito': 'GB', 'reino unido': 'GB', uk: 'GB', england: 'GB',
+  portugal: 'PT', portogallo: 'PT',
+  austria: 'AT', österreich: 'AT',
+  belgium: 'BE', belgio: 'BE', belgique: 'BE', belgië: 'BE',
+  netherlands: 'NL', 'paesi bassi': 'NL', niederlande: 'NL', holland: 'NL',
+  switzerland: 'CH', svizzera: 'CH', suisse: 'CH', schweiz: 'CH',
+};
 
 // Map locale to country code
 const getDefaultCountryFromLocale = locale => {
@@ -144,6 +283,14 @@ export const NewSignupStripePageComponent = ({
   const [signupEmail, setSignupEmail] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [pendingStripeSetup, setPendingStripeSetup] = useState(false);
+  const [useManualAddress, setUseManualAddress] = useState(false);
+  const [selectedGeolocation, setSelectedGeolocation] = useState(null);
+  const [manualFieldsChanged, setManualFieldsChanged] = useState(false);
+  const [autocompleteUsed, setAutocompleteUsed] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [cascadingCountry, setCascadingCountry] = useState('');
+  const [cascadingState, setCascadingState] = useState('');
+  const [cascadingCity, setCascadingCity] = useState('');
   const errorRef = useRef(null);
 
   // Get marketplace color from config
@@ -412,23 +559,18 @@ export const NewSignupStripePageComponent = ({
     setErrorMessage(null);
 
     try {
-      // Get signup data - first try sessionStorage, then fall back to user's privateData
       const storedData = sessionStorage.getItem(SIGNUP_DATA_KEY);
-      let country, storedCustomerType;
-      
+      let country, storedCustomerType, signupData;
+
       if (storedData) {
-        // New signup flow - data in sessionStorage
-        const signupData = JSON.parse(storedData);
+        signupData = JSON.parse(storedData);
         country = signupData.country;
         storedCustomerType = signupData.customerType;
       } else {
-        // Returning user flow - get data from user's publicData
         const userPublicData = user.attributes?.profile?.publicData || {};
-        country = userPublicData.country || 'IT'; // Default to IT if not found
+        country = userPublicData.country || 'IT';
         storedCustomerType = userPublicData.customerType || customerType || 'individual';
-        
-        // Store in sessionStorage for consistency with the rest of the flow
-        const signupData = {
+        signupData = {
           email: user.attributes?.email,
           customerType: storedCustomerType,
           country,
@@ -468,6 +610,19 @@ export const NewSignupStripePageComponent = ({
         businessProfileURL,
         stripePublishableKey,
       };
+
+      if (signupData) {
+        accountParams.email = signupData.email;
+        accountParams.phone = signupData.phoneNumber;
+        accountParams.address = signupData.address;
+        if (storedCustomerType === 'company') {
+          accountParams.companyName = signupData.companyName;
+        } else {
+          accountParams.firstName = signupData.firstName;
+          accountParams.lastName = signupData.lastName;
+          accountParams.dateOfBirth = signupData.dateOfBirth;
+        }
+      }
 
       const createdAccount = await onCreateStripeAccount(accountParams);
 
@@ -858,17 +1013,80 @@ export const NewSignupStripePageComponent = ({
    * Handle form submission - create user on Sharetribe first
    */
   const handleSubmit = async values => {
-    const { email, password, country, firstName, lastName, companyName, termsAccepted } = values;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      companyName,
+      phonePrefix,
+      phoneNumber,
+      dateOfBirth,
+      street,
+      streetNumber,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country: formCountry,
+      location: locationData,
+      termsAccepted,
+    } = values;
 
-    // Store signup data in session storage for later use
+    const fullPhoneNumber =
+      phonePrefix && phoneNumber ? `${phonePrefix}${phoneNumber.trim()}` : phoneNumber?.trim();
+
+    let addressLine1 = '';
+    let addressCountryRaw = formCountry;
+    if (useManualAddress || autocompleteUsed) {
+      const streetParts = [street?.trim(), streetNumber?.trim()].filter(Boolean);
+      addressLine1 = streetParts.join(' ');
+      addressCountryRaw = formCountry;
+    } else if (locationData?.selectedPlace) {
+      const place = locationData.selectedPlace;
+      const streetName = place.street || '';
+      const streetNum = place.streetNumber || '';
+      addressLine1 = streetNum ? `${streetName} ${streetNum}`.trim() : streetName;
+      addressCountryRaw = place.country || formCountry;
+    }
+
+    const toIsoCountry = c => {
+      const s = (c || '').trim();
+      if (!s) return null;
+      if (s.length === 2 && s === s.toUpperCase()) return s;
+      const fromMap = COUNTRY_NAME_TO_ISO[s.toLowerCase()];
+      if (fromMap) return fromMap;
+      const byName = SUPPORTED_COUNTRIES.find(
+        x => x.name?.toLowerCase() === s?.toLowerCase()
+      );
+      return byName?.code || null;
+    };
+
+    const resolvedCountry = toIsoCountry(addressCountryRaw) || getCountryForLocale(currentLocale);
+
+    const addressForStripe =
+      addressLine1 || city || postalCode
+        ? {
+            line1: addressLine1,
+            line2: addressLine2?.trim(),
+            city: city?.trim(),
+            state: state?.trim(),
+            postal_code: postalCode?.trim(),
+            country: resolvedCountry,
+          }
+        : null;
+
     const signupData = {
       email,
       password,
       customerType,
-      country,
+      country: resolvedCountry,
       firstName,
       lastName,
       companyName,
+      phoneNumber: fullPhoneNumber,
+      dateOfBirth: dateOfBirth?.trim(),
+      address: addressForStripe,
       termsAccepted,
       timestamp: Date.now(),
     };
@@ -878,18 +1096,15 @@ export const NewSignupStripePageComponent = ({
     setSignupEmail(email);
     setErrorMessage(null);
 
-    // Determine firstName and lastName based on customer type
     let finalFirstName, finalLastName;
     if (customerType === 'company' && companyName) {
       finalFirstName = companyName;
-      finalLastName = 'Company'; // Sharetribe SDK requires lastName even for companies
+      finalLastName = 'Company';
     } else {
       finalFirstName = firstName || email.split('@')[0];
       finalLastName = lastName || 'User';
     }
 
-    // Create user on Sharetribe with minimal info
-    // The signup action will auto-login the user
     const params = {
       email,
       password,
@@ -898,21 +1113,18 @@ export const NewSignupStripePageComponent = ({
       publicData: {
         userType: 'customer',
         locale: currentLocale,
-        country, // Store country in publicData
-        customerType, // Store customerType in publicData
+        country: resolvedCountry,
+        customerType,
       },
       privateData: {
-        pendingStripeOnboarding: true, // Only in privateData
+        pendingStripeOnboarding: true,
       },
       protectedData: {
         terms: termsAccepted ? ['tos-and-privacy'] : [],
       },
     };
 
-    // Set flag to proceed to Stripe after auth completes
     setPendingStripeSetup(true);
-
-    // This will trigger the signup and auto-login
     submitSignup(params);
   };
 
@@ -1164,13 +1376,53 @@ export const NewSignupStripePageComponent = ({
               ) : (
               <FinalForm
                 onSubmit={handleSubmit}
-                initialValues={{ country: getDefaultCountryFromLocale(currentLocale) }}
-                render={({ handleSubmit, invalid, pristine, values }) => {
+                initialValues={{
+                  phonePrefix: getDefaultPhonePrefix(currentLocale),
+                }}
+                render={({ handleSubmit, invalid, pristine, values, form }) => {
                   const submitInProgress =
                     authInProgress ||
                     createStripeAccountInProgress ||
                     getAccountLinkInProgress;
-                  const submitDisabled = invalid || submitInProgress;
+                  const addressCountryFromForm =
+                    values.country?.trim() ||
+                    (values.location?.selectedPlace && values.location.selectedPlace.country);
+                  const addressFieldsIncomplete =
+                    (useManualAddress || autocompleteUsed) &&
+                    (!values.street?.trim() ||
+                      !values.streetNumber?.trim() ||
+                      !values.city?.trim() ||
+                      !values.state?.trim() ||
+                      !values.postalCode?.trim() ||
+                      !addressCountryFromForm);
+                  const submitDisabled =
+                    invalid || submitInProgress || isGeocoding || !!addressFieldsIncomplete;
+
+                  const searchCountry = getCountryForLocale(currentLocale);
+
+                  React.useEffect(() => {
+                    const locationData = values.location;
+                    if (locationData?.selectedPlace && !autocompleteUsed) {
+                      const place = locationData.selectedPlace;
+                      const streetName = place.street || '';
+                      const streetNum = place.streetNumber || '';
+                      setAutocompleteUsed(true);
+                      setManualFieldsChanged(false);
+                      form.batch(() => {
+                        form.change('street', streetName);
+                        form.change('streetNumber', streetNum);
+                        form.change('city', place.city || '');
+                        form.change('state', place.state || '');
+                        form.change('postalCode', place.postalCode || '');
+                        form.change('country', place.country || values.country);
+                      });
+                      if (place.origin) {
+                        setSelectedGeolocation(
+                          new LatLng(place.origin.lat, place.origin.lng)
+                        );
+                      }
+                    }
+                  }, [values.location, autocompleteUsed]);
 
                   return (
                     <Form className={css.form} onSubmit={handleSubmit}>
@@ -1317,25 +1569,231 @@ export const NewSignupStripePageComponent = ({
                         )}
                       />
 
-                      {/* Country */}
-                      <FieldSelect
-                        className={css.field}
-                        id="country"
-                        name="country"
-                        label={intl.formatMessage({ id: 'NewSignupStripePage.countryLabel' })}
-                        validate={validators.required(
-                          intl.formatMessage({ id: 'NewSignupStripePage.countryRequired' })
-                        )}
-                      >
-                        <option disabled value="">
-                          {intl.formatMessage({ id: 'NewSignupStripePage.countryPlaceholder' })}
-                        </option>
-                        {SUPPORTED_COUNTRIES.map(country => (
-                          <option key={country.code} value={country.code}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </FieldSelect>
+                      {/* Phone */}
+                      <div className={css.phoneFields}>
+                        <FieldPhonePrefixSelect
+                          className={css.phonePrefixField}
+                          id="phonePrefix"
+                          name="phonePrefix"
+                          label={intl.formatMessage({ id: 'NewSignupPage.phonePrefixLabel' })}
+                          options={PHONE_PREFIXES}
+                        />
+                        <FieldTextInput
+                          className={css.phoneNumberField}
+                          type="tel"
+                          id="phoneNumber"
+                          name="phoneNumber"
+                          autoComplete="tel"
+                          label={intl.formatMessage({ id: 'NewSignupPage.phoneNumberLabel' })}
+                          placeholder={intl.formatMessage({
+                            id: 'NewSignupPage.phoneNumberPlaceholder',
+                          })}
+                          validate={composeValidators(
+                            validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.phoneNumberRequired' })
+                            ),
+                            phoneNumberValid(
+                              intl.formatMessage({ id: 'NewSignupPage.phoneNumberInvalid' }),
+                              values.phonePrefix || getDefaultPhonePrefix(currentLocale)
+                            )
+                          )}
+                        />
+                      </div>
+
+                      {/* Date of birth - individual only */}
+                      {customerType === 'individual' && (
+                        <FieldSingleDatePicker
+                          className={css.field}
+                          id="dateOfBirth"
+                          name="dateOfBirth"
+                          label={intl.formatMessage({ id: 'NewSignupPage.dateOfBirthLabel' })}
+                          placeholderText={intl.formatMessage({
+                            id: 'NewSignupPage.dateOfBirthPlaceholder',
+                          })}
+                          format={formatDateOfBirth}
+                          parse={parseDateOfBirth}
+                          isOutsideRange={isBirthDateOutsideRange}
+                          theme="light"
+                          showYearStepper={true}
+                          validate={composeValidators(
+                            validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.dateOfBirthRequired' })
+                            ),
+                            dateNotInFuture(
+                              intl.formatMessage({ id: 'NewSignupPage.dateNotInFuture' })
+                            ),
+                            ageAtLeast18(
+                              intl.formatMessage({ id: 'NewSignupPage.ageAtLeast18' })
+                            )
+                          )}
+                        />
+                      )}
+
+                      {/* Address */}
+                      {!useManualAddress && !autocompleteUsed ? (
+                        <>
+                          <FieldLocationAutocompleteInput
+                            rootClassName={css.locationFieldRoot}
+                            className={css.field}
+                            inputClassName={css.locationAutocompleteInput}
+                            iconClassName={css.locationAutocompleteInputIcon}
+                            predictionsClassName={css.predictionsRoot}
+                            validClassName={css.validLocation}
+                            CustomIcon={IconLocation}
+                            name="location"
+                            id="location"
+                            label={intl.formatMessage({ id: 'NewSignupPage.addressLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.addressPlaceholder',
+                            })}
+                            format={identity}
+                            valueFromForm={values.location}
+                            countryLimit={searchCountry}
+                            useDefaultPredictions={false}
+                            validate={composeValidators(
+                              autocompleteSearchRequired(
+                                intl.formatMessage({ id: 'NewSignupPage.addressRequired' })
+                              ),
+                              autocompletePlaceSelected(
+                                intl.formatMessage({ id: 'NewSignupPage.addressNotRecognized' })
+                              )
+                            )}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className={css.chipCard}
+                            onClick={() => {
+                              setUseManualAddress(false);
+                              setAutocompleteUsed(false);
+                              setManualFieldsChanged(false);
+                              form.change('location', null);
+                              form.change('street', '');
+                              form.change('streetNumber', '');
+                              form.change('addressLine2', '');
+                              form.change('city', '');
+                              form.change('state', '');
+                              form.change('postalCode', '');
+                            }}
+                            style={{
+                              backgroundColor: 'white',
+                              borderColor: marketplaceColor,
+                              color: marketplaceColor,
+                              marginBottom: '20px',
+                            }}
+                          >
+                            <FormattedMessage
+                              id="NewSignupPage.backToAutocomplete"
+                              defaultMessage="Usa la ricerca indirizzo"
+                            />
+                          </button>
+                          <div className={css.addressFields}>
+                            <FieldTextInput
+                              className={css.streetField}
+                              type="text"
+                              id="street"
+                              name="street"
+                              autoComplete="address-line1"
+                              label={intl.formatMessage({ id: 'NewSignupPage.streetLabel' })}
+                              placeholder={intl.formatMessage({
+                                id: 'NewSignupPage.streetPlaceholder',
+                              })}
+                              validate={validators.required(
+                                intl.formatMessage({ id: 'NewSignupPage.streetRequired' })
+                              )}
+                            />
+                            <FieldTextInput
+                              className={css.streetNumberField}
+                              type="text"
+                              id="streetNumber"
+                              name="streetNumber"
+                              autoComplete="off"
+                              label={intl.formatMessage({ id: 'NewSignupPage.streetNumberLabel' })}
+                              placeholder={intl.formatMessage({
+                                id: 'NewSignupPage.streetNumberPlaceholder',
+                              })}
+                              validate={composeValidators(
+                                validators.required(
+                                  intl.formatMessage({ id: 'NewSignupPage.streetNumberRequired' })
+                                ),
+                                streetNumberValid(
+                                  intl.formatMessage({ id: 'NewSignupPage.streetNumberInvalid' })
+                                )
+                              )}
+                            />
+                          </div>
+                          <FieldTextInput
+                            className={css.field}
+                            type="text"
+                            id="addressLine2"
+                            name="addressLine2"
+                            autoComplete="address-line2"
+                            label={intl.formatMessage({ id: 'NewSignupPage.addressLine2Label' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.addressLine2Placeholder',
+                            })}
+                          />
+                          <AddressCascadingDropdowns
+                            locale={currentLocale}
+                            initialCountry={
+                              values.country
+                                ? (SUPPORTED_COUNTRIES.find(c => c.code === values.country)?.name ||
+                                    values.country)
+                                : SUPPORTED_COUNTRIES.find(
+                                    c => c.code === getCountryForLocale(currentLocale)
+                                  )?.name || 'Italia'
+                            }
+                            initialState={values.state || cascadingState}
+                            initialCity={values.city || cascadingCity}
+                            initialPostalCode={values.postalCode || ''}
+                            className={css.cascadingDropdowns}
+                            onCountryChange={(countryObj, translatedName) => {
+                              setCascadingCountry(translatedName);
+                              setCascadingState('');
+                              setCascadingCity('');
+                              form.change('country', countryObj?.iso2 || values.country);
+                            }}
+                            onStateChange={(stateVal, stateName, stateCode) => {
+                              setCascadingState(stateCode || stateName);
+                              setCascadingCity('');
+                              form.change('state', stateCode || stateName);
+                              form.change('city', '');
+                            }}
+                            onCityChange={(cityVal, cityName) => {
+                              setCascadingCity(cityName);
+                              form.change('city', cityName);
+                            }}
+                            onPostalCodeChange={postalCode => {
+                              form.change('postalCode', postalCode);
+                            }}
+                          />
+                        </>
+                      )}
+
+                      {!useManualAddress && !autocompleteUsed && (
+                        <button
+                          type="button"
+                          className={css.chipCard}
+                          onClick={() => {
+                            setUseManualAddress(true);
+                            setAutocompleteUsed(false);
+                            form.change('location', null);
+                          }}
+                          style={{
+                            backgroundColor: 'white',
+                            borderColor: marketplaceColor,
+                            color: marketplaceColor,
+                            marginBottom: '20px',
+                          }}
+                        >
+                          <FormattedMessage
+                            id="NewSignupPage.useManualAddress"
+                            defaultMessage="Inserisci indirizzo manualmente"
+                          />
+                        </button>
+                      )}
 
                       {/* Info box about Stripe */}
                       <div className={css.infoBox}>

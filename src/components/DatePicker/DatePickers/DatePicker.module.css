@@ -14,8 +14,8 @@
 
 .light {
   --datepickerFgColor: var(--colorGrey700);
-  --datepickerBgColor: transparent;
-  --datepickerBorderColor: transparent;
+  --datepickerBgColor: var(--colorWhite);
+  --datepickerBorderColor: var(--colorGrey200);
   --datepickerDisabledFgColor: var(--colorGrey300);
   --datepickerDisabledTextDeco: line-through;
   --datepickerHoveredFgColor: inherit;
@@ -97,7 +97,9 @@
 }
 
 .previousMonthButton,
-.nextMonthButton {
+.nextMonthButton,
+.previousYearButton,
+.nextYearButton {
   display: inline-flex;
   width: 30px;
   height: 32px;
@@ -118,6 +120,12 @@
 .nextMonthSpacer {
   width: 30px;
   height: 32px;
+}
+
+.yearArrowIcon {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--datepickerHeaderArrowColor);
 }
 
 .arrowIcon {
@@ -235,9 +243,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--datepickerSelectedBgColor);
+    background-color: var(--marketplaceColor);
     border-radius: calc(37px / 2);
-    color: var(--datepickerFgColor);
+    color: var(--colorWhite);
   }
 }
 

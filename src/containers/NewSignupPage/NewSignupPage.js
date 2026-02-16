@@ -32,6 +32,7 @@ import {
   FieldTextInput,
   FieldSelect,
   FieldCheckbox,
+  FieldPhonePrefixSelect,
   FieldLocationAutocompleteInput,
   NamedLink,
   IconSpinner,
@@ -215,19 +216,19 @@ const vatNumberValid = message => value => {
   return pattern.test(value) ? null : message;
 };
 
-// Phone prefixes by country
+// Phone prefixes by country (flag images from flagcdn.com)
 const PHONE_PREFIXES = [
-  { code: '+1', country: 'US/CA', label: '+1 (US/CA)' },
-  { code: '+44', country: 'GB', label: '+44 (UK)' },
-  { code: '+49', country: 'DE', label: '+49 (DE)' },
-  { code: '+33', country: 'FR', label: '+33 (FR)' },
-  { code: '+39', country: 'IT', label: '+39 (IT)' },
-  { code: '+34', country: 'ES', label: '+34 (ES)' },
-  { code: '+351', country: 'PT', label: '+351 (PT)' },
-  { code: '+31', country: 'NL', label: '+31 (NL)' },
-  { code: '+32', country: 'BE', label: '+32 (BE)' },
-  { code: '+43', country: 'AT', label: '+43 (AT)' },
-  { code: '+41', country: 'CH', label: '+41 (CH)' },
+  { code: '+1', country: 'US' },
+  { code: '+44', country: 'GB' },
+  { code: '+49', country: 'DE' },
+  { code: '+33', country: 'FR' },
+  { code: '+39', country: 'IT' },
+  { code: '+34', country: 'ES' },
+  { code: '+351', country: 'PT' },
+  { code: '+31', country: 'NL' },
+  { code: '+32', country: 'BE' },
+  { code: '+43', country: 'AT' },
+  { code: '+41', country: 'CH' },
 ];
 
 // Get default phone prefix based on locale
@@ -874,18 +875,13 @@ export const NewSignupPageComponent = ({
                       />
 
                       <div className={css.phoneFields}>
-                        <FieldSelect
+                        <FieldPhonePrefixSelect
                           className={css.phonePrefixField}
                           id="phonePrefix"
                           name="phonePrefix"
                           label={intl.formatMessage({ id: 'NewSignupPage.phonePrefixLabel' })}
-                        >
-                          {PHONE_PREFIXES.map(prefix => (
-                            <option key={prefix.code} value={prefix.code}>
-                              {prefix.label}
-                            </option>
-                          ))}
-                        </FieldSelect>
+                          options={PHONE_PREFIXES}
+                        />
 
                         <FieldTextInput
                           className={css.phoneNumberField}
