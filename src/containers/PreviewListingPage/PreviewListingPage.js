@@ -68,6 +68,7 @@ import {
   IconDelete,
   NotificationBanner,
   AddressCascadingDropdowns,
+  IconLocation,
 } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
@@ -341,8 +342,6 @@ export const PreviewListingPageComponent = props => {
   const [hiddenImageIds, setHiddenImageIds] = useState(new Set()); // Track hidden images (UUIDs as strings)
   
   // Location modal state
-  const [showAddressSearch, setShowAddressSearch] = useState(false);
-  const [showFullForm, setShowFullForm] = useState(false);
   const [locationAutocompleteValue, setLocationAutocompleteValue] = useState({
     search: '',
     predictions: [],
@@ -2788,9 +2787,37 @@ export const PreviewListingPageComponent = props => {
       
       setModalLocationVisible(locationVisible);
       setModalHandByHandAvailable(handByHandAvailable);
-      // Always show full form (prefilled if address exists)
-      setShowFullForm(true);
-      setShowAddressSearch(false); // Don't show autocomplete by default, show form directly
+      setInvalidFields([]);
+      // Build synthetic selectedPlace when address exists, so form shows expanded (new address UX)
+      const hasAddress =
+        parsedStreet || parsedStreetNumber || initialCityValue || initialCountryValue;
+      if (hasAddress) {
+        const street = address.street || parsedStreet || address.addressLine1 || streetFromLocation || '';
+        const streetNum =
+          address.streetNumber || parsedStreetNumber || location.streetNumber || '';
+        const searchStr = [street, streetNum].filter(Boolean).join(' ').trim() || initialCityValue;
+        setLocationAutocompleteValue({
+          search: searchStr,
+          predictions: [],
+          selectedPlace: {
+            street,
+            streetNumber: streetNum,
+            addressLine2: address.addressLine2 || location.addressLine2 || '',
+            city: initialCityValue,
+            state: initialStateValue,
+            postalCode: address.postalCode || address.postal_code || postalCodeFromLocation || '',
+            country: initialCountryValue,
+            origin: geolocation,
+            bounds: null,
+          },
+        });
+      } else {
+        setLocationAutocompleteValue({
+          search: '',
+          predictions: [],
+          selectedPlace: null,
+        });
+      }
     }
   }, [showLocationModal, currentListing.attributes?.publicData?.location, locationVisible, handByHandAvailable]);
 
@@ -2798,8 +2825,9 @@ export const PreviewListingPageComponent = props => {
   const handleSaveLocation = async () => {
     setUpdatingListing(true);
     try {
-      // Validate required fields if full form is shown
-      if (showFullForm) {
+      // Validate required fields when address form is shown (selectedPlace exists)
+      const hasAddressSelected = !!locationAutocompleteValue?.selectedPlace;
+      if (hasAddressSelected) {
         const invalid = [];
         if (!manualAddress.street.trim()) invalid.push('street');
         if (!manualAddress.streetNumber.trim()) invalid.push('streetNumber');
@@ -2817,7 +2845,7 @@ export const PreviewListingPageComponent = props => {
       }
 
       // Build address object with data from cascading dropdowns
-      const addressFromDropdowns = showFullForm ? {
+      const addressFromDropdowns = hasAddressSelected ? {
         ...manualAddress,
         city: selectedCityData?.name || manualAddress.city,
         region: selectedStateData?.state_code || selectedStateData?.name || manualAddress.region,
@@ -4269,7 +4297,7 @@ export const PreviewListingPageComponent = props => {
                                 </>
                               ) : (
                                 <>
-                                  <span className={css.locationIcon}>📍</span>
+                                  <span>📍</span>
                                   <span>{addressString}</span>
                                 </>
                               )}
@@ -4301,7 +4329,7 @@ export const PreviewListingPageComponent = props => {
                     <div className={css.mapSection}>
                       <div className={css.noLocationSection}>
                         <div className={css.noLocationMessage}>
-                          <span className={css.locationIcon}>📍</span>
+                          <span>📍</span>
                           <FormattedMessage
                             id="PreviewListingPage.noLocationMessage"
                             defaultMessage="No location set for this listing"
@@ -5275,45 +5303,31 @@ export const PreviewListingPageComponent = props => {
             </div>
 
             <div className={css.locationModalContent}>
-              {/* Autocomplete Search */}
-              {showAddressSearch && !showFullForm && (
-                <div className={css.addressSection}>
-                  <button
-                    type="button"
-                    className={css.chipCard}
-                    onClick={() => {
-                      setShowFullForm(true);
-                      setManualAddress({
-                        street: '',
-                        streetNumber: '',
-                        addressLine2: '',
-                        city: '',
-                        region: '',
-                        postalCode: '',
-                        country: '',
-                      });
-                      setLocationAutocompleteValue({
-                        search: '',
-                        predictions: [],
-                        selectedPlace: null,
-                      });
-                      setModalGeolocation(null);
-                    }}
-                    style={{
-                      backgroundColor: 'white',
-                      borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                      color: config.branding?.marketplaceColor || '#4A90E2',
-                      marginBottom: '1rem',
-                    }}
-                  >
+              {/* New address UX: autocomplete always visible, form expands when place selected or manual entry */}
+              <div
+                className={
+                  locationAutocompleteValue?.selectedPlace
+                    ? css.addressFields
+                    : css.addressSectionSingle
+                }
+              >
+                <div
+                  className={
+                    locationAutocompleteValue?.selectedPlace
+                      ? css.streetField
+                      : css.addressFieldFullWidth
+                  }
+                >
+                  <label className={css.fieldLabel} htmlFor="listing-location-autocomplete">
                     <FormattedMessage
-                      id="ListingConfiguration.cantFindAddress"
-                      defaultMessage="Non trovi l'indirizzo? Procedi con l'inserimento manualmente"
+                      id="ListingConfiguration.addressLine1"
+                      defaultMessage="Address"
                     />
-                  </button>
+                  </label>
                   <LocationAutocompleteInputImpl
-                    className={css.input}
-                    iconClassName={css.locationIcon}
+                    id="listing-location-autocomplete"
+                    iconClassName={css.locationAutocompleteInputIconHidden}
+                    CustomIcon={IconLocation}
                     inputClassName={css.locationAutocompleteInput}
                     predictionsClassName={css.predictionsRoot}
                     validClassName={css.validLocation}
@@ -5323,36 +5337,36 @@ export const PreviewListingPageComponent = props => {
                       defaultMessage: 'Enter your address',
                     })}
                     useDefaultPredictions={false}
+                    addManualEntryOption
+                    manualEntryLabelId="LocationAutocompleteInput.useTypedAddress"
+                    countryLimit={getCountryForLocale(intl.locale)}
                     format={v => v}
                     input={{
-                      name: 'location',
+                      name: 'listing-street',
                       value: locationAutocompleteValue,
                       onChange: value => {
                         setLocationAutocompleteValue(value);
                         if (value && value.selectedPlace) {
                           const place = value.selectedPlace;
-                          setModalGeolocation(place.origin);
+                          setModalGeolocation(place.origin || null);
                           const newAddress = {
                             street: place.street || '',
                             streetNumber: place.streetNumber || '',
-                            addressLine2: '',
+                            addressLine2: place.addressLine2 || '',
                             city: place.city || '',
                             region: place.state || '',
                             postalCode: place.postalCode || '',
                             country: place.country || '',
                           };
                           setManualAddress(newAddress);
-                          setShowFullForm(true);
-                          setTimeout(() => {
-                            const invalid = [];
-                            if (!newAddress.street.trim()) invalid.push('street');
-                            if (!newAddress.streetNumber.trim()) invalid.push('streetNumber');
-                            if (!newAddress.city.trim()) invalid.push('city');
-                            if (!newAddress.region.trim()) invalid.push('region');
-                            if (!newAddress.postalCode.trim()) invalid.push('postalCode');
-                            if (!newAddress.country.trim()) invalid.push('country');
-                            setInvalidFields(invalid);
-                          }, 100);
+                          setSelectedCountryData(
+                            place.country ? { name: place.country } : null
+                          );
+                          setSelectedStateData(
+                            place.state ? { name: place.state, state_code: place.state } : null
+                          );
+                          setSelectedCityData(place.city ? { name: place.city } : null);
+                          setInvalidFields([]);
                         }
                       },
                       onFocus: () => {},
@@ -5364,92 +5378,51 @@ export const PreviewListingPageComponent = props => {
                     }}
                   />
                 </div>
-              )}
-
-              {/* Full Address Form */}
-              {showFullForm && (
-                <div className={css.manualAddressForm}>
-                  <button
-                    type="button"
-                    className={css.chipCard}
-                    onClick={() => {
-                      setShowAddressSearch(true);
-                      setShowFullForm(false);
-                      setLocationAutocompleteValue({
-                        search: '',
-                        predictions: [],
-                        selectedPlace: null,
-                      });
-                    }}
-                    style={{
-                      backgroundColor: 'white',
-                      borderColor: config.branding?.marketplaceColor || '#4A90E2',
-                      color: config.branding?.marketplaceColor || '#4A90E2',
-                      marginBottom: '20px',
-                    }}
-                  >
-                    <FormattedMessage
-                      id="ListingConfiguration.useAutomaticSearch"
-                      defaultMessage="Procedi con la ricerca automatica"
+                {locationAutocompleteValue?.selectedPlace && (
+                  <div className={css.streetNumberField}>
+                    <label className={css.fieldLabel} htmlFor="listing-streetNumber">
+                      <FormattedMessage
+                        id="ListingConfiguration.streetNumber"
+                        defaultMessage="Number"
+                      />
+                    </label>
+                    <input
+                      id="listing-streetNumber"
+                      name="listing-streetNumber"
+                      type="text"
+                      autoComplete="off"
+                      value={manualAddress.streetNumber}
+                      onChange={e => {
+                        const newAddress = { ...manualAddress, streetNumber: e.target.value };
+                        setManualAddress(newAddress);
+                        if (invalidFields.includes('streetNumber') && e.target.value.trim()) {
+                          setInvalidFields(invalidFields.filter(f => f !== 'streetNumber'));
+                        }
+                      }}
+                      className={`${css.input} ${
+                        invalidFields.includes('streetNumber') ? css.inputInvalid : ''
+                      }`}
+                      placeholder="123"
                     />
-                  </button>
-                  <div className={css.twoColumns}>
-                    <div className={css.fieldGroup}>
-                      <label className={css.fieldLabel}>
-                        <FormattedMessage id="ListingConfiguration.street" defaultMessage="Street" />
-                      </label>
-                      <input
-                        type="text"
-                        value={manualAddress.street}
-                        onChange={e => {
-                          const newAddress = { ...manualAddress, street: e.target.value };
-                          setManualAddress(newAddress);
-                          if (invalidFields.includes('street') && e.target.value.trim()) {
-                            setInvalidFields(invalidFields.filter(f => f !== 'street'));
-                          }
-                        }}
-                        className={`${css.input} ${
-                          invalidFields.includes('street') ? css.inputInvalid : ''
-                        }`}
-                        placeholder={intl.formatMessage({
-                          id: 'ListingConfiguration.streetPlaceholder',
-                          defaultMessage: 'Via/Street',
-                        })}
-                      />
-                    </div>
-                    <div className={css.fieldGroup}>
-                      <label className={css.fieldLabel}>
-                        <FormattedMessage
-                          id="ListingConfiguration.streetNumber"
-                          defaultMessage="Number"
-                        />
-                      </label>
-                      <input
-                        type="text"
-                        value={manualAddress.streetNumber}
-                        onChange={e => {
-                          const newAddress = { ...manualAddress, streetNumber: e.target.value };
-                          setManualAddress(newAddress);
-                          if (invalidFields.includes('streetNumber') && e.target.value.trim()) {
-                            setInvalidFields(invalidFields.filter(f => f !== 'streetNumber'));
-                          }
-                        }}
-                        className={`${css.input} ${
-                          invalidFields.includes('streetNumber') ? css.inputInvalid : ''
-                        }`}
-                        placeholder="123"
-                      />
-                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* Full Address Form - shown when place selected or manual entry chosen */}
+              {locationAutocompleteValue?.selectedPlace && (
+                <div className={css.manualAddressForm}>
                   <div className={css.fieldGroup}>
-                    <label className={css.fieldLabel}>
+                    <label className={css.fieldLabel} htmlFor="listing-addressLine2">
                       <FormattedMessage
                         id="ListingConfiguration.apartment"
                         defaultMessage="Apartment (Optional)"
                       />
                     </label>
                     <input
+                      id="listing-addressLine2"
+                      name="listing-addressLine2"
                       type="text"
+                      autoComplete="address-line2"
                       value={manualAddress.addressLine2}
                       onChange={e => {
                         setManualAddress({ ...manualAddress, addressLine2: e.target.value });
@@ -5463,6 +5436,7 @@ export const PreviewListingPageComponent = props => {
                   </div>
                   {/* Cascading Dropdowns: Country -> Province -> City -> Postal Code (2x2 grid) */}
                   <AddressCascadingDropdowns
+                    idPrefix="listing-address"
                     locale={intl.locale}
                     initialCountry={manualAddress.country}
                     initialState={manualAddress.region}
@@ -5513,8 +5487,6 @@ export const PreviewListingPageComponent = props => {
               <SecondaryButton
                 onClick={() => {
                   setShowLocationModal(false);
-                  setShowAddressSearch(false);
-                  setShowFullForm(false);
                 }}
                 disabled={updatingListing}
               >
@@ -5524,18 +5496,16 @@ export const PreviewListingPageComponent = props => {
                 onClick={handleSaveLocation} 
                 inProgress={updatingListing}
                 disabled={
-                  updatingListing || 
-                  // Disable when using autocomplete search (nothing to save yet)
-                  (showAddressSearch && !showFullForm) ||
-                  // Disable when form is shown but required fields are missing
-                  (showFullForm && (
-                    !manualAddress.street?.trim() ||
-                    !manualAddress.streetNumber?.trim() ||
-                    !selectedCountryData?.name ||
-                    !selectedStateData?.name ||
-                    !selectedCityData?.name ||
-                    !manualAddress.postalCode?.trim()
-                  ))
+                  updatingListing ||
+                  // Disable when no address selected
+                  !locationAutocompleteValue?.selectedPlace ||
+                  // Disable when required fields are missing
+                  !manualAddress.street?.trim() ||
+                  !manualAddress.streetNumber?.trim() ||
+                  !selectedCountryData?.name ||
+                  !selectedStateData?.name ||
+                  !selectedCityData?.name ||
+                  !manualAddress.postalCode?.trim()
                 }
               >
                 <FormattedMessage id="PreviewListingPage.saveButton" defaultMessage="Save" />

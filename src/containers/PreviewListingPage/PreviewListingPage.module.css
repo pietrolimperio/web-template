@@ -945,10 +945,6 @@
   font-size: 14px;
 }
 
-.locationIcon {
-  font-size: 18px;
-}
-
 .priceSummary {
   display: flex;
   align-items: baseline;
@@ -979,11 +975,6 @@
   border-radius: 8px;
   font-size: 15px;
   color: var(--matterColor);
-}
-
-.locationIcon {
-  font-size: 18px;
-  line-height: 1;
 }
 
 .badges {
@@ -1961,20 +1952,66 @@
   padding: 24px 0;
 }
 
+.locationModalContent > .fieldLabel:first-child {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .addressSection {
   position: relative;
   margin-bottom: 24px;
+}
+
+/* New address UX: autocomplete + street number on same row when form expanded */
+.addressFields,
+.addressSectionSingle {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.addressFieldFullWidth {
+  flex: 1;
+  min-width: 0;
+}
+
+.streetField {
+  flex: 2;
+  min-width: 0;
+}
+
+.streetNumberField {
+  flex: 1;
+  min-width: 0;
+}
+
+.streetNumberField label,
+.streetField label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+/* Align street and number inputs - same min-height for consistency */
+.streetField .locationAutocompleteInput,
+.streetNumberField .input {
+  min-height: 48px;
+  padding: 12px 1rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.locationAutocompleteInputIconHidden {
+  display: none;
 }
 
 /* Remove wrapper div from LocationAutocompleteInput, keep only the input */
 /* The wrapper div is the first direct child */
 .addressSection > div {
   display: contents;
-}
-
-/* Hide the icon in LocationAutocompleteInput */
-.addressSection .locationIcon {
-  display: none;
 }
 
 /* Location autocomplete input styling */
@@ -2530,7 +2567,9 @@
 }
 
 .cascadingDropdownSelect {
-  padding: 0.75rem;
+  padding: 12px 2.5rem 12px 1rem;
+  min-height: 48px;
+  line-height: 1.5;
   border: 2px solid #e9ecef;
   border-radius: 8px;
   font-size: 0.938rem;
@@ -2538,6 +2577,7 @@
   background-color: white;
   width: 100%;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .cascadingDropdownSelect:focus {

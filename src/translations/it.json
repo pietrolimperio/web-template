@@ -1906,7 +1906,7 @@
   "PreviewListingPage.removeFeature": "Rimuovi caratteristica",
   "PreviewListingPage.addFeature": "Aggiungi",
   "PreviewListingPage.addFeaturePlaceholder": "Inserisci caratteristica...",
-  "PreviewListingPage.editAddress": "Modifica l'indirizzo",
+  "PreviewListingPage.editAddress": "Modifica l'indirizzo di spedizione",
   "PreviewListingPage.noLocationMessage": "Nessuna posizione impostata per questo annuncio",
   "PreviewListingPage.addLocation": "Aggiungi posizione",
   "PreviewListingPage.verificationErrorTitle": "Le modifiche non sono coerenti con la categoria originale",

@@ -277,6 +277,7 @@ const AddressCascadingDropdowns = ({
   selectClassName = '',
   inputClassName = '',
   showLabels = true,
+  idPrefix = 'listing-address',
 }) => {
   const intl = useIntl();
   
@@ -692,15 +693,18 @@ const AddressCascadingDropdowns = ({
         {/* Country Dropdown */}
         <div className={css.fieldGroup}>
           {showLabels && (
-            <label className={`${css.label} ${labelClassName}`}>
+            <label className={`${css.label} ${labelClassName}`} htmlFor={`${idPrefix}-country`}>
               {labels.country}
             </label>
           )}
           <select
+            id={`${idPrefix}-country`}
+            name={`${idPrefix}-country`}
             className={`${css.select} ${selectClassName}`}
             value={selectedCountry?.id || ''}
             onChange={handleCountryChange}
             disabled={disabled || loadingCountries}
+            autoComplete="country-name"
           >
             <option value="">{loadingCountries ? '...' : placeholders.country}</option>
             {countries.map(country => (
@@ -714,15 +718,18 @@ const AddressCascadingDropdowns = ({
         {/* State/Province Dropdown */}
         <div className={css.fieldGroup}>
           {showLabels && (
-            <label className={`${css.label} ${labelClassName}`}>
+            <label className={`${css.label} ${labelClassName}`} htmlFor={`${idPrefix}-state`}>
               {labels.state}
             </label>
           )}
           <select
+            id={`${idPrefix}-state`}
+            name={`${idPrefix}-state`}
             className={`${css.select} ${selectClassName} ${!selectedCountry ? css.selectDisabled : ''}`}
             value={selectedState?.id || ''}
             onChange={handleStateChange}
             disabled={disabled || !selectedCountry || loadingStates}
+            autoComplete="address-level1"
           >
             <option value="">
               {loadingStates ? '...' : placeholders.state}
@@ -757,14 +764,17 @@ const AddressCascadingDropdowns = ({
         {/* City - Dropdown or Manual Input */}
         <div className={css.fieldGroup}>
           {showLabels && (
-            <label className={`${css.label} ${labelClassName}`}>
+            <label className={`${css.label} ${labelClassName}`} htmlFor={showManualCityInput ? `${idPrefix}-city` : `${idPrefix}-city-select`}>
               {labels.city}
             </label>
           )}
           {showManualCityInput ? (
             // Manual text input when no cities are available from the API
             <input
+              id={`${idPrefix}-city`}
+              name={`${idPrefix}-city`}
               type="text"
+              autoComplete="address-level2"
               className={`${css.input} ${selectClassName}`}
               value={selectedCity?.name || ''}
               onChange={handleManualCityChange}
@@ -774,10 +784,13 @@ const AddressCascadingDropdowns = ({
           ) : (
             // Dropdown when cities are available
             <select
+              id={`${idPrefix}-city-select`}
+              name={`${idPrefix}-city`}
               className={`${css.select} ${selectClassName} ${!selectedState ? css.selectDisabled : ''}`}
               value={selectedCity?.id || ''}
               onChange={handleCityChange}
               disabled={disabled || !selectedState || loadingCities}
+              autoComplete="address-level2"
             >
               <option value="">
                 {loadingCities ? '...' : placeholders.city}
@@ -796,12 +809,15 @@ const AddressCascadingDropdowns = ({
         {/* Postal Code */}
         <div className={css.fieldGroup}>
           {showLabels && (
-            <label className={`${css.label} ${labelClassName}`}>
+            <label className={`${css.label} ${labelClassName}`} htmlFor={`${idPrefix}-postalCode`}>
               {labels.postalCode}
             </label>
           )}
           <input
+            id={`${idPrefix}-postalCode`}
+            name={`${idPrefix}-postalCode`}
             type="text"
+            autoComplete="postal-code"
             className={`${css.input} ${inputClassName}`}
             value={postalCode}
             onChange={handlePostalCodeChange}
