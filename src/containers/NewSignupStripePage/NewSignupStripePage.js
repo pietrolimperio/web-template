@@ -1443,6 +1443,17 @@ export const NewSignupStripePageComponent = ({
 
                   const searchCountry = getCountryForLocale(currentLocale);
 
+                  // Reset all fields when switching customer type
+                  const handleCustomerTypeChange = newType => {
+                    if (customerType === newType) return;
+                    setCustomerType(newType);
+                    form.reset({ phonePrefix: getDefaultPhonePrefix(currentLocale) });
+                    setCascadingCountry('');
+                    setCascadingState('');
+                    setCascadingCity('');
+                    setSelectedGeolocation(null);
+                  };
+
                   React.useEffect(() => {
                     const locationData = values.location;
                     if (locationData?.selectedPlace) {
@@ -1478,7 +1489,7 @@ export const NewSignupStripePageComponent = ({
                           className={classNames(css.customerTypeChip, {
                             [css.customerTypeChipActive]: customerType === 'individual',
                           })}
-                          onClick={() => setCustomerType('individual')}
+                          onClick={() => handleCustomerTypeChange('individual')}
                           style={
                             customerType === 'individual'
                               ? {
@@ -1498,7 +1509,7 @@ export const NewSignupStripePageComponent = ({
                           className={classNames(css.customerTypeChip, {
                             [css.customerTypeChipActive]: customerType === 'company',
                           })}
-                          onClick={() => setCustomerType('company')}
+                          onClick={() => handleCustomerTypeChange('company')}
                           style={
                             customerType === 'company'
                               ? {

@@ -671,6 +671,19 @@ export const NewSignupPageComponent = ({
                     }
                   }, [values.location]);
 
+                  // Reset all fields when switching customer type
+                  const handleCustomerTypeChange = newType => {
+                    if (customerType === newType) return;
+                    setCustomerType(newType);
+                    form.reset({ phonePrefix: defaultPhonePrefix });
+                    setCascadingCountry('');
+                    setCascadingState('');
+                    setCascadingCity('');
+                    setSelectedAddressComponents(null);
+                    setSelectedGeolocation(null);
+                    setManualFieldsChanged(false);
+                  };
+
                   // Handler for manual address field changes
                   const handleManualFieldChange = (fieldName, value) => {
                     // Mark that manual fields have been changed (important for geolocation decision)
@@ -720,7 +733,7 @@ export const NewSignupPageComponent = ({
                           className={classNames(css.customerTypeChip, {
                             [css.customerTypeChipActive]: customerType === 'individual',
                           })}
-                          onClick={() => setCustomerType('individual')}
+                          onClick={() => handleCustomerTypeChange('individual')}
                           style={customerType === 'individual' ? {
                             backgroundColor: marketplaceColor,
                             borderColor: marketplaceColor,
@@ -736,7 +749,7 @@ export const NewSignupPageComponent = ({
                           className={classNames(css.customerTypeChip, {
                             [css.customerTypeChipActive]: customerType === 'company',
                           })}
-                          onClick={() => setCustomerType('company')}
+                          onClick={() => handleCustomerTypeChange('company')}
                           style={customerType === 'company' ? {
                             backgroundColor: marketplaceColor,
                             borderColor: marketplaceColor,
