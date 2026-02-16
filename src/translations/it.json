@@ -409,6 +409,7 @@
   "EmailVerificationForm.successText": "Comincia il tuo viaggio con noi!",
   "EmailVerificationForm.successTitle": "Grazie per aver verificato il tuo indirizzo email, {name}.",
   "EmailVerificationForm.verificationFailed": "Impossibile verificare l’indirizzo email.",
+  "EmailVerificationForm.verificationFailedText": "La verifica non è stata completata con successo. Torna all'email e riprova.",
   "EmailVerificationForm.verify": "Verifica il mio indirizzo email",
   "EmailVerificationForm.verifyEmailAddress": "Verifica il tuo indirizzo email",
   "EmailVerificationForm.verifying": "Verifica in corso…",

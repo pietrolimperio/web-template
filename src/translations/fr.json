@@ -403,6 +403,7 @@
   "EmailVerificationForm.successText": "C'est terminé. Passe une bonne journée !",
   "EmailVerificationForm.successTitle": "Merci d'avoir vérifié votre adresse email, {name}.",
   "EmailVerificationForm.verificationFailed": "Impossible de confirmer l'adresse email.",
+  "EmailVerificationForm.verificationFailedText": "La vérification n'a pas été effectuée avec succès. Veuillez retourner à l'email et réessayer.",
   "EmailVerificationForm.verify": "Confirmer mon adresse email",
   "EmailVerificationForm.verifyEmailAddress": "Confirmer votre adresse email",
   "EmailVerificationForm.verifying": "Vérification…",

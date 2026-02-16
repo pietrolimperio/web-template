@@ -414,6 +414,7 @@
   "EmailVerificationForm.successText": "We're all set. Have a great day!",
   "EmailVerificationForm.successTitle": "Thanks for verifying your email address, {name}.",
   "EmailVerificationForm.verificationFailed": "Could not verify the email address.",
+  "EmailVerificationForm.verificationFailedText": "Verification has not been successfully completed. Please go back to the email and try again.",
   "EmailVerificationForm.verify": "Verify my email address",
   "EmailVerificationForm.verifyEmailAddress": "Verify your email address",
   "EmailVerificationForm.verifying": "Verifying…",

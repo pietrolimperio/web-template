@@ -245,7 +245,7 @@ export const LandingPageComponent = props => {
         type = 'info';
       } else if (emailVerification === 'error') {
         title = intl.formatMessage({ id: 'EmailVerificationForm.verificationFailed' });
-        message = '';
+        message = intl.formatMessage({ id: 'EmailVerificationForm.verificationFailedText' });
         type = 'error';
       }
 
