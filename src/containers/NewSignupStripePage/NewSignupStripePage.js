@@ -1615,6 +1615,7 @@ export const NewSignupStripePageComponent = ({
                           isOutsideRange={isBirthDateOutsideRange}
                           theme="light"
                           showYearStepper={true}
+                          showErrorMessage={true}
                           validate={composeValidators(
                             validators.required(
                               intl.formatMessage({ id: 'NewSignupPage.dateOfBirthRequired' })

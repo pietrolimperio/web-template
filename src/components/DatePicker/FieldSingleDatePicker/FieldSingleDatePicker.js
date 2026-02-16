@@ -51,6 +51,10 @@ const FieldSingleDatePickerComponent = props => {
   }
 
   const { onChange: fieldOnChange, type, checked, value, ...restOfInput } = input;
+  const { invalid, error } = meta;
+  const hasError = !!(invalid && error);
+  const fieldMeta = { touched: hasError, error };
+
   const inputProps = {
     id,
     onChange: handleChange(parentOnChange, fieldOnChange),
@@ -81,7 +85,7 @@ const FieldSingleDatePickerComponent = props => {
         </label>
       ) : null}
       <SingleDatePicker {...inputProps} />
-      {showErrorMessage ? <ValidationError className={errorClasses} fieldMeta={meta} /> : null}
+      {showErrorMessage ? <ValidationError className={errorClasses} fieldMeta={fieldMeta} /> : null}
     </div>
   );
 };
