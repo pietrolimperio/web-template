@@ -1443,11 +1443,11 @@ export const NewSignupStripePageComponent = ({
 
                   const searchCountry = getCountryForLocale(currentLocale);
 
-                  // Reset all fields when switching customer type
+                  // Reset all fields and validation state when switching customer type
                   const handleCustomerTypeChange = newType => {
                     if (customerType === newType) return;
                     setCustomerType(newType);
-                    form.reset({ phonePrefix: getDefaultPhonePrefix(currentLocale) });
+                    form.restart({ phonePrefix: getDefaultPhonePrefix(currentLocale) });
                     setCascadingCountry('');
                     setCascadingState('');
                     setCascadingCity('');

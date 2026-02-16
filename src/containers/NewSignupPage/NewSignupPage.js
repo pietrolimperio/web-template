@@ -671,11 +671,11 @@ export const NewSignupPageComponent = ({
                     }
                   }, [values.location]);
 
-                  // Reset all fields when switching customer type
+                  // Reset all fields and validation state when switching customer type
                   const handleCustomerTypeChange = newType => {
                     if (customerType === newType) return;
                     setCustomerType(newType);
-                    form.reset({ phonePrefix: defaultPhonePrefix });
+                    form.restart({ phonePrefix: defaultPhonePrefix });
                     setCascadingCountry('');
                     setCascadingState('');
                     setCascadingCity('');
