@@ -128,6 +128,63 @@
   }
 }
 
+/* Website URL field with fixed https:// prefix */
+.websiteUrlField {
+  margin-bottom: 20px;
+}
+
+.websiteUrlField label {
+  display: block;
+  font-weight: 600;
+  color: var(--colorGrey700);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.websiteUrlInputWrapper {
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  border: 1px solid var(--colorGrey300);
+  transition: all 0.2s ease;
+}
+
+.websiteUrlInputWrapper:focus-within {
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 3px rgba(var(--marketplaceColorRGB, 102, 126, 234), 0.1);
+}
+
+.websiteUrlPrefix {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 15px;
+  border-right: 1px solid var(--colorGrey300);
+  border-radius: 8px 0 0 8px;
+}
+
+.websiteUrlInputRoot {
+  flex: 1;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.websiteUrlInputRoot input {
+  height: 48px;
+  font-size: 15px;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  box-shadow: none;
+}
+
+.websiteUrlInputRoot input:focus {
+  box-shadow: none;
+}
+
+.websiteUrlInputRoot .root {
+  margin-bottom: 0;
+}
+
 /* Phone, address field groups */
 .phoneFields {
   display: flex;

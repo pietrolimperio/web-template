@@ -68,6 +68,24 @@ const dateNotInFuture = message => value => {
 const formatDateOfBirth = v => (v ? { date: new Date(v) } : null);
 const parseDateOfBirth = v => (v?.date ? getISODateString(v.date) : null);
 
+// Format/parse for website URL: form stores full URL (https://...), input shows only domain part
+const WEBSITE_URL_PREFIX = 'https://';
+const formatWebsiteUrl = v => {
+  if (!v || typeof v !== 'string') return '';
+  const trimmed = v.trim();
+  if (trimmed.startsWith('https://')) return trimmed.slice(8);
+  if (trimmed.startsWith('http://')) return trimmed.slice(7);
+  return trimmed;
+};
+const parseWebsiteUrl = v => {
+  if (!v || typeof v !== 'string') return '';
+  const trimmed = v.trim();
+  if (!trimmed) return '';
+  if (trimmed.toLowerCase().startsWith('https://')) return trimmed;
+  if (trimmed.toLowerCase().startsWith('http://')) return `https://${trimmed.slice(7)}`;
+  return `${WEBSITE_URL_PREFIX}${trimmed}`;
+};
+
 // isOutsideRange for birth date: only allow past dates (from 120 years ago to today)
 const BIRTH_DATE_MIN_YEARS_AGO = 120;
 const isBirthDateOutsideRange = day => {
@@ -207,6 +225,16 @@ const COUNTRY_NAME_TO_ISO = {
   belgium: 'BE', belgio: 'BE', belgique: 'BE', belgië: 'BE',
   netherlands: 'NL', 'paesi bassi': 'NL', niederlande: 'NL', holland: 'NL',
   switzerland: 'CH', svizzera: 'CH', suisse: 'CH', schweiz: 'CH',
+};
+
+const resolveCountryToIso = (raw, defaultLocale) => {
+  const s = (raw || '').trim();
+  if (!s) return defaultLocale ? getCountryForLocale(defaultLocale) : null;
+  if (s.length === 2 && s === s.toUpperCase()) return s;
+  const fromMap = COUNTRY_NAME_TO_ISO[s.toLowerCase()];
+  if (fromMap) return fromMap;
+  const byName = SUPPORTED_COUNTRIES.find(x => x.name?.toLowerCase() === s?.toLowerCase());
+  return byName?.code || (defaultLocale ? getCountryForLocale(defaultLocale) : null);
 };
 
 // Map locale to country code
@@ -575,6 +603,10 @@ export const NewSignupStripePageComponent = ({
           customerType: storedCustomerType,
           country,
           timestamp: Date.now(),
+          ...(storedCustomerType === 'company' && {
+            websiteUrl: userPublicData.websiteUrl,
+            companyName: user.attributes?.profile?.firstName || userPublicData.companyName,
+          }),
         };
         sessionStorage.setItem(SIGNUP_DATA_KEY, JSON.stringify(signupData));
         devLog('📝 Created sessionStorage data for returning user:', signupData);
@@ -584,13 +616,23 @@ export const NewSignupStripePageComponent = ({
       const stripePublishableKey = config.stripe?.publishableKey;
       const defaultMCC = config.stripe?.defaultMCC || '5734';
 
-      // Build business profile URL - use test URL for localhost (Stripe doesn't accept localhost)
+      // Build business profile URL for Stripe onboarding
+      // For company: use the company website URL entered during signup (Stripe shows this as business website)
+      // For individual / fallback: use marketplace profile URL (test URL for localhost - Stripe doesn't accept localhost)
       const cleanRootURL = rootURL ? rootURL.replace(/\/$/, '') : '';
       const isLocalhost = cleanRootURL.includes('localhost');
       const profilePath = user.id?.uuid ? `/u/${user.id.uuid}` : '/u/new-user';
-      const businessProfileURL = isLocalhost
+      const marketplaceProfileURL = isLocalhost
         ? `https://test-marketplace.com${profilePath}?mode=storefront`
         : `${cleanRootURL}${profilePath}?mode=storefront`;
+
+      const companyWebsite =
+        storedCustomerType === 'company' && signupData?.websiteUrl?.trim()
+          ? (signupData.websiteUrl.trim().toLowerCase().startsWith('http')
+              ? signupData.websiteUrl.trim()
+              : `https://${signupData.websiteUrl.trim()}`)
+          : null;
+      const businessProfileURL = companyWebsite || marketplaceProfileURL;
 
       devLog('🔧 Stripe Setup Debug:', {
         rootURL,
@@ -598,6 +640,7 @@ export const NewSignupStripePageComponent = ({
         isLocalhost,
         profilePath,
         businessProfileURL,
+        companyWebsite: companyWebsite || '(using marketplace profile)',
         userId: user.id?.uuid,
         country,
         customerType: storedCustomerType,
@@ -1031,6 +1074,7 @@ export const NewSignupStripePageComponent = ({
       country: formCountry,
       location: locationData,
       termsAccepted,
+      websiteUrl,
     } = values;
 
     const fullPhoneNumber =
@@ -1050,19 +1094,8 @@ export const NewSignupStripePageComponent = ({
       addressCountryRaw = place.country || formCountry;
     }
 
-    const toIsoCountry = c => {
-      const s = (c || '').trim();
-      if (!s) return null;
-      if (s.length === 2 && s === s.toUpperCase()) return s;
-      const fromMap = COUNTRY_NAME_TO_ISO[s.toLowerCase()];
-      if (fromMap) return fromMap;
-      const byName = SUPPORTED_COUNTRIES.find(
-        x => x.name?.toLowerCase() === s?.toLowerCase()
-      );
-      return byName?.code || null;
-    };
-
-    const resolvedCountry = toIsoCountry(addressCountryRaw) || getCountryForLocale(currentLocale);
+    const resolvedCountry =
+      resolveCountryToIso(addressCountryRaw, currentLocale) || getCountryForLocale(currentLocale);
 
     const addressForStripe =
       addressLine1 || city || postalCode
@@ -1090,6 +1123,9 @@ export const NewSignupStripePageComponent = ({
       termsAccepted,
       timestamp: Date.now(),
     };
+    if (customerType === 'company') {
+      signupData.websiteUrl = websiteUrl?.trim();
+    }
     sessionStorage.setItem(SIGNUP_DATA_KEY, JSON.stringify(signupData));
 
     setStep(STEP_CREATING_USER);
@@ -1115,6 +1151,9 @@ export const NewSignupStripePageComponent = ({
         locale: currentLocale,
         country: resolvedCountry,
         customerType,
+        ...(customerType === 'company' && {
+          websiteUrl: websiteUrl?.trim(),
+        }),
       },
       privateData: {
         pendingStripeOnboarding: true,
@@ -1395,8 +1434,14 @@ export const NewSignupStripePageComponent = ({
                       !values.state?.trim() ||
                       !values.postalCode?.trim() ||
                       !addressCountryFromForm);
+                  const companyFieldsIncomplete =
+                    customerType === 'company' && !values.websiteUrl?.trim();
                   const submitDisabled =
-                    invalid || submitInProgress || isGeocoding || !!addressFieldsIncomplete;
+                    invalid ||
+                    submitInProgress ||
+                    isGeocoding ||
+                    !!addressFieldsIncomplete ||
+                    !!companyFieldsIncomplete;
 
                   const searchCountry = getCountryForLocale(currentLocale);
 
@@ -1476,20 +1521,50 @@ export const NewSignupStripePageComponent = ({
 
                       {/* Name fields based on customer type - BEFORE email */}
                       {customerType === 'company' ? (
-                        <FieldTextInput
-                          className={css.field}
-                          type="text"
-                          id="companyName"
-                          name="companyName"
-                          autoComplete="organization"
-                          label={intl.formatMessage({ id: 'NewSignupStripePage.companyNameLabel' })}
-                          placeholder={intl.formatMessage({
-                            id: 'NewSignupStripePage.companyNamePlaceholder',
-                          })}
-                          validate={validators.required(
-                            intl.formatMessage({ id: 'NewSignupStripePage.companyNameRequired' })
-                          )}
-                        />
+                        <>
+                          <FieldTextInput
+                            className={css.field}
+                            type="text"
+                            id="companyName"
+                            name="companyName"
+                            autoComplete="organization"
+                            label={intl.formatMessage({ id: 'NewSignupStripePage.companyNameLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupStripePage.companyNamePlaceholder',
+                            })}
+                            validate={validators.required(
+                              intl.formatMessage({ id: 'NewSignupStripePage.companyNameRequired' })
+                            )}
+                          />
+                          <div className={css.websiteUrlField}>
+                            <label htmlFor="websiteUrl">
+                              {intl.formatMessage({ id: 'NewSignupStripePage.websiteUrlLabel' })}
+                            </label>
+                            <div className={css.websiteUrlInputWrapper}>
+                              <span className={css.websiteUrlPrefix}>https://</span>
+                              <FieldTextInput
+                                rootClassName={css.websiteUrlInputRoot}
+                                type="text"
+                                id="websiteUrl"
+                                name="websiteUrl"
+                                autoComplete="url"
+                                placeholder={intl.formatMessage({
+                                  id: 'NewSignupStripePage.websiteUrlPlaceholderNoProtocol',
+                                })}
+                                format={formatWebsiteUrl}
+                                parse={parseWebsiteUrl}
+                                validate={composeValidators(
+                                  validators.required(
+                                    intl.formatMessage({ id: 'NewSignupStripePage.websiteUrlRequired' })
+                                  ),
+                                  validators.validBusinessURL(
+                                    intl.formatMessage({ id: 'NewSignupStripePage.websiteUrlInvalid' })
+                                  )
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </>
                       ) : (
                         <div className={css.fieldsRow}>
                           <FieldTextInput
@@ -1645,7 +1720,10 @@ export const NewSignupStripePageComponent = ({
                             id="location"
                             label={intl.formatMessage({ id: 'NewSignupPage.addressLabel' })}
                             placeholder={intl.formatMessage({
-                              id: 'NewSignupPage.addressPlaceholder',
+                              id:
+                                customerType === 'company'
+                                  ? 'NewSignupPage.addressPlaceholderCompany'
+                                  : 'NewSignupPage.addressPlaceholder',
                             })}
                             format={identity}
                             valueFromForm={values.location}

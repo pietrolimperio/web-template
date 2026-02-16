@@ -951,7 +951,10 @@ export const NewSignupPageComponent = ({
                             id="location"
                             label={intl.formatMessage({ id: 'NewSignupPage.addressLabel' })}
                             placeholder={intl.formatMessage({
-                              id: 'NewSignupPage.addressPlaceholder',
+                              id:
+                                customerType === 'company'
+                                  ? 'NewSignupPage.addressPlaceholderCompany'
+                                  : 'NewSignupPage.addressPlaceholder',
                             })}
                             format={identity}
                             valueFromForm={values.location}
