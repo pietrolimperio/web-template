@@ -101,11 +101,12 @@ export const autocompleteSearchRequired = message => value => {
 };
 
 export const autocompletePlaceSelected = message => value => {
+  // Accept both API selections (with origin) and manual entry (origin can be null)
   const selectedPlaceIsValid =
     value &&
     value.selectedPlace &&
-    value.selectedPlace.address &&
-    value.selectedPlace.origin instanceof LatLng;
+    typeof value.selectedPlace.address === 'string' &&
+    value.selectedPlace.address.trim().length > 0;
   return selectedPlaceIsValid ? VALID : message;
 };
 

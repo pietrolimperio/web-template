@@ -21,7 +21,6 @@ import { isScrollingDisabled } from '../../ducks/ui.duck';
 import { useGuestListingAfterAuth } from '../../util/useGuestListingAfterAuth';
 import {
   autocompleteSearchRequired,
-  autocompletePlaceSelected,
   composeValidators,
 } from '../../util/validators';
 
@@ -280,11 +279,9 @@ export const NewSignupPageComponent = ({
   const config = useConfiguration();
   const intl = useIntl();
   const [mounted, setMounted] = useState(false);
-  const [useManualAddress, setUseManualAddress] = useState(false);
   const [selectedAddressComponents, setSelectedAddressComponents] = useState(null);
   const [selectedGeolocation, setSelectedGeolocation] = useState(null);
   const [manualFieldsChanged, setManualFieldsChanged] = useState(false);
-  const [autocompleteUsed, setAutocompleteUsed] = useState(false); // Track if autocomplete was used
   const [isGeocoding, setIsGeocoding] = useState(false); // Track geocoding in progress
   const [customerType, setCustomerType] = useState('individual'); // 'individual' or 'company' - customer type selection
   const errorRef = useRef(null);
@@ -395,7 +392,7 @@ export const NewSignupPageComponent = ({
     let addressInfo = {};
     let geolocation = null;
 
-    if (useManualAddress || autocompleteUsed) {
+    if (locationData?.selectedPlace) {
       // Manual address entry OR autocomplete with expanded form
       // Combine street and street number for addressLine1 if using new fields
       let fullStreetAddress = addressLine1?.trim() || '';
@@ -414,7 +411,7 @@ export const NewSignupPageComponent = ({
       };
 
       // Include geolocation only if user didn't modify any fields after autocomplete selection
-      if (selectedGeolocation && !manualFieldsChanged && autocompleteUsed) {
+      if (selectedGeolocation && !manualFieldsChanged) {
         geolocation = selectedGeolocation;
       } else if (!geolocation) {
         // If we don't have geolocation, try to geocode the address
@@ -620,7 +617,8 @@ export const NewSignupPageComponent = ({
                   const submitInProgress = authInProgress;
                   
                   // Check if address fields are complete when using manual address
-                  const addressFieldsIncomplete = (useManualAddress || autocompleteUsed) && (
+                  const hasSelectedPlace = !!values.location?.selectedPlace;
+                  const addressFieldsIncomplete = hasSelectedPlace && (
                     !values.street?.trim() ||
                     !values.streetNumber?.trim() ||
                     !values.city?.trim() ||
@@ -631,10 +629,10 @@ export const NewSignupPageComponent = ({
                   
                   const submitDisabled = invalid || submitInProgress || isGeocoding || addressFieldsIncomplete;
 
-                  // Extract and store address components when location is selected
+                  // Extract and store address components when location is selected (overrides on new selection)
                   React.useEffect(() => {
                     const locationData = values.location;
-                    if (locationData && locationData.selectedPlace && !autocompleteUsed) {
+                    if (locationData && locationData.selectedPlace) {
                       const place = locationData.selectedPlace;
 
                       // Combine street name and number
@@ -659,11 +657,9 @@ export const NewSignupPageComponent = ({
                         setSelectedGeolocation(geolocation);
                       }
 
-                      // Automatically show expanded form with prefilled data
-                      setAutocompleteUsed(true);
                       setManualFieldsChanged(false); // Reset modification tracker
 
-                      // Prefill all form fields
+                      // Prefill all form fields (overrides on new selection)
                       form.batch(() => {
                         form.change('street', streetName);
                         form.change('streetNumber', streetNumber);
@@ -673,36 +669,7 @@ export const NewSignupPageComponent = ({
                         form.change('country', components.country);
                       });
                     }
-                  }, [values.location, autocompleteUsed]);
-
-                  // Handler for manual address toggle
-                  const handleManualAddressToggle = () => {
-                    setUseManualAddress(true);
-                    setAutocompleteUsed(false); // Reset autocomplete flag
-                    setManualFieldsChanged(false); // Reset manual fields changed flag
-
-                    // Clear location autocomplete field when switching to manual
-                    form.change('location', null);
-                  };
-
-                  // Handler to go back to autocomplete
-                  const handleBackToAutocomplete = () => {
-                    setUseManualAddress(false);
-                    setAutocompleteUsed(false);
-                    setManualFieldsChanged(false);
-
-                    // Clear location autocomplete field to prevent re-triggering the form expansion
-                    form.change('location', null);
-
-                    // Clear all manual address fields
-                    form.change('street', '');
-                    form.change('streetNumber', '');
-                    form.change('addressLine2', '');
-                    form.change('city', '');
-                    form.change('state', '');
-                    form.change('postalCode', '');
-                    form.change('country', '');
-                  };
+                  }, [values.location]);
 
                   // Handler for manual address field changes
                   const handleManualFieldChange = (fieldName, value) => {
@@ -935,15 +902,26 @@ export const NewSignupPageComponent = ({
                         </>
                       )}
 
-                      {/* Address fields */}
-                      {!useManualAddress && !autocompleteUsed ? (
-                        <>
-                          {/* Initial autocomplete field */}
+                      {/* Address - single FieldLocationAutocompleteInput keeps focus when switching views */}
+                      <div
+                        className={classNames(
+                          values.location?.selectedPlace ? css.addressFields : css.addressSectionSingle
+                        )}
+                      >
+                        <div
+                          className={classNames(
+                            values.location?.selectedPlace ? css.streetField : css.addressFieldFullWidth
+                          )}
+                        >
                           <FieldLocationAutocompleteInput
                             rootClassName={css.locationFieldRoot}
                             className={css.field}
                             inputClassName={css.locationAutocompleteInput}
-                            iconClassName={css.locationAutocompleteInputIcon}
+                            iconClassName={
+                              values.location?.selectedPlace
+                                ? css.locationAutocompleteInputIconHidden
+                                : css.locationAutocompleteInputIcon
+                            }
                             predictionsClassName={css.predictionsRoot}
                             validClassName={css.validLocation}
                             CustomIcon={IconLocation}
@@ -960,73 +938,36 @@ export const NewSignupPageComponent = ({
                             valueFromForm={values.location}
                             countryLimit={searchCountry}
                             useDefaultPredictions={false}
-                            validate={composeValidators(
-                              autocompleteSearchRequired(
-                                intl.formatMessage({ id: 'NewSignupPage.addressRequired' })
-                              ),
-                              autocompletePlaceSelected(
-                                intl.formatMessage({ id: 'NewSignupPage.addressNotRecognized' })
-                              )
+                            addManualEntryOption
+                            manualEntryLabelId="LocationAutocompleteInput.useTypedAddress"
+                            validate={autocompleteSearchRequired(
+                              intl.formatMessage({ id: 'NewSignupPage.addressRequired' })
                             )}
                           />
-                        </>
-                      ) : (
+                        </div>
+                        {values.location?.selectedPlace && (
+                          <FieldTextInput
+                            className={css.streetNumberField}
+                            type="text"
+                            id="streetNumber"
+                            name="streetNumber"
+                            autoComplete="off"
+                            label={intl.formatMessage({ id: 'NewSignupPage.streetNumberLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.streetNumberPlaceholder',
+                            })}
+                            onChange={e =>
+                              handleManualFieldChange('streetNumber', e.target.value)
+                            }
+                            validate={validators.required(
+                              intl.formatMessage({ id: 'NewSignupPage.streetNumberRequired' })
+                            )}
+                          />
+                        )}
+                      </div>
+
+                      {values.location?.selectedPlace && (
                         <>
-                          {/* Chip card to go back to autocomplete */}
-                          <button
-                            type="button"
-                            className={css.chipCard}
-                            onClick={handleBackToAutocomplete}
-                            style={{
-                              backgroundColor: 'white',
-                              borderColor: marketplaceColor,
-                              color: marketplaceColor,
-                              marginBottom: '20px',
-                            }}
-                          >
-                            <FormattedMessage
-                              id="NewSignupPage.backToAutocomplete"
-                              defaultMessage="Procedi con la ricerca automatica dell'indirizzo"
-                            />
-                          </button>
-
-                          {/* Expanded form - shown after autocomplete selection OR manual toggle */}
-                          {/* Street name and number */}
-                          <div className={css.addressFields}>
-                            <FieldTextInput
-                              className={css.streetField}
-                              type="text"
-                              id="street"
-                              name="street"
-                              autoComplete="address-line1"
-                              label={intl.formatMessage({ id: 'NewSignupPage.streetLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.streetPlaceholder',
-                              })}
-                              onChange={e => handleManualFieldChange('street', e.target.value)}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.streetRequired' })
-                              )}
-                            />
-
-                            <FieldTextInput
-                              className={css.streetNumberField}
-                              type="text"
-                              id="streetNumber"
-                              name="streetNumber"
-                              autoComplete="off"
-                              label={intl.formatMessage({ id: 'NewSignupPage.streetNumberLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.streetNumberPlaceholder',
-                              })}
-                              onChange={e =>
-                                handleManualFieldChange('streetNumber', e.target.value)
-                              }
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.streetNumberRequired' })
-                              )}
-                            />
-                          </div>
 
                           {/* Address line 2 (optional) */}
                           <FieldTextInput
@@ -1078,26 +1019,6 @@ export const NewSignupPageComponent = ({
                             }}
                           />
                         </>
-                      )}
-
-                      {/* Chip card to switch to manual address - only show when using autocomplete */}
-                      {!useManualAddress && !autocompleteUsed && (
-                        <button
-                          type="button"
-                          className={css.chipCard}
-                          onClick={handleManualAddressToggle}
-                          style={{
-                            backgroundColor: 'white',
-                            borderColor: marketplaceColor,
-                            color: marketplaceColor,
-                            marginBottom: '20px',
-                          }}
-                        >
-                          <FormattedMessage
-                            id="NewSignupPage.useManualAddress"
-                            defaultMessage="Non trovi l'indirizzo? Procedi con l'inserimento manualmente"
-                          />
-                        </button>
                       )}
 
                       {/* Tax ID / VAT Number Field */}

@@ -16,6 +16,7 @@ import css from './LocationAutocompleteInput.module.css';
 
 const DEBOUNCE_WAIT_TIME = 300;
 const DEBOUNCE_WAIT_TIME_FOR_SHORT_QUERIES = 1000;
+const MANUAL_ENTRY_ID = 'manual-entry';
 const KEY_CODE_ARROW_UP = 38;
 const KEY_CODE_ARROW_DOWN = 40;
 const KEY_CODE_ENTER = 13;
@@ -59,7 +60,11 @@ const LocationPredictionsList = props => {
 
   const item = (prediction, index) => {
     const isHighlighted = index === highlightedIndex;
-    const predictionId = geocoder.getPredictionId(prediction);
+    const isManualEntry = prediction.id === MANUAL_ENTRY_ID;
+    const predictionId = isManualEntry ? MANUAL_ENTRY_ID : geocoder.getPredictionId(prediction);
+    const displayText = isManualEntry
+      ? (prediction.manualAddressLabel || geocoder.getPredictionAddress(prediction))
+      : geocoder.getPredictionAddress(prediction);
 
     return (
       <li
@@ -95,7 +100,7 @@ const LocationPredictionsList = props => {
             <FormattedMessage id="LocationAutocompleteInput.currentLocation" />
           </span>
         ) : (
-          geocoder.getPredictionAddress(prediction)
+          displayText
         )}
       </li>
     );
@@ -185,7 +190,7 @@ class LocationAutocompleteInputImplementation extends Component {
 
   currentPredictions() {
     const { search, predictions: fetchedPredictions } = currentValue(this.props);
-    const { useDefaultPredictions = true, config } = this.props;
+    const { useDefaultPredictions = true, config, addManualEntryOption } = this.props;
     const hasFetchedPredictions = fetchedPredictions && fetchedPredictions.length > 0;
     const showDefaultPredictions = !search && !hasFetchedPredictions && useDefaultPredictions;
     const geocoderVariant = getGeocoderVariant(config.maps.mapProvider);
@@ -199,7 +204,33 @@ class LocationAutocompleteInputImplementation extends Component {
       : []
     ).concat(config.maps.search.defaults);
 
-    return showDefaultPredictions ? defaultPredictions : fetchedPredictions;
+    // Filter out any previous manual entry from fetched predictions to avoid accumulation
+    const rawBase = showDefaultPredictions ? defaultPredictions : fetchedPredictions || [];
+    const basePredictions = rawBase.filter(p => p.id !== MANUAL_ENTRY_ID);
+
+    // When addManualEntryOption is true, append typed-as-is option after API suggestions (no prefix)
+    if (addManualEntryOption && search && search.trim().length > 0) {
+      const trimmedSearch = search.trim();
+      const manualPlace = {
+        address: trimmedSearch,
+        street: trimmedSearch,
+        streetNumber: '',
+        postalCode: '',
+        city: '',
+        state: '',
+        country: '',
+        origin: null,
+        bounds: null,
+      };
+      const manualPrediction = {
+        id: MANUAL_ENTRY_ID,
+        predictionPlace: manualPlace,
+        manualAddressLabel: trimmedSearch,
+      };
+      return [...basePredictions, manualPrediction];
+    }
+
+    return basePredictions;
   }
 
   // Interpret input key event
@@ -294,6 +325,17 @@ class LocationAutocompleteInputImplementation extends Component {
   // Select the prediction in the given item. This will fetch/read the
   // place details and set it as the selected place.
   selectPrediction(prediction) {
+    // Manual entry: use typed text as street, no API call
+    if (prediction.id === MANUAL_ENTRY_ID && prediction.predictionPlace) {
+      this.props.input.onChange({
+        search: prediction.predictionPlace.address,
+        predictions: [],
+        selectedPlace: prediction.predictionPlace,
+      });
+      this.finalizeSelection();
+      return;
+    }
+
     const currentLocationBoundsDistance = this.props.config.maps?.search
       ?.currentLocationBoundsDistance;
     this.props.input.onChange({

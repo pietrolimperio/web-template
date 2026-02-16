@@ -129,10 +129,16 @@
 /* Name, phone, and address field groups */
 .nameFields,
 .phoneFields,
-.addressFields {
+.addressFields,
+.addressSectionSingle {
   display: flex;
   gap: 16px;
   margin-bottom: 20px;
+}
+
+.addressFieldFullWidth {
+  flex: 1;
+  min-width: 0;
 }
 
 .phoneFields {
@@ -396,6 +402,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.locationAutocompleteInputIconHidden {
+  display: none;
 }
 
 .predictionsRoot {

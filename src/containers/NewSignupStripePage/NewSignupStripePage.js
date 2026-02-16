@@ -34,7 +34,6 @@ import devLog from '../../util/devLog';
 import {
   composeValidators,
   autocompleteSearchRequired,
-  autocompletePlaceSelected,
 } from '../../util/validators';
 import { getISODateString } from '../../components/DatePicker/DatePickers/DatePicker.helpers';
 
@@ -311,10 +310,7 @@ export const NewSignupStripePageComponent = ({
   const [signupEmail, setSignupEmail] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [pendingStripeSetup, setPendingStripeSetup] = useState(false);
-  const [useManualAddress, setUseManualAddress] = useState(false);
   const [selectedGeolocation, setSelectedGeolocation] = useState(null);
-  const [manualFieldsChanged, setManualFieldsChanged] = useState(false);
-  const [autocompleteUsed, setAutocompleteUsed] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [cascadingCountry, setCascadingCountry] = useState('');
   const [cascadingState, setCascadingState] = useState('');
@@ -1082,7 +1078,8 @@ export const NewSignupStripePageComponent = ({
 
     let addressLine1 = '';
     let addressCountryRaw = formCountry;
-    if (useManualAddress || autocompleteUsed) {
+    const hasSelectedPlace = locationData?.selectedPlace;
+    if (hasSelectedPlace) {
       const streetParts = [street?.trim(), streetNumber?.trim()].filter(Boolean);
       addressLine1 = streetParts.join(' ');
       addressCountryRaw = formCountry;
@@ -1426,8 +1423,9 @@ export const NewSignupStripePageComponent = ({
                   const addressCountryFromForm =
                     values.country?.trim() ||
                     (values.location?.selectedPlace && values.location.selectedPlace.country);
+                  const hasSelectedPlace = !!values.location?.selectedPlace;
                   const addressFieldsIncomplete =
-                    (useManualAddress || autocompleteUsed) &&
+                    hasSelectedPlace &&
                     (!values.street?.trim() ||
                       !values.streetNumber?.trim() ||
                       !values.city?.trim() ||
@@ -1447,12 +1445,10 @@ export const NewSignupStripePageComponent = ({
 
                   React.useEffect(() => {
                     const locationData = values.location;
-                    if (locationData?.selectedPlace && !autocompleteUsed) {
+                    if (locationData?.selectedPlace) {
                       const place = locationData.selectedPlace;
                       const streetName = place.street || '';
                       const streetNum = place.streetNumber || '';
-                      setAutocompleteUsed(true);
-                      setManualFieldsChanged(false);
                       form.batch(() => {
                         form.change('street', streetName);
                         form.change('streetNumber', streetNum);
@@ -1467,7 +1463,7 @@ export const NewSignupStripePageComponent = ({
                         );
                       }
                     }
-                  }, [values.location, autocompleteUsed]);
+                  }, [values.location]);
 
                   return (
                     <Form className={css.form} onSubmit={handleSubmit}>
@@ -1705,14 +1701,26 @@ export const NewSignupStripePageComponent = ({
                         />
                       )}
 
-                      {/* Address */}
-                      {!useManualAddress && !autocompleteUsed ? (
-                        <>
+                      {/* Address - single FieldLocationAutocompleteInput keeps focus when switching views */}
+                      <div
+                        className={classNames(
+                          values.location?.selectedPlace ? css.addressFields : css.addressSectionSingle
+                        )}
+                      >
+                        <div
+                          className={classNames(
+                            values.location?.selectedPlace ? css.streetField : css.addressFieldFullWidth
+                          )}
+                        >
                           <FieldLocationAutocompleteInput
                             rootClassName={css.locationFieldRoot}
                             className={css.field}
                             inputClassName={css.locationAutocompleteInput}
-                            iconClassName={css.locationAutocompleteInputIcon}
+                            iconClassName={
+                              values.location?.selectedPlace
+                                ? css.locationAutocompleteInputIconHidden
+                                : css.locationAutocompleteInputIcon
+                            }
                             predictionsClassName={css.predictionsRoot}
                             validClassName={css.validLocation}
                             CustomIcon={IconLocation}
@@ -1729,80 +1737,38 @@ export const NewSignupStripePageComponent = ({
                             valueFromForm={values.location}
                             countryLimit={searchCountry}
                             useDefaultPredictions={false}
+                            addManualEntryOption
+                            manualEntryLabelId="LocationAutocompleteInput.useTypedAddress"
+                            validate={autocompleteSearchRequired(
+                              intl.formatMessage({ id: 'NewSignupPage.addressRequired' })
+                            )}
+                          />
+                        </div>
+                        {values.location?.selectedPlace && (
+                          <FieldTextInput
+                            className={css.streetNumberField}
+                            type="text"
+                            id="streetNumber"
+                            name="streetNumber"
+                            autoComplete="off"
+                            label={intl.formatMessage({ id: 'NewSignupPage.streetNumberLabel' })}
+                            placeholder={intl.formatMessage({
+                              id: 'NewSignupPage.streetNumberPlaceholder',
+                            })}
                             validate={composeValidators(
-                              autocompleteSearchRequired(
-                                intl.formatMessage({ id: 'NewSignupPage.addressRequired' })
+                              validators.required(
+                                intl.formatMessage({ id: 'NewSignupPage.streetNumberRequired' })
                               ),
-                              autocompletePlaceSelected(
-                                intl.formatMessage({ id: 'NewSignupPage.addressNotRecognized' })
+                              streetNumberValid(
+                                intl.formatMessage({ id: 'NewSignupPage.streetNumberInvalid' })
                               )
                             )}
                           />
-                        </>
-                      ) : (
+                        )}
+                      </div>
+
+                      {values.location?.selectedPlace && (
                         <>
-                          <button
-                            type="button"
-                            className={css.chipCard}
-                            onClick={() => {
-                              setUseManualAddress(false);
-                              setAutocompleteUsed(false);
-                              setManualFieldsChanged(false);
-                              form.change('location', null);
-                              form.change('street', '');
-                              form.change('streetNumber', '');
-                              form.change('addressLine2', '');
-                              form.change('city', '');
-                              form.change('state', '');
-                              form.change('postalCode', '');
-                            }}
-                            style={{
-                              backgroundColor: 'white',
-                              borderColor: marketplaceColor,
-                              color: marketplaceColor,
-                              marginBottom: '20px',
-                            }}
-                          >
-                            <FormattedMessage
-                              id="NewSignupPage.backToAutocomplete"
-                              defaultMessage="Usa la ricerca indirizzo"
-                            />
-                          </button>
-                          <div className={css.addressFields}>
-                            <FieldTextInput
-                              className={css.streetField}
-                              type="text"
-                              id="street"
-                              name="street"
-                              autoComplete="address-line1"
-                              label={intl.formatMessage({ id: 'NewSignupPage.streetLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.streetPlaceholder',
-                              })}
-                              validate={validators.required(
-                                intl.formatMessage({ id: 'NewSignupPage.streetRequired' })
-                              )}
-                            />
-                            <FieldTextInput
-                              className={css.streetNumberField}
-                              type="text"
-                              id="streetNumber"
-                              name="streetNumber"
-                              autoComplete="off"
-                              label={intl.formatMessage({ id: 'NewSignupPage.streetNumberLabel' })}
-                              placeholder={intl.formatMessage({
-                                id: 'NewSignupPage.streetNumberPlaceholder',
-                              })}
-                              validate={composeValidators(
-                                validators.required(
-                                  intl.formatMessage({ id: 'NewSignupPage.streetNumberRequired' })
-                                ),
-                                streetNumberValid(
-                                  intl.formatMessage({ id: 'NewSignupPage.streetNumberInvalid' })
-                                )
-                              )}
-                            />
-                          </div>
                           <FieldTextInput
                             className={css.field}
                             type="text"
@@ -1849,29 +1815,6 @@ export const NewSignupStripePageComponent = ({
                             }}
                           />
                         </>
-                      )}
-
-                      {!useManualAddress && !autocompleteUsed && (
-                        <button
-                          type="button"
-                          className={css.chipCard}
-                          onClick={() => {
-                            setUseManualAddress(true);
-                            setAutocompleteUsed(false);
-                            form.change('location', null);
-                          }}
-                          style={{
-                            backgroundColor: 'white',
-                            borderColor: marketplaceColor,
-                            color: marketplaceColor,
-                            marginBottom: '20px',
-                          }}
-                        >
-                          <FormattedMessage
-                            id="NewSignupPage.useManualAddress"
-                            defaultMessage="Inserisci indirizzo manualmente"
-                          />
-                        </button>
                       )}
 
                       {/* Info box about Stripe */}
