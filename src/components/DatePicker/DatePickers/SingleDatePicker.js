@@ -125,10 +125,14 @@ export const SingleDatePicker = props => {
     }
   };
   const handleOnKeyDownOnInput = e => {
-    // Gather all escape presses to close menu
     if (e.key === 'Space' || e.key === 'Enter') {
       e.preventDefault();
       toggleOpen();
+    }
+    if ((e.key === 'Backspace' || e.key === 'Delete') && dateData.formatted) {
+      e.preventDefault();
+      setDateData({ date: null, formatted: '' });
+      if (onChange) onChange(null);
     }
   };
 
