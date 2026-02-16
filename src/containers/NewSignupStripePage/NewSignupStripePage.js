@@ -1695,6 +1695,7 @@ export const NewSignupStripePageComponent = ({
                           format={formatDateOfBirth}
                           parse={parseDateOfBirth}
                           isOutsideRange={isBirthDateOutsideRange}
+                          startDateWhenEmpty="1995-06-01"
                           theme="light"
                           showYearStepper={true}
                           showErrorMessage={true}

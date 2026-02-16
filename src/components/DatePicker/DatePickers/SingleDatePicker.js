@@ -48,6 +48,7 @@ export const SingleDatePicker = props => {
     onChange,
     value,
     readOnly,
+    startDateWhenEmpty,
     ...rest
   } = props;
 
@@ -72,6 +73,8 @@ export const SingleDatePicker = props => {
   const startDateMaybe =
     dateData.date instanceof Date && !isNaN(dateData.date)
       ? { startDate: getISODateString(dateData.date) }
+      : startDateWhenEmpty
+      ? { startDate: startDateWhenEmpty }
       : {};
 
   const handleChange = value => {
