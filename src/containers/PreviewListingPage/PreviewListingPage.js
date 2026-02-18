@@ -1538,16 +1538,18 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  // Helper to get visible images (filter out hidden ones)
+  // Helper to get visible images (filter out hidden ones and thumbnail-only image)
+  const thumbnailImageId = currentListing?.attributes?.publicData?.thumbnailImageId;
   const getVisibleImages = useCallback((images) => {
     if (!images || !Array.isArray(images)) return [];
     return images.filter(img => {
       const imgId = img.imageId || img.id;
       const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
-      const isHidden = hiddenImageIds.has(imgUuid);
-      return !isHidden;
+      if (hiddenImageIds.has(imgUuid)) return false;
+      if (thumbnailImageId && imgUuid === thumbnailImageId) return false;
+      return true;
     });
-  }, [hiddenImageIds]);
+  }, [hiddenImageIds, thumbnailImageId]);
 
   // Helper to get all images including hidden ones (for restoration)
   const getAllImages = () => {
