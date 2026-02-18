@@ -629,6 +629,7 @@
   "ProductPage.closedListing": "This listing is closed",
   "ProductPage.listingCreated": "Listing created on {date}",
   "ProductPage.description": "Description",
+  "ProductPage.noImagePlaceholder": "No image available",
   "ProductPage.details": "Details",
   "ProductPage.discountForRental": "Discount for all the duration of your rental",
   "ProductPage.fromDays": "from {days} days",

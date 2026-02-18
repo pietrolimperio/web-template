@@ -1181,90 +1181,102 @@ export const ProductPageComponent = props => {
           <div className={css.mainContent}>
             {/* Left Column - Images */}
             <div className={css.imagesColumn}>
-              {images.length > 0 && (
-                <div className={css.imagesSection}>
-                  {/* Main Image with navigation arrows */}
-                  <div className={css.mainImageWrapper}>
-                    {/* Previous Arrow */}
-                    {images.length > 1 && (
-                      <button
-                        type="button"
-                        className={classNames(css.imageNavButton, css.imageNavPrev)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
-                        }}
-                      >
-                        <IconArrowHead direction="left" size="big" />
-                      </button>
-                    )}
-                    
-                    {mainImageUrl && (
-                      <img
-                        src={mainImageUrl}
-                        alt={`${title} - Image ${selectedImageIndex + 1}`}
-                        className={css.mainImage}
-                        onClick={() => setImageModalOpen(true)}
-                        style={{ cursor: 'zoom-in' }}
-                      />
-                    )}
-                    
-                    {/* Next Arrow */}
-                    {images.length > 1 && (
-                      <button
-                        type="button"
-                        className={classNames(css.imageNavButton, css.imageNavNext)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
-                        }}
-                      >
-                        <IconArrowHead direction="right" size="big" />
-                      </button>
-                    )}
-                    
-                    {/* Image counter */}
-                    {images.length > 1 && (
-                      <div className={css.imageCounter}>
-                        {selectedImageIndex + 1} / {images.length}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Thumbnails */}
-                  {images.length > 1 && (
-                    <div className={css.thumbnailsContainer}>
-                      <div className={css.thumbnailsScroll}>
-                        {images.map((image, index) => {
-                          const variants = image.attributes?.variants || {};
-                          const imageUrl =
-                            variants['scaled-small']?.url ||
-                            variants['scaled-medium']?.url ||
-                            variants['listing-card-2x']?.url ||
-                            variants['listing-card']?.url;
-
-                          return (
-                            <button
-                              key={image.id?.uuid || index}
-                              type="button"
-                              className={classNames(css.thumbnail, {
-                                [css.thumbnailActive]: index === selectedImageIndex,
-                              })}
-                              onClick={() => setSelectedImageIndex(index)}
-                            >
-                              <img
-                                src={imageUrl}
-                                alt={`Thumbnail ${index + 1}`}
-                                className={css.thumbnailImage}
-                              />
-                            </button>
-                          );
-                        })}
-                      </div>
+              <div className={css.imagesSection}>
+                {images.length > 0 ? (
+                  <>
+                    {/* Main Image with navigation arrows */}
+                    <div className={css.mainImageWrapper}>
+                      {/* Previous Arrow */}
+                      {images.length > 1 && (
+                        <button
+                          type="button"
+                          className={classNames(css.imageNavButton, css.imageNavPrev)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
+                          }}
+                        >
+                          <IconArrowHead direction="left" size="big" />
+                        </button>
+                      )}
+                      
+                      {mainImageUrl && (
+                        <img
+                          src={mainImageUrl}
+                          alt={`${title} - Image ${selectedImageIndex + 1}`}
+                          className={css.mainImage}
+                          onClick={() => setImageModalOpen(true)}
+                          style={{ cursor: 'zoom-in' }}
+                        />
+                      )}
+                      
+                      {/* Next Arrow */}
+                      {images.length > 1 && (
+                        <button
+                          type="button"
+                          className={classNames(css.imageNavButton, css.imageNavNext)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
+                          }}
+                        >
+                          <IconArrowHead direction="right" size="big" />
+                        </button>
+                      )}
+                      
+                      {/* Image counter */}
+                      {images.length > 1 && (
+                        <div className={css.imageCounter}>
+                          {selectedImageIndex + 1} / {images.length}
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {/* Breadcrumb (between images and description) */}
+                    {/* Thumbnails */}
+                    {images.length > 1 && (
+                      <div className={css.thumbnailsContainer}>
+                        <div className={css.thumbnailsScroll}>
+                          {images.map((image, index) => {
+                            const variants = image.attributes?.variants || {};
+                            const imageUrl =
+                              variants['scaled-small']?.url ||
+                              variants['scaled-medium']?.url ||
+                              variants['listing-card-2x']?.url ||
+                              variants['listing-card']?.url;
+
+                            return (
+                              <button
+                                key={image.id?.uuid || index}
+                                type="button"
+                                className={classNames(css.thumbnail, {
+                                  [css.thumbnailActive]: index === selectedImageIndex,
+                                })}
+                                onClick={() => setSelectedImageIndex(index)}
+                              >
+                                <img
+                                  src={imageUrl}
+                                  alt={`Thumbnail ${index + 1}`}
+                                  className={css.thumbnailImage}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={css.mainImageWrapper}>
+                    <div className={css.imagePlaceholder}>
+                      <FormattedMessage
+                        id="ProductPage.noImagePlaceholder"
+                        defaultMessage="Nessuna immagine disponibile"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Breadcrumb (between images and description) */}
                   {publicData?.category && (
                     <nav
                       className={css.breadcrumb}
@@ -1451,7 +1463,6 @@ export const ProductPageComponent = props => {
                   {/* Reviews */}
                   <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
                 </div>
-              )}
             </div>
 
             {/* Right Column - Title, Price, Author, Booking Form (Desktop) */}
