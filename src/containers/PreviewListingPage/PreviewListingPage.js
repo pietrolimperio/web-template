@@ -1536,16 +1536,18 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  // Helper to get visible images (filter out hidden ones)
+  // Helper to get visible images (filter out hidden ones and thumbnail used only for search/cards)
   const getVisibleImages = useCallback((images) => {
     if (!images || !Array.isArray(images)) return [];
+    const thumbnailImageId = currentListing?.attributes?.publicData?.thumbnailImageId;
     return images.filter(img => {
       const imgId = img.imageId || img.id;
       const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
       const isHidden = hiddenImageIds.has(imgUuid);
-      return !isHidden;
+      const isThumbnailOnly = thumbnailImageId && imgUuid === thumbnailImageId;
+      return !isHidden && !isThumbnailOnly;
     });
-  }, [hiddenImageIds]);
+  }, [hiddenImageIds, currentListing?.attributes?.publicData?.thumbnailImageId]);
 
   // Helper to get all images including hidden ones (for restoration)
   const getAllImages = () => {
@@ -1954,7 +1956,7 @@ export const PreviewListingPageComponent = props => {
     // If payout details are not required OR it's an inquiry process, publish directly
     if (!isPayoutDetailsRequired || isInquiryProcess) {
       setIsPublishing(true);
-      onPublishListingDraft(listingId)
+      onPublishListingDraft(listingId, config)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -1976,7 +1978,7 @@ export const PreviewListingPageComponent = props => {
     if (stripeAccountComplete) {
       // Account exists and is complete, publish
       setIsPublishing(true);
-      onPublishListingDraft(listingId)
+      onPublishListingDraft(listingId, config)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -3232,8 +3234,8 @@ export const PreviewListingPageComponent = props => {
     setNotificationMessage(null);
   };
 
-  // Show loading page while checking Stripe status or publishing
-  if (isCheckingStripeStatus || isPublishing) {
+  // Show loading page while checking Stripe status only
+  if (isCheckingStripeStatus) {
     return (
       <LoadingPage
         topbar={<TopbarContainer />}
@@ -3245,6 +3247,9 @@ export const PreviewListingPageComponent = props => {
 
   return (
     <Page title={title} scrollingDisabled={scrollingDisabled}>
+      {isPublishing && (
+        <LoadingOverlay titleId="PreviewListingPage.publishingButton" />
+      )}
       <NotificationBanner
         title={notificationTitle}
         message={notificationMessage}
@@ -5731,7 +5736,7 @@ const mapDispatchToProps = dispatch => ({
     dispatch(requestUpdateListing(tab, data, config)),
   onManageDisableScrolling: (componentId, disableScrolling) =>
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
-  onPublishListingDraft: listingId => dispatch(requestPublishListingDraft(listingId)),
+  onPublishListingDraft: (listingId, config) => dispatch(requestPublishListingDraft(listingId, config)),
   onDeleteDraft: listingId => dispatch(requestDeleteDraft(listingId)),
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),

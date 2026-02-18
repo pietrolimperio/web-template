@@ -385,6 +385,23 @@ class ProductAPI {
   }
 
   /**
+   * Optimize image for use as thumbnail (light background, improved visibility, contrast).
+   * POST /optimize-image with multipart/form-data.
+   *
+   * @param {File|Blob} image - Product image file
+   * @param {string} category - Listing category (e.g. "Construction Equipment & Tools", "Electronics", "Home")
+   * @param {string} [model] - gemini-2.5-flash-image (default) or gemini-3-pro-image-preview
+   * @returns {Promise<{ data: string, mimeType: string }>} Base64-encoded image and mimeType
+   */
+  async optimizeImage(image, category, model = 'gemini-2.5-flash-image') {
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('category', category || 'Other');
+    formData.append('model', model);
+    return await this.call('optimize-image', formData);
+  }
+
+  /**
    * Validate image file
    * Note: Sharetribe only accepts PNG and JPEG formats
    * @private
@@ -402,6 +419,24 @@ class ProductAPI {
  * @param {Object} imageEntity - Image entity with variants
  * @returns {Promise<File>} File object
  */
+/**
+ * Convert base64 data to File for Sharetribe upload
+ * @param {string} base64Data - Base64-encoded image string
+ * @param {string} mimeType - e.g. "image/png"
+ * @returns {File}
+ */
+export const base64ToFile = (base64Data, mimeType = 'image/png') => {
+  const byteString = atob(base64Data);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  const blob = new Blob([ab], { type: mimeType });
+  const ext = mimeType.split('/')[1] || 'png';
+  return new File([blob], `thumbnail-${Date.now()}.${ext}`, { type: mimeType });
+};
+
 export const imageEntityToFile = async (imageEntity) => {
   if (!imageEntity || !imageEntity.attributes || !imageEntity.attributes.variants) {
     throw new Error('Invalid image entity');

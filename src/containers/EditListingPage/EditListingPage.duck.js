@@ -17,13 +17,14 @@ import { parse } from '../../util/urlHelpers';
 import { isUserAuthorized } from '../../util/userHelpers';
 import { isBookingProcessAlias } from '../../transactions/transaction';
 
-import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
+import { addMarketplaceEntities, getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 import {
   createStripeAccount,
   updateStripeAccount,
   fetchStripeAccount,
 } from '../../ducks/stripeConnectAccount.duck';
 import { fetchCurrentUser } from '../../ducks/user.duck';
+import productApiInstance, { imageEntityToFile, base64ToFile } from '../../util/productApi';
 
 const { UUID } = sdkTypes;
 
@@ -723,22 +724,129 @@ export function requestUpdateListing(tab, data, config) {
   };
 }
 
-export const requestPublishListingDraft = listingId => (dispatch, getState, sdk) => {
+/**
+ * Check if thumbnail optimization is enabled.
+ * Default: production only (saves API costs in local dev).
+ * Override: set REACT_APP_OPTIMIZE_THUMBNAIL_ENABLED=true in .env to test locally.
+ */
+const isOptimizeThumbnailEnabled = () => {
+  const envVal = process.env.REACT_APP_OPTIMIZE_THUMBNAIL_ENABLED;
+  if (envVal != null && envVal !== '') {
+    return envVal === 'true' || envVal === '1';
+  }
+  return process.env.NODE_ENV === 'production';
+};
+
+/**
+ * Optimize thumbnail in background (async, non-blocking). Calls optimize-image API, uploads to listing,
+ * puts thumbnail as first image for search/category cards. Skips if no images/category or API unavailable.
+ * Does NOT block publish - runs after listing is already published.
+ */
+async function prepareThumbnailInBackground(listingId, listing, config, dispatch, sdk) {
+  if (!isOptimizeThumbnailEnabled()) {
+    return;
+  }
+  if (!listing?.images?.length || !listing?.attributes?.publicData?.category) {
+    return;
+  }
+
+  const category = listing.attributes.publicData.category;
+  const firstImage = listing.images[0];
+
+  let imageFile;
+  try {
+    imageFile = await imageEntityToFile(firstImage);
+  } catch (e) {
+    console.warn('thumbnail-prepare-skip:', e?.message || e);
+    return;
+  }
+
+  let optimized;
+  try {
+    optimized = await productApiInstance.optimizeImage(imageFile, category);
+  } catch (e) {
+    console.warn('thumbnail-optimize-skip:', e?.message || e);
+    return;
+  }
+
+  if (!optimized?.data) {
+    return;
+  }
+
+  const thumbnailFile = base64ToFile(optimized.data, optimized.mimeType ?? 'image/png');
+
+  const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
+  const uploadQueryParams = {
+    expand: true,
+    'fields.image': imageVariantInfo.fieldsImage,
+    ...imageVariantInfo.imageVariants,
+  };
+
+  const uploadResponse = await sdk.images.upload(
+    { image: thumbnailFile },
+    uploadQueryParams
+  );
+  const thumbnailImageId = uploadResponse.data.data.id;
+  const thumbnailUuid = typeof thumbnailImageId === 'object' ? thumbnailImageId.uuid : thumbnailImageId;
+
+  const getImageId = img => img.imageId || img.id;
+  const existingImageIds = listing.images.map(getImageId);
+  const newImageIds = [thumbnailImageId, ...existingImageIds];
+
+  const currentPublicData = listing.attributes?.publicData || {};
+  const updatedPublicData = {
+    ...currentPublicData,
+    thumbnailImageId: thumbnailUuid,
+  };
+
+  const updateQueryParams = {
+    expand: true,
+    include: ['images'],
+    'fields.image': imageVariantInfo.fieldsImage,
+    ...imageVariantInfo.imageVariants,
+  };
+
+  await sdk.ownListings.update(
+    { id: listingId, images: newImageIds, publicData: updatedPublicData },
+    updateQueryParams
+  );
+
+  await dispatch(requestShowListing({ id: listingId }, config));
+}
+
+export const requestPublishListingDraft = (listingId, config) => (dispatch, getState, sdk) => {
   dispatch(publishListingRequest(listingId));
 
-  return sdk.ownListings
-    .publishDraft({ id: listingId }, { expand: true })
-    .then(response => {
-      // Add the created listing to the marketplace data
-      dispatch(addMarketplaceEntities(response));
-      dispatch(publishListingSuccess(response));
+  const doPublish = () =>
+    sdk.ownListings
+      .publishDraft({ id: listingId }, { expand: true })
+      .then(response => {
+        dispatch(addMarketplaceEntities(response));
+        dispatch(publishListingSuccess(response));
+        return response;
+      })
+      .catch(e => {
+        const error = storableError(e);
+        dispatch(publishListingError(error));
+        throw error;
+      });
+
+  const state = getState();
+  const listingRef = { id: listingId, type: 'ownListing' };
+  const listings = getMarketplaceEntities(state, [listingRef]);
+  const listing = listings?.length === 1 ? listings[0] : null;
+
+  if (listing && config) {
+    // Publish first, then optimize thumbnail in background (non-blocking)
+    return doPublish().then(response => {
+      prepareThumbnailInBackground(listingId, listing, config, dispatch, sdk).catch(e =>
+        console.warn('thumbnail-optimize-background:', e?.message || e)
+      );
       return response;
-    })
-    .catch(e => {
-      const error = storableError(e);
-      dispatch(publishListingError(error));
-      throw error; // Re-throw to propagate error to caller
     });
+  }
+
+  return doPublish();
 };
 
 export const requestDeleteDraft = listingId => (dispatch, getState, sdk) => {

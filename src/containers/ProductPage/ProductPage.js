@@ -102,6 +102,7 @@ import {
   ErrorPage,
   priceData,
   listingImages,
+  listingWithoutThumbnailOnly,
   handleContactUser,
   handleSubmitInquiry,
   handleNavigateToMakeOfferPage,
@@ -1009,10 +1010,13 @@ export const ProductPageComponent = props => {
     }
   };
 
-  const facebookImages = listingImages(currentListing, 'facebook');
-  const twitterImages = listingImages(currentListing, 'twitter');
+  // Exclude thumbnail image (used only for search/category cards) from gallery display
+  const listingForGallery = listingWithoutThumbnailOnly(currentListing);
+
+  const facebookImages = listingImages(listingForGallery, 'facebook');
+  const twitterImages = listingImages(listingForGallery, 'twitter');
   const schemaImages = listingImages(
-    currentListing,
+    listingForGallery,
     `${config.layout.listingImage.variantPrefix}-2x`
   ).map(img => img.url);
   const marketplaceName = config.marketplaceName;
@@ -1021,8 +1025,8 @@ export const ProductPageComponent = props => {
     { title, price: formattedPrice, marketplaceName }
   );
 
-  // Get images
-  const images = currentListing.images || [];
+  // Get images for gallery (thumbnail excluded)
+  const images = listingForGallery.images || [];
   const mainImage = images[selectedImageIndex];
   const mainImageVariants = mainImage?.attributes?.variants || {};
   const mainImageUrl =

@@ -97,6 +97,22 @@ export const listingImages = (listing, variantName) =>
     .filter(variant => variant != null);
 
 /**
+ * Get listing with gallery images only (excludes thumbnail used for search/category cards).
+ * Use for PreviewListingPage, ProductPage, ListingPage gallery display.
+ */
+export const listingWithoutThumbnailOnly = listing => {
+  if (!listing) return listing;
+  const thumbnailImageId = listing?.attributes?.publicData?.thumbnailImageId;
+  if (!thumbnailImageId || !listing.images?.length) return listing;
+  const galleryImages = listing.images.filter(img => {
+    const imgId = img.imageId || img.id;
+    const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+    return imgUuid !== thumbnailImageId;
+  });
+  return { ...listing, images: galleryImages };
+};
+
+/**
  * Callback for the "contact" button on ListingPage to open inquiry modal.
  *
  * @param {Object} parameters all the info needed to open inquiry modal.
