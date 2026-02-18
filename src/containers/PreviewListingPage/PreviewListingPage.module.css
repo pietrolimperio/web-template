@@ -1340,7 +1340,7 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--matterColor);
-  margin: 0 0 16px 0;
+  margin: 0;
 }
 
 .modalDescription {
@@ -1458,7 +1458,6 @@
   justify-content: center;
   padding-top: 1.5rem;
   border-top: 1px solid var(--matterColorNegative);
-  margin-top: 2rem;
   justify-self: flex-end;
 
   & button {
@@ -1509,6 +1508,96 @@
     align-items: center !important;
   }
 }
+
+/* Edit panel drawer - desktop: slide from right, mobile: centered modal */
+.editPanelDrawerScrollLayer {
+  /* Base: same as Modal scrollLayer */
+  flex-grow: 1;
+  display: flex;
+  min-height: 100vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--colorWhite);
+
+  @media (--viewportMedium) {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  /* Desktop: align drawer to the right */
+  @media (--viewportLarge) {
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+  }
+}
+
+.editPanelDrawerContainer {
+  /* Desktop: drawer from right, wider, with smoother base transition */
+  @media (--viewportLarge) {
+    flex-basis: auto !important;
+    width: min(680px, 58vw) !important;
+    max-width: 760px !important;
+    min-width: 500px !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 12px 0 0 12px !important;
+    border-bottom: none !important;
+    border-left: 4px solid var(--marketplaceColor) !important;
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.35s ease-out;
+    will-change: transform;
+    backface-visibility: hidden;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Drawer open: gentle slide in (longer, softer easing so it doesn’t feel violent) */
+.editPanelDrawerContainer.editPanelDrawerOpen {
+  @media (--viewportLarge) {
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.46s linear;
+  }
+}
+
+/* Drawer closing: slide out */
+.editPanelDrawerContainer.editPanelDrawerClosing {
+  @media (--viewportLarge) {
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.46s linear;
+  }
+}
+
+/* Drawer: make the Modal’s content wrapper a flex child so height is constrained and inner content can scroll */
+.editPanelDrawerContainer > *:last-child {
+  @media (--viewportLarge) {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* Drawer content area - scrollable */
+.editPanelDrawerContainer .availabilityModalContent {
+  @media (--viewportLarge) {
+    flex: 1 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 
 .availabilityModalContent {
   width: 100%;

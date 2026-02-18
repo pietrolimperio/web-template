@@ -320,7 +320,9 @@ export const PreviewListingPageComponent = props => {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  
+  const [drawerClosing, setDrawerClosing] = useState(null); // 'price' | 'availability' | 'location' | null for close animation
+  const [drawerOpening, setDrawerOpening] = useState(null); // same values: drive open transition with class after first paint
+
   // Image deletion confirmation dialog state
   const [showDeleteImageDialog, setShowDeleteImageDialog] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
@@ -1536,18 +1538,16 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  // Helper to get visible images (filter out hidden ones and thumbnail used only for search/cards)
+  // Helper to get visible images (filter out hidden ones)
   const getVisibleImages = useCallback((images) => {
     if (!images || !Array.isArray(images)) return [];
-    const thumbnailImageId = currentListing?.attributes?.publicData?.thumbnailImageId;
     return images.filter(img => {
       const imgId = img.imageId || img.id;
       const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
       const isHidden = hiddenImageIds.has(imgUuid);
-      const isThumbnailOnly = thumbnailImageId && imgUuid === thumbnailImageId;
-      return !isHidden && !isThumbnailOnly;
+      return !isHidden;
     });
-  }, [hiddenImageIds, currentListing?.attributes?.publicData?.thumbnailImageId]);
+  }, [hiddenImageIds]);
 
   // Helper to get all images including hidden ones (for restoration)
   const getAllImages = () => {
@@ -1956,7 +1956,7 @@ export const PreviewListingPageComponent = props => {
     // If payout details are not required OR it's an inquiry process, publish directly
     if (!isPayoutDetailsRequired || isInquiryProcess) {
       setIsPublishing(true);
-      onPublishListingDraft(listingId, config)
+      onPublishListingDraft(listingId)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -1978,7 +1978,7 @@ export const PreviewListingPageComponent = props => {
     if (stripeAccountComplete) {
       // Account exists and is complete, publish
       setIsPublishing(true);
-      onPublishListingDraft(listingId, config)
+      onPublishListingDraft(listingId)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -2212,21 +2212,18 @@ export const PreviewListingPageComponent = props => {
     }
   }, [showPriceModal, currentListing.attributes?.price, currentListing.attributes?.publicData?.priceVariants]);
 
-   // Handle click outside availability modal to close it
+  // Handle click outside availability modal/drawer to close it (cancels unsaved changes)
   useEffect(() => {
     if (!showAvailabilityModal) return;
 
     const handleClickOutside = (event) => {
-      // The modal container is the white box, its parent is the scrollLayer (backdrop)
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
-      
-      // If the click is not inside the modal container, close the modal
-      if (!modalContainer && event.target.closest('[class*="scrollLayer"]')) {
-        setShowAvailabilityModal(false);
+      const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
+      if (!modalContainer && backdrop) {
+        handleCloseAvailabilityDrawer();
       }
     };
 
-    // Add listener with a small delay to prevent immediate closing
     const timer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
     }, 200);
@@ -2237,15 +2234,15 @@ export const PreviewListingPageComponent = props => {
     };
   }, [showAvailabilityModal]);
 
-  // Handle click outside price modal to close it
+  // Handle click outside price modal/drawer to close it (cancels unsaved changes)
   useEffect(() => {
     if (!showPriceModal) return;
 
     const handleClickOutside = (event) => {
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
-      
-      if (!modalContainer && event.target.closest('[class*="scrollLayer"]')) {
-        handleClosePriceModal();
+      const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
+      if (!modalContainer && backdrop) {
+        handleClosePriceDrawer();
       }
     };
 
@@ -2259,17 +2256,15 @@ export const PreviewListingPageComponent = props => {
     };
   }, [showPriceModal]);
 
-  // Handle click outside location modal to close it
+  // Handle click outside location modal/drawer to close it (cancels unsaved changes)
   useEffect(() => {
     if (!showLocationModal) return;
 
     const handleClickOutside = (event) => {
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
-      
-      if (!modalContainer && event.target.closest('[class*="scrollLayer"]')) {
-        setShowLocationModal(false);
-        setShowAddressSearch(false);
-        setShowFullForm(false);
+      const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
+      if (!modalContainer && backdrop) {
+        handleCloseLocationDrawer();
       }
     };
 
@@ -2610,6 +2605,52 @@ export const PreviewListingPageComponent = props => {
     setEditingPriceVariant(null);
   };
 
+  const DRAWER_CLOSE_DURATION_MS = 320;
+
+  // After a modal opens, set drawerOpening so the drawer slides in via transition (avoids keyframe bump)
+  useEffect(() => {
+    if (showPriceModal) {
+      const id = requestAnimationFrame(() => setDrawerOpening('price'));
+      return () => cancelAnimationFrame(id);
+    }
+    if (showAvailabilityModal) {
+      const id = requestAnimationFrame(() => setDrawerOpening('availability'));
+      return () => cancelAnimationFrame(id);
+    }
+    if (showLocationModal) {
+      const id = requestAnimationFrame(() => setDrawerOpening('location'));
+      return () => cancelAnimationFrame(id);
+    }
+    setDrawerOpening(null);
+  }, [showPriceModal, showAvailabilityModal, showLocationModal]);
+
+  // Close price drawer/modal with slide-out animation on desktop
+  const handleClosePriceDrawer = () => {
+    setDrawerClosing('price');
+    setTimeout(() => {
+      handleClosePriceModal();
+      setDrawerClosing(null);
+    }, DRAWER_CLOSE_DURATION_MS);
+  };
+
+  // Close availability drawer/modal with slide-out animation on desktop
+  const handleCloseAvailabilityDrawer = () => {
+    setDrawerClosing('availability');
+    setTimeout(() => {
+      setShowAvailabilityModal(false);
+      setDrawerClosing(null);
+    }, DRAWER_CLOSE_DURATION_MS);
+  };
+
+  // Close location drawer/modal with slide-out animation on desktop
+  const handleCloseLocationDrawer = () => {
+    setDrawerClosing('location');
+    setTimeout(() => {
+      setShowLocationModal(false);
+      setDrawerClosing(null);
+    }, DRAWER_CLOSE_DURATION_MS);
+  };
+
   // Handle save price from modal
   const handleSavePrice = async () => {
     setUpdatingListing(true);
@@ -2882,8 +2923,6 @@ export const PreviewListingPageComponent = props => {
       // Refresh listing
       await onFetchListing({ id: listingId }, config);
       setShowLocationModal(false);
-      setShowAddressSearch(false);
-      setShowFullForm(false);
     } catch (error) {
       console.error('Failed to update location:', error);
     } finally {
@@ -3234,8 +3273,8 @@ export const PreviewListingPageComponent = props => {
     setNotificationMessage(null);
   };
 
-  // Show loading page while checking Stripe status only
-  if (isCheckingStripeStatus) {
+  // Show loading page while checking Stripe status or publishing
+  if (isCheckingStripeStatus || isPublishing) {
     return (
       <LoadingPage
         topbar={<TopbarContainer />}
@@ -3247,9 +3286,6 @@ export const PreviewListingPageComponent = props => {
 
   return (
     <Page title={title} scrollingDisabled={scrollingDisabled}>
-      {isPublishing && (
-        <LoadingOverlay titleId="PreviewListingPage.publishingButton" />
-      )}
       <NotificationBanner
         title={notificationTitle}
         message={notificationMessage}
@@ -4479,13 +4515,14 @@ export const PreviewListingPageComponent = props => {
           />
         </Modal>
 
-        {/* Price Modification Modal */}
+        {/* Price Modification Modal - drawer on desktop, modal on mobile */}
         <Modal
           id="PreviewListingPage.priceModal"
           isOpen={showPriceModal}
-          onClose={handleClosePriceModal}
+          onClose={handleClosePriceDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
-          containerClassName={css.availabilityModalContainer}
+          scrollLayerClassName={css.editPanelDrawerScrollLayer}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'price' && drawerClosing !== 'price' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'price' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -5088,7 +5125,7 @@ export const PreviewListingPageComponent = props => {
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
-              <SecondaryButton onClick={handleClosePriceModal} disabled={updatingListing}>
+              <SecondaryButton onClick={handleClosePriceDrawer} disabled={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
               </SecondaryButton>
               <PrimaryButton onClick={handleSavePrice} inProgress={updatingListing}>
@@ -5098,13 +5135,14 @@ export const PreviewListingPageComponent = props => {
           </div>
         </Modal>
 
-        {/* Availability Modification Modal */}
+        {/* Availability Modification Modal - drawer on desktop, modal on mobile */}
         <Modal
           id="PreviewListingPage.availabilityModal"
           isOpen={showAvailabilityModal}
-          onClose={() => setShowAvailabilityModal(false)}
+          onClose={handleCloseAvailabilityDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
-          containerClassName={css.availabilityModalContainer}
+          scrollLayerClassName={css.editPanelDrawerScrollLayer}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'availability' && drawerClosing !== 'availability' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'availability' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -5268,7 +5306,7 @@ export const PreviewListingPageComponent = props => {
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
-              <SecondaryButton onClick={() => setShowAvailabilityModal(false)} disabled={updatingListing}>
+              <SecondaryButton onClick={handleCloseAvailabilityDrawer} disabled={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
               </SecondaryButton>
               <PrimaryButton onClick={handleSaveAvailability} inProgress={updatingListing}>
@@ -5278,17 +5316,14 @@ export const PreviewListingPageComponent = props => {
           </div>
         </Modal>
 
-        {/* Location Modification Modal */}
+        {/* Location Modification Modal - drawer on desktop, modal on mobile */}
         <Modal
           id="PreviewListingPage.locationModal"
           isOpen={showLocationModal}
-          onClose={() => {
-            setShowLocationModal(false);
-            setShowAddressSearch(false);
-            setShowFullForm(false);
-          }}
+          onClose={handleCloseLocationDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
-          containerClassName={css.availabilityModalContainer}
+          scrollLayerClassName={css.editPanelDrawerScrollLayer}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'location' && drawerClosing !== 'location' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'location' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -5490,9 +5525,7 @@ export const PreviewListingPageComponent = props => {
             {/* Modal Actions */}
             <div className={css.drawerActions}>
               <SecondaryButton
-                onClick={() => {
-                  setShowLocationModal(false);
-                }}
+                onClick={handleCloseLocationDrawer}
                 disabled={updatingListing}
               >
                 <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
@@ -5736,7 +5769,7 @@ const mapDispatchToProps = dispatch => ({
     dispatch(requestUpdateListing(tab, data, config)),
   onManageDisableScrolling: (componentId, disableScrolling) =>
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
-  onPublishListingDraft: (listingId, config) => dispatch(requestPublishListingDraft(listingId, config)),
+  onPublishListingDraft: listingId => dispatch(requestPublishListingDraft(listingId)),
   onDeleteDraft: listingId => dispatch(requestDeleteDraft(listingId)),
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
