@@ -142,6 +142,8 @@ const formatPrice = (price, intl) => {
 // Price variant card component (display only, not clickable)
 const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
   const formatPriceVariantLabel = (variant) => {
+    const variantType = variant.type || (variant.period || variant.dates ? 'period' : 'duration');
+
     // Handle period-based variants
     if (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) {
       const start = new Date(variant.dates[0]);
@@ -153,6 +155,47 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
         return `${day} ${month}`;
       };
       return `${formatDate(start)} - ${formatDate(end)}`;
+    }
+
+    if (variantType === 'period' && variant.period && typeof variant.period === 'string' && variant.period.trim()) {
+      const formatPeriodDate = dateStr => {
+        if (dateStr.length === 8 && /^\d+$/.test(dateStr)) {
+          const year = parseInt(dateStr.substring(0, 4), 10);
+          const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+          const day = parseInt(dateStr.substring(6, 8), 10);
+          const date = new Date(year, month, day);
+          const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+          return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+        }
+
+        const parsedDate = new Date(dateStr);
+        if (!isNaN(parsedDate.getTime())) {
+          const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+          return `${parsedDate.getDate()} ${monthNames[parsedDate.getMonth()]}`;
+        }
+
+        return dateStr;
+      };
+
+      const periodValues = variant.period.split(',').map(value => value.trim()).filter(Boolean);
+      const firstPeriod = periodValues[0];
+
+      if (firstPeriod && firstPeriod.includes('-')) {
+        const [startStr, endStr] = firstPeriod.split('-').map(s => s.trim());
+        if (startStr && endStr) {
+          return `${formatPeriodDate(startStr)} - ${formatPeriodDate(endStr)}`;
+        }
+      }
+
+      if (periodValues.length > 1) {
+        const startStr = periodValues[0];
+        const endStr = periodValues[periodValues.length - 1];
+        if (startStr && endStr) {
+          return `${formatPeriodDate(startStr)} - ${formatPeriodDate(endStr)}`;
+        }
+      }
+
+      return formatPeriodDate(firstPeriod);
     }
     
     // Handle duration-based variants
@@ -171,6 +214,10 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
       );
     }
     
+    if (variantType === 'period') {
+      return '';
+    }
+
     return variant.name || '';
   };
 

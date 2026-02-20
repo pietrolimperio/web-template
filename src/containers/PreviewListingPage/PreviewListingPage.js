@@ -4157,6 +4157,10 @@ export const PreviewListingPageComponent = props => {
                           }
                         }
                         
+                        if (variantType === 'period') {
+                          return typeof variant.period === 'string' ? variant.period : '';
+                        }
+
                         return '';
                       };
 
@@ -4741,6 +4745,10 @@ export const PreviewListingPageComponent = props => {
                             }
                           }
                           
+                          if (variantType === 'period') {
+                            return typeof variant.period === 'string' ? variant.period : '';
+                          }
+
                           return '';
                         })()}
                       </div>
