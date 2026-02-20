@@ -71,6 +71,7 @@ import {
   NamedRedirect,
   LayoutSingleColumn,
   AvatarSmall,
+  ResponsiveImage,
   PrimaryButton,
   Form,
   FieldDateRangePicker,
@@ -1267,12 +1268,19 @@ export const ProductPageComponent = props => {
                   </>
                 ) : (
                   <div className={css.mainImageWrapper}>
-                    <div className={css.imagePlaceholder}>
-                      <FormattedMessage
-                        id="ProductPage.noImagePlaceholder"
-                        defaultMessage="Nessuna immagine disponibile"
-                      />
-                    </div>
+                    <ResponsiveImage
+                      className={css.mainImageFallback}
+                      image={null}
+                      variants={[]}
+                      alt={intl.formatMessage({
+                        id: 'ProductPage.noImagePlaceholder',
+                        defaultMessage: 'Nessuna immagine disponibile',
+                      })}
+                      noImageMessage={intl.formatMessage({
+                        id: 'ProductPage.noImagePlaceholder',
+                        defaultMessage: 'Nessuna immagine disponibile',
+                      })}
+                    />
                   </div>
                 )}
 
