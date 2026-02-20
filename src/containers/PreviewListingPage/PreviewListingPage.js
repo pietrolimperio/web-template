@@ -1958,7 +1958,7 @@ export const PreviewListingPageComponent = props => {
     // If payout details are not required OR it's an inquiry process, publish directly
     if (!isPayoutDetailsRequired || isInquiryProcess) {
       setIsPublishing(true);
-      onPublishListingDraft(listingId)
+      onPublishListingDraft(listingId, config)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -1980,7 +1980,7 @@ export const PreviewListingPageComponent = props => {
     if (stripeAccountComplete) {
       // Account exists and is complete, publish
       setIsPublishing(true);
-      onPublishListingDraft(listingId)
+      onPublishListingDraft(listingId, config)
         .then(response => {
           if (!response) {
             setHasPublished(false);
@@ -5779,7 +5779,8 @@ const mapDispatchToProps = dispatch => ({
     dispatch(requestUpdateListing(tab, data, config)),
   onManageDisableScrolling: (componentId, disableScrolling) =>
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
-  onPublishListingDraft: listingId => dispatch(requestPublishListingDraft(listingId)),
+  onPublishListingDraft: (listingId, config) =>
+    dispatch(requestPublishListingDraft(listingId, config)),
   onDeleteDraft: listingId => dispatch(requestDeleteDraft(listingId)),
   onGetStripeConnectAccountLink: params => dispatch(getStripeConnectAccountLink(params)),
   onCreateStripeAccount: params => dispatch(createStripeAccount(params)),
