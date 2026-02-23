@@ -193,9 +193,13 @@
   background-color: var(--matterColorNegative);
 }
 
+.mainImageAspectBox {
+  overflow: hidden;
+}
+
 .mainImage {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   object-fit: contain;
   transition: transform 0.3s ease;

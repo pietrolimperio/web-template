@@ -71,6 +71,7 @@ import {
   NamedRedirect,
   LayoutSingleColumn,
   AvatarSmall,
+  AspectRatioWrapper,
   ResponsiveImage,
   PrimaryButton,
   Form,
@@ -1086,6 +1087,8 @@ export const ProductPageComponent = props => {
     mainImageVariants['listing-card-2x']?.url ||
     mainImageVariants['listing-card']?.url;
 
+  const { aspectWidth = 4, aspectHeight = 3 } = config.layout?.listingImage || {};
+
   const isClosed = currentListing.attributes.state === LISTING_STATE_CLOSED;
 
   return (
@@ -1247,17 +1250,23 @@ export const ProductPageComponent = props => {
                           <IconArrowHead direction="left" size="big" />
                         </button>
                       )}
-                      
-                      {mainImageUrl && (
-                        <img
-                          src={mainImageUrl}
-                          alt={`${title} - Image ${selectedImageIndex + 1}`}
-                          className={css.mainImage}
-                          onClick={() => setImageModalOpen(true)}
-                          style={{ cursor: 'zoom-in' }}
-                        />
-                      )}
-                      
+
+                      <AspectRatioWrapper
+                        width={aspectWidth}
+                        height={aspectHeight}
+                        rootClassName={css.mainImageAspectBox}
+                      >
+                        {mainImageUrl && (
+                          <img
+                            src={mainImageUrl}
+                            alt={`${title} - Image ${selectedImageIndex + 1}`}
+                            className={css.mainImage}
+                            onClick={() => setImageModalOpen(true)}
+                            style={{ cursor: 'zoom-in' }}
+                          />
+                        )}
+                      </AspectRatioWrapper>
+
                       {/* Next Arrow */}
                       {images.length > 1 && (
                         <button
@@ -1271,7 +1280,7 @@ export const ProductPageComponent = props => {
                           <IconArrowHead direction="right" size="big" />
                         </button>
                       )}
-                      
+
                       {/* Image counter */}
                       {images.length > 1 && (
                         <div className={css.imageCounter}>
@@ -1315,19 +1324,25 @@ export const ProductPageComponent = props => {
                   </>
                 ) : (
                   <div className={css.mainImageWrapper}>
-                    <ResponsiveImage
-                      className={css.mainImageFallback}
-                      image={null}
-                      variants={[]}
-                      alt={intl.formatMessage({
-                        id: 'ProductPage.noImagePlaceholder',
-                        defaultMessage: 'Nessuna immagine disponibile',
-                      })}
-                      noImageMessage={intl.formatMessage({
-                        id: 'ProductPage.noImagePlaceholder',
-                        defaultMessage: 'Nessuna immagine disponibile',
-                      })}
-                    />
+                    <AspectRatioWrapper
+                      width={aspectWidth}
+                      height={aspectHeight}
+                      rootClassName={css.mainImageAspectBox}
+                    >
+                      <ResponsiveImage
+                        className={css.mainImageFallback}
+                        image={null}
+                        variants={[]}
+                        alt={intl.formatMessage({
+                          id: 'ProductPage.noImagePlaceholder',
+                          defaultMessage: 'Nessuna immagine disponibile',
+                        })}
+                        noImageMessage={intl.formatMessage({
+                          id: 'ProductPage.noImagePlaceholder',
+                          defaultMessage: 'Nessuna immagine disponibile',
+                        })}
+                      />
+                    </AspectRatioWrapper>
                   </div>
                 )}
 

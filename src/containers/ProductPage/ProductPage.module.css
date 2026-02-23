@@ -105,7 +105,10 @@
   border-radius: 12px;
   overflow: hidden;
   background-color: var(--matterColorNegative);
-  aspect-ratio: 4/3;
+}
+
+.mainImageAspectBox {
+  overflow: hidden;
 }
 
 .mainImage {

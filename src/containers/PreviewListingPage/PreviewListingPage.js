@@ -69,6 +69,7 @@ import {
   NotificationBanner,
   AddressCascadingDropdowns,
   IconLocation,
+  AspectRatioWrapper,
 } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
@@ -3269,6 +3270,7 @@ export const PreviewListingPageComponent = props => {
     { marketplaceName: config.marketplaceName }
   );
   const listing = currentListing;
+  const { aspectWidth = 4, aspectHeight = 3 } = config.layout?.listingImage || {};
 
   const handleNotificationClose = () => {
     setNotificationTitle(null);
@@ -3367,34 +3369,40 @@ export const PreviewListingPageComponent = props => {
                     )}
                     {/* Main Image */}
                     <div className={css.mainImageWrapper}>
-                      {(() => {
-                        const mainImage = visibleImages[selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex];
-                        if (!mainImage) return null;
-                        const variants = mainImage?.attributes?.variants || {};
-                        // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
-                        const imageUrl =
-                          variants['scaled-xlarge']?.url ||
-                          variants['scaled-large']?.url ||
-                          variants['scaled-medium']?.url ||
-                          variants['listing-card-6x']?.url ||
-                          variants['listing-card-4x']?.url ||
-                          variants['listing-card-2x']?.url ||
-                          variants['listing-card']?.url;
+                      <AspectRatioWrapper
+                        width={aspectWidth}
+                        height={aspectHeight}
+                        rootClassName={css.mainImageAspectBox}
+                      >
+                        {(() => {
+                          const mainImage = visibleImages[selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex];
+                          if (!mainImage) return null;
+                          const variants = mainImage?.attributes?.variants || {};
+                          // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
+                          const imageUrl =
+                            variants['scaled-xlarge']?.url ||
+                            variants['scaled-large']?.url ||
+                            variants['scaled-medium']?.url ||
+                            variants['listing-card-6x']?.url ||
+                            variants['listing-card-4x']?.url ||
+                            variants['listing-card-2x']?.url ||
+                            variants['listing-card']?.url;
 
-                        return (
-                          <img
-                            src={imageUrl}
-                            alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
-                            className={css.mainImage}
-                            onClick={() => handleImageClick(selectedImageIndex)}
-                            style={{ cursor: 'pointer' }}
-                            onError={e => {
-                              console.error('Failed to load image:', imageUrl);
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        );
-                      })()}
+                          return (
+                            <img
+                              src={imageUrl}
+                              alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
+                              className={css.mainImage}
+                              onClick={() => handleImageClick(selectedImageIndex)}
+                              style={{ cursor: 'pointer' }}
+                              onError={e => {
+                                console.error('Failed to load image:', imageUrl);
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          );
+                        })()}
+                      </AspectRatioWrapper>
                     </div>
 
                     {/* Thumbnails - Horizontally scrollable, delete icons if more than 4 images */}
