@@ -14,6 +14,7 @@ import { DEFAULT_LOCALE, getLocalizedPageId } from '../../config/localeConfig';
 import { NotificationBanner, NamedRedirect } from '../../components';
 import FallbackPage from './FallbackPage';
 import { ASSET_NAME } from './LandingPage.duck';
+import { injectCustomSections, customSectionComponents } from '../CMSPage/cmsPageInjections';
 import { fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
 import { updateProfile } from '../ProfileSettingsPage/ProfileSettingsPage.duck';
 import { verify as verifyEmail } from '../../ducks/emailVerification.duck';
@@ -275,10 +276,11 @@ export const LandingPageComponent = props => {
         onClose={handleNotificationClose}
       />
       <PageBuilder
-        pageAssetsData={getLandingPageData(pageAssetsData)}
+        pageAssetsData={injectCustomSections(getLandingPageData(pageAssetsData), ASSET_NAME)}
         inProgress={inProgress}
         error={error}
         fallbackPage={<FallbackPage error={error} />}
+        options={{ sectionComponents: customSectionComponents }}
       />
     </>
   );
