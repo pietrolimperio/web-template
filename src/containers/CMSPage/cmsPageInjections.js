@@ -29,7 +29,8 @@ export const injectionConfig = {
     // { position: 1, section: { sectionType: 'injectedStats', sectionId: 'stats-1' } },
   ],
   'landing-page': [
-    { position: -1, section: { sectionType: 'customHero', sectionId: 'custom-hero-landing' } },
+    // Rimossa customHero in prima posizione (position: -1)
+    // { position: -1, section: { sectionType: 'customHero', sectionId: 'custom-hero-landing' } },
     // { position: 1, section: { sectionType: 'injectedStats', sectionId: 'stats-landing' } },
   ],
   // about: [
