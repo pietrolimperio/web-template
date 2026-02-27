@@ -1,21 +1,19 @@
 .root {
-  /* Layout */
+  /* Layout: aspect-ratio definisce l'altezza; niente position absolute per evitare sovrapposizioni */
   display: block;
   width: 100%;
-  position: relative;
+  overflow: hidden;
 }
 
-/* Firefox doesn't support image aspect ratio inside flexbox */
-/* Aspect ratio for is given inline */
 .aspectPadding {
+  width: 100%;
+  height: 100%;
 }
 
 .aspectBox {
-  /* Layout - image will take space defined by aspect ratio wrapper */
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /* In flow: riempie il contenitore, niente position absolute */
+  display: block;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 }

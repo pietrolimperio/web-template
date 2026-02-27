@@ -16,15 +16,18 @@ import css from './AspectRatioWrapper.module.css';
  * @returns {JSX.Element} container element that maintains given aspect ratio
  */
 const AspectRatioWrapper = props => {
-  const { children, className, rootClassName, width, height, ...rest } = props;
+  const { children, className, rootClassName, width, height, style: restStyle, ...rest } = props;
   const classes = classNames(rootClassName || css.root, className);
 
-  const aspectRatio = (height / width) * 100;
-  const paddingBottom = `${aspectRatio}%`;
+  const aspectRatioStyle = `${width}/${height}`;
 
   return (
-    <div className={classes} {...rest}>
-      <div className={css.aspectPadding} style={{ paddingBottom }}>
+    <div
+      className={classes}
+      style={{ aspectRatio: aspectRatioStyle, ...restStyle }}
+      {...rest}
+    >
+      <div className={css.aspectPadding}>
         <div className={css.aspectBox}>{children}</div>
       </div>
     </div>

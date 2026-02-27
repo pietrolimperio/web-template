@@ -188,6 +188,7 @@
 
 .mainImageWrapper {
   width: 100%;
+  min-height: 0; /* consente al flex child di rispettare l'aspect ratio */
   border-radius: 12px;
   overflow: hidden;
   background-color: var(--matterColorNegative);
@@ -195,6 +196,7 @@
 
 .mainImageAspectBox {
   overflow: hidden;
+  min-height: 0;
 }
 
 .mainImage {
@@ -202,6 +204,8 @@
   height: 100%;
   display: block;
   object-fit: contain;
+  object-position: center;
+  vertical-align: middle;
   transition: transform 0.3s ease;
 }
 
@@ -259,7 +263,7 @@
 .thumbnailImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
   display: block;
 }

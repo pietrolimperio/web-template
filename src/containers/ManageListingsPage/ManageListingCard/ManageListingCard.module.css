@@ -58,8 +58,11 @@
   /* Layout - image will take space defined by aspect ratio wrapper */
   composes: coverEverything;
   width: 100%;
+  height: 100%;
   border: solid 1px var(--colorGrey100);
   border-radius: var(--borderRadiusMedium);
+  object-fit: contain;
+  object-position: center;
 }
 
 .menubarWrapper {
