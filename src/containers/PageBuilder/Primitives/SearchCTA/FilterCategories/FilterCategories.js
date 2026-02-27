@@ -2,14 +2,16 @@ import React, { useState, useRef } from 'react';
 import { Field } from 'react-final-form';
 import classNames from 'classnames';
 import { FormattedMessage, useIntl } from '../../../../../util/reactIntl';
-import { getLocalizedCategoryName } from '../../../../../util/string';
-
+import { useConfiguration } from '../../../../../context/configurationContext';
+import { getCategoryDisplayName, getShortLocaleForCategoryDisplay } from '../../../../../util/fieldHelpers';
 import { OutsideClickHandler } from '../../../../../components';
 
 import css from './FilterCategories.module.css';
 
 const CategoryDropdown = ({ input, className, rootClassName, categories, alignLeft }) => {
   const intl = useIntl();
+  const config = useConfiguration();
+  const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [hasSelected, setHasSelected] = useState(false);
@@ -69,7 +71,7 @@ const CategoryDropdown = ({ input, className, rootClassName, categories, alignLe
   const selectedCategory = categories.find(category => category.id === input.value);
 
   const labelText = selectedCategory ? (
-    getLocalizedCategoryName(intl, selectedCategory.name)
+    getCategoryDisplayName(selectedCategory, shortLocale)
   ) : hasSelected && input.value === '' ? (
     <FormattedMessage id="PageBuilder.SearchCTA.CategoryFilter.selectAll" />
   ) : (
@@ -119,14 +121,13 @@ const CategoryDropdown = ({ input, className, rootClassName, categories, alignLe
             role="listbox"
             id="category-listbox"
           >
-            {allOptions.map(({ id, name }, index) => {
+            {allOptions.map((option, index) => {
+              const { id, name } = option;
               const isSelected =
                 id === input.value || (id === 'all-categories' && input.value === '');
               const isActive = index === activeIndex;
-              // If name is a React element (FormattedMessage), use it as-is; otherwise, it's a string category name that needs localization
-              const displayName = React.isValidElement(name) 
-                ? name 
-                : getLocalizedCategoryName(intl, name);
+              const displayName =
+                React.isValidElement(name) ? name : getCategoryDisplayName(option, shortLocale);
               return (
                 <li
                   key={id}

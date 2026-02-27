@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
-import { getLocalizedCategoryName } from '../../util/string';
+import { useConfiguration } from '../../context/configurationContext';
+import { getCategoryDisplayName, getShortLocaleForCategoryDisplay } from '../../util/fieldHelpers';
 import css from './CategoryModal.module.css';
-import categoriesData from '../../config/categories.json';
 
 /**
  * CategoryModal Component
@@ -10,10 +10,12 @@ import categoriesData from '../../config/categories.json';
  * Features:
  * - Full-screen modal overlay
  * - Three dropdown fields in column: category, subcategory, third category
- * - Pre-filled data from productAnalysis if available
+ * - Pre-filled from AI: use only categoryId, subcategoryId, thirdCategoryId (IDs). Names are
+ *   always taken from the localized categories API (user locale), not from AI (backend uses locale en).
  * - Subcategory options filtered by selected parent category
  * - Third category options filtered by selected subcategory
  * - Third category is optional
+ * - Categories are loaded from Leaz backend API via app config (categoryConfiguration.categories)
  */
 const CategoryModal = ({
   initialCategoryId = null,
@@ -23,85 +25,73 @@ const CategoryModal = ({
   onCancel,
 }) => {
   const intl = useIntl();
-  
-  // Helper functions to find categories
+  const config = useConfiguration();
+  const categoriesList = config?.categoryConfiguration?.categories ?? [];
+  const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
+
+  // Helper functions to find categories (structure: subcategories at every level)
   const findCategoryById = (id) => {
-    return categoriesData.categories.find(cat => cat.id === id);
+    return categoriesList.find(cat => cat.id === id);
   };
 
   const findCategoryByName = (name) => {
     if (!name) return null;
-    return categoriesData.categories.find(cat => 
+    return categoriesList.find(cat =>
       cat.name.toLowerCase().trim() === name.toLowerCase().trim()
     );
   };
 
   const findSubcategoryById = (categoryId, subcategoryId) => {
     const category = findCategoryById(categoryId);
-    if (!category || !category.subcategory) return null;
-    return category.subcategory.find(sub => sub.id === subcategoryId);
+    if (!category || !category.subcategories) return null;
+    return category.subcategories.find(sub => sub.id === subcategoryId);
   };
 
   const findSubcategoryByName = (categoryId, name) => {
     if (!name || !categoryId) return null;
     const category = findCategoryById(categoryId);
-    if (!category || !category.subcategory) return null;
-    return category.subcategory.find(sub => 
+    if (!category || !category.subcategories) return null;
+    return category.subcategories.find(sub =>
       sub.name.toLowerCase().trim() === name.toLowerCase().trim()
     );
   };
 
   const findThirdCategoryById = (categoryId, subcategoryId, thirdCategoryId) => {
     const subcategory = findSubcategoryById(categoryId, subcategoryId);
-    if (!subcategory || !subcategory['sub-subcategory']) return null;
-    return subcategory['sub-subcategory'].find(third => third.id === thirdCategoryId);
+    if (!subcategory || !subcategory.subcategories) return null;
+    return subcategory.subcategories.find(third => third.id === thirdCategoryId);
   };
 
   const findThirdCategoryByName = (categoryId, subcategoryId, name) => {
     if (!name || !categoryId || !subcategoryId) return null;
     const subcategory = findSubcategoryById(categoryId, subcategoryId);
-    if (!subcategory || !subcategory['sub-subcategory']) return null;
-    return subcategory['sub-subcategory'].find(third => 
+    if (!subcategory || !subcategory.subcategories) return null;
+    return subcategory.subcategories.find(third =>
       third.name.toLowerCase().trim() === name.toLowerCase().trim()
     );
   };
 
-  // Convert initial values: if they are IDs use them, if they are names find the IDs
+  // Initial values: prefer IDs (e.g. from AI). If a string is passed (legacy), resolve by name.
+  // For AI flow we only pass IDs so the preselection uses our localized tree for display names.
   const getInitialCategoryId = () => {
-    if (initialCategoryId) {
-      // Check if it's already an ID (number) or needs to be found by name
-      if (typeof initialCategoryId === 'number') {
-        return initialCategoryId;
-      }
-      // If it's a string (name), try to find the ID
-      const category = findCategoryByName(initialCategoryId);
-      return category?.id || null;
-    }
-    return null;
+    if (initialCategoryId == null) return null;
+    if (typeof initialCategoryId === 'number') return initialCategoryId;
+    const category = findCategoryByName(initialCategoryId);
+    return category?.id ?? null;
   };
 
-  const getInitialSubcategoryId = (catId) => {
-    if (!catId) return null;
-    if (initialSubcategoryId) {
-      if (typeof initialSubcategoryId === 'number') {
-        return initialSubcategoryId;
-      }
-      const subcategory = findSubcategoryByName(catId, initialSubcategoryId);
-      return subcategory?.id || null;
-    }
-    return null;
+  const getInitialSubcategoryId = catId => {
+    if (!catId || initialSubcategoryId == null) return null;
+    if (typeof initialSubcategoryId === 'number') return initialSubcategoryId;
+    const subcategory = findSubcategoryByName(catId, initialSubcategoryId);
+    return subcategory?.id ?? null;
   };
 
   const getInitialThirdCategoryId = (catId, subId) => {
-    if (!catId || !subId) return null;
-    if (initialThirdCategoryId) {
-      if (typeof initialThirdCategoryId === 'number') {
-        return initialThirdCategoryId;
-      }
-      const thirdCategory = findThirdCategoryByName(catId, subId, initialThirdCategoryId);
-      return thirdCategory?.id || null;
-    }
-    return null;
+    if (!catId || !subId || initialThirdCategoryId == null) return null;
+    if (typeof initialThirdCategoryId === 'number') return initialThirdCategoryId;
+    const thirdCategory = findThirdCategoryByName(catId, subId, initialThirdCategoryId);
+    return thirdCategory?.id ?? null;
   };
 
   // Initialize state with prefilled values
@@ -134,19 +124,19 @@ const CategoryModal = ({
   }, [selectedSubcategoryId]);
 
   // Get available options based on selections
-  const availableCategories = useMemo(() => categoriesData.categories || [], []);
+  const availableCategories = useMemo(() => categoriesList, [categoriesList]);
 
   const availableSubcategories = useMemo(() => {
     if (!selectedCategoryId) return [];
     const category = findCategoryById(selectedCategoryId);
-    return category?.subcategory || [];
-  }, [selectedCategoryId]);
+    return category?.subcategories || [];
+  }, [selectedCategoryId, categoriesList]);
 
   const availableThirdCategories = useMemo(() => {
     if (!selectedCategoryId || !selectedSubcategoryId) return [];
     const subcategory = findSubcategoryById(selectedCategoryId, selectedSubcategoryId);
-    return subcategory?.['sub-subcategory'] || [];
-  }, [selectedCategoryId, selectedSubcategoryId]);
+    return subcategory?.subcategories || [];
+  }, [selectedCategoryId, selectedSubcategoryId, categoriesList]);
 
   const handleCategoryChange = (e) => {
     const categoryId = e.target.value ? parseInt(e.target.value, 10) : null;
@@ -239,7 +229,7 @@ const CategoryModal = ({
                 </option>
                 {availableCategories.map(category => (
                   <option key={category.id} value={category.id}>
-                    {getLocalizedCategoryName(intl, category.name)}
+                    {getCategoryDisplayName(category, shortLocale)}
                   </option>
                 ))}
               </select>
@@ -265,7 +255,7 @@ const CategoryModal = ({
                 </option>
                 {availableSubcategories.map(subcategory => (
                   <option key={subcategory.id} value={subcategory.id}>
-                    {getLocalizedCategoryName(intl, subcategory.name)}
+                    {getCategoryDisplayName(subcategory, shortLocale)}
                   </option>
                 ))}
               </select>
@@ -289,11 +279,11 @@ const CategoryModal = ({
                   <option value="">
                     {intl.formatMessage({ id: 'CategoryModal.selectThirdCategory' })}
                   </option>
-                  {availableThirdCategories.map(thirdCategory => (
-                    <option key={thirdCategory.id} value={thirdCategory.id}>
-                      {getLocalizedCategoryName(intl, thirdCategory.name)}
-                    </option>
-                  ))}
+                    {availableThirdCategories.map(thirdCategory => (
+                      <option key={thirdCategory.id} value={thirdCategory.id}>
+                        {getCategoryDisplayName(thirdCategory, shortLocale)}
+                      </option>
+                    ))}
                 </select>
               </div>
             )}

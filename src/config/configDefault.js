@@ -96,7 +96,7 @@ const defaultConfig = {
     accessControl: '/general/access-control.json',
     userTypes: '/users/user-types.json',
     userFields: '/users/user-fields.json',
-    categories: '/listings/listing-categories.json',
+    // Categories are loaded from Leaz backend API (see util/categoriesApi.js), not from CDN
     listingTypes: '/listings/listing-types.json',
     listingFields: '/listings/listing-fields.json',
     search: '/listings/listing-search.json',

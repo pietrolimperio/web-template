@@ -107,6 +107,65 @@ export const pickCategoryFields = (data, prefix, level, categoryLevelOptions = [
 };
 
 /**
+ * Short locale (e.g. 'it', 'en') for category display. Prefers user-selected language (localStorage),
+ * then config, then intl, then default 'en'.
+ * @param {Object} [config] - from useConfiguration()
+ * @param {string} [intlLocale] - from useIntl().locale
+ * @returns {string}
+ */
+export const getShortLocaleForCategoryDisplay = (config, intlLocale) => {
+  const currentLocale =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) ||
+    config?.localization?.locale ||
+    intlLocale ||
+    'it';
+  return currentLocale.split('-')[0] || 'en';
+};
+
+/**
+ * Display name for a category entry: use translations[locale] if available, else name (base name for storage).
+ * @param {Object} entry - { name, translations?: { en?, it?, fr?, ... } }
+ * @param {string} shortLocale - e.g. 'it', 'en', 'fr'
+ * @returns {string}
+ */
+export const getCategoryDisplayName = (entry, shortLocale) => {
+  if (!entry) return '';
+  const t = entry.translations;
+  const translated = t && shortLocale && t[shortLocale];
+  if (typeof translated === 'string' && translated.trim() !== '') return translated.trim();
+  return entry.name ?? '';
+};
+
+/**
+ * Resolve category IDs to localized names using the given categories tree (from config).
+ * Uses translations[shortLocale] for display when API returns includeTranslations=1; otherwise name.
+ *
+ * @param {Array} categories - categoryConfiguration.categories (id, name, translations?, subcategories)
+ * @param {number|string} id1 - categoryLevel1 or categoryId
+ * @param {number|string} [id2] - categoryLevel2 or subcategoryId
+ * @param {number|string} [id3] - categoryLevel3 or thirdCategoryId
+ * @param {string} [shortLocale] - e.g. 'it', 'en' for display language
+ * @returns {{ category: string|null, subcategory: string|null, thirdCategory: string|null }}
+ */
+export const getCategoryNamesFromIds = (categories, id1, id2, id3, shortLocale) => {
+  const out = { category: null, subcategory: null, thirdCategory: null };
+  if (!categories?.length || id1 == null) return out;
+  const matchId = (a, b) => a == null || b == null || Number(a) === Number(b) || a === b;
+  const cat1 = categories.find(c => matchId(c.id, id1));
+  if (!cat1) return out;
+  out.category = getCategoryDisplayName(cat1, shortLocale) || null;
+  if (id2 == null) return out;
+  const cat2 = cat1.subcategories?.find(s => matchId(s.id, id2));
+  if (!cat2) return out;
+  out.subcategory = getCategoryDisplayName(cat2, shortLocale) || null;
+  if (id3 == null) return out;
+  const cat3 = cat2.subcategories?.find(s => matchId(s.id, id3));
+  if (!cat3) return out;
+  out.thirdCategory = getCategoryDisplayName(cat3, shortLocale) || null;
+  return out;
+};
+
+/**
  * Pick props for SectionMultiEnumMaybe and SectionTextMaybe display components.
  *
  * @param {*} publicData entity public data containing the value(s) to be displayed

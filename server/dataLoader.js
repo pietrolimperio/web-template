@@ -19,6 +19,7 @@ exports.loadData = function(requestUrl, sdk, appInfo) {
     defaultConfig,
     mergeConfig,
     fetchAppAssets,
+    fetchCategories,
   } = appInfo;
   const { pathname, search } = new URL(`${getRootURL()}${requestUrl}`);
 
@@ -54,6 +55,9 @@ exports.loadData = function(requestUrl, sdk, appInfo) {
   // Then make loadData calls
   // And return object containing preloaded state and translations
   // This order supports other asset (in the future) that should be fetched before data calls.
+  const categoriesPromise =
+    typeof fetchCategories === 'function' ? fetchCategories() : Promise.resolve({ categories: [] });
+
   return store
     .dispatch(fetchAppAssets(defaultConfig.appCdnAssets))
     .then(fetchedAppAssets => {
@@ -63,10 +67,14 @@ exports.loadData = function(requestUrl, sdk, appInfo) {
       // It's given to React Intl instead of pushing to config Context
       translations = translationsRaw?.data || {};
 
-      // Rest of the assets are considered as hosted configs
-      // This structure just gives possibilities to add initial config data
+      // Rest of the assets are considered as hosted configs; categories from Leaz backend API
       hostedConfig = { ...hostedConfig, ...extractHostedConfig(rest) };
-      return Promise.all(dataLoadingCalls(hostedConfig));
+      return categoriesPromise.then(categoriesData => {
+        if (categoriesData && categoriesData.categories) {
+          hostedConfig.categories = categoriesData;
+        }
+        return Promise.all(dataLoadingCalls(hostedConfig));
+      });
     })
     .then(() => {
       return { preloadedState: store.getState(), translations, hostedConfig };

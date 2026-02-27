@@ -38,6 +38,7 @@ import * as log from './util/log';
 import { authInfo } from './ducks/auth.duck';
 import { fetchAppAssets } from './ducks/hostedAssets.duck';
 import { fetchCurrentUser } from './ducks/user.duck';
+import { fetchCategories } from './util/categoriesApi';
 
 // Route config
 import routeConfiguration from './routing/routeConfiguration';
@@ -62,19 +63,23 @@ const render = (store, shouldHydrate) => {
         loadablePromise,
         store.dispatch(fetchAppAssets(defaultConfig.appCdnAssets, cdnAssetsVersion)),
         store.dispatch(fetchCurrentUser()),
+        fetchCategories(),
       ]);
     })
-    .then(([_, fetchedAppAssets, cu]) => {
+    .then(([_, fetchedAppAssets, cu, categoriesData]) => {
       const { translations: translationsRaw, ...rest } = fetchedAppAssets || {};
       // We'll handle translations as a separate data.
       // It's given to React Intl instead of pushing to config Context
       const translations = translationsRaw?.data || {};
 
-      // Rest of the assets are considered as hosted configs
+      // Rest of the assets are considered as hosted configs; categories come from Leaz backend API
       const configEntries = Object.entries(rest);
       const hostedConfig = configEntries.reduce((collectedData, [name, content]) => {
         return { ...collectedData, [name]: content.data || {} };
       }, {});
+      if (categoriesData && categoriesData.categories) {
+        hostedConfig.categories = categoriesData;
+      }
 
       if (shouldHydrate) {
         const container = document.getElementById('root');
@@ -189,4 +194,5 @@ export {
   defaultConfig,
   mergeConfig,
   fetchAppAssets,
+  fetchCategories,
 };

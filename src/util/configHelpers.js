@@ -1089,9 +1089,10 @@ const validateCategoryConfig = hostedConfig => {
     }
 
     return {
-      categories: data.categories.map(({ name, id, subcategories }) => ({
+      categories: data.categories.map(({ name, id, translations, subcategories }) => ({
         name,
         id,
+        translations: translations && typeof translations === 'object' ? translations : {},
         subcategories: validateSubcategories(subcategories),
       })),
     };
@@ -1102,9 +1103,10 @@ const validateCategoryConfig = hostedConfig => {
       return [];
     }
 
-    return subcategories.map(({ name, id, subcategories }) => ({
+    return subcategories.map(({ name, id, translations, subcategories }) => ({
       name,
       id,
+      translations: translations && typeof translations === 'object' ? translations : {},
       subcategories: validateSubcategories(subcategories),
     }));
   };

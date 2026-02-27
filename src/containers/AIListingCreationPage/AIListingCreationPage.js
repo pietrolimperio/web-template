@@ -723,9 +723,9 @@ export const AIListingCreationPageComponent = ({
       case STEP_CATEGORIES:
         return (
           <CategoryModal
-            initialCategoryId={productAnalysis?.categoryId || productAnalysis?.category || null}
-            initialSubcategoryId={productAnalysis?.subcategoryId || productAnalysis?.subcategory || null}
-            initialThirdCategoryId={productAnalysis?.thirdCategoryId || productAnalysis?.thirdCategory || null}
+            initialCategoryId={productAnalysis?.categoryId ?? null}
+            initialSubcategoryId={productAnalysis?.subcategoryId ?? null}
+            initialThirdCategoryId={productAnalysis?.thirdCategoryId ?? null}
             onComplete={handleCategoryComplete}
             onCancel={handleCancelCategories}
           />

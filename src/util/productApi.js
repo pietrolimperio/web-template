@@ -599,9 +599,9 @@ export const mapProductToListingData = (productAnalysis, config) => {
       category: category || 'Other',
       subcategory: subcategory || '',
       thirdCategory: thirdCategory || '',
-      ...(categoryId != null && { categoryId: categoryId }),
-      ...(subcategoryId != null && { subcategoryId: subcategoryId }),
-      ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId }),
+      ...(categoryId != null && { categoryId: categoryId, categoryLevel1: categoryId }),
+      ...(subcategoryId != null && { subcategoryId: subcategoryId, categoryLevel2: subcategoryId }),
+      ...(thirdCategoryId != null && { thirdCategoryId: thirdCategoryId, categoryLevel3: thirdCategoryId }),
       brand: normalizedBrand, // Always include brand, even if "N/A"
       condition: normalizedCondition,
       estimatedPriceNew: fields.priceNew,

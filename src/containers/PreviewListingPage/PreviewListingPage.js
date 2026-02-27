@@ -8,8 +8,8 @@ import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 import { FormattedMessage, useIntl, intlShape, injectIntl } from '../../util/reactIntl';
 import { propTypes } from '../../util/types';
 import { currencyFormatting } from '../../config/settingsCurrency';
-import { getLocalizedCategoryName } from '../../util/string';
 import { ensureCurrentUser, ensureOwnListing } from '../../util/data';
+import { getCategoryNamesFromIds, getShortLocaleForCategoryDisplay } from '../../util/fieldHelpers';
 import { LISTING_STATE_DRAFT } from '../../util/types';
 import { createResourceLocatorString, findRouteByRouteName } from '../../util/routes';
 import { isScrollingDisabled, manageDisableScrolling } from '../../ducks/ui.duck';
@@ -3551,54 +3551,62 @@ export const PreviewListingPageComponent = props => {
                         })}
                       </div>
                     </div>
-                            {/* Breadcrumb */}
-                            {listing.attributes.publicData?.category && (
+                            {/* Breadcrumb - resolve category names from IDs; use translations for current locale for display */}
+                            {(() => {
+                const pub = listing.attributes.publicData || {};
+                const id1 = pub.categoryLevel1 ?? pub.categoryId;
+                const id2 = pub.categoryLevel2 ?? pub.subcategoryId;
+                const id3 = pub.categoryLevel3 ?? pub.thirdCategoryId;
+                const categories = config?.categoryConfiguration?.categories ?? [];
+                const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
+                const names = getCategoryNamesFromIds(categories, id1, id2, id3, shortLocale);
+                const categoryLabel = names.category ?? pub.category;
+                const subcategoryLabel = names.subcategory ?? pub.subcategory;
+                const thirdCategoryLabel = names.thirdCategory ?? pub.thirdCategory;
+                const hasCategory = categoryLabel || id1 != null;
+                if (!hasCategory) return null;
+                return (
                 <div className={css.breadcrumb}>
                   <NamedLink
                     name="SearchPage"
                     to={{
-                      search: `?keywords=${encodeURIComponent(
-                        listing.attributes.publicData.category
-                      )}`,
+                      search: `?keywords=${encodeURIComponent(categoryLabel || '')}`,
                     }}
                     className={css.breadcrumbItem}
                   >
-                    {getLocalizedCategoryName(intl, listing.attributes.publicData.category)}
+                    {categoryLabel ?? ''}
                   </NamedLink>
-                  {listing.attributes.publicData.subcategory && (
+                  {(subcategoryLabel || id2 != null) && (
                     <>
                       <span className={css.breadcrumbSeparator}>›</span>
                       <NamedLink
                         name="SearchPage"
                         to={{
-                          search: `?keywords=${encodeURIComponent(
-                            listing.attributes.publicData.subcategory
-                          )}`,
+                          search: `?keywords=${encodeURIComponent(subcategoryLabel || '')}`,
                         }}
                         className={css.breadcrumbItem}
                       >
-                        {getLocalizedCategoryName(intl, listing.attributes.publicData.subcategory)}
+                        {subcategoryLabel ?? ''}
                       </NamedLink>
                     </>
                   )}
-                  {listing.attributes.publicData.thirdCategory && (
+                  {(thirdCategoryLabel || id3 != null) && (
                     <>
                       <span className={css.breadcrumbSeparator}>›</span>
                       <NamedLink
                         name="SearchPage"
                         to={{
-                          search: `?keywords=${encodeURIComponent(
-                            listing.attributes.publicData.thirdCategory
-                          )}`,
+                          search: `?keywords=${encodeURIComponent(thirdCategoryLabel || '')}`,
                         }}
                         className={css.breadcrumbItem}
                       >
-                        {getLocalizedCategoryName(intl, listing.attributes.publicData.thirdCategory)}
+                        {thirdCategoryLabel ?? ''}
                       </NamedLink>
                     </>
                   )}
                 </div>
-              )}
+                );
+              })()}
               
               {/* Editable Description */}
               <div className={css.descriptionSection}>

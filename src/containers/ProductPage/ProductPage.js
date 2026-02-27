@@ -11,8 +11,8 @@ import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 // Utils
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { LISTING_STATE_PENDING_APPROVAL, LISTING_STATE_CLOSED, propTypes } from '../../util/types';
-import { getLocalizedCategoryName } from '../../util/string';
 import { types as sdkTypes } from '../../util/sdkLoader';
+import { getCategoryNamesFromIds, getShortLocaleForCategoryDisplay } from '../../util/fieldHelpers';
 import {
   LISTING_PAGE_DRAFT_VARIANT,
   LISTING_PAGE_PENDING_APPROVAL_VARIANT,
@@ -1346,8 +1346,20 @@ export const ProductPageComponent = props => {
                   </div>
                 )}
 
-                {/* Breadcrumb (between images and description) */}
-                  {publicData?.category && (
+                {/* Breadcrumb - resolve category names from IDs; use translations for current locale for display */}
+                  {(() => {
+                    const id1 = publicData?.categoryLevel1 ?? publicData?.categoryId;
+                    const id2 = publicData?.categoryLevel2 ?? publicData?.subcategoryId;
+                    const id3 = publicData?.categoryLevel3 ?? publicData?.thirdCategoryId;
+                    const categories = config?.categoryConfiguration?.categories ?? [];
+                    const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
+                    const names = getCategoryNamesFromIds(categories, id1, id2, id3, shortLocale);
+                    const categoryLabel = names.category ?? publicData?.category;
+                    const subcategoryLabel = names.subcategory ?? publicData?.subcategory;
+                    const thirdCategoryLabel = names.thirdCategory ?? publicData?.thirdCategory;
+                    const hasCategory = categoryLabel || id1 != null;
+                    if (!hasCategory) return null;
+                    return (
                     <nav
                       className={css.breadcrumb}
                       aria-label={intl.formatMessage({
@@ -1356,10 +1368,10 @@ export const ProductPageComponent = props => {
                       })}
                     >
                       <ol className={css.breadcrumbList}>
-                        {!publicData.subcategory && !publicData.thirdCategory ? (
+                        {!subcategoryLabel && !thirdCategoryLabel && id2 == null && id3 == null ? (
                           <li className={css.breadcrumbListItem}>
                             <span className={css.breadcrumbCurrent} aria-current="page">
-                              {getLocalizedCategoryName(intl, publicData.category)}
+                              {categoryLabel ?? ''}
                             </span>
                           </li>
                         ) : (
@@ -1367,37 +1379,37 @@ export const ProductPageComponent = props => {
                             <li className={css.breadcrumbListItem}>
                               <NamedLink
                                 name="SearchPage"
-                                to={{ search: `?keywords=${encodeURIComponent(publicData.category)}` }}
+                                to={{ search: `?keywords=${encodeURIComponent(categoryLabel || '')}` }}
                                 className={css.breadcrumbItem}
                               >
-                                {getLocalizedCategoryName(intl, publicData.category)}
+                                {categoryLabel ?? ''}
                               </NamedLink>
                             </li>
-                            {publicData.subcategory && (
+                            {(subcategoryLabel || id2 != null) && (
                               <>
                                 <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
                                   <span className={css.breadcrumbSeparator}>›</span>
                                 </li>
                                 <li className={css.breadcrumbListItem}>
-                                  {publicData.thirdCategory ? (
+                                  {(thirdCategoryLabel || id3 != null) ? (
                                     <NamedLink
                                       name="SearchPage"
                                       to={{
-                                        search: `?keywords=${encodeURIComponent(publicData.subcategory)}`,
+                                        search: `?keywords=${encodeURIComponent(subcategoryLabel || '')}`,
                                       }}
                                       className={css.breadcrumbItem}
                                     >
-                                      {getLocalizedCategoryName(intl, publicData.subcategory)}
+                                      {subcategoryLabel ?? ''}
                                     </NamedLink>
                                   ) : (
                                     <span className={css.breadcrumbCurrent} aria-current="page">
-                                      {getLocalizedCategoryName(intl, publicData.subcategory)}
+                                      {subcategoryLabel ?? ''}
                                     </span>
                                   )}
                                 </li>
                               </>
                             )}
-                            {publicData.thirdCategory && (
+                            {(thirdCategoryLabel || id3 != null) && (
                               <>
                                 <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
                                   <span className={css.breadcrumbSeparator}>›</span>
@@ -1406,11 +1418,11 @@ export const ProductPageComponent = props => {
                                   <NamedLink
                                     name="SearchPage"
                                     to={{
-                                      search: `?keywords=${encodeURIComponent(publicData.thirdCategory)}`,
+                                      search: `?keywords=${encodeURIComponent(thirdCategoryLabel || '')}`,
                                     }}
                                     className={css.breadcrumbItem}
                                   >
-                                    {getLocalizedCategoryName(intl, publicData.thirdCategory)}
+                                    {thirdCategoryLabel ?? ''}
                                   </NamedLink>
                                 </li>
                               </>
@@ -1419,7 +1431,8 @@ export const ProductPageComponent = props => {
                         )}
                       </ol>
                     </nav>
-                  )}
+                    );
+                  })()}
 
                   {/* Description */}
                   {description && (
