@@ -84,9 +84,14 @@ export const getFieldValue = (data, key) => {
  * @param {Array} categoryLevelOptions array of nested category structure
  * @returns pick valid prefixed properties
  */
+// Fallback keys when reading: we store categoryId, subcategoryId, thirdCategoryId
+const CATEGORY_ID_KEYS_BY_LEVEL = { 1: 'categoryId', 2: 'subcategoryId', 3: 'thirdCategoryId' };
+
 export const pickCategoryFields = (data, prefix, level, categoryLevelOptions = []) => {
   const currentCategoryKey = `${prefix}${level}`;
-  const currentCategoryValue = data[currentCategoryKey];
+  const fallbackKey = prefix === 'categoryLevel' ? CATEGORY_ID_KEYS_BY_LEVEL[level] : null;
+  const currentCategoryValue =
+    data[currentCategoryKey] ?? (fallbackKey ? data[fallbackKey] : undefined);
   const isCategoryLevelSet = typeof currentCategoryValue !== 'undefined';
 
   // Validate the value against category options
