@@ -46,18 +46,18 @@
   --colorLightTransparent: rgba(255, 255, 255, 0.65);
 
   /**
-  * Marketplace color comes by default from src/config/brandingConfig.js
+  * Marketplace color comes by default from src/config/configBranding.js
   * It overwrites these CSS Properties.
   * In the future, we are planning to bring more --marketplace* CSS Properties
   * from hosted assets, which means that they could be managed through Console.
   */
-  --marketplaceColor: #5d2bc0; /* hsl(260, 63%, 46%) */
-  --marketplaceColorLight: #7748d5; /* hsl(260, 63%, 56%), +10L from marketplaceColor */
-  --marketplaceColorDark: #492296; /* hsl(260, 63%, 26%), -10L from marketplaceColor */
+  --marketplaceColor: #ff5a02; /* brand primary (orange) */
+  --marketplaceColorLight: #ff8534; /* +10L from marketplaceColor */
+  --marketplaceColorDark: #cc4800; /* -10L from marketplaceColor */
 
-  --marketplaceColorSecondary: #07A2A9; /* hsl(183, 92%, 34%) */
-  --marketplaceColorSecondaryLight: #1AB8C0; /* hsl(183, 92%, 44%), +10L from marketplaceColorSecondary */
-  --marketplaceColorSecondaryDark: #057C82; /* hsl(183, 92%, 24%), -10L from marketplaceColorSecondary */
+  --marketplaceColorSecondary: #0C9FA7; /* brand secondary (teal) */
+  --marketplaceColorSecondaryLight: #14b8c0; /* +10L from marketplaceColorSecondary */
+  --marketplaceColorSecondaryDark: #098a91; /* -10L from marketplaceColorSecondary */
 
   /** 
    * The fill color used by <PrimaryButton>

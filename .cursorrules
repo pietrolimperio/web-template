@@ -1,0 +1,30 @@
+# Project rules and design context
+
+## Design Context
+
+### Users
+- **Acquirenti**: chi vuole noleggiare; devono poter cercare il prodotto di interesse e contattare il venditore.
+- **Venditori**: privati e aziende che mettono a noleggio; devono poter caricare annunci, gestire le transazioni, usare la chat con chi noleggia e accettare le richieste.
+
+Il marketplace è bilaterale: stesso prodotto delle esperienze “cerca → contatta” e “carica annuncio → chat → accetta richiesta”.
+
+### Brand Personality
+- **Tre parole**: economia circolare, efficienza, semplicità.
+- **Emozioni da evocare**: fiducia, energia, semplicità.
+- **Riferimento positivo**: Vinted — apprezzata la facilità della UX.
+- **Anti-riferimento**: evitare l’effetto “subito.it” o siti che inducono dubbi nei consumatori; l’interfaccia deve trasmettere chiarezza e affidabilità.
+
+### Aesthetic Direction
+- **Direzione visiva**: giocoso e organico (non freddo o puramente tecnico).
+- **Tema**: solo light mode per il momento.
+- **Colori di brand** (fonte di verità per ogni scelta di design):
+  - **Primario**: `#ff5a02` (arancione).
+  - **Secondario**: `#0C9FA7` (teal).
+- **Hero landing**: l’hero attuale della landing è **hero-landing.avif** (da usare come riferimento per la hero della homepage).
+
+### Design Principles
+1. **Fiducia e chiarezza**: ogni schermata e flusso devono essere comprensibili e rassicuranti; niente ambiguità che generino dubbi (stile “subito”).
+2. **Energia e semplicità**: UX fluida e immediata, ispirata a Vinted; pochi passi, azioni evidenti, niente fronzoli.
+3. **Giocoso e organico**: forme e micro-interazioni amichevoli e “vive”, senza sembrare corporate o fredde.
+4. **Economia circolare ed efficienza**: il tono visivo e testuale deve riflettere riuso, praticità e valore per chi noleggia e chi mette a noleggio.
+5. **Coerenza con il design system esistente**: usare le variabili CSS e i pattern già in `marketplaceDefaults.css` e nei moduli, allineando colore primario/secondario ai valori di brand sopra (#ff5a02, #0C9FA7) quando si introducono o aggiornano componenti.

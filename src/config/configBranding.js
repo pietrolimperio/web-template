@@ -14,11 +14,11 @@ import twitterImage from '../assets/logo.png';
 // Note: These come from the branding asset nowadays by default.
 //       To use this built-in configuration, you need to remove the overwrite from configHelper.js (mergeBranding func)
 
-// Marketplace color.
+// Marketplace color (brand primary).
 // This is saved as CSS Property: --marketplaceColor in src/app.js
 // Also --marketplaceColorDark and --marketplaceColorLight are generated from this one
 // by adding +/- 10% to lightness.
-export const marketplaceColor = '#7c3aed';
+export const marketplaceColor = '#ff5a02';
 
 // Logo is used in Topbar on mobile and desktop, where height is the limiting factor.
 // Therefore, we strongly suggest that your image file for desktop logo is in landscape!
