@@ -17,3 +17,5 @@ yarn-error.log
 .vscode
 ENV_PRIORITY.md
 .cursor/debug.log
+
+.cursor
