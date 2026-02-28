@@ -87,23 +87,22 @@ const ResponsiveImage = props => {
     );
   }
 
-  const imageVariants = image.attributes.variants;
+  const imageVariants = image.attributes.variants || {};
 
-  const srcSet = variants
+  const srcSetEntries = variants
     .map(variantName => {
       const variant = imageVariants[variantName];
-
-      if (!variant) {
-        // Variant not available (most like just not loaded yet)
-        return null;
-      }
-      return `${variant.url} ${variant.width}w`;
+      if (!variant) return null;
+      return { url: variant.url, width: variant.width };
     })
-    .filter(v => v != null)
-    .join(', ');
+    .filter(v => v != null);
+
+  const srcSet = srcSetEntries.map(e => `${e.url} ${e.width}w`).join(', ');
+  const src = srcSetEntries.length > 0 ? srcSetEntries[0].url : undefined;
 
   const imgProps = {
     className: classes,
+    src,
     srcSet,
     ...rest,
   };

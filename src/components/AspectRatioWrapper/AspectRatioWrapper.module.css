@@ -11,7 +11,8 @@
 }
 
 .aspectBox {
-  /* In flow: riempie il contenitore, niente position absolute */
+  /* position: relative so that lazyLoadWithDimensions' absolute child is contained and gets correct dimensions */
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
