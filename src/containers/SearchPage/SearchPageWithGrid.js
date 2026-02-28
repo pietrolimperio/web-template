@@ -285,13 +285,13 @@ export class SearchPageComponent extends Component {
 
     const isKeywordSearch = isMainSearchTypeKeywords(config);
     const builtInPrimaryFilters = defaultFiltersConfig.filter(f =>
-      ['categoryLevel', 'listingType'].includes(f.key)
+      ['category', 'listingType'].includes(f.key)
     );
     const builtInFilters = isKeywordSearch
       ? defaultFiltersConfig.filter(
-          f => !['keywords', 'categoryLevel', 'listingType'].includes(f.key)
+          f => !['keywords', 'category', 'listingType'].includes(f.key)
         )
-      : defaultFiltersConfig.filter(f => !['categoryLevel', 'listingType'].includes(f.key));
+      : defaultFiltersConfig.filter(f => !['category', 'listingType'].includes(f.key));
     const [customPrimaryFilters, customSecondaryFilters] = groupListingFieldConfigs(
       listingFieldsConfig,
       activeListingTypes

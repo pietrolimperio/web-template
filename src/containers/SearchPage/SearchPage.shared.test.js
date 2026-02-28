@@ -132,11 +132,12 @@ const listingTypesConfig = activeListingTypes.map(lt => ({
 
 const defaultFiltersConfig = [
   {
-    key: 'categoryLevel',
+    key: 'category',
     schemaType: 'category',
     scope: 'public',
-    isNestedEnum: false,
-    nestedParams: ['categoryLevel'],
+    isNestedEnum: true,
+    categoryLevelKeys: ['categoryId', 'subcategoryId', 'thirdCategoryId'],
+    nestedParams: ['categoryId', 'subcategoryId', 'thirdCategoryId'],
   },
   {
     key: 'price',
@@ -208,14 +209,14 @@ describe('SearchPage.helpers', () => {
     });
     it('returns everything if correct category and listing type is set', () => {
       const params = {
-        pub_categoryLevel1: 'a',
+        pub_categoryId: 'a',
         pub_cat: 'cat1',
         other_param: 'somevalue',
         pub_listingType: 'sell-bicycles',
       };
       const validParam = omitLimitedListingFieldParams(params, filterConfigs);
       expect(validParam).toEqual({
-        pub_categoryLevel1: 'a',
+        pub_categoryId: 'a',
         pub_cat: 'cat1',
         other_param: 'somevalue',
         pub_listingType: 'sell-bicycles',

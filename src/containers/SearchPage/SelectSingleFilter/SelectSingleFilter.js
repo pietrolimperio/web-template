@@ -88,7 +88,7 @@ const SelectSingleFilter = props => {
     const firstQueryParamName = isArray ? queryParamNames[0] : queryParamNames;
 
     // Nested options create multiple query params
-    //   - E.g. categoryLevel1: 'v1', categoryLevel2: 'v2', categoryLevel3: 'v3'
+    //   - E.g. categoryId: 'v1', subcategoryId: 'v2', thirdCategoryId: 'v3'
     // If there's only a single query param in use, we flatten the value
     //   - E.g. categoryLevel: 'value'
     const usedValue = hasMultipleQueryParams

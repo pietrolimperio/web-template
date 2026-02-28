@@ -218,12 +218,12 @@ const getInitialValues = (
   listingTypes,
   listingFields,
   listingCategories,
-  categoryKey
+  categoryLevelKeys
 ) => {
   const { description, title, publicData, privateData } = props?.listing?.attributes || {};
   const { listingType } = publicData;
 
-  const nestedCategories = pickCategoryFields(publicData, categoryKey, 1, listingCategories);
+  const nestedCategories = pickCategoryFields(publicData, categoryLevelKeys, 1, listingCategories);
   // Initial values for the form
   return {
     title,
@@ -290,7 +290,7 @@ const EditListingDetailsPanel = props => {
   const listingTypes = config.listing.listingTypes;
   const listingFields = config.listing.listingFields;
   const listingCategories = config.categoryConfiguration.categories;
-  const categoryKey = config.categoryConfiguration.key;
+  const categoryLevelKeys = config.categoryConfiguration.categoryLevelKeys;
 
   const { hasExistingListingType, existingListingTypeInfo } = hasSetListingType(publicData);
   const hasValidExistingListingType =
@@ -307,7 +307,7 @@ const EditListingDetailsPanel = props => {
     listingTypes,
     listingFields,
     listingCategories,
-    categoryKey
+    categoryLevelKeys
   );
 
   const noListingTypesSet = listingTypes?.length === 0;
@@ -355,10 +355,9 @@ const EditListingDetailsPanel = props => {
               ...rest
             } = values;
 
-            const nestedCategories = pickCategoryFields(rest, categoryKey, 1, listingCategories);
-            // Remove old categories by explicitly saving null for them.
+            const nestedCategories = pickCategoryFields(rest, categoryLevelKeys, 1, listingCategories);
             const cleanedNestedCategories = {
-              ...[1, 2, 3].reduce((a, i) => ({ ...a, [`${categoryKey}${i}`]: null }), {}),
+              ...(categoryLevelKeys || []).reduce((a, k) => ({ ...a, [k]: null }), {}),
               ...nestedCategories,
             };
             const publicListingFields = pickListingFieldsData(
@@ -396,9 +395,9 @@ const EditListingDetailsPanel = props => {
           hasExistingListingType={hasExistingListingType}
           selectableCategories={listingCategories}
           pickSelectedCategories={values =>
-            pickCategoryFields(values, categoryKey, 1, listingCategories)
+            pickCategoryFields(values, categoryLevelKeys, 1, listingCategories)
           }
-          categoryPrefix={categoryKey}
+          categoryLevelKeys={categoryLevelKeys}
           onListingTypeChange={onListingTypeChange}
           listingFieldsConfig={listingFields}
           listingCurrency={listing?.attributes?.price?.currency}

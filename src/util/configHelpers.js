@@ -25,17 +25,15 @@ const getMaxDepth = (depth, subcategories) =>
 const createArray = length => [...Array(length)].fill(null).map((_, i) => i + 1);
 
 /**
- * Returns the fixed/built-in configs. Marketplace API has specified search schema for
- * categoryLevel1, categoryLevel2, categoryLevel3
+ * Returns the fixed/built-in configs for categories.
+ * Listing publicData uses categoryId, subcategoryId, thirdCategoryId.
  *
  * @param {Array} categories config from listing-categories.json asset
- * @returns object-literal containing fixed key and array of extended data keys used with nested categories.
+ * @returns object-literal containing key, scope, categoryLevelKeys (categoryId, subcategoryId, thirdCategoryId), categories.
  */
 const getBuiltInCategorySpecs = (categories = []) => {
-  // Don't change! The search schema is fixed to categoryLevel1, categoryLevel2, categoryLevel3
-  const key = 'categoryLevel';
-  const maxDepth = depthFirstSearch({ subcategories: categories }, getMaxDepth);
-  const categoryLevelKeys = createArray(maxDepth).map(i => `${key}${i}`);
+  const key = 'category';
+  const categoryLevelKeys = ['categoryId', 'subcategoryId', 'thirdCategoryId'];
 
   return { key, scope: 'public', categoryLevelKeys, categories };
 };
@@ -57,9 +55,9 @@ const hasClashWithBuiltInPublicDataKey = listingFields => {
     'shippingEnabled',
     'shippingPriceInSubunitsOneItem',
     'shippingPriceInSubunitsAdditionalItems',
-    'categoryLevel1',
-    'categoryLevel2',
-    'categoryLevel3',
+    'categoryId',
+    'subcategoryId',
+    'thirdCategoryId',
     'cardStyle',
   ];
   let hasClash = false;
@@ -1201,7 +1199,6 @@ const validCategoryConfig = (config, categoryConfiguration) => {
   }
 
   const { key, scope, categoryLevelKeys } = categoryConfiguration;
-  // This ensures that flat category structure still uses categoryLevel1 key
   const isNestedEnum = true;
   const nestedParams = categoryLevelKeys;
 

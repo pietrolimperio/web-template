@@ -160,11 +160,12 @@ const listingTypeOptions = listingTypes.map(lt => ({ option: lt.id, label: label
 
 const defaultFiltersConfig = [
   {
-    key: 'categoryLevel',
+    key: 'category',
     schemaType: 'category',
     scope: 'public',
     isNestedEnum: true,
-    nestedParams: ['categoryLevel1', 'categoryLevel2', 'categoryLevel3'],
+    categoryLevelKeys: ['categoryId', 'subcategoryId', 'thirdCategoryId'],
+    nestedParams: ['categoryId', 'subcategoryId', 'thirdCategoryId'],
   },
   {
     key: 'listingType',
@@ -629,8 +630,8 @@ describe('Duck', () => {
     ...defaultConfig,
     categoryConfiguration: {
       categories: [...defaultConfig.categories.categories],
-      categoryLevelKeys: ['categoryLevel1', 'categoryLevel2', 'categoryLevel3'],
-      key: 'categoryLevel',
+      categoryLevelKeys: ['categoryId', 'subcategoryId', 'thirdCategoryId'],
+      key: 'category',
       scope: 'public',
     },
     listing: {

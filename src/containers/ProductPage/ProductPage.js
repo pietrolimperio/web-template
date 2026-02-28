@@ -1348,9 +1348,9 @@ export const ProductPageComponent = props => {
 
                 {/* Breadcrumb - resolve category names from IDs; use translations for current locale for display */}
                   {(() => {
-                    const id1 = publicData?.categoryLevel1 ?? publicData?.categoryId;
-                    const id2 = publicData?.categoryLevel2 ?? publicData?.subcategoryId;
-                    const id3 = publicData?.categoryLevel3 ?? publicData?.thirdCategoryId;
+                    const id1 = publicData?.categoryId;
+                    const id2 = publicData?.subcategoryId;
+                    const id3 = publicData?.thirdCategoryId;
                     const categories = config?.categoryConfiguration?.categories ?? [];
                     const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
                     const names = getCategoryNamesFromIds(categories, id1, id2, id3, shortLocale);

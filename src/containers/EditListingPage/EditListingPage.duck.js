@@ -629,17 +629,6 @@ const updateStockOfListingMaybe = (listingId, stockTotals, dispatch) => {
   return Promise.resolve();
 };
 
-// Store only categoryId, subcategoryId, thirdCategoryId (not categoryLevel1/2/3)
-const normalizePublicDataCategories = publicData => {
-  if (!publicData || typeof publicData !== 'object') return publicData;
-  const { categoryLevel1, categoryLevel2, categoryLevel3, ...rest } = publicData;
-  const normalized = { ...rest };
-  if (categoryLevel1 != null) normalized.categoryId = categoryLevel1;
-  if (categoryLevel2 != null) normalized.subcategoryId = categoryLevel2;
-  if (categoryLevel3 != null) normalized.thirdCategoryId = categoryLevel3;
-  return normalized;
-};
-
 // Create listing in draft state
 // NOTE: we want to keep it possible to include stock management field to the first wizard form.
 // this means that there needs to be a sequence of calls:
@@ -649,16 +638,10 @@ export function requestCreateListingDraft(data, config) {
     dispatch(createListingDraftRequest(data));
     const { stockUpdate, images, ...rest } = data;
 
-    // Normalize publicData: use only categoryId, subcategoryId, thirdCategoryId
-    const restNormalized =
-      rest.publicData != null
-        ? { ...rest, publicData: normalizePublicDataCategories(rest.publicData) }
-        : rest;
-
     // If images should be saved, create array out of the image UUIDs for the API call
     // Note: in this template, image upload is not happening at the same time as listing creation.
     const imageProperty = typeof images !== 'undefined' ? { images: imageIds(images) } : {};
-    const ownListingValues = { ...imageProperty, ...restNormalized };
+    const ownListingValues = { ...imageProperty, ...rest };
 
     const imageVariantInfo = getImageVariantInfo(config.layout.listingImage);
     const queryParams = {
@@ -698,15 +681,9 @@ export function requestUpdateListing(tab, data, config) {
     dispatch(updateListingRequest(data));
     const { id, stockUpdate, images, ...rest } = data;
 
-    // Normalize publicData: use only categoryId, subcategoryId, thirdCategoryId
-    const restNormalized =
-      rest.publicData != null
-        ? { ...rest, publicData: normalizePublicDataCategories(rest.publicData) }
-        : rest;
-
     // If images should be saved, create array out of the image UUIDs for the API call
     const imageProperty = typeof images !== 'undefined' ? { images: imageIds(images) } : {};
-    const ownListingUpdateValues = { id, ...imageProperty, ...restNormalized };
+    const ownListingUpdateValues = { id, ...imageProperty, ...rest };
     const imageVariantInfo = getImageVariantInfo(config.layout.listingImage);
     const queryParams = {
       expand: true,

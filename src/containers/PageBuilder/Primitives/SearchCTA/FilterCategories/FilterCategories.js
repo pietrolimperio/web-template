@@ -159,7 +159,7 @@ const FilterCategories = props => {
   return (
     <Field
       {...rest}
-      name="pub_categoryLevel1"
+      name="pub_categoryId"
       component={CategoryDropdown}
       className={className}
       rootClassName={rootClassName}

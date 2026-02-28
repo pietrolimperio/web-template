@@ -128,17 +128,23 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
       : {};
   };
 
-  const constructCategoryPropertiesForAPI = (queryParamPrefix, categories, level, params) => {
-    const levelKey = `${queryParamPrefix}${level}`;
+  const constructCategoryPropertiesForAPI = (categoryLevelKeys, categories, level, params) => {
+    const keyAtLevel = categoryLevelKeys?.[level - 1];
+    if (!keyAtLevel) return {};
+    const levelKey = constructQueryParamName(keyAtLevel, 'public');
     const levelValue =
       typeof params?.[levelKey] !== 'undefined' ? `${params?.[levelKey]}` : undefined;
     const foundCategory = categories.find(cat => cat.id === levelValue);
     const subcategories = foundCategory?.subcategories || [];
-    // Note: we might need to prepare nested categories too: categoryLevel1, categoryLevel2, categoryLevel3
     return foundCategory && subcategories.length > 0
       ? {
           [levelKey]: levelValue,
-          ...constructCategoryPropertiesForAPI(queryParamPrefix, subcategories, level + 1, params),
+          ...constructCategoryPropertiesForAPI(
+            categoryLevelKeys,
+            subcategories,
+            level + 1,
+            params
+          ),
         }
       : foundCategory
       ? { [levelKey]: levelValue }
@@ -156,10 +162,13 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
   const prepareCategoryParams = (paramName, params) => {
     const categoryConfig = config.search.defaultFilters?.find(f => f.schemaType === 'category');
     const categories = config.categoryConfiguration.categories;
-    const { key, scope } = categoryConfig || {};
-    const categoryParamPrefix = constructQueryParamName(key, scope);
-    return paramName.startsWith(categoryParamPrefix)
-      ? constructCategoryPropertiesForAPI(categoryParamPrefix, categories, 1, params)
+    const categoryLevelKeys =
+      categoryConfig?.categoryLevelKeys ?? categoryConfig?.nestedParams;
+    const categoryParamNames =
+      categoryLevelKeys?.map(k => constructQueryParamName(k, 'public')) || [];
+    const isCategoryParam = categoryParamNames.some(name => paramName === name);
+    return isCategoryParam && categoryLevelKeys?.length
+      ? constructCategoryPropertiesForAPI(categoryLevelKeys, categories, 1, params)
       : {};
   };
 

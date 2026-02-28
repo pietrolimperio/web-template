@@ -88,9 +88,11 @@ describe('EditListingDetailsForm', () => {
         disabled={false}
         ready={false}
         listingFieldsConfig={listingFieldsConfig}
-        categoryPrefix="categoryLevel"
+        categoryLevelKeys={['categoryId', 'subcategoryId', 'thirdCategoryId']}
         selectableCategories={[]}
-        pickSelectedCategories={values => pickCategoryFields(values, 'categoryLevel', 1, [])}
+        pickSelectedCategories={values =>
+          pickCategoryFields(values, ['categoryId', 'subcategoryId', 'thirdCategoryId'], 1, [])
+        }
         selectableListingTypes={selectableListingTypes}
         hasExistingListingType={true}
         initialValues={selectableListingTypes[0]}

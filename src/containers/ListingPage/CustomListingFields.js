@@ -25,8 +25,13 @@ import SectionYoutubeVideoMaybe from './SectionYoutubeVideoMaybe';
 const CustomListingFields = props => {
   const { publicData, metadata, listingFieldConfigs, categoryConfiguration } = props;
 
-  const { key: categoryPrefix, categories: listingCategoriesConfig } = categoryConfiguration;
-  const categoriesObj = pickCategoryFields(publicData, categoryPrefix, 1, listingCategoriesConfig);
+  const { categoryLevelKeys, categories: listingCategoriesConfig } = categoryConfiguration;
+  const categoriesObj = pickCategoryFields(
+    publicData,
+    categoryLevelKeys,
+    1,
+    listingCategoriesConfig
+  );
   const currentCategories = Object.values(categoriesObj);
 
   const isFieldForSelectedCategories = fieldConfig => {

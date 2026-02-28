@@ -8,8 +8,8 @@ defined through Console. There you can configure
 - **categories**
   - Configured through both listing-search.json and listing-categories.json
   - Categories support nesting
-  - It might use multiple query parameters: pub_categoryLevel1, pub_categoryLevel2,
-    pub_categoryLevel3
+  - It might use multiple query parameters: pub_categoryId, pub_subcategoryId,
+    pub_thirdCategoryId
 - **built-in filters**: price, dates, keywords
   - Configured through listing-search.json
 

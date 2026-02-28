@@ -76,9 +76,9 @@ export const isAnyFilterActive = (filterKeys, urlQueryParams, filterConfigs) => 
 /**
  * Pick initial vales for FieldSelectTree component.
  * The value object should be an object containing search params:
- * { pub_categoryLevel1: 'cats', pub_categoryLevel2: 'egyptian-mau', meta_foo: 'bar' }
+ * { pub_categoryId: 'cats', pub_subcategoryId: 'egyptian-mau', meta_foo: 'bar' }
  *
- * @param {String} prefix like "pub_categoryLevel"
+ * @param {String} prefix like "pub_categoryId"
  * @param {Object} values object literal containing level-specific info
  *
  * @returns returns properties, which have a key that starts with the given prefix.

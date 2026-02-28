@@ -156,7 +156,7 @@ const publicData = {
   listingType: 'sell-bicycles', // Ensure listing field can be tied to listing type
   transactionProcessAlias: 'default-purchase/release-1',
   unitType: 'item',
-  categoryLevel1: 'cats', // Ensure listing field can be tied to category
+  categoryId: 'cats', // Ensure listing field can be tied to category
   cat: 'cat_1',
 };
 const listing1 = createListing(id, { publicData }, { author: createUser('user-1') });

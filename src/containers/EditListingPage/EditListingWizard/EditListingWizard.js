@@ -174,9 +174,9 @@ const hasValidListingFieldsInExtendedData = (publicData, privateData, config) =>
       return savedOptions.every(optionData => schemaOptionKeys.includes(optionData));
     };
 
-    const categoryKey = config.categoryConfiguration.key;
+    const categoryLevelKeys = config.categoryConfiguration.categoryLevelKeys;
     const categoryOptions = config.categoryConfiguration.categories;
-    const categoriesObj = pickCategoryFields(publicData, categoryKey, 1, categoryOptions);
+    const categoriesObj = pickCategoryFields(publicData, categoryLevelKeys, 1, categoryOptions);
     const currentCategories = Object.values(categoriesObj);
 
     const isTargetListingType = isFieldForListingType(publicData?.listingType, fieldConfig);

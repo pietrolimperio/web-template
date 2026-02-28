@@ -67,9 +67,9 @@ Here's what data each panel collects and where it's stored:
   - `listing.attributes.publicData.transactionProcessAlias` - Transaction process identifier
   - `listing.attributes.publicData.unitType` - Unit for pricing (e.g., 'day', 'night', 'hour',
     'fixed')
-  - `listing.attributes.publicData.categoryLevel1` - Main category (if categories are in use)
-  - `listing.attributes.publicData.categoryLevel2` - Subcategory (nested under main category)
-  - `listing.attributes.publicData.categoryLevel3` - Subcategory (nested under subcategory)
+  - `listing.attributes.publicData.categoryId` - Main category (if categories are in use)
+  - `listing.attributes.publicData.subcategoryId` - Subcategory (nested under main category)
+  - `listing.attributes.publicData.thirdCategoryId` - Third level category (nested under subcategory)
   - `listing.attributes.publicData.{fieldId}` - Custom listing fields (public scope)
   - `listing.attributes.privateData.{fieldId}` - Custom listing fields (private scope)
 

@@ -139,15 +139,15 @@ const findCategoryConfig = (categories, categoryIdToFind) => {
 
 /**
  * Recursively render subcategory field inputs if there are subcategories available.
- * This function calls itself with updated props to render nested category fields.
- * The select field is used for choosing a category or subcategory.
+ * Uses categoryLevelKeys (e.g. categoryId, subcategoryId, thirdCategoryId) for field names.
  */
 const CategoryField = props => {
-  const { currentCategoryOptions, level, values, prefix, handleCategoryChange, intl } = props;
+  const { currentCategoryOptions, level, values, categoryLevelKeys, handleCategoryChange, intl } =
+    props;
 
-  const currentCategoryKey = `${prefix}${level}`;
+  const currentCategoryKey = categoryLevelKeys?.[level - 1];
 
-  const categoryConfig = findCategoryConfig(currentCategoryOptions, values[`${prefix}${level}`]);
+  const categoryConfig = findCategoryConfig(currentCategoryOptions, values[currentCategoryKey]);
 
   return (
     <>
@@ -160,19 +160,19 @@ const CategoryField = props => {
           onChange={event => handleCategoryChange(event, level, currentCategoryOptions)}
           label={intl.formatMessage(
             { id: 'EditListingDetailsForm.categoryLabel' },
-            { categoryLevel: currentCategoryKey }
+            { categoryKey: currentCategoryKey }
           )}
           validate={required(
             intl.formatMessage(
               { id: 'EditListingDetailsForm.categoryRequired' },
-              { categoryLevel: currentCategoryKey }
+              { categoryKey: currentCategoryKey }
             )
           )}
         >
           <option disabled value="">
             {intl.formatMessage(
               { id: 'EditListingDetailsForm.categoryPlaceholder' },
-              { categoryLevel: currentCategoryKey }
+              { categoryKey: currentCategoryKey }
             )}
           </option>
 
@@ -189,7 +189,7 @@ const CategoryField = props => {
           currentCategoryOptions={categoryConfig.subcategories}
           level={level + 1}
           values={values}
-          prefix={prefix}
+          categoryLevelKeys={categoryLevelKeys}
           handleCategoryChange={handleCategoryChange}
           intl={intl}
         />
@@ -203,29 +203,26 @@ const FieldSelectCategory = props => {
     checkIfInitialValuesExist();
   }, []);
 
-  const { prefix, listingCategories, formApi, intl, setAllCategoriesChosen, values } = props;
+  const { categoryLevelKeys, listingCategories, formApi, intl, setAllCategoriesChosen, values } =
+    props;
 
-  // Counts the number of selected categories in the form values based on the given prefix.
   const countSelectedCategories = () => {
-    return Object.keys(values).filter(key => key.startsWith(prefix)).length;
+    return Object.keys(values).filter(key => categoryLevelKeys?.includes(key)).length;
   };
 
-  // Checks if initial values exist for categories and sets the state accordingly.
-  // If initial values exist, it sets `allCategoriesChosen` state to true; otherwise, it sets it to false
   const checkIfInitialValuesExist = () => {
-    const count = countSelectedCategories(values, prefix);
+    const count = countSelectedCategories();
     setAllCategoriesChosen(count > 0);
   };
 
-  // If a parent category changes, clear all child category values
   const handleCategoryChange = (category, level, currentCategoryOptions) => {
-    const selectedCatLenght = countSelectedCategories();
-    if (level < selectedCatLenght) {
-      for (let i = selectedCatLenght; i > level; i--) {
-        formApi.change(`${prefix}${i}`, null);
+    const selectedCatLength = countSelectedCategories();
+    if (level < selectedCatLength && categoryLevelKeys?.length) {
+      for (let i = selectedCatLength; i > level; i--) {
+        formApi.change(categoryLevelKeys[i - 1], null);
       }
     }
-    const categoryConfig = findCategoryConfig(currentCategoryOptions, category).subcategories;
+    const categoryConfig = findCategoryConfig(currentCategoryOptions, category)?.subcategories;
     setAllCategoriesChosen(!categoryConfig || categoryConfig.length === 0);
   };
 
@@ -234,7 +231,7 @@ const FieldSelectCategory = props => {
       currentCategoryOptions={listingCategories}
       level={1}
       values={values}
-      prefix={prefix}
+      categoryLevelKeys={categoryLevelKeys}
       handleCategoryChange={handleCategoryChange}
       intl={intl}
     />
@@ -299,6 +296,7 @@ const AddListingFields = props => {
  * @param {boolean} [props.autoFocus] - Whether the form should autofocus
  * @param {Function} props.onListingTypeChange - The listing type change function
  * @param {Function} props.onSubmit - The submit function
+ * @param {Array<string>} [props.categoryLevelKeys] - Category field keys, e.g. ['categoryId', 'subcategoryId', 'thirdCategoryId']
  * @returns {JSX.Element}
  */
 const EditListingDetailsForm = props => (
@@ -323,7 +321,7 @@ const EditListingDetailsForm = props => (
         selectableCategories,
         hasExistingListingType = false,
         pickSelectedCategories,
-        categoryPrefix,
+        categoryLevelKeys,
         saveActionMsg,
         updated,
         updateInProgress,
@@ -397,7 +395,7 @@ const EditListingDetailsForm = props => (
           {showCategories && isCompatibleCurrency && (
             <FieldSelectCategory
               values={values}
-              prefix={categoryPrefix}
+              categoryLevelKeys={categoryLevelKeys}
               listingCategories={selectableCategories}
               formApi={formApi}
               intl={intl}

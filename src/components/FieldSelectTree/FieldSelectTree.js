@@ -134,12 +134,12 @@ const SelectOptions = props => {
  * Returns an array of selected nested option configurations.
  * It roughly looks like this:
  * [
- *   { option: 'women', label: 'Women', levelKey: 'categoryLevel1', suboptions: [etc.] },
- *   { option: 'jackets', label: 'Jackets', levelKey: 'categoryLevel2' },
+ *   { option: 'women', label: 'Women', levelKey: 'categoryId', suboptions: [etc.] },
+ *   { option: 'jackets', label: 'Jackets', levelKey: 'subcategoryId' },
  * ]
  *
  * @param {Array} primaryOptions highest level of options
- * @param {Object} currentSelections selected nested options: { categoryLevel1: 'women', categoryLevel2: 'jacket' }
+ * @param {Object} currentSelections selected nested options: { categoryId: 'women', subcategoryId: 'jacket' }
  * @returns an array of selected nested option configurations.
  */
 const getBranchPath = (primaryOptions, currentSelections) => {
@@ -160,8 +160,8 @@ const getBranchPath = (primaryOptions, currentSelections) => {
  * Handle value changes that happen when user clicks different options.
  *
  * @param {Array} primaryOptions highest level of options
- * @param {Object} currentSelections selected nested options: { categoryLevel1: 'women', categoryLevel2: 'jacket' }
- * @param {String} namePrefix like "categoryLevel"
+ * @param {Object} currentSelections selected nested options: { categoryId: 'women', subcategoryId: 'jacket' }
+ * @param {String} namePrefix like "categoryId" or prefix for level keys
  * @param {Function} onChange Final Form's onChange function.
  */
 const handleChangeFn = (primaryOptions, currentSelections, namePrefix, onChange) => (
