@@ -182,6 +182,134 @@ exports.calculateQuantityFromDates = (startDate, endDate, type) => {
 };
 
 /**
+ * Parse period variant date range to { start, end } (moment start-of-day).
+ * period can be: "YYYYMMDD,YYYYMMDD,..." (comma list) or "YYYYMMDD-YYYYMMDD" or array of dates.
+ * @param {Object} variant - price variant with period or dates
+ * @returns {{ start: moment.Moment, end: moment.Moment } | null}
+ */
+const parsePeriodVariantRange = variant => {
+  if (!variant) return null;
+  const periodStr = variant.period;
+  const datesArr = variant.dates;
+
+  if (datesArr && Array.isArray(datesArr) && datesArr.length > 0) {
+    const moments = datesArr.map(d => moment(d).startOf('day'));
+    const start = moment.min(moments);
+    const end = moment.max(moments);
+    return { start, end };
+  }
+
+  if (periodStr && typeof periodStr === 'string') {
+    const trimmed = periodStr.trim();
+    if (trimmed.includes('-')) {
+      const [startStr, endStr] = trimmed.split('-').map(s => s.trim());
+      if (startStr && endStr) {
+        const start = moment(startStr, 'YYYYMMDD', true).startOf('day');
+        const end = moment(endStr, 'YYYYMMDD', true).startOf('day');
+        if (start.isValid() && end.isValid()) return { start, end };
+      }
+    }
+    const parts = trimmed.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      const moments = parts.map(p => moment(p, 'YYYYMMDD', true).startOf('day')).filter(m => m.isValid());
+      if (moments.length > 0) {
+        return { start: moment.min(moments), end: moment.max(moments) };
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * Find period price variant that applies to the booking start date.
+ * @param {Array} priceVariants - listing publicData.priceVariants
+ * @param {string|Date} bookingStart - booking start date
+ * @returns {Object | null} applicable period variant or null
+ */
+exports.getApplicablePeriodVariant = (priceVariants, bookingStart) => {
+  if (!priceVariants || !Array.isArray(priceVariants) || !bookingStart) return null;
+  const bookingDay = moment(bookingStart).startOf('day');
+
+  for (const variant of priceVariants) {
+    const type = variant.type || (variant.period || (variant.dates && variant.dates.length) ? 'period' : null);
+    if (type !== 'period') continue;
+    if (variant.priceInSubunits == null || !Number.isInteger(variant.priceInSubunits)) continue;
+
+    const range = parsePeriodVariantRange(variant);
+    if (!range || !bookingDay.isSameOrAfter(range.start) || !bookingDay.isSameOrBefore(range.end)) continue;
+    return variant;
+  }
+  return null;
+};
+
+/**
+ * Get the list of dates (days) covered by the booking (start inclusive, end exclusive).
+ * @param {string|Date} bookingStart
+ * @param {string|Date} bookingEnd - exclusive end
+ * @returns {moment.Moment[]} array of moment instances, one per day
+ */
+exports.getBookingDateRange = (bookingStart, bookingEnd) => {
+  if (!bookingStart || !bookingEnd) return [];
+  const dates = [];
+  let d = moment(bookingStart).startOf('day');
+  const endM = moment(bookingEnd).startOf('day');
+  while (d.isBefore(endM)) {
+    dates.push(d.clone());
+    d.add(1, 'day');
+  }
+  return dates;
+};
+
+/**
+ * Get price in subunits for a single date: period variant if that date falls in one, else base price.
+ * @param {Array} priceVariants - listing publicData.priceVariants
+ * @param {moment.Moment|Date} date - the day to price
+ * @param {number} basePriceAmount - listing default price amount (subunits)
+ * @returns {number} price in subunits for that date
+ */
+exports.getPriceForDate = (priceVariants, date, basePriceAmount) => {
+  if (!priceVariants || !Array.isArray(priceVariants)) return basePriceAmount;
+  const variant = exports.getApplicablePeriodVariant(priceVariants, moment(date).toDate());
+  if (variant && variant.priceInSubunits != null && Number.isInteger(variant.priceInSubunits)) {
+    return variant.priceInSubunits;
+  }
+  return basePriceAmount;
+};
+
+/**
+ * Find duration price variant that applies to the given quantity (days/nights).
+ * Picks the variant with highest minLength that still applies (best discount for the stay length).
+ * @param {Array} priceVariants - listing publicData.priceVariants
+ * @param {number} quantity - number of days or nights
+ * @returns {Object | null} applicable duration variant or null
+ */
+exports.getApplicableDurationVariant = (priceVariants, quantity) => {
+  if (!priceVariants || !Array.isArray(priceVariants) || quantity == null || quantity < 1) return null;
+
+  const durationVariants = priceVariants.filter(v => {
+    const t = v.type || (v.minLength || v.minDuration ? 'duration' : null);
+    if (t !== 'duration') return false;
+    const minLen = v.minLength ?? v.minDuration;
+    if (minLen == null || v.percentageDiscount == null) return false;
+    if (quantity < minLen) return false;
+    const maxLen = v.maxLength ?? v.maxDuration;
+    if (maxLen != null && quantity > maxLen) return false;
+    return true;
+  });
+
+  if (durationVariants.length === 0) return null;
+  if (durationVariants.length === 1) return durationVariants[0];
+
+  return durationVariants.reduce((best, v) => {
+    const minLen = v.minLength ?? v.minDuration ?? 0;
+    const bestMin = best.minLength ?? best.minDuration ?? 0;
+    if (minLen > bestMin) return v;
+    if (minLen === bestMin && (v.percentageDiscount ?? 0) > (best.percentageDiscount ?? 0)) return v;
+    return best;
+  });
+};
+
+/**
  * Calculate the quantity of hours between start and end dates.
  * If the length of the timeslot is something else than hour (e.g. 30 minutes)
  * you can change parameter 'hours' to 'minutes' and use that to calculate the

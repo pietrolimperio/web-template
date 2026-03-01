@@ -9,6 +9,12 @@
   white-space: nowrap;
 }
 
+.lineItemBasePriceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .lineItem {
   composes: h4 from global;
   margin: 0;
@@ -21,6 +27,18 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+.itemLabelOriginal {
+  composes: textSmall from global;
+  color: var(--colorGrey700);
+  text-decoration: line-through;
+}
+
+.itemValueOriginal {
+  composes: textSmall from global;
+  color: var(--colorGrey700);
+  text-decoration: line-through;
 }
 
 .bookingPeriod {

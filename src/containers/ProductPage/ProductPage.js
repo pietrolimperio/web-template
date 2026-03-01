@@ -128,7 +128,7 @@ const MIN_LENGTH_FOR_LONG_WORDS_IN_TITLE = 16;
 const TODAY = new Date();
 const MAX_BOOKING_DAYS = 80;
 
-const { UUID } = sdkTypes;
+const { UUID, Money } = sdkTypes;
 
 // Helper to format price
 const formatPrice = (price, intl) => {
@@ -222,9 +222,10 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
     return variant.name || '';
   };
 
-  const priceDisplay = variant.percentageDiscount != null
-    ? `-${variant.percentageDiscount}%`
-    : `${(variant.priceInSubunits / 100).toFixed(2)} ${currency}`;
+  const priceDisplay =
+    variant.percentageDiscount != null
+      ? `-${variant.percentageDiscount}%`
+      : formatMoney(intl, new Money(variant.priceInSubunits, currency));
 
   return (
     <div
@@ -441,11 +442,17 @@ const BookingForm = props => {
     !appliesToUnitType || effectiveMinimum === 0 || bookingUnits >= effectiveMinimum;
   const canShowFullBookingUI =
     hasValidDates && hasMinimumDuration && !fetchLineItemsError;
+  // Use exclusive end date (day after last selected) so LineItemBookingPeriod shows the correct last day
   const breakdownData = hasValidDates
-    ? {
-        startDate: calendarSelectedDates[0],
-        endDate: calendarSelectedDates[calendarSelectedDates.length - 1],
-      }
+    ? (() => {
+        const lastSelected = calendarSelectedDates[calendarSelectedDates.length - 1];
+        const endDateExclusive = new Date(lastSelected);
+        endDateExclusive.setDate(endDateExclusive.getDate() + 1);
+        return {
+          startDate: calendarSelectedDates[0],
+          endDate: endDateExclusive,
+        };
+      })()
     : null;
   const showEstimatedBreakdown =
     canShowFullBookingUI &&

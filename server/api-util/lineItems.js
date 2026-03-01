@@ -7,6 +7,9 @@ const {
   getShippingFeeForBookingStub,
   getInsuranceFeeMaybe,
   getCouponDiscountMaybe,
+  getApplicableDurationVariant,
+  getBookingDateRange,
+  getPriceForDate,
 } = require('./lineItemHelpers');
 const { types } = require('sharetribe-flex-sdk');
 const { Money } = types;
@@ -153,25 +156,66 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
   const priceVariantConfig = priceVariants
     ? priceVariants.find(pv => pv.name === priceVariantName)
     : null;
-  
+
   // Handle different types of price variants
   let unitPrice = priceAttribute;
-  
-  if (isBookable && priceVariationsEnabled && priceVariantConfig) {
+  let originalUnitPrice = null; // set when we apply variants so breakdown can show both
+
+  const isDayOrNight = ['day', 'night'].includes(unitType);
+  const hasBookingDates = orderData?.bookingStart && orderData?.bookingEnd;
+
+  // 1) Auto-apply price variants from selected dates when no explicit priceVariantName
+  //    Price per day: each day uses period variant price if that date is in a variant range, else base price.
+  //    Then duration discount (e.g. 50% from 4 days) is applied to the total.
+  if (
+    isBookable &&
+    isDayOrNight &&
+    hasBookingDates &&
+    priceVariationsEnabled &&
+    priceVariants?.length > 0 &&
+    !priceVariantName
+  ) {
+    const quantity = calculateQuantityFromDates(
+      orderData.bookingStart,
+      orderData.bookingEnd,
+      `line-item/${unitType}`
+    );
+    const bookingDates = getBookingDateRange(orderData.bookingStart, orderData.bookingEnd);
+    const baseAmount = priceAttribute.amount;
+
+    // Sum price per day: period variant or base for each date
+    let totalBeforeDurationSubunits = 0;
+    for (const day of bookingDates) {
+      totalBeforeDurationSubunits += getPriceForDate(priceVariants, day, baseAmount);
+    }
+
+    const durationVariant = getApplicableDurationVariant(priceVariants, quantity);
+    let totalAfterDurationSubunits = totalBeforeDurationSubunits;
+    if (durationVariant && durationVariant.percentageDiscount != null) {
+      const discountMultiplier = 1 - durationVariant.percentageDiscount / 100;
+      totalAfterDurationSubunits = Math.round(totalBeforeDurationSubunits * discountMultiplier);
+    }
+
+    const unitPriceAmount = quantity > 0 ? Math.round(totalAfterDurationSubunits / quantity) : 0;
+    unitPrice = new Money(unitPriceAmount, currency);
+    originalUnitPrice = new Money(
+      quantity > 0 ? Math.round(totalBeforeDurationSubunits / quantity) : totalBeforeDurationSubunits,
+      currency
+    );
+  }
+  // 2) Explicit price variant selected by name (e.g. from picker)
+  else if (isBookable && priceVariationsEnabled && priceVariantConfig) {
     const { priceInSubunits, percentageDiscount, type } = priceVariantConfig;
-    
-    // For duration-based variants with percentage discount
+
     if (type === 'duration' && percentageDiscount != null) {
-      // Apply percentage discount to the base price (or period variant price if applicable)
-      // First check if there's a period variant that should be applied
       const basePriceAmount = priceAttribute.amount;
-      const discountMultiplier = 1 - (percentageDiscount / 100);
+      const discountMultiplier = 1 - percentageDiscount / 100;
       const discountedAmount = Math.round(basePriceAmount * discountMultiplier);
       unitPrice = new Money(discountedAmount, currency);
-    } 
-    // For period-based variants or duration variants with absolute price
-    else if (priceInSubunits != null && Number.isInteger(priceInSubunits) && priceInSubunits >= 0) {
+      originalUnitPrice = priceAttribute;
+    } else if (priceInSubunits != null && Number.isInteger(priceInSubunits) && priceInSubunits >= 0) {
       unitPrice = new Money(priceInSubunits, currency);
+      originalUnitPrice = priceAttribute;
     }
   } else if (offer instanceof Money && isNegotiationUnitType) {
     unitPrice = offer;
@@ -242,6 +286,7 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
     unitPrice,
     ...quantityOrSeats,
     includeFor: ['customer', 'provider'],
+    ...(originalUnitPrice && { originalUnitPrice }),
   };
 
   // For booking: add shipping (when deliveryMethod === 'shipping'), insurance (always), coupon (if valid)

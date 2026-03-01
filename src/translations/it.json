@@ -779,6 +779,7 @@
   "OrderBreakdown.baseUnitOffer": "Prezzo",
   "OrderBreakdown.baseUnitQuantity": "{quantity, plural, one {Prezzo unitario} other {{unitPrice} x #}}",
   "OrderBreakdown.baseUnitRequest": "Prezzo",
+  "OrderBreakdown.baseUnitOriginalPrice": "Prezzo base: {unitPrice} x {quantity}",
   "OrderBreakdown.bookingEnd": "Fine prenotazione",
   "OrderBreakdown.bookingStart": "Inizio prenotazione",
   "OrderBreakdown.bookingWithDSTInEffect": "Ora legale",

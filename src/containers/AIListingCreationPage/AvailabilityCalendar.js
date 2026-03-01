@@ -375,9 +375,18 @@ const AvailabilityCalendar = ({
 
       setInternalSelectedDates(finalRange);
       onDatesChange(finalRange);
+      const endDate = finalRange.length > 0 ? finalRange[finalRange.length - 1] : end;
       setRangeStart(start);
-      setRangeEnd(finalRange.length > 0 ? finalRange[finalRange.length - 1] : end);
+      setRangeEnd(endDate);
       setSelectingRange(false);
+
+      // If end date is in a different month, switch the calendar view to that month
+      const endMonth = endDate.getMonth();
+      const endYear = endDate.getFullYear();
+      if (endMonth !== currentMonth || endYear !== currentYear) {
+        setCurrentMonth(endMonth);
+        setCurrentYear(endYear);
+      }
     }
   };
 
