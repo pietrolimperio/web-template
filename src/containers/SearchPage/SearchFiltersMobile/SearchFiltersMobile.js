@@ -117,9 +117,14 @@ class SearchFiltersMobileComponent extends Component {
 
           {sortByComponent}
           {isMapVariant ? (
-            <div className={css.mapIcon} onClick={onMapIconClick}>
+            <button
+              type="button"
+              className={css.mapIcon}
+              onClick={onMapIconClick}
+              aria-label={intl.formatMessage({ id: 'SearchFiltersMobile.openMapView' })}
+            >
               <FormattedMessage id="SearchFiltersMobile.openMapView" className={css.mapIconText} />
-            </div>
+            </button>
           ) : null}
         </div>
 

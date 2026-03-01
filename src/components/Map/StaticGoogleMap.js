@@ -117,6 +117,7 @@ class StaticGoogleMap extends Component {
         src={`https://maps.googleapis.com/maps/api/staticmap?${srcParams}`}
         alt={address}
         crossOrigin="anonymous"
+        loading="lazy"
       />
     );
   }

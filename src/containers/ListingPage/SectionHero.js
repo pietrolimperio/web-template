@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { FormattedMessage } from '../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { ResponsiveImage, Modal } from '../../components';
 
 import ImageCarousel from './ImageCarousel/ImageCarousel';
@@ -8,6 +8,7 @@ import ImageCarousel from './ImageCarousel/ImageCarousel';
 import css from './ListingPage.module.css';
 
 const SectionHero = props => {
+  const intl = useIntl();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -39,11 +40,25 @@ const SectionHero = props => {
     </button>
   ) : null;
 
+  const handleWrapperKeyDown = e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleViewPhotosClick();
+    }
+  };
+
   return (
     <section className={css.sectionHero} data-testid="hero">
-      <div className={css.imageWrapperForSectionHero} onClick={handleViewPhotosClick}>
+      <div
+        className={css.imageWrapperForSectionHero}
+        onClick={handleViewPhotosClick}
+        onKeyDown={handleWrapperKeyDown}
+        role="button"
+        tabIndex={hasImages ? 0 : -1}
+        aria-label={hasImages ? intl.formatMessage({ id: 'ListingPage.viewImagesButton' }, { count: listing.images.length }) : undefined}
+      >
         {mounted && listing.id && isOwnListing ? (
-          <div onClick={e => e.stopPropagation()} className={css.actionBarContainerForHeroLayout}>
+          <div onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} className={css.actionBarContainerForHeroLayout} role="presentation">
             {actionBar}
           </div>
         ) : null}

@@ -147,6 +147,10 @@
 
 .fieldArrayDelete {
   cursor: pointer;
+  border: none;
+  background: none;
+  font: inherit;
+  padding: 5px 12px;
 
   &:hover {
     color: var(--colorBlack);

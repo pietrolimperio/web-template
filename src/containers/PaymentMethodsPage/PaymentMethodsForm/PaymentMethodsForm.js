@@ -52,11 +52,7 @@ const stripeErrorTranslation = (intl, stripeError) => {
 };
 
 const stripeElementsOptions = {
-  fonts: [
-    {
-      cssSrc: 'https://fonts.googleapis.com/css?family=Inter',
-    },
-  ],
+  fonts: [],
 };
 
 // card (being a Stripe Elements component), can have own styling passed to it.
@@ -65,7 +61,7 @@ const stripeElementsOptions = {
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 const cardStyles = {
   base: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Inter var", Helvetica, Arial, sans-serif',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
     fontSize: isMobile ? '14px' : '16px',
     fontSmoothing: 'antialiased',
     lineHeight: '24px',

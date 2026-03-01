@@ -198,11 +198,11 @@
 
 /* Verified badge special styling */
 .verifiedBadge .badgeIcon {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
+  background: var(--colorSuccess);
+  color: var(--colorWhite);
   border-radius: 50%;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: var(--fontWeightBold);
 }
 
 .badgeText {

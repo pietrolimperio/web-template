@@ -116,6 +116,7 @@ const getResolvedCurrentPage = (location, routeConfiguration) => {
 
 const GenericError = props => {
   const { show } = props;
+  const intl = useIntl();
   const [isDismissed, setIsDismissed] = useState(false);
   const isVisible = show && !isDismissed;
   
@@ -137,7 +138,7 @@ const GenericError = props => {
           className={css.genericErrorClose} 
           onClick={handleClose}
           type="button"
-          aria-label="Close"
+          aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}
         >
           <IconClose size="small" />
         </button>

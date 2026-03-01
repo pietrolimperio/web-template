@@ -1,8 +1,8 @@
 .root {
-  --marketplaceColorLight: color-mix(in srgb, var(--marketplaceColor, #4A90E2) 15%, transparent);
-  --marketplaceColorLighter: color-mix(in srgb, var(--marketplaceColor, #4A90E2) 10%, transparent);
-  --marketplaceColorMedium: color-mix(in srgb, var(--marketplaceColor, #4A90E2) 25%, transparent);
-  --marketplaceColorBorder: color-mix(in srgb, var(--marketplaceColor, #4A90E2) 30%, transparent);
+  --marketplaceColorLight: color-mix(in srgb, var(--marketplaceColor) 15%, transparent);
+  --marketplaceColorLighter: color-mix(in srgb, var(--marketplaceColor) 10%, transparent);
+  --marketplaceColorMedium: color-mix(in srgb, var(--marketplaceColor) 25%, transparent);
+  --marketplaceColorBorder: color-mix(in srgb, var(--marketplaceColor) 30%, transparent);
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -18,31 +18,32 @@
 }
 
 .navButton {
-  background: var(--marketplaceColor, #4A90E2);
-  color: white;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
   border: none;
-  width: 40px;
-  height: 40px;
+  min-width: var(--touchTargetMin, 44px);
+  min-height: var(--touchTargetMin, 44px);
+  width: var(--touchTargetMin, 44px);
+  height: var(--touchTargetMin, 44px);
   border-radius: 50%;
   font-size: 1.25rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: transform var(--transitionStyleButton), box-shadow var(--transitionStyleButton);
 }
 
 .navButton:hover:not(:disabled) {
-  background: var(--marketplaceColor, #4A90E2);
-  opacity: 0.9;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: var(--marketplaceColorDark);
+  transform: scale(1.05);
+  box-shadow: var(--boxShadowButton);
 }
 
 .navButton:disabled {
-  background: #bdc3c7;
+  background: var(--colorGrey300);
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .monthsContainer {
@@ -58,8 +59,8 @@
 }
 
 .monthContainer {
-  background: white;
-  border-radius: 8px;
+  background: var(--colorWhite);
+  border-radius: var(--borderRadiusMedium);
   padding: 1rem;
   width: 100%;
   max-width: 400px;
@@ -70,13 +71,13 @@
   text-align: center;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #ecf0f1;
+  border-bottom: 2px solid var(--colorGrey100);
 }
 
 .monthName {
   font-size: 1.125rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--colorGrey800);
 }
 
 .dayNames {
@@ -89,8 +90,8 @@
 .dayName {
   text-align: center;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #7f8c8d;
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--colorGrey600);
   padding: 0.5rem 0;
   text-transform: uppercase;
 }
@@ -110,13 +111,13 @@
 .day {
   aspect-ratio: 1;
   border: none;
-  background: white;
+  background: var(--colorWhite);
   border-radius: 50%;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #2c3e50;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorGrey800);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--transitionStyleButton), transform var(--transitionStyleButton);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,16 +131,16 @@
 
 /* Single day selected (when start equals end) */
 .daySingleSelected {
-  background: var(--marketplaceColor, #4A90E2);
-  color: white;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
   font-weight: 600;
   z-index: 2;
 }
 
 /* Start of range - full circle with marketplace color */
 .dayRangeStart {
-  background: var(--marketplaceColor, #4A90E2);
-  color: white;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
   font-weight: 600;
   border-radius: 50%;
   z-index: 2;
@@ -147,8 +148,8 @@
 
 /* End of range - full circle with marketplace color */
 .dayRangeEnd {
-  background: var(--marketplaceColor, #4A90E2);
-  color: white;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
   font-weight: 600;
   border-radius: 50%;
   z-index: 2;
@@ -157,7 +158,7 @@
 /* Days in the middle of the range */
 .dayInRange {
   background: var(--marketplaceColorLight);
-  color: #2c3e50;
+  color: var(--colorGrey800);
   font-weight: 500;
   border-radius: 50%;
 }
@@ -181,33 +182,32 @@
 }
 
 .daySelected {
-  background: var(--marketplaceColor, #4A90E2);
-  color: white;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
   font-weight: 600;
 }
 
 .daySelected:hover:not(.dayDisabled):not(.dayUnavailable) {
-  background: var(--marketplaceColor, #4A90E2);
-  opacity: 0.9;
+  background: var(--marketplaceColorDark);
 }
 
 .dayDisabled {
-  background: #f8f9fa;
-  color: #bdc3c7;
+  background: var(--colorGrey50);
+  color: var(--colorGrey300);
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.6;
   pointer-events: none;
 }
 
 .dayDisabled:hover {
   transform: none !important;
-  background: #f8f9fa !important;
-  opacity: 0.5 !important;
+  background: var(--colorGrey50) !important;
+  opacity: 0.6 !important;
 }
 
 .dayUnavailable {
-  background: #ffe6e6;
-  color: #cc0000;
+  background: var(--colorFailLight);
+  color: var(--colorFail);
   opacity: 0.6;
   position: relative;
 }
@@ -219,13 +219,13 @@
 
 .dayUnavailableLocked:hover {
   transform: none !important;
-  background: #ffe6e6 !important;
+  background: var(--colorFailLight) !important;
   opacity: 0.6 !important;
 }
 
 .dayTempUnavailable {
-  background: #fff2f2;
-  color: #d35400;
+  background: var(--colorFailLight);
+  color: var(--marketplaceColorDark);
   opacity: 0.65;
   cursor: not-allowed;
   pointer-events: none;
@@ -233,7 +233,7 @@
 
 .dayTempUnavailable:hover {
   transform: none !important;
-  background: #fff2f2 !important;
+  background: var(--colorFailLight) !important;
   opacity: 0.65 !important;
 }
 
@@ -247,13 +247,13 @@
 }
 
 .dayReadOnly.daySelected:hover {
-  background: var(--marketplaceColor, #4A90E2);
+  background: var(--marketplaceColor);
   opacity: 1;
 }
 
 .dayReadOnly.dayRangeStart:hover,
 .dayReadOnly.dayRangeEnd:hover {
-  background: var(--marketplaceColor, #4A90E2);
+  background: var(--marketplaceColor);
   opacity: 1;
 }
 
@@ -261,13 +261,10 @@
   background: var(--marketplaceColorLight);
 }
 
-.dayToday {
-}
-
 .dayToday.dayRangeStart,
 .dayToday.dayRangeEnd,
 .dayToday.daySingleSelected {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--colorWhite) 50%, transparent);
 }
 
 .emptyDay {
@@ -276,30 +273,30 @@
 
 /* Days from previous/next month (always 5 weeks grid) – same behaviour as current month, subtle visual hint */
 .dayOtherMonth {
-  color: #6c757d;
+  color: var(--colorGrey500);
 }
 
 .dayOtherMonth.daySelected,
 .dayOtherMonth.dayRangeStart,
 .dayOtherMonth.dayRangeEnd,
 .dayOtherMonth.daySingleSelected {
-  color: white;
+  color: var(--colorWhite);
 }
 
 .dayOtherMonth:hover:not(:disabled):not(.dayDisabled):not(.dayUnavailable):not(.dayRangeStart):not(.dayRangeEnd):not(.daySingleSelected) {
   background: var(--marketplaceColorLight);
-  color: #cc0000 !important;
+  color: var(--colorFail) !important;
 }
 
 .rangeIndicator {
   text-align: center;
   padding: 0.75rem;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 6px;
-  color: #856404;
+  background: var(--colorAttentionLight);
+  border: 1px solid var(--colorAttention);
+  border-radius: var(--borderRadiusMedium);
+  color: var(--colorGrey800);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--fontWeightMedium);
   margin-bottom: 1rem;
 }
 
@@ -344,7 +341,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #7f8c8d;
+  color: var(--colorGrey600);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -357,7 +354,7 @@
 }
 
 .legendStartEnd {
-  background: var(--marketplaceColor, #4A90E2);
+  background: var(--marketplaceColor);
   border-color: var(--marketplaceColor, #4A90E2);
   border-radius: 50%;
 }
@@ -368,12 +365,12 @@
 }
 
 .legendSelected {
-  background: var(--marketplaceColor, #4A90E2);
+  background: var(--marketplaceColor);
   border-color: var(--marketplaceColor, #4A90E2);
 }
 
 .legendAvailable {
-  background: white;
+  background: var(--colorWhite);
   border-color: #e9ecef;
 }
 

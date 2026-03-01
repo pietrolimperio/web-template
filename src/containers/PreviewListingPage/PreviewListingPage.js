@@ -1328,6 +1328,15 @@ export const PreviewListingPageComponent = props => {
     setShowImageModal(false);
   };
 
+  useEffect(() => {
+    if (!showImageModal) return;
+    const onKeyDown = e => {
+      if (e.key === 'Escape') handleCloseImageModal();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showImageModal]);
+
   const handleNextImage = () => {
     const visibleImages = getVisibleImages(currentListing.images || []);
     if (visibleImages && visibleImages.length > 0) {
@@ -3393,6 +3402,7 @@ export const PreviewListingPageComponent = props => {
                               src={imageUrl}
                               alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
                               className={css.mainImage}
+                              loading="lazy"
                               onClick={() => handleImageClick(selectedImageIndex)}
                               style={{ cursor: 'pointer' }}
                               onError={e => {
@@ -3444,13 +3454,22 @@ export const PreviewListingPageComponent = props => {
                                 index === selectedImageIndex ? css.thumbnailActive : ''
                               } ${isDeleting ? css.thumbnailDeleting : ''}`}
                             >
-                              <div onClick={() => setSelectedImageIndex(index)}>
+                              <button
+                                type="button"
+                                className={css.thumbnailButton}
+                                onClick={() => setSelectedImageIndex(index)}
+                                aria-label={intl.formatMessage(
+                                  { id: 'PreviewListingPage.selectImage' },
+                                  { index: index + 1 }
+                                )}
+                              >
                                 <img
                                   src={imageUrl}
                                   alt={`Thumbnail ${index + 1}`}
                                   className={css.thumbnailImage}
+                                  loading="lazy"
                                 />
-                              </div>
+                              </button>
                               {/* Pulsante elimina/sostituisci immagine – solo in modalità bozza e non guest */}
                               {isDraftMode && !isGuestPreview && (
                                 <div className={css.thumbnailDeleteButtonWrapper}>
@@ -5580,9 +5599,9 @@ export const PreviewListingPageComponent = props => {
 
         {/* Image Lightbox Modal with Prev/Next Navigation */}
         {showImageModal && visibleImages && visibleImages.length > 0 && (
-          <div className={css.imageModalOverlay} onClick={handleCloseImageModal}>
+          <div className={css.imageModalOverlay} onClick={handleCloseImageModal} role="dialog" aria-modal="true" aria-label={intl.formatMessage({ id: 'PreviewListingPage.imageModal' })}>
             <div className={css.imageModalContent} onClick={e => e.stopPropagation()}>
-              <button className={css.imageModalClose} onClick={handleCloseImageModal}>
+              <button type="button" className={css.imageModalClose} onClick={handleCloseImageModal} aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}>
                 ×
               </button>
 
@@ -5613,6 +5632,7 @@ export const PreviewListingPageComponent = props => {
                     src={imageUrl}
                     alt={`${listing.attributes.title} - Image ${selectedImageIndex + 1}`}
                     className={css.imageModalImage}
+                    loading="lazy"
                   />
                 );
               })()}

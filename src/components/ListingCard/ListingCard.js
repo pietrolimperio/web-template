@@ -136,6 +136,7 @@ const ListingCardImage = props => {
         image={firstImage}
         variants={variants}
         sizes={renderSizes}
+        loading="lazy"
       />
     </AspectRatioWrapper>
   ) : (

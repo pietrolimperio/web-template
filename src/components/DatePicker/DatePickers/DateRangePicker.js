@@ -227,7 +227,20 @@ export const DateRangePicker = props => {
   return (
     <OutsideClickHandler className={classes} onOutsideClick={handleBlur}>
       <div id={id} className={css.picker} onKeyDown={handleKeyDown} ref={element}>
-        <div className={classNames(css.inputWrapper, { [css.open]: isOpen })} onClick={toggleOpen}>
+        <div
+          className={classNames(css.inputWrapper, { [css.open]: isOpen })}
+          onClick={toggleOpen}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleOpen();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isOpen}
+          aria-haspopup="dialog"
+        >
           <div className={css.inputs}>
             <input
               id={startDateId}

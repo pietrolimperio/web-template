@@ -1,4 +1,4 @@
-@import '../../../styles/customMediaQueries.css';
+@import '../../styles/customMediaQueries.css';
 
 /* Details column is visible only on desktop */
 .detailsContainerDesktop {
@@ -18,7 +18,7 @@
     /* Coloring */
     background-color: var(--colorWhite);
     border: 1px solid var(--colorGrey100);
-    border-radius: 2px;
+    border-radius: var(--borderRadius);
   }
 }
 
@@ -37,7 +37,7 @@
   width: 100%;
 
   @media (--viewportLarge) {
-    border-radius: 2px 2px 0 0;
+    border-radius: var(--borderRadius) var(--borderRadius) 0 0;
   }
 }
 
@@ -50,7 +50,7 @@
   margin-left: 24px;
   margin-top: -31px;
 
-  /* Rendering context to the same lavel as listing image */
+  /* Rendering context to the same level as listing image */
   position: relative;
 
   /* Layout */
@@ -81,39 +81,6 @@
     @media (--viewportLarge) {
       margin-top: 32px;
     }
-  }
-}
-
-.orderBreakdownHeader {
-  @media (--viewportLarge) {
-    margin: 0 48px;
-  }
-}
-.orderBreakdownTitle {
-  /* Font */
-  letter-spacing: 1px;
-  font-weight: var(--fontWeightMedium);
-
-  /* Layout spacing */
-  margin: 5px 24px 25px 24px;
-
-  @media (--viewportLarge) {
-    padding: 6px 0 2px 0;
-    margin: 16px 0 8px 0;
-  }
-}
-
-.totalDivider {
-  /* dimensions */
-  width: 100%;
-  height: 1px;
-  margin: 12px 0 5px 0;
-
-  border: none;
-  background-color: var(--colorGrey100);
-
-  @media (--viewportMedium) {
-    margin: 7px 0 0 0;
   }
 }
 
@@ -150,7 +117,6 @@
 }
 
 .perUnit {
-  /* Font */
   composes: p from global;
   font-weight: var(--fontWeightBold);
 
@@ -162,8 +128,5 @@
   @media (--viewportMedium) {
     margin-top: 0;
     margin-bottom: 0;
-  }
-
-  @media (--viewportLarge) {
   }
 }

@@ -21,7 +21,16 @@ export const MarkdownImage = React.forwardRef((props, ref) => {
   const { className, rootClassName, alt = 'image', ...otherProps } = props;
   const classes = classNames(rootClassName || css.markdownImage, className);
 
-  return <img className={classes} alt={alt} {...otherProps} ref={ref} crossOrigin="anonymous" />;
+  return (
+    <img
+      className={classes}
+      alt={alt}
+      loading="lazy"
+      {...otherProps}
+      ref={ref}
+      crossOrigin="anonymous"
+    />
+  );
 });
 
 MarkdownImage.displayName = 'MarkdownImage';
@@ -76,6 +85,7 @@ export const FieldImage = React.forwardRef((props, ref) => {
       image={image}
       variants={variantNames}
       sizes={sizes}
+      loading="lazy"
       {...otherProps}
     />
   );

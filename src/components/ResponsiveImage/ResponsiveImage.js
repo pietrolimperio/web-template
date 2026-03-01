@@ -69,6 +69,7 @@ const ResponsiveImage = props => {
     image,
     variants,
     dimensions,
+    loading,
     ...rest
   } = props;
   const classes = classNames(rootClassName || css.root, className);
@@ -104,6 +105,7 @@ const ResponsiveImage = props => {
     className: classes,
     src,
     srcSet,
+    ...(loading != null && { loading }),
     ...rest,
   };
 

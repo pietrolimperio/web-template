@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { bool, func, string } from 'prop-types';
 import classNames from 'classnames';
 
-import { FormattedMessage } from '../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { COUNTRIES, LANGUAGE_LABELS } from '../../config/localeConfig';
 
 import Menu from '../Menu/Menu';
@@ -26,6 +26,7 @@ const LocaleSelector = ({
   onLocaleChange,
 }) => {
   
+  const intl = useIntl();
   const [isLanguageDialogOpen, setIsLanguageDialogOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const modalBackdropRef = React.useRef(null);
@@ -145,7 +146,7 @@ const LocaleSelector = ({
           scrollLayerClassName={css.modalScrollLayer}
         >
           <div className={css.modalContentWrapper} ref={modalBackdropRef} onClick={(e) => e.stopPropagation()}>
-            <button className={css.closeButton} onClick={handleCancel} type="button" aria-label="Close">
+            <button className={css.closeButton} onClick={handleCancel} type="button" aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}>
               ×
             </button>
             

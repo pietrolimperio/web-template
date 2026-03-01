@@ -1321,6 +1321,7 @@ export const ProductPageComponent = props => {
                                   src={imageUrl}
                                   alt={`Thumbnail ${index + 1}`}
                                   className={css.thumbnailImage}
+                                  loading="lazy"
                                 />
                               </button>
                             );
@@ -1707,6 +1708,7 @@ export const ProductPageComponent = props => {
                 src={mainImageUrl}
                 alt={`${title} - Image ${selectedImageIndex + 1}`}
                 className={css.modalImage}
+                loading="lazy"
               />
             )}
             

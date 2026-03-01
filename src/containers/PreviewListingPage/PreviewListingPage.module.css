@@ -239,12 +239,22 @@
   background-color: var(--matterColorNegative);
 }
 
-.thumbnail > div {
+.thumbnail > div,
+.thumbnail > button.thumbnailButton {
   cursor: pointer;
   width: 100%;
   height: 100%;
   border-radius: 5px;
   overflow: hidden;
+}
+
+.thumbnail > button.thumbnailButton {
+  border: none;
+  padding: 0;
+  background: none;
+  display: block;
+  font: inherit;
+  text-align: left;
 }
 
 .thumbnail:hover {
@@ -441,20 +451,22 @@
 
 .imageModalClose {
   position: absolute;
-  top: -40px;
+  top: -44px;
   right: 0;
   background: none;
   border: none;
-  color: white;
+  color: var(--colorWhite);
   font-size: 40px;
   cursor: pointer;
   padding: 0;
-  width: 40px;
-  height: 40px;
+  min-width: var(--touchTargetMin, 44px);
+  min-height: var(--touchTargetMin, 44px);
+  width: var(--touchTargetMin, 44px);
+  height: var(--touchTargetMin, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform var(--transitionStyleButton);
 }
 
 .imageModalClose:hover {
@@ -466,19 +478,21 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--colorBlack) 50%, transparent);
   border: none;
-  color: white;
+  color: var(--colorWhite);
   font-size: 60px;
   cursor: pointer;
+  min-width: var(--touchTargetMin, 44px);
+  min-height: var(--touchTargetMin, 44px);
   padding: 20px;
   z-index: 10;
-  transition: background-color 0.2s;
+  transition: background-color var(--transitionStyleButton);
 }
 
 .imageModalPrev:hover,
 .imageModalNext:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background: color-mix(in srgb, var(--colorBlack) 80%, transparent);
 }
 
 .imageModalPrev {
@@ -494,8 +508,8 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
+  background: color-mix(in srgb, var(--colorBlack) 70%, transparent);
+  color: var(--colorWhite);
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 14px;

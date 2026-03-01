@@ -322,14 +322,32 @@ class ContactDetailsFormComponent extends Component {
             );
           }
 
+          const handleResetKeyDown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.handleResetPassword();
+            }
+          };
           const sendPasswordLink = (
-            <span className={css.helperLink} onClick={this.handleResetPassword} role="button">
+            <span
+              className={css.helperLink}
+              onClick={this.handleResetPassword}
+              onKeyDown={handleResetKeyDown}
+              role="button"
+              tabIndex={0}
+            >
               <FormattedMessage id="ContactDetailsForm.resetPasswordLinkText" />
             </span>
           );
 
           const resendPasswordLink = (
-            <span className={css.helperLink} onClick={this.handleResetPassword} role="button">
+            <span
+              className={css.helperLink}
+              onClick={this.handleResetPassword}
+              onKeyDown={handleResetKeyDown}
+              role="button"
+              tabIndex={0}
+            >
               <FormattedMessage id="ContactDetailsForm.resendPasswordLinkText" />
             </span>
           );

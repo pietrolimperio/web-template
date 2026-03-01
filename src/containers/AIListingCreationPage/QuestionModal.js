@@ -206,7 +206,7 @@ const QuestionModal = ({
             </div>
             <div className={css.progressContainer}>
               <div className={css.progressBar}>
-                <div className={css.progressFill} style={{ width: `${progress}%` }} />
+                <div className={css.progressFill} style={{ transform: `scaleX(${progress / 100})` }} />
               </div>
               <span className={css.progressText}>
                 <FormattedMessage

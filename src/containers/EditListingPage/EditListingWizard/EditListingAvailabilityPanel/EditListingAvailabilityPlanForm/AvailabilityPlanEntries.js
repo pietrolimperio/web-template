@@ -281,10 +281,15 @@ const TimeRangeSelects = props => {
       ) : (
         <FieldHidden name={`${name}.seats`} value={1} />
       )}
-      <div className={css.fieldArrayDelete} onClick={onRemove} style={{ cursor: 'pointer' }}>
+      <button
+        type="button"
+        className={css.fieldArrayDelete}
+        onClick={onRemove}
+        aria-label={intl.formatMessage({ id: 'EditListingAvailabilityPlanForm.delete' })}
+      >
         <IconDelete rootClassName={css.deleteIcon} />
         <FormattedMessage id="EditListingAvailabilityPlanForm.delete" />
-      </div>
+      </button>
     </div>
   );
 };

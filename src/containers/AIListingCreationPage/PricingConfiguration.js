@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FormattedMessage } from '../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { formatMoney } from '../../util/currency';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import css from './PricingConfiguration.module.css';
@@ -15,6 +15,7 @@ const { Money } = sdkTypes;
  * - Add period-based variants (e.g., seasonal pricing)
  */
 const PricingConfiguration = ({ suggestedPrice, currency, onComplete, onBack, isSubmitting }) => {
+  const intl = useIntl();
   // Parse suggested price
   const parsedPrice = suggestedPrice?.match(/\$?(\d+)/);
   const defaultPriceAmount = parsedPrice ? parseInt(parsedPrice[1], 10) * 100 : 1000; // Convert to cents
@@ -153,7 +154,7 @@ const PricingConfiguration = ({ suggestedPrice, currency, onComplete, onBack, is
                   type="button"
                   onClick={() => handleRemoveVariant(index)}
                   className={css.removeButton}
-                  aria-label="Remove variant"
+                  aria-label={intl.formatMessage({ id: 'PricingConfiguration.removeVariant' })}
                 >
                   ×
                 </button>

@@ -72,7 +72,7 @@ const FieldPhonePrefixSelectComponent = props => {
         <div className={css.selectedOption}>
           <img
             src={getFlagSrc(selectedOption.country)}
-            alt=""
+            alt={selectedOption.code ? `Flag ${selectedOption.code}` : ''}
             className={css.flag}
           />
           <span className={css.code}>{selectedOption.code}</span>
@@ -101,7 +101,7 @@ const FieldPhonePrefixSelectComponent = props => {
               >
                 <img
                   src={getFlagSrc(opt.country)}
-                  alt=""
+                  alt={opt.code ? `Flag ${opt.code}` : ''}
                   className={css.flag}
                 />
                 <span className={css.code}>{opt.code}</span>

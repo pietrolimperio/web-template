@@ -7,8 +7,9 @@
   @media (--viewportLarge) {
     flex-shrink: 0;
     display: block;
-    /* Dimensions */
-    width: 409px;
+    /* Dimensions - fluid width with max to match content */
+    width: 100%;
+    max-width: 409px;
     padding-bottom: 36px;
 
     /* Position */

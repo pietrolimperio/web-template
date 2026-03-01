@@ -28,9 +28,9 @@
   --colorBannedLight: var(--marketplaceColorLight);
   --colorBannedDark: var(--marketplaceColor);
 
-  /* B&W and Grey palette */
+  /* B&W and Grey palette (slight warm tint for cohesion with brand) */
 
-  --colorWhite: hsl(0 0% 100%);
+  --colorWhite: hsl(30 2% 98%);
   --colorGrey50: hsl(240 3% 98%);
   --colorGrey100: hsl(240 3% 90%);
   --colorGrey200: hsl(240 3% 80%);
@@ -41,7 +41,7 @@
   --colorGrey700: hsl(240 3% 30%);
   --colorGrey800: hsl(240 3% 20%);
   --colorGrey900: hsl(240 3% 10%);
-  --colorBlack: hsl(0 0% 0%);
+  --colorBlack: hsl(30 2% 8%);
 
   --colorLightTransparent: rgba(255, 255, 255, 0.65);
 
@@ -75,7 +75,7 @@
   --colorSecondaryButtonLight: var(--colorWhite);
 
   /* ================ Font ================ */
-  --fontFamily: -apple-system, BlinkMacSystemFont, 'Inter', Helvetica, Arial, sans-serif,
+  --fontFamily: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
   --fontWeightRegular: 400;
@@ -131,8 +131,12 @@
 
   /* ================ Transition styles ================ */
 
-  --transitionStyle: ease-in 0.2s;
-  --transitionStyleButton: ease-in-out 0.1s;
+  --transitionStyle: cubic-bezier(0.25, 0.1, 0.25, 1) 0.2s;
+  --transitionStyleButton: cubic-bezier(0.25, 0.1, 0.25, 1) 0.1s;
+
+  /* ================ Touch targets (accessibility) ================ */
+  --touchTargetMin: 44px;
+  --overlayBackdrop: color-mix(in srgb, var(--colorBlack) 50%, transparent);
 
   /* ================ Topbar related ================ */
 
@@ -149,6 +153,11 @@
 
   --modalPadding: 24px 24px 48px 24px;
   --modalPaddingMedium: 55px 60px 55px 60px;
+
+  /* ================ Focus visible (accessibility) ================ */
+  --focusRingColor: var(--marketplaceColor);
+  --focusRingWidth: 2px;
+  --focusRingOffset: 2px;
 
   /* ================ Filters ================ */
   --marketplaceButtonSmallDesktopPadding: 9px 16px 9px 16px;
@@ -516,6 +525,10 @@ select:focus {
   box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
   transition: all ease-in-out 100ms;
 }
+select:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
+}
 select:disabled {
   opacity: 0.5;
   appearance: none;
@@ -567,6 +580,11 @@ textarea:focus {
   border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
   transition: all ease-in-out 100ms;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
 }
 input:disabled,
 textarea:disabled {
@@ -1014,6 +1032,10 @@ textarea {
   box-shadow: var(--boxShadowButton);
   background-color: var(--marketplaceColorDark);
 }
+.buttonDefault:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
+}
 .buttonDefault:disabled {
   box-shadow: none;
   cursor: not-allowed;
@@ -1070,6 +1092,10 @@ textarea {
   background-color: var(--colorPrimaryButtonDark);
   color: var(--colorWhite);
 }
+.buttonPrimary:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
+}
 .buttonPrimary:hover {
   text-decoration: none;
 }
@@ -1118,6 +1144,10 @@ textarea {
   text-decoration: none;
   background-color: var(--colorPrimaryButtonDark);
   color: var(--colorWhite);
+}
+.buttonPrimaryInline:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
 }
 .buttonPrimaryInline:disabled {
   box-shadow: none;
@@ -1173,6 +1203,10 @@ textarea {
   box-shadow: var(--boxShadowButton);
   border-color: var(--colorGrey300);
   background-color: var(--colorSecondaryButton);
+}
+.buttonSecondary:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
 }
 .buttonSecondary:hover {
   text-decoration: none;
@@ -1237,6 +1271,10 @@ textarea {
   border-color: var(--colorGrey300);
   background-color: var(--colorSecondaryButton);
 }
+.buttonSecondaryInline:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
+}
 .buttonSecondaryInline:hover {
   text-decoration: none;
 }
@@ -1280,6 +1318,10 @@ textarea {
   background-color: var(--marketplaceColor);
   border-color: var(--marketplaceColor);
   color: var(--colorWhite);
+}
+.buttonSmall:focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
 }
 
 /* ================ Modals ================ */
@@ -1553,5 +1595,23 @@ textarea {
 
   @media (--viewportMedium) {
     margin-top: 32px;
+  }
+}
+
+/* ================ Focus visible fallback (accessibility) ================ */
+/* Ensures keyboard users always see focus when components use outline: none */
+:where(button, a, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: var(--focusRingWidth) solid var(--focusRingColor);
+  outline-offset: var(--focusRingOffset);
+}
+
+/* ================ Reduced motion (accessibility) ================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

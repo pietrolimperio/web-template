@@ -18,7 +18,11 @@
 }
 
 .overlay {
-  background: linear-gradient(-45deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
+  background: linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--colorBlack) 30%, transparent),
+    color-mix(in srgb, var(--colorBlack) 60%, transparent)
+  );
 }
 
 .backgroundImage {

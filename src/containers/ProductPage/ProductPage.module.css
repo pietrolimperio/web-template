@@ -775,11 +775,13 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--colorWhite) 90%, transparent);
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  min-width: var(--touchTargetMin, 44px);
+  min-height: var(--touchTargetMin, 44px);
+  width: var(--touchTargetMin, 44px);
+  height: var(--touchTargetMin, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -790,9 +792,9 @@
 }
 
 .imageNavButton:hover {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transform: translateY(-50%) scale(1.1);
+  background: var(--colorWhite);
+  box-shadow: var(--boxShadowButton);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .imageNavPrev {
@@ -847,9 +849,11 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--colorWhite) 90%, transparent);
   border: none;
   border-radius: 50%;
+  min-width: var(--touchTargetMin, 44px);
+  min-height: var(--touchTargetMin, 44px);
   width: 48px;
   height: 48px;
   display: flex;
@@ -861,8 +865,8 @@
 }
 
 .modalNavButton:hover {
-  background: white;
-  transform: translateY(-50%) scale(1.1);
+  background: var(--colorWhite);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .modalNavPrev {
@@ -890,14 +894,14 @@
 .exchangeBadge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border: 1px solid #81c784;
-  border-radius: 8px;
+  gap: var(--spacingUnitDesktop);
+  background: var(--colorSuccessLight);
+  border: 1px solid var(--colorSuccess);
+  border-radius: var(--borderRadiusMedium);
   padding: 12px 16px;
   font-size: 14px;
-  font-weight: 500;
-  color: #2e7d32;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorSuccessDark);
   margin: 0;
 }
 
@@ -1026,8 +1030,10 @@
   }
   
   .imageNavButton {
-    width: 32px;
-    height: 32px;
+    min-width: var(--touchTargetMin, 44px);
+    min-height: var(--touchTargetMin, 44px);
+    width: var(--touchTargetMin, 44px);
+    height: var(--touchTargetMin, 44px);
   }
   
   .imageNavPrev {

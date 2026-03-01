@@ -6,7 +6,8 @@
 
 .numberInputWrapper {
   align-self: baseline;
-  height: 40px;
+  min-height: var(--touchTargetMin, 44px);
+  height: var(--touchTargetMin, 44px);
 
   display: flex;
   align-items: center;
@@ -19,11 +20,13 @@
   stroke-width: 1px;
   border-radius: 10%;
   fill: var(--colorSecondaryButton);
-  height: 40px;
-  width: 40px;
+  min-height: var(--touchTargetMin, 44px);
+  min-width: var(--touchTargetMin, 44px);
+  height: var(--touchTargetMin, 44px);
+  width: var(--touchTargetMin, 44px);
   cursor: pointer;
   display: flex;
-  padding: 0px;
+  padding: 0;
   align-items: center;
   justify-content: center;
   border: none;
@@ -35,7 +38,7 @@
 
 .numberButton:hover {
   .iconContainer {
-    stroke: #b8bfd1;
+    stroke: var(--colorGrey300);
   }
 }
 
@@ -43,7 +46,7 @@
   outline: none;
 
   .iconContainer {
-    stroke: #b8bfd1;
+    stroke: var(--colorGrey300);
   }
 }
 .numberButton:active {
