@@ -170,6 +170,8 @@
   "CustomExtendedDataField.placeholderText": "Rédiger une description…",
   "CustomExtendedDataField.placeholderYoutubeVideoURL": "L'URL d'une vidéo sur YouTube",
   "CustomExtendedDataField.required": "Obligatoire",
+  "LandingHero.motto": "Tout ce que vous voulez, seulement pour le temps dont vous avez besoin",
+  "LandingHero.createListing": "Publier une annonce",
   "DatePicker.clearButton": "Effacer",
   "DatePicker.screenreader.blockedDate": "{date} n'est pas disponible",
   "DatePicker.screenreader.chooseDate": "Choisir {date}",

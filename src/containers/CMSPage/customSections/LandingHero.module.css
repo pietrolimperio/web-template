@@ -1,0 +1,206 @@
+@import '../../../styles/customMediaQueries.css';
+
+.root {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 40px 24px 32px;
+
+  background-image: url('../../../assets/hero-landing.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  @media (--viewportMedium) {
+    min-height: 480px;
+    padding: 48px 36px 36px;
+  }
+
+  @media (--viewportLarge) {
+    min-height: 575px;
+    padding: 56px 48px 48px;
+  }
+}
+
+/* ── Motto ── */
+
+.mottoWrapper {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+  margin-bottom: auto;
+}
+
+.motto {
+  margin: 0;
+  width: 100%;
+  color: var(--colorWhite);
+  font-size: 26px;
+  font-weight: 800;
+  font-style: normal;
+  line-height: 1.2;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+
+  @media (--viewportMedium) {
+    width: 50%;
+    font-size: 36px;
+  }
+
+  @media (--viewportLarge) {
+    font-size: 44px;
+  }
+}
+
+/* ── Bottom row: CTA (left) + Search (right) ── */
+
+.bottomRow {
+  width: 100%;
+  max-width: 1200px;
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+
+  @media (--viewportLarge) {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 32px;
+  }
+}
+
+/* ── CTA column (left) ── */
+
+.ctaColumn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  order: 2;
+
+  @media (--viewportLarge) {
+    order: 1;
+    flex: 0 0 auto;
+  }
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 36px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  background-color: var(--colorWhite);
+  color: var(--marketplaceColor);
+  border: 2px solid var(--colorWhite);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    border-color: var(--marketplaceColor);
+    text-decoration: none;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+  }
+
+  @media (--viewportLarge) {
+    padding: 16px 40px;
+    font-size: 18px;
+  }
+}
+
+/* ── Search column (right) ── */
+
+.searchColumn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  order: 1;
+
+  @media (--viewportLarge) {
+    order: 2;
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+.searchBar {
+  width: 100%;
+  max-width: 720px;
+  background-color: var(--colorWhite);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  width: 50%;
+
+  @media (--viewportLarge) {
+    padding: 8px;
+    width: 100%;
+  }
+}
+
+.searchForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+
+  @media (--viewportLarge) {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  }
+}
+
+.searchField {
+  display: grid;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px 0;
+
+  @media (--viewportLarge) {
+    padding: 0;
+    border-right: 1px solid var(--colorGrey200);
+  }
+}
+
+.keywordField {
+  @media (--viewportLarge) {
+    border-right: 1px solid var(--colorGrey200);
+  }
+}
+
+.searchField:last-of-type {
+  @media (--viewportLarge) {
+    border-right: none;
+  }
+}
+
+.submitButton {
+  min-height: 40px;
+  min-width: 80px;
+  padding: 0 20px;
+  white-space: nowrap;
+  border-radius: 6px;
+  margin-top: 4px;
+
+  @media (--viewportLarge) {
+    margin-top: 0;
+    height: 44px;
+  }
+}

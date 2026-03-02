@@ -4,6 +4,7 @@
  */
 import InjectedStatsSection from './customSections/InjectedStatsSection';
 import CustomHero from './customSections/CustomHero';
+import LandingHero from './customSections/LandingHero';
 
 /**
  * Custom Section Components Registry
@@ -13,10 +14,8 @@ import CustomHero from './customSections/CustomHero';
  */
 export const customSectionComponents = {
   customHero: { component: CustomHero },
+  landingHero: { component: LandingHero },
   injectedStats: { component: InjectedStatsSection },
-  // Add more custom sections here:
-  // customFeatures: { component: CustomFeaturesSection },
-  // customTestimonials: { component: CustomTestimonialsSection },
 };
 
 /**
@@ -29,9 +28,7 @@ export const injectionConfig = {
     // { position: 1, section: { sectionType: 'injectedStats', sectionId: 'stats-1' } },
   ],
   'landing-page': [
-    // Rimossa customHero in prima posizione (position: -1)
-    // { position: -1, section: { sectionType: 'customHero', sectionId: 'custom-hero-landing' } },
-    // { position: 1, section: { sectionType: 'injectedStats', sectionId: 'stats-landing' } },
+    { position: -1, section: { sectionType: 'landingHero', sectionId: 'landing-hero' } },
   ],
   // about: [
   //   { position: 0, section: { sectionType: 'injectedStats', sectionId: 'about-stats' } },

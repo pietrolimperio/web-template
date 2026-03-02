@@ -170,6 +170,8 @@
   "CustomExtendedDataField.placeholderText": "Beschreibung schreiben…",
   "CustomExtendedDataField.placeholderYoutubeVideoURL": "Die URL eines YouTube-Videos",
   "CustomExtendedDataField.required": "Pflichtfeld",
+  "LandingHero.motto": "Alles, was Sie wollen, nur für die Zeit, die Sie brauchen",
+  "LandingHero.createListing": "Inserat veröffentlichen",
   "DatePicker.clearButton": "Leeren",
   "DatePicker.screenreader.blockedDate": "{date} ist nicht verfügbar",
   "DatePicker.screenreader.chooseDate": "{date} auswählen",

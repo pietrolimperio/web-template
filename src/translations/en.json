@@ -179,6 +179,8 @@
   "CustomHero.discoverMore": "Discover more",
   "CustomHero.postListing": "Post new listing",
   "CustomHero.title": "Everything you want, only for the time you need",
+  "LandingHero.motto": "Everything you want, only for the time you need",
+  "LandingHero.createListing": "Post a listing",
   "DatePicker.clearButton": "Clear",
   "DatePicker.screenreader.blockedDate": "{date} is not available",
   "DatePicker.screenreader.chooseDate": "Choose {date}",

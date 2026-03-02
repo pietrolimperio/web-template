@@ -173,6 +173,8 @@
   "CustomHero.discoverMore": "Descubre más",
   "CustomHero.postListing": "Publicar anuncio",
   "CustomHero.title": "Todo lo que quieres, solo por el tiempo que necesitas",
+  "LandingHero.motto": "Todo lo que quieres, solo por el tiempo que necesitas",
+  "LandingHero.createListing": "Publicar un anuncio",
   "DatePicker.clearButton": "Borrar",
   "DatePicker.screenreader.blockedDate": "{date} no está disponible",
   "DatePicker.screenreader.chooseDate": "Elige {date}",
