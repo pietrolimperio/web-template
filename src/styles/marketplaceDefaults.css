@@ -521,7 +521,6 @@ select:hover {
 }
 select:focus {
   background-color: #fff;
-  border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
   transition: all ease-in-out 100ms;
 }
@@ -928,7 +927,6 @@ textarea {
 }
 .marketplaceInputStyles:focus {
   background-color: #fff;
-  border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
   transition: all ease-in-out 100ms;
 }
