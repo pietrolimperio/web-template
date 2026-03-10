@@ -8,7 +8,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   padding: 40px 24px 32px;
 
   background-image: url('../../../assets/hero-landing.png');
@@ -49,7 +49,7 @@
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
 
   @media (--viewportMedium) {
-    width: 50%;
+    width: 35%;
     font-size: 36px;
   }
 
@@ -58,7 +58,7 @@
   }
 }
 
-/* ── Bottom row: CTA (left) + Search (right) ── */
+/* ── Bottom area: search bar + CTA stacked centered ── */
 
 .bottomRow {
   width: 100%;
@@ -69,26 +69,13 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
-
-  @media (--viewportLarge) {
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 32px;
-  }
 }
-
-/* ── CTA column (left) ── */
 
 .ctaColumn {
   display: flex;
   align-items: center;
   justify-content: center;
   order: 2;
-
-  @media (--viewportLarge) {
-    order: 1;
-    flex: 0 0 auto;
-  }
 }
 
 .ctaButton {
@@ -126,7 +113,7 @@
   }
 }
 
-/* ── Search column (right) ── */
+/* ── Search column ── */
 
 .searchColumn {
   display: flex;
@@ -134,26 +121,21 @@
   justify-content: center;
   width: 100%;
   order: 1;
-
-  @media (--viewportLarge) {
-    order: 2;
-    width: auto;
-    justify-content: flex-end;
-  }
+  overflow: visible;
 }
 
 .searchBar {
-  width: 100%;
+  position: relative;
+  width: 90%;
   max-width: 720px;
   background-color: var(--colorWhite);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   padding: 8px;
-  width: 50%;
+  overflow: visible;
 
-  @media (--viewportLarge) {
-    padding: 8px;
-    width: 100%;
+  @media (--viewportExtraSmall) {
+    width: 50%;
   }
 }
 
@@ -161,9 +143,16 @@
   display: grid;
   grid-template-columns: 1fr;
   align-items: center;
+  transition: grid-template-columns 0.2s ease;
 
-  @media (--viewportLarge) {
+  @media (--viewportMedium) {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  }
+}
+
+.searchFormExpanded {
+  @media (--viewportMedium) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto;
   }
 }
 
@@ -173,21 +162,41 @@
   min-height: 40px;
   padding: 4px 0;
 
-  @media (--viewportLarge) {
+  @media (--viewportMedium) {
     padding: 0;
     border-right: 1px solid var(--colorGrey200);
   }
 }
 
+.categoryField {
+  display: none;
+  animation: fadeIn 0.2s ease;
+
+  @media (--viewportMedium) {
+    display: grid;
+  }
+}
+
 .keywordField {
-  @media (--viewportLarge) {
+  @media (--viewportMedium) {
     border-right: 1px solid var(--colorGrey200);
   }
 }
 
 .searchField:last-of-type {
-  @media (--viewportLarge) {
+  @media (--viewportMedium) {
     border-right: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 60px;
   }
 }
 
@@ -199,7 +208,7 @@
   border-radius: 6px;
   margin-top: 4px;
 
-  @media (--viewportLarge) {
+  @media (--viewportMedium) {
     margin-top: 0;
     height: 44px;
   }

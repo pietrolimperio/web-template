@@ -8,13 +8,13 @@ import { OutsideClickHandler } from '../../../../../components';
 
 import css from './FilterCategories.module.css';
 
-const CategoryDropdown = ({ input, className, rootClassName, categories, alignLeft }) => {
+const CategoryDropdown = ({ input, className, rootClassName, categories, alignLeft, defaultShowAll }) => {
   const intl = useIntl();
   const config = useConfiguration();
   const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [hasSelected, setHasSelected] = useState(false);
+  const [hasSelected, setHasSelected] = useState(!!defaultShowAll);
 
   const toggleDropdown = () => {
     setIsOpen(prev => !prev);
