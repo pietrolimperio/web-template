@@ -624,17 +624,22 @@ class StripePaymentForm extends Component {
                   />
                 ) : null}
 
-                <FieldTextInput
-                  className={css.field}
-                  type="text"
-                  id="name"
-                  name="name"
-                  autoComplete="cc-name"
-                  label={billingDetailsNameLabel}
-                  placeholder={billingDetailsNamePlaceholder}
-                />
+                {!askShippingDetails ||
+                !(values.sameAddressCheckbox && values.sameAddressCheckbox.includes('sameAddress')) ? (
+                  <>
+                    <FieldTextInput
+                      className={css.field}
+                      type="text"
+                      id="name"
+                      name="name"
+                      autoComplete="cc-name"
+                      label={billingDetailsNameLabel}
+                      placeholder={billingDetailsNamePlaceholder}
+                    />
 
-                {billingAddress}
+                    {billingAddress}
+                  </>
+                ) : null}
               </div>
             ) : null}
           </React.Fragment>

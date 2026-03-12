@@ -229,6 +229,13 @@
     margin-top: 0;
     padding: 0;
   }
+
+  /* White background for all checkout text fields (shipping + billing) */
+  & input,
+  & select,
+  & textarea {
+    background-color: #fff !important;
+  }
 }
 
 .orderError,

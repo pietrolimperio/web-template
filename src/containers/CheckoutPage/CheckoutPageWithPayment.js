@@ -513,6 +513,22 @@ export const CheckoutPageWithPayment = props => {
     ? `${currentUser.attributes.profile.firstName} ${currentUser.attributes.profile.lastName}`
     : null;
 
+  // Prefill shipping address from user profile (privateData.address)
+  const profile = currentUser?.attributes?.profile;
+  const publicData = profile?.publicData || {};
+  const privateData = profile?.privateData || {};
+  const address = privateData.address || {};
+  const shippingFromProfile = {
+    recipientName: userName,
+    recipientPhoneNumber: publicData.phoneNumber || privateData.phoneNumber || '',
+    recipientAddressLine1: address.addressLine1 ?? '',
+    recipientAddressLine2: address.addressLine2 ?? '',
+    recipientPostal: address.postalCode ?? '',
+    recipientCity: address.city ?? '',
+    recipientState: address.state ?? '',
+    recipientCountry: address.country ?? '',
+  };
+
   // If paymentIntent status is not waiting user action,
   // confirmCardPayment has been called previously.
   const hasPaymentIntentUserActionsDone =
@@ -520,8 +536,19 @@ export const CheckoutPageWithPayment = props => {
 
   // If your marketplace works mostly in one country you can use initial values to select country automatically
   // e.g. {country: 'FI'}
-
-  const initialValuesForStripePayment = { name: userName, recipientName: userName };
+  // Same billing/shipping checkbox is true by default; billing fields prefilled from shipping
+  const initialValuesForStripePayment = {
+    name: userName,
+    recipientName: userName,
+    ...shippingFromProfile,
+    sameAddressCheckbox: ['sameAddress'],
+    addressLine1: shippingFromProfile.recipientAddressLine1,
+    addressLine2: shippingFromProfile.recipientAddressLine2,
+    postal: shippingFromProfile.recipientPostal,
+    city: shippingFromProfile.recipientCity,
+    state: shippingFromProfile.recipientState,
+    country: shippingFromProfile.recipientCountry,
+  };
   const askShippingDetails =
     orderData?.deliveryMethod === 'shipping' &&
     !hasTransactionPassedPendingPayment(existingTransaction, process);
