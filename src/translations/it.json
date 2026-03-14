@@ -793,6 +793,7 @@
   "OrderBreakdown.pickupFee": "Ritiro",
   "OrderBreakdown.insuranceFee": "Costi di assicurazione",
   "OrderBreakdown.couponDiscount": "Sconto coupon",
+  "OrderBreakdown.autoDiscount": "Sconto automatico",
   "OrderBreakdown.providerTotalDefault": "Guadagnerai",
   "OrderBreakdown.providerTotalReceived": "Hai guadagnato",
   "OrderBreakdown.providerTotalRefunded": "Prezzo totale",

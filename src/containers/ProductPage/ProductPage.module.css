@@ -337,6 +337,20 @@
   color: var(--matterColorAnti);
 }
 
+.discountBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  margin-left: 4px;
+}
+
 /* Author Section */
 .authorSection {
   display: flex;

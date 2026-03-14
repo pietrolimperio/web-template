@@ -714,3 +714,55 @@ exports.getCouponDiscountMaybe = (couponCode, order, extraLineItems, currency) =
     },
   ];
 };
+
+/**
+ * Get automatic discount line items from pre-matched discounts.
+ * Applies the best discount from the autoDiscounts array.
+ * Policy: apply only the single best discount (not cumulative).
+ *
+ * @param {Array} autoDiscounts - Array of { id, name, type, value } from discounts/match
+ * @param {Object} order - Base order line item
+ * @param {Array} extraLineItems - Extra line items to include in subtotal
+ * @param {string} currency - Currency code
+ * @returns {Array} Auto-discount line item array (negative value)
+ */
+exports.getAutoDiscountMaybe = (autoDiscounts, order, extraLineItems, currency) => {
+  if (!Array.isArray(autoDiscounts) || autoDiscounts.length === 0) {
+    return [];
+  }
+
+  // Policy: pick the best discount (highest value percentage first, then fixed)
+  const best = autoDiscounts.reduce((acc, d) => {
+    if (!acc) return d;
+    if (d.type === 'percentage' && acc.type !== 'percentage') return d;
+    if (d.type === acc.type && d.value > acc.value) return d;
+    return acc;
+  }, null);
+
+  if (!best) return [];
+
+  const allItems = [order, ...(extraLineItems || [])];
+  const subtotal = exports.calculateTotalFromLineItems(allItems);
+
+  if (best.type === 'percentage') {
+    return [
+      {
+        code: 'line-item/auto-discount',
+        unitPrice: subtotal,
+        percentage: new Decimal(best.value).negated().toNumber(),
+        includeFor: ['customer', 'provider'],
+      },
+    ];
+  }
+
+  // Fixed discount: value is in minor units (e.g. 1500 = 15.00 EUR)
+  const fixedAmount = Math.min(best.value, subtotal.amount);
+  return [
+    {
+      code: 'line-item/auto-discount',
+      unitPrice: new Money(-fixedAmount, currency),
+      quantity: 1,
+      includeFor: ['customer', 'provider'],
+    },
+  ];
+};

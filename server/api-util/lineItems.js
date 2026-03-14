@@ -7,6 +7,7 @@ const {
   getShippingFeeForBookingStub,
   getInsuranceFeeMaybe,
   getCouponDiscountMaybe,
+  getAutoDiscountMaybe,
   getApplicableDurationVariant,
   getBookingDateRange,
   getPriceForDate,
@@ -319,6 +320,13 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
     bookingExtraLineItems = [
       ...bookingExtraLineItems,
       ...getCouponDiscountMaybe(couponCode, order, bookingExtraLineItems, currency),
+    ];
+
+    // Auto-discount: applied if autoDiscounts are passed from the frontend
+    const autoDiscounts = orderData?.autoDiscounts;
+    bookingExtraLineItems = [
+      ...bookingExtraLineItems,
+      ...getAutoDiscountMaybe(autoDiscounts, order, bookingExtraLineItems, currency),
     ];
   }
 

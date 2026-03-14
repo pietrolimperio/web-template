@@ -421,6 +421,111 @@ export async function validateCoupon({ code, listingId, locale }) {
 }
 
 /**
+ * Fetch automatic discounts that apply to a listing.
+ * Works for both guest and authenticated users.
+ * Authenticated requests can also match user-specific discounts.
+ *
+ * @param {Object} params
+ * @param {string} params.listingId - Listing UUID
+ * @param {string} [params.locale] - Locale filter (e.g. 'it', 'en')
+ * @returns {Promise<{ discounts: Array<{ id: string, name: string, type: 'percentage'|'fixed', value: number }> }>}
+ */
+export async function matchDiscounts({ listingId, locale }) {
+  if (!isLeazBackendApiAvailable()) {
+    throw new Error('Leaz backend: discount matching is not available');
+  }
+
+  const body = { listingId };
+  if (locale) body.locale = locale;
+  const path = 'discounts/match';
+
+  const sharetribeToken = await ensureSharetribeTokenValid();
+  if (sharetribeToken && API_KEY) {
+    return requestAuthenticatedPost(path, body);
+  }
+  return requestGuestPost(path, body);
+}
+
+/**
+ * Register coupon usage after an order is completed.
+ * Idempotent per (couponId, transactionId) — safe to retry.
+ *
+ * @param {Object} params
+ * @param {string} params.couponId - Coupon UUID
+ * @param {string} params.transactionId - Transaction UUID
+ * @param {string} [params.listingId] - Listing UUID (optional)
+ * @returns {Promise<{ recorded: boolean }>}
+ */
+export async function registerCouponUsage({ couponId, transactionId, listingId }) {
+  if (!isLeazBackendApiAvailable()) {
+    throw new Error('Leaz backend: coupon usage registration is not available');
+  }
+
+  const body = { transactionId };
+  if (listingId) body.listingId = listingId;
+  const path = `coupons/${couponId}/use`;
+
+  return requestAuthenticatedPost(path, body);
+}
+
+/**
+ * Register automatic discount usage after an order is completed.
+ * Idempotent per (discountId, transactionId) — safe to retry.
+ *
+ * @param {Object} params
+ * @param {string} params.discountId - Discount UUID
+ * @param {string} params.transactionId - Transaction UUID
+ * @param {string} [params.listingId] - Listing UUID (optional)
+ * @returns {Promise<{ recorded: boolean }>}
+ */
+export async function registerDiscountUsage({ discountId, transactionId, listingId }) {
+  if (!isLeazBackendApiAvailable()) {
+    throw new Error('Leaz backend: discount usage registration is not available');
+  }
+
+  const body = { transactionId };
+  if (listingId) body.listingId = listingId;
+  const path = `discounts/${discountId}/use`;
+
+  return requestAuthenticatedPost(path, body);
+}
+
+/**
+ * Register usage for all applied discounts and coupons after order completion.
+ * Wraps registerCouponUsage and registerDiscountUsage, ignoring 409 (already recorded).
+ *
+ * @param {Object} params
+ * @param {string} params.transactionId - Transaction UUID
+ * @param {string} [params.listingId] - Listing UUID
+ * @param {Array<{ id: string }>} [params.discounts] - Applied automatic discounts
+ * @param {{ id: string }|null} [params.coupon] - Applied coupon
+ * @returns {Promise<void>}
+ */
+export async function registerAllUsage({ transactionId, listingId, discounts = [], coupon = null }) {
+  const promises = [];
+
+  for (const discount of discounts) {
+    promises.push(
+      registerDiscountUsage({ discountId: discount.id, transactionId, listingId }).catch(err => {
+        if (err.message && err.message.includes('409')) return; // already recorded
+        console.warn('Failed to register discount usage:', err.message);
+      })
+    );
+  }
+
+  if (coupon?.id) {
+    promises.push(
+      registerCouponUsage({ couponId: coupon.id, transactionId, listingId }).catch(err => {
+        if (err.message && err.message.includes('409')) return;
+        console.warn('Failed to register coupon usage:', err.message);
+      })
+    );
+  }
+
+  await Promise.allSettled(promises);
+}
+
+/**
  * Check if Leaz Backend API is configured
  */
 export const isLeazBackendApiAvailable = () => !!BASE_URL;

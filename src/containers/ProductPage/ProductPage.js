@@ -97,6 +97,7 @@ import {
   fetchTimeSlots,
   fetchTransactionLineItems,
   fetchAvailabilityForCalendar,
+  fetchAutoDiscounts,
 } from '../ListingPage/ListingPage.duck';
 
 import {
@@ -127,6 +128,28 @@ import css from './ProductPage.module.css';
 const MIN_LENGTH_FOR_LONG_WORDS_IN_TITLE = 16;
 const TODAY = new Date();
 const MAX_BOOKING_DAYS = 80;
+
+/**
+ * Returns the best applicable automatic discount from an array.
+ * Prefers percentage discounts with the highest value.
+ */
+const getBestDiscount = (discounts = []) => {
+  if (!discounts.length) return null;
+  return discounts.reduce((best, d) => {
+    if (!best) return d;
+    if (d.type === 'percentage' && best.type !== 'percentage') return d;
+    if (d.type === best.type && d.value > best.value) return d;
+    return best;
+  }, null);
+};
+
+const formatDiscountLabel = (discount, intl) => {
+  if (!discount) return null;
+  if (discount.type === 'percentage') {
+    return `-${discount.value}%`;
+  }
+  return `-${(discount.value / 100).toFixed(2)} €`;
+};
 
 const { UUID, Money } = sdkTypes;
 
@@ -293,9 +316,12 @@ const BookingForm = props => {
   const [deliveryMethod, setDeliveryMethod] = useState(defaultDeliveryMethod);
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
+  const [couponData, setCouponData] = useState(null); // { id, type, value } from validation
   const [couponError, setCouponError] = useState(null);
   const [couponValidating, setCouponValidating] = useState(false);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
+
+  const autoDiscounts = props.autoDiscounts || [];
 
   // Fetch availability from timeslots (works for guests and owners)
   useEffect(() => {
@@ -366,6 +392,7 @@ const BookingForm = props => {
 
       if (result.valid) {
         setCouponApplied(true);
+        setCouponData(result.id ? { id: result.id, type: result.type, value: result.value } : null);
         if (canShowFullBookingUI) {
           fetchLineItemsForDatesAndDelivery(
             calendarSelectedDates[0],
@@ -387,6 +414,7 @@ const BookingForm = props => {
   const handleRemoveCoupon = () => {
     setCouponCode('');
     setCouponApplied(false);
+    setCouponData(null);
     setCouponError(null);
     if (canShowFullBookingUI) {
       fetchLineItemsForDatesAndDelivery(
@@ -489,6 +517,8 @@ const BookingForm = props => {
       },
       ...(deliveryMethod && { deliveryMethod }),
       ...(couponCode && couponCode.trim() && { couponCode: couponCode.trim() }),
+      ...(couponData && { couponData }),
+      ...(autoDiscounts.length > 0 && { autoDiscounts }),
     };
 
     onSubmit(bookingData);
@@ -857,6 +887,7 @@ export const ProductPageComponent = props => {
     sendVerificationEmailError,
     sendInquiryInProgress,
     sendInquiryError,
+    autoDiscounts,
   } = props;
 
   const listingConfig = config.listing;
@@ -1161,6 +1192,11 @@ export const ProductPageComponent = props => {
                       <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
                     </span>
                   </div>
+                  {getBestDiscount(autoDiscounts) && (
+                    <span className={css.discountBadge}>
+                      {formatDiscountLabel(getBestDiscount(autoDiscounts), intl)}
+                    </span>
+                  )}
                 </div>
                 {isBooking && !isClosed && (
                   <button
@@ -1531,6 +1567,7 @@ export const ProductPageComponent = props => {
                         sendVerificationEmailInProgress={sendVerificationEmailInProgress}
                         sendVerificationEmailError={sendVerificationEmailError}
                         onManageDisableScrolling={onManageDisableScrolling}
+                        autoDiscounts={autoDiscounts}
                       />
                     </div>
                   )}
@@ -1587,6 +1624,11 @@ export const ProductPageComponent = props => {
                   <span className={css.perUnit}>
                     <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
                   </span>
+                  {getBestDiscount(autoDiscounts) && (
+                    <span className={css.discountBadge}>
+                      {formatDiscountLabel(getBestDiscount(autoDiscounts), intl)}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -1648,6 +1690,7 @@ export const ProductPageComponent = props => {
                     sendVerificationEmailInProgress={sendVerificationEmailInProgress}
                     sendVerificationEmailError={sendVerificationEmailError}
                     onManageDisableScrolling={onManageDisableScrolling}
+                    autoDiscounts={autoDiscounts}
                   />
                 </div>
               )}
@@ -1807,6 +1850,7 @@ const mapStateToProps = state => {
     fetchLineItemsInProgress,
     fetchLineItemsError,
     inquiryModalOpenForListingId,
+    autoDiscounts,
   } = state.ListingPage;
   const {
     authorReviews = [],
@@ -1851,6 +1895,7 @@ const mapStateToProps = state => {
     sendInquiryError,
     sendVerificationEmailInProgress,
     sendVerificationEmailError,
+    autoDiscounts: autoDiscounts || [],
   };
 };
 
@@ -1866,6 +1911,7 @@ const mapDispatchToProps = dispatch => ({
     dispatch(fetchTimeSlots(listingId, start, end, timeZone, options)),
   onFetchAvailabilityForCalendar: (listing, options) =>
     dispatch(fetchAvailabilityForCalendar(listing, options)),
+  onFetchAutoDiscounts: (listingId, locale) => dispatch(fetchAutoDiscounts(listingId, locale)),
   onResendVerificationEmail: () => dispatch(sendVerificationEmail()),
 });
 

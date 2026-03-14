@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 // Import contexts and util modules
+import { registerAllUsage } from '../../util/leazBackendApi';
 import { FormattedMessage, intlShape } from '../../util/reactIntl';
 import { pathByRouteName } from '../../util/routes';
 import { isValidCurrencyForTransactionProcess } from '../../util/fieldHelpers.js';
@@ -111,6 +112,8 @@ const getOrderParams = (pageData, shippingDetails, optionalPaymentParams, config
   const deliveryMethodMaybe = deliveryMethod ? { deliveryMethod } : {};
   const couponCode = pageData.orderData?.couponCode;
   const couponCodeMaybe = couponCode && couponCode.trim() ? { couponCode: couponCode.trim() } : {};
+  const autoDiscounts = pageData.orderData?.autoDiscounts;
+  const autoDiscountsMaybe = autoDiscounts?.length > 0 ? { autoDiscounts } : {};
   const { listingType, unitType, priceVariants } = pageData?.listing?.attributes?.publicData || {};
 
   // price variant data for fixed duration bookings
@@ -141,6 +144,7 @@ const getOrderParams = (pageData, shippingDetails, optionalPaymentParams, config
     listingId: pageData?.listing?.id,
     ...deliveryMethodMaybe,
     ...couponCodeMaybe,
+    ...autoDiscountsMaybe,
     ...quantityMaybe,
     ...seatsMaybe,
     ...bookingDatesMaybe(pageData.orderData?.bookingDates),
@@ -314,6 +318,19 @@ const handleSubmit = (values, process, props, stripe, submitting, setSubmitting)
     .then(response => {
       const { orderId, messageSuccess, paymentMethodSaved } = response;
       setSubmitting(false);
+
+      // Register discount/coupon usage (non-blocking, idempotent)
+      const appliedDiscounts = pageData.orderData?.autoDiscounts || [];
+      const appliedCouponData = pageData.orderData?.couponData;
+      if (appliedDiscounts.length > 0 || appliedCouponData?.id) {
+        const listingIdStr = pageData.listing?.id?.uuid;
+        registerAllUsage({
+          transactionId: orderId.uuid,
+          listingId: listingIdStr,
+          discounts: appliedDiscounts,
+          coupon: appliedCouponData,
+        }).catch(() => {});
+      }
 
       const initialMessageFailedToTransaction = messageSuccess ? null : orderId;
       const orderDetailsPath = pathByRouteName('OrderDetailsPage', routeConfiguration, {

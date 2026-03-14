@@ -234,6 +234,8 @@ export const handleSubmit = parameters => values => {
     seats: seatsRaw,
     deliveryMethod,
     couponCode,
+    couponData,
+    autoDiscounts,
     ...otherOrderData
   } = values;
 
@@ -260,6 +262,8 @@ export const handleSubmit = parameters => values => {
   const seatsMaybe = Number.isInteger(seats) ? { seats } : {};
   const deliveryMethodMaybe = deliveryMethod ? { deliveryMethod } : {};
   const couponCodeMaybe = couponCode && couponCode.trim() ? { couponCode: couponCode.trim() } : {};
+  const couponDataMaybe = couponData ? { couponData } : {};
+  const autoDiscountsMaybe = autoDiscounts?.length > 0 ? { autoDiscounts } : {};
 
   const initialValues = {
     listing,
@@ -270,6 +274,8 @@ export const handleSubmit = parameters => values => {
       ...seatsMaybe,
       ...deliveryMethodMaybe,
       ...couponCodeMaybe,
+      ...couponDataMaybe,
+      ...autoDiscountsMaybe,
       ...otherOrderData,
     },
     confirmPaymentError: null,

@@ -1,5 +1,6 @@
 import pick from 'lodash/pick';
 
+import { matchDiscounts, isLeazBackendApiAvailable } from '../../util/leazBackendApi';
 import { types as sdkTypes, createImageVariantConfig } from '../../util/sdkLoader';
 import { storableError } from '../../util/errors';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -69,6 +70,10 @@ export const FETCH_LINE_ITEMS_REQUEST = 'app/ListingPage/FETCH_LINE_ITEMS_REQUES
 export const FETCH_LINE_ITEMS_SUCCESS = 'app/ListingPage/FETCH_LINE_ITEMS_SUCCESS';
 export const FETCH_LINE_ITEMS_ERROR = 'app/ListingPage/FETCH_LINE_ITEMS_ERROR';
 
+export const FETCH_DISCOUNTS_REQUEST = 'app/ListingPage/FETCH_DISCOUNTS_REQUEST';
+export const FETCH_DISCOUNTS_SUCCESS = 'app/ListingPage/FETCH_DISCOUNTS_SUCCESS';
+export const FETCH_DISCOUNTS_ERROR = 'app/ListingPage/FETCH_DISCOUNTS_ERROR';
+
 export const SEND_INQUIRY_REQUEST = 'app/ListingPage/SEND_INQUIRY_REQUEST';
 export const SEND_INQUIRY_SUCCESS = 'app/ListingPage/SEND_INQUIRY_SUCCESS';
 export const SEND_INQUIRY_ERROR = 'app/ListingPage/SEND_INQUIRY_ERROR';
@@ -100,6 +105,9 @@ const initialState = {
   lineItems: null,
   fetchLineItemsInProgress: false,
   fetchLineItemsError: null,
+  autoDiscounts: [],
+  fetchDiscountsInProgress: false,
+  fetchDiscountsError: null,
   sendInquiryInProgress: false,
   sendInquiryError: null,
   inquiryModalOpenForListingId: null,
@@ -204,6 +212,13 @@ const listingPageReducer = (state = initialState, action = {}) => {
     case FETCH_LINE_ITEMS_ERROR:
       return { ...state, fetchLineItemsInProgress: false, fetchLineItemsError: payload };
 
+    case FETCH_DISCOUNTS_REQUEST:
+      return { ...state, fetchDiscountsInProgress: true, fetchDiscountsError: null };
+    case FETCH_DISCOUNTS_SUCCESS:
+      return { ...state, fetchDiscountsInProgress: false, autoDiscounts: payload };
+    case FETCH_DISCOUNTS_ERROR:
+      return { ...state, fetchDiscountsInProgress: false, fetchDiscountsError: payload };
+
     case SEND_INQUIRY_REQUEST:
       return { ...state, sendInquiryInProgress: true, sendInquiryError: null };
     case SEND_INQUIRY_SUCCESS:
@@ -279,6 +294,17 @@ export const fetchLineItemsSuccess = lineItems => ({
 });
 export const fetchLineItemsError = error => ({
   type: FETCH_LINE_ITEMS_ERROR,
+  error: true,
+  payload: error,
+});
+
+export const fetchDiscountsRequest = () => ({ type: FETCH_DISCOUNTS_REQUEST });
+export const fetchDiscountsSuccess = discounts => ({
+  type: FETCH_DISCOUNTS_SUCCESS,
+  payload: discounts,
+});
+export const fetchDiscountsError = error => ({
+  type: FETCH_DISCOUNTS_ERROR,
   error: true,
   payload: error,
 });
@@ -458,6 +484,30 @@ export const sendInquiry = (listing, message) => (dispatch, getState, sdk) => {
     .catch(e => {
       dispatch(sendInquiryError(storableError(e)));
       throw e;
+    });
+};
+
+/**
+ * Fetch automatic discounts for a listing from the Leaz backend.
+ * Results are cached per listing in Redux state.
+ *
+ * @param {string} listingIdStr - Listing UUID string
+ * @param {string} [locale] - Locale for filtering (e.g. 'it')
+ */
+export const fetchAutoDiscounts = (listingIdStr, locale) => dispatch => {
+  if (!isLeazBackendApiAvailable()) {
+    return Promise.resolve();
+  }
+
+  dispatch(fetchDiscountsRequest());
+
+  return matchDiscounts({ listingId: listingIdStr, locale })
+    .then(data => {
+      dispatch(fetchDiscountsSuccess(data.discounts || []));
+    })
+    .catch(e => {
+      dispatch(fetchDiscountsError(storableError(e)));
+      log.error(e, 'fetching-auto-discounts-failed', { listingId: listingIdStr });
     });
 };
 
@@ -755,11 +805,14 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
     const listing = listingResponse?.data?.data;
     const transactionProcessAlias = listing?.attributes?.publicData?.transactionProcessAlias || '';
     if (isBookingProcessAlias(transactionProcessAlias) && !hasNoViewingRights) {
-      // Fetch timeSlots if the user has viewing rights.
-      // This can happen parallel to loadData.
-      // We are not interested to return them from loadData call.
       fetchMonthlyTimeSlots(dispatch, listing);
     }
+
+    // Fetch automatic discounts for this listing (non-blocking)
+    if (listing?.id?.uuid) {
+      dispatch(fetchAutoDiscounts(listing.id.uuid));
+    }
+
     return response;
   });
 };
