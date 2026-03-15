@@ -116,6 +116,16 @@
   padding: 0;
   margin: 0;
 
+  @media (--viewportMobile) {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 32px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
   @media (--viewportSmall) {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -134,4 +144,9 @@
 
 .gridItem {
   min-width: 0;
+
+  @media (--viewportMobile) {
+    flex: 0 0 160px;
+    scroll-snap-align: start;
+  }
 }

@@ -1,3 +1,4 @@
+@custom-media --viewportMobile (max-width: 425px);
 @custom-media --viewportExtraSmall (min-width: 450px);
 @custom-media --viewportSmall (min-width: 550px);
 @custom-media --viewportMedium (min-width: 768px);
