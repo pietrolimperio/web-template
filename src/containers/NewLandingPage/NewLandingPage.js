@@ -55,7 +55,7 @@ const NewLandingPageComponent = props => {
           return (
             <>
               <Topbar as="header" className={css.topbar}>
-                <TopbarContainer currentPage="NewLandingPage" />
+                <TopbarContainer currentPage="LandingPage" />
               </Topbar>
               <Main as="main" className={css.main}>
                 <HeroSection />

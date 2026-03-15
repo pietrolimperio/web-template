@@ -84,14 +84,13 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
     {
       path: '/',
       name: 'LandingPage',
-      component: LandingPage,
-      loadData: pageDataLoadingAPI.LandingPage.loadData,
+      component: NewLandingPage,
+      loadData: pageDataLoadingAPI.NewLandingPage.loadData,
     },
     {
       path: '/new-landing',
       name: 'NewLandingPage',
-      component: NewLandingPage,
-      loadData: pageDataLoadingAPI.NewLandingPage.loadData,
+      component: () => <NamedRedirect name="LandingPage" />,
     },
     {
       path: '/p/:pageId',
