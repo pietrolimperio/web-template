@@ -11,6 +11,7 @@ import InboxPage from './InboxPage/InboxPage.duck';
 import ListingPage from './ListingPage/ListingPage.duck';
 import MakeOfferPage from './MakeOfferPage/MakeOfferPage.duck';
 import ManageListingsPage from './ManageListingsPage/ManageListingsPage.duck';
+import NewLandingPage from './NewLandingPage/NewLandingPage.duck';
 import PasswordChangePage from './PasswordChangePage/PasswordChangePage.duck';
 import PasswordRecoveryPage from './PasswordRecoveryPage/PasswordRecoveryPage.duck';
 import PasswordResetPage from './PasswordResetPage/PasswordResetPage.duck';
@@ -31,6 +32,7 @@ export {
   ListingPage,
   MakeOfferPage,
   ManageListingsPage,
+  NewLandingPage,
   PasswordChangePage,
   PasswordRecoveryPage,
   PasswordResetPage,

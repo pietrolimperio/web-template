@@ -1,0 +1,151 @@
+@import '../../../styles/customMediaQueries.css';
+
+.root {
+  width: 100%;
+  padding: 28px 24px 40px;
+  background-color: var(--colorGrey50, #f7f7f7);
+  box-sizing: border-box;
+  color: var(--colorGrey800, #1a1a1a);
+}
+
+@media (--viewportMedium) {
+  .root {
+    padding: 32px 36px 44px;
+  }
+}
+
+@media (--viewportLarge) {
+  .root {
+    padding: 16px 28px 28px;
+  }
+}
+
+.title {
+  margin: 0 0 20px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1a1a1a !important;
+  display: block;
+  visibility: visible;
+}
+
+@media (--viewportMedium) {
+  .title {
+    margin-bottom: 24px;
+    font-size: 26px;
+  }
+}
+
+@media (--viewportLarge) {
+  .title {
+    margin-bottom: 28px;
+    font-size: 28px;
+  }
+}
+
+.list {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 20px 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  width: 100%;
+}
+
+@media (--viewportMedium) {
+  .list {
+    gap: 28px 20px;
+  }
+}
+
+@media (--viewportLarge) {
+  .list {
+    gap: 32px 24px;
+  }
+}
+
+.item {
+  min-width: 0;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 4px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  transition: color 0.2s ease;
+}
+
+
+@media (--viewportMedium) {
+  .link {
+    gap: 12px;
+    padding: 10px 6px;
+  }
+}
+
+@media (--viewportLarge) {
+  .link {
+    gap: 14px;
+    padding: 12px 8px;
+  }
+}
+
+.imageWrap {
+  position: relative;
+  width: 90%;
+  max-width: 200px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--colorGrey200, #d4d4d4);
+  flex-shrink: 0;
+  transition: box-shadow 0.2s ease;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--colorGrey200, #d4d4d4);
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@media (--viewportMedium) {
+  .name {
+    font-size: 15px;
+  }
+}
+
+@media (--viewportLarge) {
+  .name {
+    font-size: 16px;
+  }
+}

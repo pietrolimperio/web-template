@@ -5,6 +5,7 @@
 import InjectedStatsSection from './customSections/InjectedStatsSection';
 import CustomHero from './customSections/CustomHero';
 import LandingHero from './customSections/LandingHero';
+import CategoriesStrip from './customSections/CategoriesStrip';
 
 /**
  * Custom Section Components Registry
@@ -16,6 +17,7 @@ export const customSectionComponents = {
   customHero: { component: CustomHero },
   landingHero: { component: LandingHero },
   injectedStats: { component: InjectedStatsSection },
+  categoriesStrip: { component: CategoriesStrip },
 };
 
 /**
@@ -29,6 +31,7 @@ export const injectionConfig = {
   ],
   'landing-page': [
     { position: -1, section: { sectionType: 'landingHero', sectionId: 'landing-hero' } },
+    { position: 0, section: { sectionType: 'categoriesStrip', sectionId: 'categories-strip' } },
   ],
   // about: [
   //   { position: 0, section: { sectionType: 'injectedStats', sectionId: 'about-stats' } },

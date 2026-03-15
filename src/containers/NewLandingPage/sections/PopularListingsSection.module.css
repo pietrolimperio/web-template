@@ -1,0 +1,137 @@
+@import '../../../styles/customMediaQueries.css';
+
+.root {
+  width: 100%;
+  padding: 48px 0;
+  background-color: white;
+
+  @media (--viewportMedium) {
+    padding: 64px 0;
+  }
+
+  @media (--viewportLarge) {
+    padding: 40px 0;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+
+  @media (--viewportMedium) {
+    padding: 0 36px;
+  }
+
+  @media (--viewportLarge) {
+    padding: 0 48px;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 36px;
+  }
+}
+
+.headerText {
+  flex: 1;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--colorGrey900);
+
+  @media (--viewportMedium) {
+    font-size: 30px;
+  }
+
+  @media (--viewportLarge) {
+    font-size: 34px;
+  }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--colorGrey500);
+  line-height: 1.5;
+
+  @media (--viewportMedium) {
+    font-size: 16px;
+  }
+}
+
+.viewAllLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--marketplaceColor);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: gap 0.15s ease;
+
+  &:hover {
+    text-decoration: none;
+    gap: 10px;
+  }
+}
+
+.arrow {
+  font-size: 18px;
+  transition: transform 0.15s ease;
+}
+
+.viewAllLink:hover .arrow {
+  transform: translateX(2px);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  @media (--viewportSmall) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  @media (--viewportLarge) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+}
+
+.gridItem {
+  min-width: 0;
+}

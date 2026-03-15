@@ -1087,12 +1087,15 @@ const validateCategoryConfig = hostedConfig => {
     }
 
     return {
-      categories: data.categories.map(({ name, id, translations, subcategories }) => ({
-        name,
-        id,
-        translations: translations && typeof translations === 'object' ? translations : {},
-        subcategories: validateSubcategories(subcategories),
-      })),
+      categories: data.categories.map(
+        ({ name, id, translations, imageUrl, subcategories }) => ({
+          name,
+          id,
+          translations: translations && typeof translations === 'object' ? translations : {},
+          ...(imageUrl != null && imageUrl !== '' ? { imageUrl } : {}),
+          subcategories: validateSubcategories(subcategories),
+        })
+      ),
     };
   };
 
@@ -1101,10 +1104,11 @@ const validateCategoryConfig = hostedConfig => {
       return [];
     }
 
-    return subcategories.map(({ name, id, translations, subcategories }) => ({
+    return subcategories.map(({ name, id, translations, imageUrl, subcategories }) => ({
       name,
       id,
       translations: translations && typeof translations === 'object' ? translations : {},
+      ...(imageUrl != null && imageUrl !== '' ? { imageUrl } : {}),
       subcategories: validateSubcategories(subcategories),
     }));
   };

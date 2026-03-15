@@ -1,50 +1,99 @@
 import React from 'react';
-import loadable from '@loadable/component';
-
-import { bool, object } from 'prop-types';
+import { bool, array, object } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 
-import { camelize } from '../../util/string';
+import { useIntl } from '../../util/reactIntl';
+import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { getListingsById } from '../../ducks/marketplaceData.duck';
 import { propTypes } from '../../util/types';
 
-import FallbackPage from './FallbackPage';
-import { ASSET_NAME } from './NewLandingPage.duck';
+import { LayoutComposer, Page } from '../../components';
+import TopbarContainer from '../TopbarContainer/TopbarContainer';
+import FooterContainer from '../FooterContainer/FooterContainer';
 
-const PageBuilder = loadable(() =>
-  import(/* webpackChunkName: "PageBuilder" */ '../PageBuilder/PageBuilder')
-);
+import HeroSection from './sections/HeroSection';
+import CategoriesSection from './sections/CategoriesSection';
+import PopularListingsSection from './sections/PopularListingsSection';
+import PartnersSection from './sections/PartnersSection';
+import ValuePropositionSection from './sections/ValuePropositionSection';
 
-export const NewLandingPageComponent = props => {
-  const { pageAssetsData, inProgress, error } = props;
+import css from './NewLandingPage.module.css';
+
+const NewLandingPageComponent = props => {
+  const {
+    scrollingDisabled,
+    popularListings,
+    fetchPopularInProgress,
+  } = props;
+  const intl = useIntl();
+
+  const siteTitle = intl.formatMessage({ id: 'NewLandingPage.schemaTitle' });
+  const schemaDescription = intl.formatMessage({ id: 'NewLandingPage.schemaDescription' });
+
+  const layoutAreas = `
+    topbar
+    main
+    footer
+  `;
 
   return (
-    <PageBuilder
-      pageAssetsData={pageAssetsData?.[camelize(ASSET_NAME)]?.data}
-      inProgress={inProgress}
-      error={error}
-      fallbackPage={<FallbackPage error={error} />}
-    />
+    <Page
+      title={siteTitle}
+      description={schemaDescription}
+      scrollingDisabled={scrollingDisabled}
+      schema={{
+        '@context': 'http://schema.org',
+        '@type': 'WebPage',
+        name: siteTitle,
+        description: schemaDescription,
+      }}
+    >
+      <LayoutComposer areas={layoutAreas} className={css.layout}>
+        {layoutProps => {
+          const { Topbar, Main, Footer } = layoutProps;
+          return (
+            <>
+              <Topbar as="header" className={css.topbar}>
+                <TopbarContainer currentPage="NewLandingPage" />
+              </Topbar>
+              <Main as="main" className={css.main}>
+                <HeroSection />
+                <ValuePropositionSection />
+                <CategoriesSection />
+                <PopularListingsSection
+                  listings={popularListings}
+                  inProgress={fetchPopularInProgress}
+                />
+                <PartnersSection />
+              </Main>
+              <Footer>
+                <FooterContainer />
+              </Footer>
+            </>
+          );
+        }}
+      </LayoutComposer>
+    </Page>
   );
 };
 
 NewLandingPageComponent.propTypes = {
-  pageAssetsData: object,
-  inProgress: bool,
-  error: propTypes.error,
+  scrollingDisabled: bool.isRequired,
+  popularListings: array.isRequired,
+  fetchPopularInProgress: bool.isRequired,
 };
 
 const mapStateToProps = state => {
-  const { pageAssetsData, inProgress, error } = state.hostedAssets || {};
-  return { pageAssetsData, inProgress, error };
+  const { popularListingIds, fetchPopularInProgress } = state.NewLandingPage;
+  const popularListings = getListingsById(state, popularListingIds);
+  return {
+    scrollingDisabled: isScrollingDisabled(state),
+    popularListings,
+    fetchPopularInProgress,
+  };
 };
 
-// Note: it is important that the withRouter HOC is **outside** the
-// connect HOC, otherwise React Router won't rerender any Route
-// components since connect implements a shouldComponentUpdate
-// lifecycle hook.
-//
-// See: https://github.com/ReactTraining/react-router/issues/4671
 const NewLandingPage = compose(connect(mapStateToProps))(NewLandingPageComponent);
 
 export default NewLandingPage;

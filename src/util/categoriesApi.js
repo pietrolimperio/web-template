@@ -1,7 +1,7 @@
 /**
  * Categories API: fetch categories from Leaz backend with in-memory cache.
  *
- * - GET {REACT_APP_LEAZ_BACKEND_API_URL}/api/services/categories?includeTranslations=1
+ * - GET {REACT_APP_LEAZ_BACKEND_API_URL}/api/services/categories?includeTranslations=1&includeImages=1
  * - Response: each node has id, name (base for storage), translations: { en, it, fr, de, es, pt }
  * - No auth headers
  * - Cache in memory (TTL) to avoid repeated requests and respect rate limit (60/min per IP)
@@ -16,21 +16,32 @@ let cache = null;
 let cacheExpiry = 0;
 
 /**
- * Normalize API shape: subcategory -> subcategories, keep name and translations for each node.
- * @param {Array} items - array of { id, name, translations?, subcategory?, sub-subcategory? }
- * @returns {Array} array of { id, name, translations, subcategories }
+ * Normalize API shape: subcategory -> subcategories, keep name, translations and imageUrl for each node.
+ * imageUrl is present only when the API was called with includeImages=1.
+ * @param {Array} items - array of { id, name, translations?, imageUrl?, subcategory?, sub-subcategory? }
+ * @returns {Array} array of { id, name, translations, imageUrl?, subcategories }
  */
 function normalizeToSubcategories(items) {
   if (!items || !Array.isArray(items)) return [];
-  return items.map(({ id, name, translations, subcategory, 'sub-subcategory': subSubcategory }) => {
-    const children = subcategory || subSubcategory || [];
-    return {
+  return items.map(
+    ({
       id,
-      name: name ?? '',
-      translations: translations && typeof translations === 'object' ? translations : {},
-      subcategories: normalizeToSubcategories(children),
-    };
-  });
+      name,
+      translations,
+      imageUrl,
+      subcategory,
+      'sub-subcategory': subSubcategory,
+    }) => {
+      const children = subcategory || subSubcategory || [];
+      return {
+        id,
+        name: name ?? '',
+        translations: translations && typeof translations === 'object' ? translations : {},
+        ...(imageUrl != null && imageUrl !== '' ? { imageUrl } : {}),
+        subcategories: normalizeToSubcategories(children),
+      };
+    }
+  );
 }
 
 /**
@@ -47,7 +58,7 @@ export function fetchCategories() {
     return Promise.resolve(cache);
   }
 
-  const url = `${baseUrl.replace(/\/$/, '')}/api/services/categories?includeTranslations=1`;
+  const url = `${baseUrl.replace(/\/$/, '')}/api/services/categories?includeTranslations=1&includeImages=1`;
 
   const doFetch = (retriesLeft = MAX_RETRIES_429) =>
     fetch(url, { method: 'GET' })
