@@ -665,6 +665,7 @@
   "ProductPage.couponValidating": "Vérification...",
   "ProductPage.couponInvalid": "Code promo invalide",
   "ProductPage.couponError": "Erreur lors de la validation du coupon",
+  "ProductPage.couponConflictWithDiscount": "Vous ne pouvez pas utiliser ce coupon car une réduction est déjà appliquée.",
   "ProductPage.handByHand": "Échange en personne disponible",
   "ProductPage.minimumDurationRequired": "La durée de réservation minimale est de {days} jours",
   "LoadableComponentErrorBoundaryPage.description": "Il semble que l'application doive être mise à jour ! Veuillez actualiser la page ou revenir à {link}.",

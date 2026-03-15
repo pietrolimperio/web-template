@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -354,6 +354,7 @@ const BookingForm = props => {
       bookingEnd: endDateForAPI,
       ...(method && { deliveryMethod: method }),
       ...(coupon && coupon.trim() && { couponCode: coupon.trim() }),
+      ...(autoDiscounts.length > 0 && { autoDiscounts }),
     };
 
     onFetchTransactionLineItems({
@@ -366,6 +367,17 @@ const BookingForm = props => {
   const handleApplyCoupon = async () => {
     const code = couponCode.trim();
     if (!code) return;
+
+    if (autoDiscounts.length > 0) {
+      setCouponError(
+        intl.formatMessage({
+          id: 'ProductPage.couponConflictWithDiscount',
+          defaultMessage:
+            'Non puoi usare questo coupon perché è già attivo uno sconto sulla prenotazione.',
+        })
+      );
+      return;
+    }
 
     if (!isLeazBackendApiAvailable()) {
       setCouponError('Coupon validation is not available');
@@ -489,6 +501,26 @@ const BookingForm = props => {
     !fetchLineItemsInProgress &&
     !fetchLineItemsError;
   const showBreakdownSkeleton = canShowFullBookingUI && fetchLineItemsInProgress;
+
+  // Re-fetch line items when autoDiscounts arrive (fixes race: user selects dates before discounts load)
+  const prevAutoDiscountsLengthRef = useRef(autoDiscounts.length);
+  useEffect(() => {
+    const prevLen = prevAutoDiscountsLengthRef.current;
+    prevAutoDiscountsLengthRef.current = autoDiscounts.length;
+    if (
+      prevLen === 0 &&
+      autoDiscounts.length > 0 &&
+      calendarSelectedDates.length >= 2 &&
+      canShowFullBookingUI
+    ) {
+      fetchLineItemsForDatesAndDelivery(
+        calendarSelectedDates[0],
+        calendarSelectedDates[calendarSelectedDates.length - 1],
+        deliveryMethod,
+        couponCode
+      );
+    }
+  }, [autoDiscounts, calendarSelectedDates, deliveryMethod, couponCode, canShowFullBookingUI]);
 
   // Check if user is logged in but not verified
   const user = ensureCurrentUser(currentUser);
@@ -686,6 +718,9 @@ const BookingForm = props => {
               currency={currency}
               marketplaceName={marketplaceName}
               processName={BOOKING_PROCESS_NAME}
+              autoDiscounts={autoDiscounts}
+              couponCode={couponCode}
+              couponData={couponData}
               childrenAfterBookingPeriod={
                 <div className={css.couponSection}>
                   <label htmlFor="productPage-couponCode" className={css.couponLabel}>

@@ -751,6 +751,7 @@ exports.getAutoDiscountMaybe = (autoDiscounts, order, extraLineItems, currency) 
         unitPrice: subtotal,
         percentage: new Decimal(best.value).negated().toNumber(),
         includeFor: ['customer', 'provider'],
+        ...(best.name && { discountName: best.name }),
       },
     ];
   }
@@ -763,6 +764,7 @@ exports.getAutoDiscountMaybe = (autoDiscounts, order, extraLineItems, currency) 
       unitPrice: new Money(-fixedAmount, currency),
       quantity: 1,
       includeFor: ['customer', 'provider'],
+      ...(best.name && { discountName: best.name }),
     },
   ];
 };

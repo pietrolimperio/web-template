@@ -48,6 +48,7 @@ export const OrderBreakdownComponent = props => {
     marketplaceName,
     intl,
     renderAfterBookingPeriod,
+    autoDiscounts,
   } = props;
 
   const isCustomer = userRole === 'customer';
@@ -125,8 +126,6 @@ export const OrderBreakdownComponent = props => {
       <LineItemShippingFeeMaybe lineItems={lineItems} intl={intl} />
       <LineItemPickupFeeMaybe lineItems={lineItems} intl={intl} />
       <LineItemInsuranceFeeMaybe lineItems={lineItems} intl={intl} />
-      <LineItemCouponDiscountMaybe lineItems={lineItems} intl={intl} />
-      <LineItemAutoDiscountMaybe lineItems={lineItems} intl={intl} />
       <LineItemUnknownItemsMaybe lineItems={lineItems} isProvider={isProvider} intl={intl} />
 
       <LineItemSubTotalMaybe
@@ -135,6 +134,17 @@ export const OrderBreakdownComponent = props => {
         userRole={userRole}
         intl={intl}
         marketplaceCurrency={currency}
+      />
+      <LineItemCouponDiscountMaybe
+        lineItems={lineItems}
+        intl={intl}
+        couponCode={props.couponCode}
+        couponData={props.couponData}
+      />
+      <LineItemAutoDiscountMaybe
+        lineItems={lineItems}
+        intl={intl}
+        autoDiscounts={autoDiscounts}
       />
       <LineItemRefundMaybe lineItems={lineItems} intl={intl} marketplaceCurrency={currency} />
 

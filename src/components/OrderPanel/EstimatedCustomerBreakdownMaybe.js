@@ -129,6 +129,9 @@ const EstimatedCustomerBreakdownMaybe = props => {
     marketplaceName,
     processName,
     childrenAfterBookingPeriod,
+    autoDiscounts,
+    couponCode,
+    couponData,
   } = props;
   const { startDate, endDate } = breakdownData;
 
@@ -174,6 +177,9 @@ const EstimatedCustomerBreakdownMaybe = props => {
       timeZone={timeZone}
       currency={currency}
       marketplaceName={marketplaceName}
+      autoDiscounts={autoDiscounts}
+      couponCode={couponCode}
+      couponData={couponData}
       renderAfterBookingPeriod={
         childrenAfterBookingPeriod != null ? () => childrenAfterBookingPeriod : undefined
       }

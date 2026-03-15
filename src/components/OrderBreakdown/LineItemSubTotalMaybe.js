@@ -6,6 +6,8 @@ import { formatMoney } from '../../util/currency';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import {
   propTypes,
+  LINE_ITEM_AUTO_DISCOUNT,
+  LINE_ITEM_COUPON_DISCOUNT,
   LINE_ITEM_CUSTOMER_COMMISSION,
   LINE_ITEM_PROVIDER_COMMISSION,
 } from '../../util/types';
@@ -36,10 +38,17 @@ const isCommission = lineItem => {
 };
 
 /**
- * Returns non-commission, non-reversal line items
+ * Returns non-commission, non-reversal line items for subtotal.
+ * Excludes auto-discount and coupon so subtotal = amount before discounts are applied.
  */
 const nonCommissionNonReversalLineItems = lineItems => {
-  return lineItems.filter(item => !isCommission(item) && !item.reversal);
+  return lineItems.filter(
+    item =>
+      !isCommission(item) &&
+      !item.reversal &&
+      item.code !== LINE_ITEM_AUTO_DISCOUNT &&
+      item.code !== LINE_ITEM_COUPON_DISCOUNT
+  );
 };
 
 /**
