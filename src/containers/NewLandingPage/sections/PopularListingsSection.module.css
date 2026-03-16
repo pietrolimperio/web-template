@@ -18,7 +18,9 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
+  min-width: 0;
+  box-sizing: border-box;
 
   @media (--viewportMedium) {
     padding: 0 36px;
@@ -49,7 +51,7 @@
 
 .title {
   margin: 0 0 8px;
-  font-size: 24px;
+  font-size: clamp(20px, 5.5vw, 34px);
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -110,26 +112,11 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   list-style: none;
   padding: 0;
   margin: 0;
-
-  @media (--viewportMobile) {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 32px;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-  }
-
-  @media (--viewportSmall) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
 
   @media (--viewportMedium) {
     grid-template-columns: repeat(3, 1fr);
@@ -144,9 +131,17 @@
 
 .gridItem {
   min-width: 0;
+}
 
-  @media (--viewportMobile) {
-    flex: 0 0 160px;
-    scroll-snap-align: start;
+/* Mobile: 2 columns, max 5 rows (10 items visible) */
+@media (max-width: 767px) {
+  .gridItem:nth-child(n + 11) {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .gridItem:nth-child(n + 11) {
+    display: list-item;
   }
 }

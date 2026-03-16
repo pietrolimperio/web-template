@@ -18,7 +18,9 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
+  min-width: 0;
+  box-sizing: border-box;
 
   @media (--viewportMedium) {
     padding: 0 36px;
@@ -40,7 +42,7 @@
 
 .title {
   margin: 0 0 8px;
-  font-size: 24px;
+  font-size: clamp(20px, 5.5vw, 34px);
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.01em;

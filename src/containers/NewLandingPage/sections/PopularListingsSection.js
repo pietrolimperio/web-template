@@ -6,8 +6,7 @@ import { ListingCard, NamedLink, IconSpinner } from '../../../components';
 
 import css from './PopularListingsSection.module.css';
 
-const PopularListingsSection = props => {
-  const { listings, inProgress } = props;
+const PopularListingsSection = ({ listings = [], inProgress = false } = {}) => {
 
   const hasListings = listings && listings.length > 0;
 
@@ -49,11 +48,6 @@ const PopularListingsSection = props => {
       </div>
     </section>
   );
-};
-
-PopularListingsSection.defaultProps = {
-  listings: [],
-  inProgress: false,
 };
 
 PopularListingsSection.propTypes = {

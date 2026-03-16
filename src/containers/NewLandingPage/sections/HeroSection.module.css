@@ -3,7 +3,7 @@
 .root {
   position: relative;
   width: 100%;
-  min-height: 520px;
+  min-height: min(400px, 90dvh);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,11 +40,12 @@
   z-index: 2;
   width: 100%;
   max-width: 1200px;
-  padding: 48px 20px 40px;
+  padding: 32px 16px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
+  box-sizing: border-box;
 
   @media (--viewportMedium) {
     padding: 56px 36px 48px;
@@ -65,11 +66,11 @@
 }
 
 .motto {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   color: var(--colorWhite);
-  font-size: 28px;
+  font-size: clamp(22px, 6vw, 50px);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
 
@@ -86,7 +87,7 @@
 .subtitle {
   margin: 0;
   color: rgba(255, 255, 255, 0.88);
-  font-size: 16px;
+  font-size: clamp(14px, 3.5vw, 18px);
   font-weight: 400;
   line-height: 1.5;
 
@@ -99,8 +100,11 @@
 
 .searchArea {
   width: 100%;
+  max-width: 100%;
   display: flex;
   justify-content: center;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .searchBar {
@@ -112,10 +116,6 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
   padding: 8px;
   overflow: visible;
-
-  @media (--viewportMobile) {
-    max-width: 50%;
-  }
 }
 
 .searchForm {
@@ -238,38 +238,37 @@
 }
 
 .ctaExplore {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 32px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: none;
-  white-space: nowrap;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-  background-color: var(--marketplaceColor);
-  color: var(--colorWhite);
-  border: 2px solid var(--marketplaceColor);
-
-  &:hover {
-    background-color: var(--marketplaceColorDark);
-    border-color: var(--marketplaceColorDark);
-    color: var(--colorWhite);
-    text-decoration: none;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
+  display: none;
 
   @media (--viewportMedium) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 16px 36px;
     font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    background-color: var(--marketplaceColor);
+    color: var(--colorWhite);
+    border: 2px solid var(--marketplaceColor);
+
+    &:hover {
+      background-color: var(--marketplaceColorDark);
+      border-color: var(--marketplaceColorDark);
+      color: var(--colorWhite);
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 }
