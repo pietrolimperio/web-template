@@ -108,6 +108,7 @@ export const AIListingCreationPageComponent = ({
   const [locationData, setLocationData] = useState(null);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null); // 'PROHIBITED_CATEGORY' or null
+  const [prohibitedErrorDetails, setProhibitedErrorDetails] = useState(null); // { categories, confidence } for test display
 
   const user = ensureCurrentUser(currentUser);
 
@@ -367,6 +368,7 @@ export const AIListingCreationPageComponent = ({
     setStep(STEP_SAVING);
     setError(null);
     setErrorType(null);
+    setProhibitedErrorDetails(null);
 
     try {
       const listingData = buildListingDraftPayload(
@@ -433,6 +435,7 @@ export const AIListingCreationPageComponent = ({
     }
     setError(null);
     setErrorType(null);
+    setProhibitedErrorDetails(null);
   };
 
   // Handle AI analysis start
@@ -446,6 +449,7 @@ export const AIListingCreationPageComponent = ({
     setStep(STEP_ANALYZING);
     setError(null);
     setErrorType(null);
+    setProhibitedErrorDetails(null);
 
     try {
       // Call AI API to analyze product
@@ -479,9 +483,11 @@ export const AIListingCreationPageComponent = ({
       // Check for PROHIBITED_CATEGORY error
       if (err.errorCode === 'PROHIBITED_CATEGORY') {
         setErrorType('PROHIBITED_CATEGORY');
+        setProhibitedErrorDetails(err.prohibitedErrorDetails ?? null);
         setError(err.message || 'Failed to analyze product images');
       } else {
         setErrorType(null);
+        setProhibitedErrorDetails(null);
         setError(err.message || 'Failed to analyze product images');
       }
       setStep(STEP_UPLOAD);
@@ -501,6 +507,7 @@ export const AIListingCreationPageComponent = ({
     setStep(STEP_REFINING);
     setError(null);
     setErrorType(null);
+    setProhibitedErrorDetails(null);
 
     try {
       // Call refine API
@@ -540,9 +547,11 @@ export const AIListingCreationPageComponent = ({
       console.error('Refinement error:', err);
       if (err.errorCode === 'PROHIBITED_CATEGORY') {
         setErrorType('PROHIBITED_CATEGORY');
+        setProhibitedErrorDetails(err.prohibitedErrorDetails ?? null);
         setError(err.message || 'Failed to refine product analysis');
       } else {
         setErrorType(null);
+        setProhibitedErrorDetails(null);
         setError(err.message || 'Failed to refine product analysis');
       }
       setStep(STEP_UPLOAD);
@@ -572,9 +581,11 @@ export const AIListingCreationPageComponent = ({
         console.error('Refinement error:', err);
         if (err.errorCode === 'PROHIBITED_CATEGORY') {
           setErrorType('PROHIBITED_CATEGORY');
+          setProhibitedErrorDetails(err.prohibitedErrorDetails ?? null);
           setError(err.message || 'Failed to refine product analysis');
         } else {
           setErrorType(null);
+          setProhibitedErrorDetails(null);
           setError(err.message || 'Failed to refine product analysis');
         }
         setStep(STEP_UPLOAD);
@@ -793,23 +804,48 @@ export const AIListingCreationPageComponent = ({
                 id: 'AIListingCreationPage.errorTitle',
                 defaultMessage: 'Error',
               })}
-              message={
-                errorType === 'PROHIBITED_CATEGORY'
-                  ? intl.formatMessage({
-                      id: 'AIListingCreationPage.prohibitedCategoryErrorMessage',
-                      defaultMessage:
-                        'The product seems not aligned with our policy. If you\'re not sure, please reach out to our customer service.',
-                    })
-                  : intl.formatMessage({
-                      id: 'AIListingCreationPage.errorMessage',
-                      defaultMessage: 'Please try again',
-                    })
-              }
+              message={(() => {
+                const baseMsg =
+                  errorType === 'PROHIBITED_CATEGORY'
+                    ? intl.formatMessage({
+                        id: 'AIListingCreationPage.prohibitedCategoryErrorMessage',
+                        defaultMessage:
+                          'The product seems not aligned with our policy. If you\'re not sure, please reach out to our customer service.',
+                      })
+                    : intl.formatMessage({
+                        id: 'AIListingCreationPage.errorMessage',
+                        defaultMessage: 'Please try again',
+                      });
+                const showDebugDetails =
+                  errorType === 'PROHIBITED_CATEGORY' &&
+                  prohibitedErrorDetails &&
+                  (process.env.NODE_ENV !== 'production' ||
+                    process.env.REACT_APP_SHOW_PROHIBITED_ERROR_DETAILS === 'true');
+                if (!showDebugDetails) return baseMsg;
+                const parts = [];
+                if (prohibitedErrorDetails.categories != null) {
+                  const catVal = Array.isArray(prohibitedErrorDetails.categories)
+                    ? prohibitedErrorDetails.categories.join(', ')
+                    : typeof prohibitedErrorDetails.categories === 'object'
+                      ? JSON.stringify(prohibitedErrorDetails.categories)
+                      : String(prohibitedErrorDetails.categories);
+                  parts.push(`Categories: ${catVal}`);
+                }
+                if (prohibitedErrorDetails.confidence != null) {
+                  const confVal =
+                    typeof prohibitedErrorDetails.confidence === 'object'
+                      ? JSON.stringify(prohibitedErrorDetails.confidence)
+                      : String(prohibitedErrorDetails.confidence);
+                  parts.push(`Confidence: ${confVal}`);
+                }
+                return parts.length > 0 ? `${baseMsg} [Debug: ${parts.join(' | ')}]` : baseMsg;
+              })()}
               type="error"
               duration={5000}
               onClose={() => {
                 setError(null);
                 setErrorType(null);
+                setProhibitedErrorDetails(null);
               }}
             />
           )}
