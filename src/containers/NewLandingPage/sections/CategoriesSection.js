@@ -56,11 +56,11 @@ const CategoriesSection = () => {
             <FormattedMessage id="NewLandingPage.categoriesSubtitle" />
           </p>
         </div>
-        <div className={css.track} aria-hidden="true">
-          <div className={css.marquee}>
-            <div className={css.marqueeContent}>{renderCategoryRow('-a')}</div>
-            <div className={css.marqueeContent}>{renderCategoryRow('-b')}</div>
-          </div>
+      </div>
+      <div className={css.track} aria-hidden="true">
+        <div className={css.marquee}>
+          <div className={css.marqueeContent}>{renderCategoryRow('-a')}</div>
+          <div className={css.marqueeContent}>{renderCategoryRow('-b')}</div>
         </div>
       </div>
     </section>

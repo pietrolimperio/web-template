@@ -62,11 +62,11 @@ const PartnersSection = () => {
             <FormattedMessage id="NewLandingPage.partnersSubtitle" />
           </p>
         </div>
-        <div className={css.track} aria-hidden="true">
-          <div className={css.marquee}>
-            <div className={css.marqueeContent}>{renderPartnerRow('-a')}</div>
-            <div className={css.marqueeContent}>{renderPartnerRow('-b')}</div>
-          </div>
+      </div>
+      <div className={css.track} aria-hidden="true">
+        <div className={css.marquee}>
+          <div className={css.marqueeContent}>{renderPartnerRow('-a')}</div>
+          <div className={css.marqueeContent}>{renderPartnerRow('-b')}</div>
         </div>
       </div>
     </section>

@@ -16,8 +16,6 @@
 
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 0 16px;
   min-width: 0;
   box-sizing: border-box;
@@ -27,7 +25,7 @@
   }
 
   @media (--viewportLarge) {
-    padding: 0 48px;
+    padding: 0 clamp(48px, 5vw, 100px);
   }
 }
 
@@ -125,7 +123,11 @@
 
   @media (--viewportLarge) {
     grid-template-columns: repeat(4, 1fr);
-    gap: 28px;
+    gap: 24px;
+  }
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
