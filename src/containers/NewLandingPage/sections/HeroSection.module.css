@@ -7,7 +7,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 
   background-image: url('../../../assets/hero-landing.png');
   background-size: cover;
@@ -109,6 +108,7 @@
 
 .searchBar {
   position: relative;
+  z-index: 10;
   width: 100%;
   max-width: 740px;
   background-color: var(--colorWhite);

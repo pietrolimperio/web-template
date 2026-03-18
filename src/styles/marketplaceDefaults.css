@@ -176,7 +176,7 @@
   --datepickerDateOutline: white solid 1px;
   --datepickerButtonOutlineColor: var(--colorGrey50);
   --datepickerSelectedFgColor: var(--colorWhite);
-  --datepickerSelectedBgColor: var(--colorSuccess);
+  --datepickerSelectedBgColor: var(--marketplaceColor);
   --datepickerSelectedHoveredFgColor: inherit;
   --datepickerSelectedHoveredBgColor: rgba(255, 255, 255, 0.2);
 

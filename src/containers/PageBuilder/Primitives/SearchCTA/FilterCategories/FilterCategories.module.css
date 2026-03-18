@@ -118,7 +118,7 @@
 }
 
 .dropdownItemBorderSelected {
-  background-color: var(--colorGrey900);
+  background-color: var(--marketplaceColorSecondary);
   width: 6px;
 }
 

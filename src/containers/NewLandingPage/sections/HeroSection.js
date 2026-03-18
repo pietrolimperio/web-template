@@ -35,6 +35,7 @@ const HeroSection = () => {
   const [showCategories, setShowCategories] = useState(false);
   const blurTimeoutRef = useRef(null);
   const formRef = useRef(null);
+  const latestValuesRef = useRef({});
 
   const categoryConfig = config.categoryConfiguration;
   const hasCategories = categoryConfig?.categories?.length > 0;
@@ -73,6 +74,8 @@ const HeroSection = () => {
             <FinalForm
               onSubmit={onSubmit}
               render={({ handleSubmit, values }) => {
+                latestValuesRef.current = values;
+
                 const handleFormFocus = () => {
                   clearTimeout(blurTimeoutRef.current);
                   setShowCategories(true);
@@ -82,13 +85,14 @@ const HeroSection = () => {
                     if (formRef.current && formRef.current.contains(document.activeElement)) {
                       return;
                     }
-                    const hasKeyword = values?.keywords && values.keywords.trim().length > 0;
-                    const hasCat = values?.pub_categoryId != null && values.pub_categoryId !== '';
-                    const hasDate = values?.dateRange?.startDate && values?.dateRange?.endDate;
+                    const v = latestValuesRef.current;
+                    const hasKeyword = v?.keywords && v.keywords.trim().length > 0;
+                    const hasCat = v?.pub_categoryId != null && v.pub_categoryId !== '';
+                    const hasDate = v?.dateRange?.startDate && v?.dateRange?.endDate;
                     if (!hasKeyword && !hasCat && !hasDate) {
                       setShowCategories(false);
                     }
-                  }, 300);
+                  }, 350);
                 };
 
                 return (

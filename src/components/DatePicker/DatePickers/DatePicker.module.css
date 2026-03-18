@@ -26,10 +26,10 @@
   --datepickerDateOutline: auto;
   --datepickerButtonOutlineColor: var(--colorGrey600);
   --datepickerSelectedFgColor: var(--colorWhite);
-  --datepickerSelectedBgColor: var(--colorSuccess);
-  --datepickerSelectedBorder: solid 1px var(--colorSuccess);
+  --datepickerSelectedBgColor: var(--marketplaceColor);
+  --datepickerSelectedBorder: solid 1px var(--marketplaceColor);
   --datepickerSelectedHoveredFgColor: var(--colorWhite);
-  --datepickerSelectedHoveredBgColor: var(--colorSuccess);
+  --datepickerSelectedHoveredBgColor: var(--marketplaceColor);
 }
 
 .datepicker {
@@ -228,7 +228,7 @@
     height: 2px;
     position: absolute;
     bottom: 6px;
-    background-color: var(--datepickerFgColor);
+    background-color: var(--marketplaceColorSecondary);
   }
 }
 
