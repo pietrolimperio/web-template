@@ -403,14 +403,18 @@ export async function requestAuthenticated(path, options = {}) {
  * @param {string} params.code - Coupon code
  * @param {string} params.listingId - Listing UUID
  * @param {string} params.locale - Locale (e.g. 'it', 'en')
- * @returns {Promise<{ valid: boolean, type?: 'percentage'|'fixed', value?: number }>}
+ * @param {number} [params.orderTotal] - Importo totale ordine in minor units (es. 2500 = 25,00 €)
+ * @returns {Promise<{ valid: boolean, type?: 'percentage'|'fixed', value?: number, minOrderValue?: number, reason?: string }>}
  */
-export async function validateCoupon({ code, listingId, locale }) {
+export async function validateCoupon({ code, listingId, locale, orderTotal }) {
   if (!isLeazBackendApiAvailable()) {
     throw new Error('Leaz backend: coupon validation is not available');
   }
 
   const body = { code, listingId, locale };
+  if (orderTotal != null && orderTotal >= 0) {
+    body.orderTotal = orderTotal;
+  }
   const path = 'coupons/validate';
 
   const sharetribeToken = await ensureSharetribeTokenValid();
@@ -428,15 +432,19 @@ export async function validateCoupon({ code, listingId, locale }) {
  * @param {Object} params
  * @param {string} params.listingId - Listing UUID
  * @param {string} [params.locale] - Locale filter (e.g. 'it', 'en')
- * @returns {Promise<{ discounts: Array<{ id: string, name: string, type: 'percentage'|'fixed', value: number }> }>}
+ * @param {number} [params.orderTotal] - Importo totale ordine in minor units (es. 2500 = 25,00 €)
+ * @returns {Promise<{ discounts: Array<{ id: string, name: string, type: 'percentage'|'fixed', value: number, minOrderValue?: number }> }>}
  */
-export async function matchDiscounts({ listingId, locale }) {
+export async function matchDiscounts({ listingId, locale, orderTotal }) {
   if (!isLeazBackendApiAvailable()) {
     throw new Error('Leaz backend: discount matching is not available');
   }
 
   const body = { listingId };
   if (locale) body.locale = locale;
+  if (orderTotal != null && orderTotal >= 0) {
+    body.orderTotal = orderTotal;
+  }
   const path = 'discounts/match';
 
   const sharetribeToken = await ensureSharetribeTokenValid();

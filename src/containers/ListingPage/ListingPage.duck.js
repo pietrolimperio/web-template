@@ -1,6 +1,7 @@
 import pick from 'lodash/pick';
 
 import { matchDiscounts, isLeazBackendApiAvailable } from '../../util/leazBackendApi';
+import { getOrderTotalInMinorUnits } from '../../util/currency';
 import { types as sdkTypes, createImageVariantConfig } from '../../util/sdkLoader';
 import { storableError } from '../../util/errors';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -493,15 +494,16 @@ export const sendInquiry = (listing, message) => (dispatch, getState, sdk) => {
  *
  * @param {string} listingIdStr - Listing UUID string
  * @param {string} [locale] - Locale for filtering (e.g. 'it')
+ * @param {number} [orderTotal] - Importo totale ordine in minor units per filtrare min_order_value
  */
-export const fetchAutoDiscounts = (listingIdStr, locale) => dispatch => {
+export const fetchAutoDiscounts = (listingIdStr, locale, orderTotal) => dispatch => {
   if (!isLeazBackendApiAvailable()) {
     return Promise.resolve();
   }
 
   dispatch(fetchDiscountsRequest());
 
-  return matchDiscounts({ listingId: listingIdStr, locale })
+  return matchDiscounts({ listingId: listingIdStr, locale, orderTotal })
     .then(data => {
       dispatch(fetchDiscountsSuccess(data.discounts || []));
     })
@@ -751,17 +753,55 @@ const fetchMonthlyTimeSlots = (dispatch, listing) => {
   return Promise.all([]);
 };
 
-export const fetchTransactionLineItems = ({ orderData, listingId, isOwnListing }) => dispatch => {
+export const fetchTransactionLineItems = ({ orderData, listingId, isOwnListing }) => (
+  dispatch,
+  getState
+) => {
   dispatch(fetchLineItemsRequest());
-  transactionLineItems({ orderData, listingId, isOwnListing })
+  const listingIdStr = listingId?.uuid ?? listingId;
+  const orderDataPhase1 = { ...orderData };
+  delete orderDataPhase1.autoDiscounts;
+
+  transactionLineItems({ orderData: orderDataPhase1, listingId, isOwnListing })
     .then(response => {
-      const lineItems = response.data;
-      dispatch(fetchLineItemsSuccess(lineItems));
+      const lineItemsPhase1 = response.data;
+      const orderTotal = getOrderTotalInMinorUnits(lineItemsPhase1);
+      const locale =
+        (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) || 'it';
+
+      const fetchFilteredDiscounts =
+        listingIdStr && orderTotal != null
+          ? dispatch(
+              fetchAutoDiscounts(listingIdStr, locale.split('-')[0] || 'it', orderTotal)
+            )
+          : Promise.resolve();
+
+      return fetchFilteredDiscounts.then(() => {
+        const state = getState();
+        // Usa sconti filtrati solo se: orderTotal disponibile E API Leaz attiva (altrimenti non abbiamo filtrato)
+        const filteredDiscounts =
+          orderTotal != null && isLeazBackendApiAvailable()
+            ? (state.ListingPage?.autoDiscounts || [])
+            : [];
+
+        if (filteredDiscounts.length === 0) {
+          dispatch(fetchLineItemsSuccess(lineItemsPhase1));
+          return;
+        }
+
+        return transactionLineItems({
+          orderData: { ...orderData, autoDiscounts: filteredDiscounts },
+          listingId,
+          isOwnListing,
+        }).then(res => {
+          dispatch(fetchLineItemsSuccess(res.data));
+        });
+      });
     })
     .catch(e => {
       dispatch(fetchLineItemsError(storableError(e)));
       log.error(e, 'fetching-line-items-failed', {
-        listingId: listingId.uuid,
+        listingId: listingIdStr,
         orderData,
         statusText: e.statusText,
       });
@@ -808,10 +848,8 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
       fetchMonthlyTimeSlots(dispatch, listing);
     }
 
-    // Fetch automatic discounts for this listing (non-blocking)
-    if (listing?.id?.uuid) {
-      dispatch(fetchAutoDiscounts(listing.id.uuid));
-    }
+    // Gli sconti automatici vengono caricati solo nella fetch a due fasi (fetchTransactionLineItems)
+    // quando l'utente seleziona le date, così possiamo filtrare per min_order_value.
 
     return response;
   });

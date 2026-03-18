@@ -681,6 +681,12 @@
   color: var(--marketplaceColorDark);
 }
 
+.couponMinOrderHint {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--matterColorAnti);
+}
+
 /* Submit Button */
 .submitButtonWrapper {
   margin-bottom: 12px;

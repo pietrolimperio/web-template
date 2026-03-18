@@ -285,3 +285,33 @@ export const formatCurrencyMajorUnit = (intl, currency, valueWithoutSubunits) =>
 
   return intl.formatNumber(valueAsNumber, numberFormatOptions);
 };
+
+/** Line item codes da escludere dal totale ordine (sconti promozionali) */
+const DISCOUNT_LINE_ITEM_CODES = ['line-item/coupon-discount', 'line-item/auto-discount'];
+
+/**
+ * Calcola l'importo totale ordine in minor units (centesimi) dalla somma dei line items del customer,
+ * ESCLUDENDO coupon e sconti automatici. Usato per validazione coupon e match sconti (min_order_value).
+ *
+ * @param {Array<{ code?: string, includeFor?: string[], lineTotal?: { amount: number|object, currency: string } }>} lineItems
+ * @returns {number|undefined} Totale in minor units o undefined se non calcolabile
+ */
+export const getOrderTotalInMinorUnits = lineItems => {
+  if (!lineItems || !Array.isArray(lineItems) || lineItems.length === 0) return undefined;
+  const customerItems = lineItems.filter(
+    item =>
+      item.includeFor?.includes('customer') &&
+      !DISCOUNT_LINE_ITEM_CODES.includes(item.code)
+  );
+  if (!customerItems.length) return undefined;
+  return customerItems.reduce((sum, item) => {
+    const amount = item.lineTotal?.amount;
+    if (amount == null) return sum;
+    const num =
+      typeof amount === 'object' && typeof amount.toString === 'function'
+        ? parseInt(amount.toString(), 10)
+        : Number(amount);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+};
+

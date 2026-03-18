@@ -36,7 +36,7 @@ import {
   userDisplayNameAsString,
 } from '../../util/data';
 import { richText } from '../../util/richText';
-import { formatMoney } from '../../util/currency';
+import { formatMoney, getOrderTotalInMinorUnits } from '../../util/currency';
 import { currencyFormatting } from '../../config/settingsCurrency';
 import { geocodeAddress, getCountryForLocale } from '../../util/maps';
 import {
@@ -368,17 +368,6 @@ const BookingForm = props => {
     const code = couponCode.trim();
     if (!code) return;
 
-    if (autoDiscounts.length > 0) {
-      setCouponError(
-        intl.formatMessage({
-          id: 'ProductPage.couponConflictWithDiscount',
-          defaultMessage:
-            'Non puoi usare questo coupon perché è già attivo uno sconto sulla prenotazione.',
-        })
-      );
-      return;
-    }
-
     if (!isLeazBackendApiAvailable()) {
       setCouponError('Coupon validation is not available');
       return;
@@ -396,15 +385,27 @@ const BookingForm = props => {
       const locale = (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) || intl.locale || 'it';
       const localeBase = locale.split('-')[0] || 'it';
 
+      const orderTotal = lineItems ? getOrderTotalInMinorUnits(lineItems) : undefined;
+
       const result = await validateCoupon({
         code,
         listingId: String(listingIdStr),
         locale: localeBase,
+        orderTotal,
       });
 
       if (result.valid) {
         setCouponApplied(true);
-        setCouponData(result.id ? { id: result.id, type: result.type, value: result.value } : null);
+        setCouponData(
+          result.id
+            ? {
+                id: result.id,
+                type: result.type,
+                value: result.value,
+                minOrderValue: result.minOrderValue,
+              }
+            : null
+        );
         if (canShowFullBookingUI) {
           fetchLineItemsForDatesAndDelivery(
             calendarSelectedDates[0],
@@ -414,7 +415,27 @@ const BookingForm = props => {
           );
         }
       } else {
-        setCouponError(intl.formatMessage({ id: 'ProductPage.couponInvalid', defaultMessage: 'Codice coupon non valido' }));
+        let message;
+        if (result.reasonCode === 'DISCOUNT_ALREADY_ACTIVE') {
+          message = intl.formatMessage({
+            id: 'ProductPage.couponReasonDiscountAlreadyActive',
+            defaultMessage: 'Questo coupon non può essere usato quando è già attivo uno sconto su questo listing.',
+          });
+        } else if (result.reasonCode === 'MIN_ORDER_NOT_MET' && result.minOrderValue != null) {
+          const amountFormatted = formatMoney(intl, new Money(result.minOrderValue, currency));
+          message = intl.formatMessage(
+            {
+              id: 'ProductPage.couponReasonMinOrderNotMet',
+              defaultMessage: "L'ordine deve avere un importo minimo di {amount}",
+            },
+            { amount: amountFormatted }
+          );
+        } else {
+          message =
+            result.reason ||
+            intl.formatMessage({ id: 'ProductPage.couponInvalid', defaultMessage: 'Codice coupon non valido' });
+        }
+        setCouponError(message);
       }
     } catch (e) {
       setCouponError(e.message || intl.formatMessage({ id: 'ProductPage.couponError', defaultMessage: 'Errore durante la validazione del coupon' }));
@@ -760,6 +781,17 @@ const BookingForm = props => {
                     </button>
                   </div>
                   {couponError && <p className={css.couponError}>{couponError}</p>}
+                  {couponApplied && couponData?.minOrderValue != null && (
+                    <p className={css.couponMinOrderHint}>
+                      <FormattedMessage
+                        id="ProductPage.couponMinOrderValue"
+                        defaultMessage="Valid for orders ≥ {amount}"
+                        values={{
+                          amount: formatMoney(intl, new Money(couponData.minOrderValue, currency)),
+                        }}
+                      />
+                    </p>
+                  )}
                 </div>
               }
             />
