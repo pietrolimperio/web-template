@@ -237,6 +237,21 @@
   }
 }
 
+/* Primary CTA swap: Esplora tutto on mobile, Pubblica annuncio from tablet up */
+.ctaShowMobileOnly {
+  @media (--viewportMedium) {
+    display: none;
+  }
+}
+
+.ctaShowDesktopOnly {
+  display: none;
+
+  @media (--viewportMedium) {
+    display: inline-flex;
+  }
+}
+
 .ctaExplore {
   display: none;
 

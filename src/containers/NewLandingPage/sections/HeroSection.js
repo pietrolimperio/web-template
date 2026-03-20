@@ -131,7 +131,13 @@ const HeroSection = () => {
         </div>
 
         <div className={css.ctaArea}>
-          <NamedLink name="AIListingCreationPage" className={css.ctaButton}>
+          <NamedLink name="SearchPage" className={classNames(css.ctaButton, css.ctaShowMobileOnly)}>
+            <FormattedMessage id="NewLandingPage.heroExplore" />
+          </NamedLink>
+          <NamedLink
+            name="AIListingCreationPage"
+            className={classNames(css.ctaButton, css.ctaShowDesktopOnly)}
+          >
             <FormattedMessage id="NewLandingPage.heroCreateListing" />
           </NamedLink>
           <NamedLink name="LandingPage" to={{ hash: 'categories' }} className={css.ctaExplore}>

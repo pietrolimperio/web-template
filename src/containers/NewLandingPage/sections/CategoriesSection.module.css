@@ -1,11 +1,13 @@
 @import '../../../styles/customMediaQueries.css';
 
 .root {
+  display: none;
   width: 100%;
   padding: 48px 0;
   background-color: white;
 
   @media (--viewportMedium) {
+    display: block;
     padding: 64px 0;
   }
 
