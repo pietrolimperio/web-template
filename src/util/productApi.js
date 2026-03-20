@@ -12,6 +12,109 @@ const DEFAULT_MODELS = ['gemini-2.5-flash', 'claude-4.5-sonnet'];
 //const DEFAULT_MODELS =['gemini-2.5-flash','gemini-2.5-pro','gemini-3-flash-preview','gemini-2.5-flash-lite','claude-4.5-sonnet','claude-3-haiku','gpt-5.2','gpt-5.2-mini','grok-4-fast-reasoning','sonar-pro','sonar-reasoning'];
 const DEFAULT_PROMPT_VERSION = 'v3';
 
+/** Express / IP rate limit: changing AI model does not help. */
+const NON_RETRYABLE_ERROR_CODES = new Set(['API_RATE_LIMIT', 'PROHIBITED_CATEGORY']);
+
+/** True when the API refused the request due to policy / confidence / validation (not model availability). */
+function isNonRetryableAnalyzeError(error) {
+  if (!error) return true;
+  if (error.errorCode && NON_RETRYABLE_ERROR_CODES.has(error.errorCode)) return true;
+  const msg = error.message || '';
+  if (
+    /confidence\s*\(\s*\d+%\s*\).*threshold\s*\(\s*\d+%\s*\)/i.test(msg) ||
+    /below the required threshold/i.test(msg)
+  ) {
+    return true;
+  }
+  const st = error.status;
+  if (st === 400 || st === 403 || st === 404 || st === 408 || st === 413 || st === 422) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * After analyze() fails for one model: try the next model only when the backend says so
+ * (retryable: true on provider errors for /analyze) or heuristics match transient failures.
+ */
+function shouldRetryAnalyzeWithNextModel(error) {
+  if (!error) return false;
+  if (error.retryable === false) return false;
+  if (error.retryable === true) return true;
+  if (error.errorCode === 'API_RATE_LIMIT') return false;
+  return !isNonRetryableAnalyzeError(error);
+}
+
+/**
+ * Parse category/confidence hints from API error text when structured fields are missing.
+ * @param {string} text
+ * @returns {{ categories?: string, confidence?: { actualPercent?: number, thresholdPercent?: number } } | null}
+ */
+function parseProhibitedDetailsFromMessage(text) {
+  if (!text || typeof text !== 'string') return null;
+  const out = {};
+  const confMatch = text.match(
+    /(?:classification\s+)?confidence\s*\(\s*(\d+)\s*%\s*\)[\s\S]*?threshold\s*\(\s*(\d+)\s*%\s*\)/i
+  );
+  if (confMatch) {
+    out.confidence = {
+      actualPercent: Number(confMatch[1]),
+      thresholdPercent: Number(confMatch[2]),
+    };
+  }
+  const asMatch = text.match(/\bas\s+([^(.]+?)(?:\s*\(|\.|$)/i);
+  if (asMatch) {
+    out.categories = asMatch[1].trim();
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/**
+ * Maps ai-leaz-models 403 PROHIBITED_CATEGORY body to UI/debug details.
+ * @param {Record<string, unknown>} body
+ * @param {string} errorMessage
+ */
+function buildProhibitedErrorDetails(body, errorMessage) {
+  const fromMsg = parseProhibitedDetailsFromMessage(errorMessage) || {};
+  const details = { ...fromMsg };
+
+  const copyKeys = [
+    'categories',
+    'detectedCategories',
+    'prohibitedCategories',
+    'predictedCategory',
+    'subcategory',
+    'thirdCategory',
+    'categoryId',
+    'subcategoryId',
+    'thirdCategoryId',
+    'classificationLevel',
+    'categoryConfidence',
+    'subcategoryConfidence',
+    'modelConfidence',
+  ];
+  copyKeys.forEach(key => {
+    if (body[key] != null) {
+      details[key] = body[key];
+    }
+  });
+  if (body.confidence != null) {
+    details.confidence = body.confidence;
+  }
+
+  details.apiMessage = errorMessage;
+
+  const hasStructured =
+    copyKeys.some(k => details[k] != null) ||
+    details.confidence != null ||
+    Object.keys(fromMsg).length > 0;
+
+  if (!hasStructured) {
+    details.raw = body;
+  }
+  return details;
+}
+
 /** Key for Product API token in localStorage (used when backend persists session) */
 const PRODUCT_API_TOKEN_KEY = 'product_api_session_token';
 
@@ -111,8 +214,10 @@ class ProductAPI {
         return result;
       } catch (error) {
         lastError = error;
+        if (!shouldRetryAnalyzeWithNextModel(error)) {
+          throw error;
+        }
         console.warn(`⚠️ [Product API] Model ${model} failed, trying next model...`, error.message);
-        // Continue to next model
       }
     }
 
@@ -341,32 +446,39 @@ class ProductAPI {
       }
 
       if (!response.ok) {
-        let errorMessage;
-        let errorCode = null;
+        let errorMessage = `API call failed with status ${response.status} - ${response.statusText}`;
+        let resolvedErrorCode = null;
         let prohibitedErrorDetails = null;
+        /** @type {Record<string, unknown> | null} */
+        let body = null;
         try {
-          const error = await response.json();
-          console.error('❌ Error', error);
+          body = await response.json();
+          console.error('❌ Error', body);
           errorMessage =
-            error.error || error.message || `API call failed with status ${response.status}`;
-          // Check for PROHIBITED_CATEGORY error code
-          if (response.status === 403 && error.errorCode === 'PROHIBITED_CATEGORY') {
-            errorCode = 'PROHIBITED_CATEGORY';
-            // Extract categories and confidence for test/debug display in notification
-            const categories =
-              error.categories ?? error.prohibitedCategories ?? error.detectedCategories;
-            const confidence =
-              error.confidence ?? error.modelConfidence ?? error.scores;
-            if (categories != null || confidence != null) {
-              prohibitedErrorDetails = { categories, confidence };
-            }
+            body.error || body.message || `API call failed with status ${response.status}`;
+          const confidenceThresholdBody =
+            response.status === 403 &&
+            /confidence\s*\(\s*\d+%\s*\)/i.test(errorMessage) &&
+            /threshold\s*\(\s*\d+%\s*\)/i.test(errorMessage);
+
+          if (
+            response.status === 403 &&
+            (body.errorCode === 'PROHIBITED_CATEGORY' || confidenceThresholdBody)
+          ) {
+            resolvedErrorCode = 'PROHIBITED_CATEGORY';
+            prohibitedErrorDetails = buildProhibitedErrorDetails(body, errorMessage);
+          } else if (body.errorCode) {
+            resolvedErrorCode = body.errorCode;
           }
         } catch {
-          errorMessage = `API call failed with status ${response.status} - ${response.statusText}`;
+          body = null;
         }
 
         // Invalid/expired session (e.g. backend restarted) – clear token and retry once
+        const sessionCodes = new Set(['SESSION_REQUIRED', 'SESSION_INVALID', 'SESSION_EXPIRED']);
+        const isSessionByCode = body?.errorCode && sessionCodes.has(body.errorCode);
         const isSessionError =
+          isSessionByCode ||
           /invalid or expired session|invalid.*expired.*session/i.test(errorMessage);
         if (isSessionError && !isRetry) {
           clearProductApiToken();
@@ -377,11 +489,18 @@ class ProductAPI {
 
         console.error('❌ [Product API] Error response:', errorMessage);
         const apiError = new Error(errorMessage);
-        if (errorCode) {
-          apiError.errorCode = errorCode;
-          if (prohibitedErrorDetails) {
-            apiError.prohibitedErrorDetails = prohibitedErrorDetails;
-          }
+        apiError.status = response.status;
+        if (typeof body?.retryable === 'boolean') {
+          apiError.retryable = body.retryable;
+        }
+        if (body?.details != null) {
+          apiError.details = body.details;
+        }
+        if (resolvedErrorCode) {
+          apiError.errorCode = resolvedErrorCode;
+        }
+        if (prohibitedErrorDetails) {
+          apiError.prohibitedErrorDetails = prohibitedErrorDetails;
         }
         throw apiError;
       }

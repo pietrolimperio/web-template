@@ -818,27 +818,52 @@ export const AIListingCreationPageComponent = ({
                       });
                 const showDebugDetails =
                   errorType === 'PROHIBITED_CATEGORY' &&
-                  prohibitedErrorDetails &&
                   (process.env.NODE_ENV !== 'production' ||
                     process.env.REACT_APP_SHOW_PROHIBITED_ERROR_DETAILS === 'true');
                 if (!showDebugDetails) return baseMsg;
+                const fmtDetail = val =>
+                  Array.isArray(val)
+                    ? val.join(', ')
+                    : typeof val === 'object' && val !== null
+                      ? JSON.stringify(val)
+                      : String(val);
                 const parts = [];
-                if (prohibitedErrorDetails.categories != null) {
-                  const catVal = Array.isArray(prohibitedErrorDetails.categories)
-                    ? prohibitedErrorDetails.categories.join(', ')
-                    : typeof prohibitedErrorDetails.categories === 'object'
-                      ? JSON.stringify(prohibitedErrorDetails.categories)
-                      : String(prohibitedErrorDetails.categories);
-                  parts.push(`Categories: ${catVal}`);
+                if (prohibitedErrorDetails?.categories != null) {
+                  parts.push(`Categories: ${fmtDetail(prohibitedErrorDetails.categories)}`);
                 }
-                if (prohibitedErrorDetails.confidence != null) {
-                  const confVal =
-                    typeof prohibitedErrorDetails.confidence === 'object'
-                      ? JSON.stringify(prohibitedErrorDetails.confidence)
-                      : String(prohibitedErrorDetails.confidence);
-                  parts.push(`Confidence: ${confVal}`);
+                if (prohibitedErrorDetails?.detectedCategories != null) {
+                  parts.push(`Detected: ${fmtDetail(prohibitedErrorDetails.detectedCategories)}`);
                 }
-                return parts.length > 0 ? `${baseMsg} [Debug: ${parts.join(' | ')}]` : baseMsg;
+                if (prohibitedErrorDetails?.classificationLevel != null) {
+                  parts.push(`Level: ${fmtDetail(prohibitedErrorDetails.classificationLevel)}`);
+                }
+                if (prohibitedErrorDetails?.predictedCategory != null) {
+                  parts.push(`Predicted: ${fmtDetail(prohibitedErrorDetails.predictedCategory)}`);
+                }
+                if (prohibitedErrorDetails?.subcategory != null) {
+                  parts.push(`Subcategory: ${fmtDetail(prohibitedErrorDetails.subcategory)}`);
+                }
+                if (prohibitedErrorDetails?.thirdCategory != null) {
+                  parts.push(`Third: ${fmtDetail(prohibitedErrorDetails.thirdCategory)}`);
+                }
+                if (prohibitedErrorDetails?.categoryConfidence != null) {
+                  parts.push(`Cat conf: ${fmtDetail(prohibitedErrorDetails.categoryConfidence)}`);
+                }
+                if (prohibitedErrorDetails?.subcategoryConfidence != null) {
+                  parts.push(`Subcat conf: ${fmtDetail(prohibitedErrorDetails.subcategoryConfidence)}`);
+                }
+                if (prohibitedErrorDetails?.modelConfidence != null) {
+                  parts.push(`Model conf: ${fmtDetail(prohibitedErrorDetails.modelConfidence)}`);
+                }
+                if (prohibitedErrorDetails?.confidence != null) {
+                  parts.push(`Confidence: ${fmtDetail(prohibitedErrorDetails.confidence)}`);
+                }
+                if (prohibitedErrorDetails?.apiMessage && prohibitedErrorDetails.apiMessage !== error) {
+                  parts.push(`API: ${prohibitedErrorDetails.apiMessage}`);
+                }
+                const debugBody =
+                  parts.length > 0 ? `${parts.join(' | ')} | ${error}` : error;
+                return `${baseMsg} [Debug: ${debugBody}]`;
               })()}
               type="error"
               duration={5000}
