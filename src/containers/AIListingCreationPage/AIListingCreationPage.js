@@ -683,21 +683,7 @@ export const AIListingCreationPageComponent = ({
     switch (step) {
       case STEP_UPLOAD:
         return (
-          <div className={css.stepContent}>
-            <div className={css.stepHeader}>
-              <h1 className={css.stepTitle}>
-                <FormattedMessage
-                  id="AIListingCreation.uploadTitle"
-                  defaultMessage="Upload Product Images"
-                />
-              </h1>
-              <p className={css.stepDescription}>
-                <FormattedMessage
-                  id="AIListingCreation.uploadDescription"
-                  defaultMessage="Take clear photos of your product with your camera. Our AI will analyze them and create a listing for you."
-                />
-              </p>
-            </div>
+          <div className={css.uploadStepShell}>
             <ImageUpload
               onImagesSelected={handleImagesSelected}
               onAnalyze={handleStartAnalysis}
