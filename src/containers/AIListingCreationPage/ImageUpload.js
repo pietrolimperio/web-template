@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import ExifReader from 'exifreader';
 import { useIntl } from '../../util/reactIntl';
 import devLog from '../../util/devLog';
+import robotMascotSrc from '../../assets/stitch-product-upload/ai-upload-robot-mascot.png';
 import css from './ImageUpload.module.css';
 
 // 🔧 TESTING FLAG: Set REACT_APP_SKIP_EXIF_VALIDATION=true in .env to skip EXIF validation
@@ -304,7 +305,6 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
 
   const panelDisabled = isAnalyzing || validationInProgress;
   const isEmpty = files.length === 0;
-  const robotMascotSrc = `${process.env.PUBLIC_URL || ''}/assets/stitch-product-upload/ai-upload-robot-mascot.png`;
 
   const atMaxFiles = files.length >= UPLOAD_CONSTRAINTS.MAX_FILES;
   const showAddMoreBelowGrid = !atMaxFiles && !validationInProgress;
