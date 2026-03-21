@@ -421,6 +421,11 @@
     padding: 24px 20px 28px;
   }
 
+  /* Con almeno un’immagine: robot + testo + Sfoglia nascosti; restano griglia e “Aggiungi altre foto” */
+  .mainCard:not(.mainCardEmpty) .leftPanel {
+    display: none;
+  }
+
   .heroTitleDesktop {
     display: none;
   }
