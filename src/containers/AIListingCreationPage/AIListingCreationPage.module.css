@@ -4,7 +4,8 @@
 
 .layout {
   min-height: calc(100vh - var(--topbarHeight));
-  background-color: var(--matterColorBright);
+  /* AI-assisted flow: subtle primary-fixed wash (DESIGN.md §5) */
+  background-color: color-mix(in srgb, var(--colorPrimaryFixed) 28%, var(--colorSurface));
 }
 
 .content {
@@ -12,6 +13,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 24px;
+  background-color: var(--colorSurface);
 }
 
 /* Stitch-style upload step: layout lives in ImageUpload */
@@ -41,7 +43,7 @@
 
 .stepDescription {
   font-size: 18px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
   max-width: 600px;
   margin: 0 auto;
@@ -83,7 +85,7 @@
 
 .loadingDescription {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
   max-width: 500px;
 }
@@ -135,7 +137,7 @@
   height: 32px;
   border-radius: 50%;
   background-color: var(--matterColorNegative);
-  color: var(--matterColorAnti);
+  color: var(--matterColor);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,7 +159,7 @@
 .progressStepLabel {
   font-size: 14px;
   font-weight: 500;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .progressStepLabelActive {

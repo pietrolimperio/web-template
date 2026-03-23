@@ -21,7 +21,7 @@
 }
 
 .noReviewsText {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 16px 0;
   font-size: 14px;
 }

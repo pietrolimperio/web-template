@@ -712,7 +712,7 @@
 .verificationInstructions {
   font-size: 15px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0 0 32px 0;
 }
 
@@ -726,7 +726,7 @@
 .verificationHelpText {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
 }
 

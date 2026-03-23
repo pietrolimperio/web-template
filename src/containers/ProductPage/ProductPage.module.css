@@ -34,7 +34,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -46,7 +46,7 @@
 }
 
 .breadcrumbItem {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -57,7 +57,7 @@
 }
 
 .breadcrumbCurrent {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-weight: 500;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .breadcrumbSeparator {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Main Content Grid */
@@ -104,7 +104,7 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  background-color: var(--matterColorNegative);
+  background-color: var(--colorSurface);
 }
 
 .mainImageAspectBox {
@@ -131,7 +131,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 16px;
   line-height: 24px;
   text-align: center;
@@ -157,7 +157,7 @@
   border-radius: 8px;
   overflow: hidden;
   border: 3px solid transparent;
-  background: none;
+  background-color: var(--colorSurface);
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -334,7 +334,7 @@
 
 .perUnit {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .discountBadge {
@@ -410,7 +410,7 @@
 
 .authorReviewsCount {
   font-size: 13px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Booking Form Wrapper */
@@ -469,7 +469,7 @@
 
 .priceVariantLabel {
   font-size: 12px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-align: center;
 }
 
@@ -490,7 +490,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 14px;
 }
 
@@ -684,7 +684,7 @@
 .couponMinOrderHint {
   margin-top: 6px;
   font-size: 13px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Submit Button */
@@ -694,7 +694,7 @@
 
 .finePrint {
   font-size: 12px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-align: center;
   margin: 0;
 }
@@ -709,7 +709,7 @@
   border-radius: 8px;
   padding: 24px;
   text-align: center;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 16px;
   margin-bottom: 24px;
 }
@@ -781,7 +781,7 @@
 
 .detailLabel {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .detailValue {
@@ -989,7 +989,7 @@
   margin-top: 16px;
   padding-top: 0;
   border-top: none;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 14px;
   text-align: end;
 }
@@ -1075,8 +1075,6 @@
     gap: 6px 4px;
     font-size: 13px;
     padding: 10px 14px;
-    background: var(--matterColorNegative);
-    border-radius: 8px;
     align-items: center;
   }
 

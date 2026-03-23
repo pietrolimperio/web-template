@@ -10,11 +10,10 @@
   align-items: center;
   justify-content: center;
 
-  /* fill */
-  background-color: var(--colorWhite);
-
-  /* shadows */
-  box-shadow: var(--boxShadow);
+  background-color: var(--topbarGlassBackground);
+  backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  -webkit-backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  box-shadow: var(--topbarGlassHairline);
 
   @media (--viewportMedium) {
     height: var(--topbarHeightDesktop);

@@ -265,6 +265,7 @@ export const EditListingPageComponent = props => {
     return (
       <Page title={intl.formatMessage({ id: titleId })} scrollingDisabled={scrollingDisabled}>
         <TopbarContainer
+          className={css.topbarGlassHost}
           mobileRootClassName={css.mobileTopbar}
           desktopClassName={css.desktopTopbar}
           mobileClassName={css.mobileTopbar}
@@ -323,6 +324,7 @@ export const EditListingPageComponent = props => {
     return (
       <Page title={intl.formatMessage(loadingPageMsg)} scrollingDisabled={scrollingDisabled}>
         <TopbarContainer
+          className={css.topbarGlassHost}
           mobileRootClassName={css.mobileTopbar}
           desktopClassName={css.desktopTopbar}
           mobileClassName={css.mobileTopbar}

@@ -72,7 +72,8 @@
   display: flex;
   width: 24px;
   align-self: stretch;
-  background-color: var(--colorWhite);
+  /* One surface with .searchLink / parent well (glass topbar) */
+  background-color: transparent;
 }
 
 .desktopInput {
@@ -93,7 +94,7 @@
   margin-top: 0;
   margin-bottom: 0;
 
-  background-color: var(--colorGrey50);
+  background-color: transparent;
 
   &:hover,
   &:focus {
@@ -171,6 +172,9 @@
 .keywordSearchWrapper {
   position: relative;
   display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .searchSubmit {
@@ -193,7 +197,7 @@
   width: 24px;
   align-self: stretch;
   border-bottom: 2px solid var(--marketplaceColor);
-  background-color: var(--colorWhite);
+  background-color: transparent;
 }
 
 .iconSvg {

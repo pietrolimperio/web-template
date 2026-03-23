@@ -28,7 +28,7 @@
   & p {
     margin-top: 24px;
     font-size: 16px;
-    color: var(--matterColorAnti);
+    color: var(--matterColorMuted);
   }
 }
 
@@ -65,7 +65,7 @@
 .description {
   font-size: 16px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0 0 32px 0;
   text-align: center;
 }
@@ -92,11 +92,11 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .breadcrumbItem {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
@@ -108,7 +108,7 @@
 }
 
 .breadcrumbSeparator {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0 4px;
 }
 
@@ -191,7 +191,7 @@
   min-height: 0; /* consente al flex child di rispettare l'aspect ratio */
   border-radius: 12px;
   overflow: hidden;
-  background-color: var(--matterColorNegative);
+  background-color: var(--colorSurface);
 }
 
 .mainImageAspectBox {
@@ -236,7 +236,7 @@
   position: relative;
   border: 3px solid transparent;
   transition: all 0.2s ease;
-  background-color: var(--matterColorNegative);
+  background-color: var(--colorSurface);
 }
 
 .thumbnail > div,
@@ -407,12 +407,12 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: var(--matterColorNegative);
+  background-color: var(--colorSurface);
   transition: background-color 0.2s ease;
 }
 
 .uploadThumbnail:hover {
-  background-color: var(--matterColorBright);
+  background-color: var(--colorSurfaceContainerLow);
 }
 
 .uploadIcon {
@@ -736,7 +736,7 @@
 
 .priceFrom {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-style: italic;
 }
 
@@ -748,7 +748,7 @@
 
 .priceUnit {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Price Variants Dropdown */
@@ -985,7 +985,7 @@
 
 .priceUnit {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .locationSummary {
@@ -1115,7 +1115,7 @@
 .detailLabel {
   font-size: 14px;
   font-weight: 600;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-transform: capitalize;
 }
 
@@ -1263,7 +1263,7 @@
   cursor: pointer;
   padding: 4px;
   margin-left: auto;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   opacity: 0.7;
   transition: opacity 0.2s, color 0.2s;
   flex-shrink: 0;
@@ -1367,7 +1367,7 @@
 
 .modalDescription {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0 0 24px 0;
   line-height: 1.6;
 }
@@ -1395,7 +1395,7 @@
 .modalDescription {
   font-size: 16px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0 0 32px 0;
 }
 
@@ -1487,6 +1487,26 @@
     max-width: 200px;
     flex: 0 0 auto;
     min-width: 120px;
+  }
+
+  /* Secondary (Annulla): sfondo bianco in drawer/modal modifica */
+  & :global(.buttonSecondary) {
+    background-color: var(--colorSurfaceContainerLowest);
+    background-image: none;
+    color: var(--marketplaceColor);
+  }
+
+  & :global(.buttonSecondary):hover,
+  & :global(.buttonSecondary):focus {
+    background-color: var(--colorSurfaceContainerLow);
+    background-image: none;
+    color: var(--marketplaceColor);
+    box-shadow: var(--boxShadowAmbient);
+  }
+
+  & :global(.buttonSecondary):disabled {
+    background-color: var(--colorGrey100);
+    color: var(--colorGrey500);
   }
 }
 
@@ -1760,6 +1780,17 @@
   justify-content: flex-end;
 }
 
+/* Stesso sfondo del contenitore .exceptionCalendar (matterColorBright / surface) */
+.exceptionCalendar .cancelButton {
+  background: var(--matterColorBright);
+  color: var(--matterColor);
+}
+
+.exceptionCalendar .cancelButton:hover {
+  background: var(--colorSurfaceContainerLow);
+  color: var(--matterColor);
+}
+
 .saveExceptionButton {
   padding: 10px 20px;
   border: none;
@@ -1807,7 +1838,7 @@
 
 .priceSectionSubtitle {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin-bottom: 16px;
   text-align: center;
 }
@@ -1854,7 +1885,7 @@
 
 .priceCardLabel {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-align: center;
 }
 
@@ -1895,7 +1926,7 @@
 
 .perDay {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .variantsTitle {
@@ -2014,7 +2045,7 @@
 
 .priceCardLabel {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   text-align: center;
 }
 
@@ -2037,7 +2068,7 @@
   background: none;
   border: none;
   font-size: 20px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   cursor: pointer;
   width: 24px;
   height: 24px;
@@ -2345,7 +2376,7 @@
 
 .deleteImageDialogMessage {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
 }
 
@@ -2738,7 +2769,7 @@
   margin: 0 0 24px 0;
   font-size: 16px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .dialogButtons {

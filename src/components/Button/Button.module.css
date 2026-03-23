@@ -116,12 +116,12 @@
 
 .secondaryButton .spinner,
 .secondaryButtonInline .spinner {
-  stroke: var(--colorGrey300);
+  stroke: var(--marketplaceColor);
 }
 
 .secondaryButton .checkmark,
 .secondaryButtonInline .checkmark {
-  stroke: var(--colorGrey300);
+  stroke: var(--marketplaceColor);
 }
 
 /* Social logins && SSO buttons */
@@ -145,11 +145,11 @@
   text-align: center;
   text-decoration: none;
 
-  border: 1px solid #d2d2d2;
-  border-radius: var(--borderRadiusMedium);
+  border: var(--ghostBorderInput);
+  border-radius: var(--borderRadiusFull);
 
-  background-color: var(--colorWhite);
-  color: var(--colorBlack);
+  background-color: var(--colorSurfaceContainerLowest);
+  color: var(--colorOnSurface);
 
   /* We need to add this to position the icon inside button */
   position: relative;

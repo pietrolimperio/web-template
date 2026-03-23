@@ -28,22 +28,34 @@
   --colorBannedLight: var(--marketplaceColorLight);
   --colorBannedDark: var(--marketplaceColor);
 
-  /* B&W and Grey palette (slight warm tint for cohesion with brand) */
+  /* B&W and Grey palette (editorial neutrals; warm tint) */
 
-  --colorWhite: hsl(30 2% 98%);
-  --colorGrey50: hsl(240 3% 98%);
-  --colorGrey100: hsl(240 3% 90%);
-  --colorGrey200: hsl(240 3% 80%);
-  --colorGrey300: hsl(240 3% 70%);
-  --colorGrey400: hsl(240 3% 60%);
-  --colorGrey500: hsl(240 3% 50%);
-  --colorGrey600: hsl(240 3% 40%);
-  --colorGrey700: hsl(240 3% 30%);
-  --colorGrey800: hsl(240 3% 20%);
-  --colorGrey900: hsl(240 3% 10%);
-  --colorBlack: hsl(30 2% 8%);
+  --colorOnSurface: #1a1c1c;
+  --colorSurface: #f9f9f9;
+  --colorSurfaceContainerLow: #f3f3f3;
+  --colorSurfaceContainerLowest: #ffffff;
+  /* Elevated neutral for secondary actions (between low and lowest) */
+  --colorSurfaceContainerHighest: #ebebeb;
+  --colorOutlineVariant: #e4beb4;
+  --colorPrimaryFixed: #ffdbd1;
+
+  --colorWhite: var(--colorSurfaceContainerLowest);
+  --colorGrey50: var(--colorSurface);
+  --colorGrey100: var(--colorSurfaceContainerLow);
+  --colorGrey200: #e0e0e0;
+  --colorGrey300: #c4c4c4;
+  --colorGrey400: #a3a3a3;
+  --colorGrey500: #858585;
+  --colorGrey600: #5c5f62;
+  --colorGrey700: #3d4043;
+  --colorGrey800: #2e3134;
+  --colorGrey900: #1f2225;
+  --colorBlack: var(--colorOnSurface);
 
   --colorLightTransparent: rgba(255, 255, 255, 0.65);
+
+  /* Ghost border: outline-variant @ 20% (DESIGN.md §4) */
+  --ghostBorderInput: 1px solid color-mix(in srgb, var(--colorOutlineVariant) 20%, transparent);
 
   /**
   * Marketplace color comes by default from src/config/configBranding.js
@@ -51,32 +63,46 @@
   * In the future, we are planning to bring more --marketplace* CSS Properties
   * from hosted assets, which means that they could be managed through Console.
   */
-  --marketplaceColor: #ff5a02; /* brand primary (orange) */
-  --marketplaceColorLight: #ff8534; /* +10L from marketplaceColor */
-  --marketplaceColorDark: #cc4800; /* -10L from marketplaceColor */
+  --marketplaceColor: #ff5722; /* primary-container */
+  --marketplaceColorLight: #ff7a50;
+  --marketplaceColorDark: #b02f00; /* gradient start “primary” */
 
-  --marketplaceColorSecondary: #0C9FA7; /* brand secondary (teal) */
-  --marketplaceColorSecondaryLight: #14b8c0; /* +10L from marketplaceColorSecondary */
-  --marketplaceColorSecondaryDark: #098a91; /* -10L from marketplaceColorSecondary */
+  --marketplaceColorSecondary: #0c9fa7;
+  --marketplaceColorSecondaryLight: #14b8c0;
+  --marketplaceColorSecondaryDark: #098a91;
+
+  --gradientPrimaryCTA: linear-gradient(135deg, var(--marketplaceColorDark) 0%, var(--marketplaceColor) 100%);
 
   /** 
-   * The fill color used by <PrimaryButton>
-   * These might be overwritten by values from hosted assets
+   * The fill color used by <PrimaryButton> (overwritable from hosted assets)
    */
-  --colorPrimaryButton: var(--colorSuccess);
-  --colorPrimaryButtonDark: var(--colorSuccessDark);
-  --colorPrimaryButtonLight: var(--colorSuccessLight);
+  --colorPrimaryButton: var(--marketplaceColor);
+  --colorPrimaryButtonDark: var(--marketplaceColorDark);
+  --colorPrimaryButtonLight: var(--marketplaceColorLight);
 
   /** 
    * The fill color used by <SecondaryButton>
    */
-  --colorSecondaryButton: var(--colorWhite);
-  --colorSecondaryButtonDark: var(--colorWhite);
-  --colorSecondaryButtonLight: var(--colorWhite);
+  --colorSecondaryButton: var(--colorSurfaceContainerHighest);
+  --colorSecondaryButtonDark: var(--colorSurfaceContainerHighest);
+  --colorSecondaryButtonLight: var(--colorSurfaceContainerHighest);
+
+  /* Aliases for legacy “matter” tokens used across product / AI flows */
+  --matterColor: var(--colorOnSurface);
+  --matterColorDark: #2a2d30;
+  /* Light surface, or text/icons on dark UI only */
+  --matterColorAnti: var(--colorSurfaceContainerLowest);
+  /* Secondary / meta / helper text on light backgrounds (replaces mistaken use of --matterColorAnti) */
+  --matterColorMuted: var(--colorGrey600);
+  --matterColorBright: var(--colorSurface);
+  --matterColorLight: var(--colorSurfaceContainerLow);
+  --matterColorNegative: color-mix(in srgb, var(--colorOutlineVariant) 22%, var(--colorSurfaceContainerLow));
 
   /* ================ Font ================ */
-  --fontFamily: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif,
+  --fontFamily: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  --fontFamilyDisplay: 'Manrope', var(--fontFamily);
+  --fontLetterSpacingDisplayTight: -0.02em;
 
   --fontWeightRegular: 400;
   --fontWeightMedium: 500;
@@ -99,19 +125,20 @@
   --spacingUnit: 6px;
   --spacingUnitDesktop: 8px;
 
-  /* Shadows */
-  --boxShadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
-  --boxShadowTop: 0 -2px 4px 0 rgba(0, 0, 0, 0.1);
-  --boxShadowLight: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
-  --boxShadowPopup: 0 8px 16px 0 rgba(0, 0, 0, 0.3);
-  --boxShadowPopupLight: 0 3px 6px 0 rgba(0, 0, 0, 0.2);
-  --boxShadowBreakdown: 0 3px 6px 0 rgba(0, 0, 0, 0.2);
-  --boxShadowButton: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
-  --boxShadowListingCard: 0 0 50px 0 rgba(0, 0, 0, 0.1);
-  --boxShadowNotFoundPageSearch: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
-  --boxShadowSectionLocationHover: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
-  --boxShadowBottomForm: 0 -2px 4px 0 rgba(0, 0, 0, 0.05);
-  --boxShadowFilterButton: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+  /* Shadows: prefer tonal lift; ambient for focus / overlays (DESIGN.md §4) */
+  --boxShadowAmbient: 0 12px 32px color-mix(in srgb, var(--colorOnSurface) 6%, transparent);
+  --boxShadow: var(--boxShadowAmbient);
+  --boxShadowTop: 0 -12px 32px color-mix(in srgb, var(--colorOnSurface) 5%, transparent);
+  --boxShadowLight: 0 8px 24px color-mix(in srgb, var(--colorOnSurface) 4%, transparent);
+  --boxShadowPopup: var(--boxShadowAmbient);
+  --boxShadowPopupLight: 0 8px 24px color-mix(in srgb, var(--colorOnSurface) 5%, transparent);
+  --boxShadowBreakdown: var(--boxShadowPopupLight);
+  --boxShadowButton: var(--boxShadowAmbient);
+  --boxShadowListingCard: none;
+  --boxShadowNotFoundPageSearch: var(--boxShadowAmbient);
+  --boxShadowSectionLocationHover: var(--boxShadowAmbient);
+  --boxShadowBottomForm: 0 -8px 24px color-mix(in srgb, var(--colorOnSurface) 4%, transparent);
+  --boxShadowFilterButton: var(--boxShadowAmbient);
 
   /* ================ Z-index base levels ================ */
 
@@ -124,10 +151,12 @@
   /* generic error message should overlay even modals */
   --zIndexGenericError: 200;
 
-  /* ================ Border radius ================ */
+  /* ================ Border radius (soft minimalist) ================ */
 
-  --borderRadius: 2px;
-  --borderRadiusMedium: 4px;
+  --borderRadius: 10px;
+  --borderRadiusMedium: 14px;
+  --borderRadiusXl: 24px;
+  --borderRadiusFull: 9999px;
 
   /* ================ Transition styles ================ */
 
@@ -142,6 +171,11 @@
 
   --topbarHeight: 60px;
   --topbarHeightDesktop: 72px;
+
+  /* Glass topbar (single layer on layout <header> or standalone root) */
+  --topbarGlassBackground: color-mix(in srgb, var(--colorSurfaceContainerLowest) 78%, transparent);
+  --topbarGlassBackdropBlur: 16px;
+  --topbarGlassHairline: 0 1px 0 color-mix(in srgb, var(--colorOnSurface) 4%, transparent);
 
   --TopbarMobileMenu_topMargin: 96px;
 
@@ -203,6 +237,17 @@
   --carouselWidth: 100vw;
 }
 
+/**
+ * Applied to layout headers that wrap TopbarContainer (or composed into SearchPage topbar root)
+ * so the frosted bar is one layer behind transparent inner nav/desktop shells.
+ */
+.marketplaceLayoutTopbar {
+  background-color: var(--topbarGlassBackground);
+  backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  -webkit-backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  box-shadow: var(--topbarGlassHairline);
+}
+
 /* ================ Global element styles ================ */
 /**
  * Here are the global styles: for elements as well as some
@@ -221,7 +266,8 @@ body {
   text-rendering: optimizeSpeed;
   font-optical-sizing: auto;
 
-  background-color: var(--colorGrey50);
+  background-color: var(--colorSurface);
+  color: var(--colorOnSurface);
 }
 
 ::selection {
@@ -267,6 +313,8 @@ a:hover {
 }
 
 h1 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-size: 24px;
   line-height: 24px;
   font-weight: var(--fontWeightBlack);
@@ -286,6 +334,8 @@ h1 {
 }
 
 h2 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-size: 21px;
   line-height: 24px;
   font-weight: var(--fontWeightBold);
@@ -306,6 +356,8 @@ h2 {
 }
 
 h3 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightBold);
   font-size: 18px;
   line-height: 24px;
@@ -324,6 +376,8 @@ h3 {
 }
 
 h4 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightBold);
   font-size: 21px;
   line-height: 30px;
@@ -342,6 +396,8 @@ h4 {
 }
 
 h5 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightMedium);
   font-size: 14px;
   line-height: 18px;
@@ -360,6 +416,8 @@ h5 {
 }
 
 h6 {
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightBold);
   font-size: 12px;
   line-height: 18px;
@@ -414,7 +472,7 @@ pre {
 
 html {
   /* font is set earlier */
-  color: var(--colorGrey700);
+  color: var(--colorOnSurface);
   padding: 0;
   margin: 0;
 }
@@ -483,11 +541,11 @@ select {
 
   /* 6 + 24 + 4 + borders are divisible by 6 */
   padding: 6px 12px 4px 12px;
-  background-color: #fff;
+  background-color: var(--colorSurfaceContainerLowest);
 
   /* Borders */
-  border-radius: 6px;
-  border: 1px solid #d8dce6;
+  border-radius: var(--borderRadiusMedium);
+  border: var(--ghostBorderInput);
   outline: none;
 
   /* Transition */
@@ -516,12 +574,13 @@ select {
 }
 /* Effects */
 select:hover {
-  border: 1px solid #b8bfd1;
+  border-color: color-mix(in srgb, var(--colorOutlineVariant) 35%, transparent);
   transition: all ease-in-out 100ms;
 }
 select:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+  background-color: var(--colorSurfaceContainerLowest);
+  border: 1px solid var(--marketplaceColor);
+  box-shadow: var(--boxShadowAmbient);
   transition: all ease-in-out 100ms;
 }
 select:focus-visible {
@@ -549,8 +608,9 @@ textarea {
   padding: 6px 12px 4px 12px;
 
   /* Borders */
-  border-radius: 6px;
-  border: 1px solid #d8dce6;
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorSurfaceContainerLowest);
+  border: var(--ghostBorderInput);
   outline: none;
 
   /* Transition */
@@ -569,13 +629,13 @@ textarea {
 /* Effects */
 input:hover,
 textarea:hover {
-  border: 1px solid #b8bfd1;
+  border-color: color-mix(in srgb, var(--colorOutlineVariant) 35%, transparent);
   transition: all ease-in-out 100ms;
 }
 input:focus,
 textarea:focus {
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+  border: 1px solid var(--marketplaceColor);
+  box-shadow: var(--boxShadowAmbient);
   transition: all ease-in-out 100ms;
 }
 input:focus-visible,
@@ -900,11 +960,11 @@ textarea {
 
   /* 6 + 24 + 4 + borders are divisible by 6 */
   padding: 6px 12px 4px 12px;
-  background-color: #fff;
+  background-color: var(--colorSurfaceContainerLowest);
 
   /* Borders */
-  border-radius: 6px;
-  border: 1px solid #d8dce6;
+  border-radius: var(--borderRadiusMedium);
+  border: var(--ghostBorderInput);
   outline: none;
 
   /* Transition */
@@ -922,12 +982,13 @@ textarea {
 }
 /* Effects */
 .marketplaceInputStyles:hover {
-  border: 1px solid #b8bfd1;
+  border-color: color-mix(in srgb, var(--colorOutlineVariant) 35%, transparent);
   transition: all ease-in-out 100ms;
 }
 .marketplaceInputStyles:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+  background-color: var(--colorSurfaceContainerLowest);
+  border: 1px solid var(--marketplaceColor);
+  box-shadow: var(--boxShadowAmbient);
   transition: all ease-in-out 100ms;
 }
 .marketplaceInputStyles:disabled {
@@ -1005,6 +1066,8 @@ textarea {
   /*
    * Font: most font styles are defined earlier in this file
    */
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightSemiBold);
 
   /* Button text styles */
@@ -1015,18 +1078,19 @@ textarea {
   /* Button borders */
   /* Default button has no borders */
   border: none;
-  border-radius: var(--borderRadiusMedium);
+  border-radius: var(--borderRadiusFull);
 
   /* Button colors */
-  /* Default button uses marketplace color */
+  /* Default button: editorial primary gradient */
+  background-image: var(--gradientPrimaryCTA);
   background-color: var(--marketplaceColor);
   color: var(--colorWhite);
 }
 .buttonDefault:focus,
 .buttonDefault:hover {
   outline: none;
-  box-shadow: var(--boxShadowButton);
-  background-color: var(--marketplaceColorDark);
+  box-shadow: var(--boxShadowAmbient);
+  filter: brightness(0.96);
 }
 .buttonDefault:focus-visible {
   outline: var(--focusRingWidth) solid var(--focusRingColor);
@@ -1036,8 +1100,9 @@ textarea {
   box-shadow: none;
   cursor: not-allowed;
   text-decoration: none;
+  background-image: none;
   background-color: var(--colorGrey100);
-  color: var(--colorGrey700);
+  color: var(--colorGrey500);
 }
 
 /**
@@ -1060,6 +1125,8 @@ textarea {
   /*
    * Font: most font styles are defined earlier in this file
    */
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightSemiBold);
 
   /* Button text styles */
@@ -1070,10 +1137,15 @@ textarea {
   /* Button borders */
   /* Primary button has no borders */
   border: none;
-  border-radius: var(--borderRadiusMedium);
+  border-radius: var(--borderRadiusFull);
 
   /* Button colors */
-  /* Primary button uses success color */
+  /* Primary CTA: brand gradient (hosted assets may override --colorPrimaryButton*) */
+  background-image: linear-gradient(
+    135deg,
+    var(--colorPrimaryButtonDark) 0%,
+    var(--colorPrimaryButton) 100%
+  );
   background-color: var(--colorPrimaryButton);
   color: var(--colorWhite);
 
@@ -1084,8 +1156,8 @@ textarea {
 .buttonPrimary:focus,
 .buttonPrimary:hover {
   outline: none;
-  box-shadow: var(--boxShadowButton);
-  background-color: var(--colorPrimaryButtonDark);
+  box-shadow: var(--boxShadowAmbient);
+  filter: brightness(0.96);
   color: var(--colorWhite);
 }
 .buttonPrimary:focus-visible {
@@ -1098,8 +1170,9 @@ textarea {
 .buttonPrimary:disabled {
   box-shadow: none;
   cursor: not-allowed;
+  background-image: none;
   background-color: var(--colorGrey100);
-  color: var(--colorGrey700);
+  color: var(--colorGrey500);
 }
 
 /**
@@ -1114,6 +1187,8 @@ textarea {
   cursor: pointer;
 
   /* Font */
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-size: 13px;
   line-height: 18px;
   font-weight: var(--fontWeightMedium);
@@ -1124,8 +1199,13 @@ textarea {
 
   /* Button borders */
   border: none;
-  border-radius: var(--borderRadiusMedium);
+  border-radius: var(--borderRadiusFull);
 
+  background-image: linear-gradient(
+    135deg,
+    var(--colorPrimaryButtonDark) 0%,
+    var(--colorPrimaryButton) 100%
+  );
   background-color: var(--colorPrimaryButton);
   color: var(--colorWhite);
 
@@ -1136,9 +1216,9 @@ textarea {
 .buttonPrimaryInline:focus,
 .buttonPrimaryInline:hover {
   outline: none;
-  box-shadow: var(--boxShadowButton);
+  box-shadow: var(--boxShadowAmbient);
   text-decoration: none;
-  background-color: var(--colorPrimaryButtonDark);
+  filter: brightness(0.96);
   color: var(--colorWhite);
 }
 .buttonPrimaryInline:focus-visible {
@@ -1148,8 +1228,9 @@ textarea {
 .buttonPrimaryInline:disabled {
   box-shadow: none;
   cursor: not-allowed;
+  background-image: none;
   background-color: var(--colorGrey100);
-  color: var(--colorGrey700);
+  color: var(--colorGrey500);
 }
 
 /**
@@ -1172,6 +1253,8 @@ textarea {
   /*
    * Font: most font styles are defined earlier in this file
    */
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightSemiBold);
 
   /* Button text styles */
@@ -1179,15 +1262,13 @@ textarea {
   text-align: center;
   text-decoration: none;
 
-  /* Secondary button has clear borders */
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--colorGrey100);
-  border-radius: var(--borderRadiusMedium);
+  /* No hairline border: tonal surface only */
+  border: none;
+  border-radius: var(--borderRadiusFull);
 
   /* Button colors: secondary */
   background-color: var(--colorSecondaryButton);
-  color: var(--colorGrey700);
+  color: var(--marketplaceColor);
 
   @media (--viewportMedium) {
     padding: 20px 0 20px 0;
@@ -1196,9 +1277,8 @@ textarea {
 .buttonSecondary:focus,
 .buttonSecondary:hover {
   outline: none;
-  box-shadow: var(--boxShadowButton);
-  border-color: var(--colorGrey300);
-  background-color: var(--colorSecondaryButton);
+  box-shadow: var(--boxShadowAmbient);
+  background-color: color-mix(in srgb, var(--colorSecondaryButton) 92%, var(--marketplaceColor) 8%);
 }
 .buttonSecondary:focus-visible {
   outline: var(--focusRingWidth) solid var(--focusRingColor);
@@ -1210,9 +1290,8 @@ textarea {
 .buttonSecondary:disabled {
   box-shadow: none;
   cursor: not-allowed;
-  border-color: var(--colorGrey100);
   background-color: var(--colorGrey100);
-  color: var(--colorWhite);
+  color: var(--colorGrey500);
 }
 
 /**
@@ -1236,25 +1315,23 @@ textarea {
   /*
    * Font
    */
+  font-family: var(--fontFamilyDisplay);
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
   font-weight: var(--fontWeightMedium);
   font-size: 14px;
   line-height: 18px;
-  letter-spacing: 0;
 
   /* Button text styles */
   /* Secondary button text is centered without decorations */
   text-align: center;
   text-decoration: none;
 
-  /* Secondary button has clear borders */
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--colorGrey100);
-  border-radius: var(--borderRadiusMedium);
+  border: none;
+  border-radius: var(--borderRadiusFull);
 
   /* Button colors: secondary */
   background-color: var(--colorSecondaryButton);
-  color: var(--colorGrey700);
+  color: var(--marketplaceColor);
 
   @media (--viewportMedium) {
     height: 40px;
@@ -1263,9 +1340,8 @@ textarea {
 .buttonSecondaryInline:focus,
 .buttonSecondaryInline:hover {
   outline: none;
-  box-shadow: var(--boxShadowButton);
-  border-color: var(--colorGrey300);
-  background-color: var(--colorSecondaryButton);
+  box-shadow: var(--boxShadowAmbient);
+  background-color: color-mix(in srgb, var(--colorSecondaryButton) 92%, var(--marketplaceColor) 8%);
 }
 .buttonSecondaryInline:focus-visible {
   outline: var(--focusRingWidth) solid var(--focusRingColor);
@@ -1277,7 +1353,8 @@ textarea {
 .buttonSecondaryInline:disabled {
   box-shadow: none;
   cursor: not-allowed;
-  border-color: var(--colorGrey100);
+  background-color: var(--colorGrey100);
+  color: var(--colorGrey500);
 }
 
 .buttonSmall {
@@ -1294,13 +1371,12 @@ textarea {
   text-align: center;
 
   /* Colors */
-  background-color: var(--colorWhite);
-  color: var(--colorGrey700);
+  background-color: var(--colorSurfaceContainerLowest);
+  color: var(--colorOnSurface);
 
   /* Borders */
-  border-radius: var(--borderRadius);
-  border: 1px solid var(--colorGrey100);
-  background: var(--colorWhite);
+  border-radius: var(--borderRadiusFull);
+  border: var(--ghostBorderInput);
 
   cursor: pointer;
   transition: var(--transitionStyleButton);
@@ -1311,9 +1387,11 @@ textarea {
 }
 .buttonSmall:focus,
 .buttonSmall:hover {
+  background-image: var(--gradientPrimaryCTA);
   background-color: var(--marketplaceColor);
-  border-color: var(--marketplaceColor);
+  border-color: transparent;
   color: var(--colorWhite);
+  box-shadow: var(--boxShadowAmbient);
 }
 .buttonSmall:focus-visible {
   outline: var(--focusRingWidth) solid var(--focusRingColor);
@@ -1354,9 +1432,10 @@ textarea {
   flex-direction: column;
   padding: var(--modalPadding);
 
-  background-color: var(--colorWhite);
-  border-radius: var(--borderRadius);
+  background-color: var(--colorSurfaceContainerLowest);
+  border-radius: var(--borderRadiusXl);
   border-bottom: none;
+  box-shadow: var(--boxShadowAmbient);
 
   @media (--viewportMedium) {
     flex-basis: 480px;
@@ -1365,7 +1444,6 @@ textarea {
     padding: var(--modalPaddingMedium);
     margin-top: 12.5vh;
     margin-bottom: 12.5vh;
-    border-bottom: 8px solid var(--marketplaceColor);
   }
 }
 
@@ -1381,8 +1459,8 @@ textarea {
   height: 100vh;
   padding: 0;
 
-  background-color: var(--colorWhite);
-  border-radius: var(--borderRadius);
+  background-color: var(--colorSurfaceContainerLowest);
+  border-radius: var(--borderRadiusXl);
 
   @media (--viewportMedium) {
     flex-basis: 480px;

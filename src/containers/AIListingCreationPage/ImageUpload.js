@@ -360,9 +360,7 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
                 </p>
               </>
             )}
-            <div
-              className={`${css.emptyDropZone} ${isDragActive ? css.emptyDropZoneActive : ''}`}
-            >
+            <div className={css.emptyDropZone}>
               <button
                 type="button"
                 className={css.browseButton}

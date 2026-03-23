@@ -19,11 +19,11 @@
   justify-content: space-between;
   align-items: center;
 
-  /* fill */
-  background-color: var(--colorWhite);
-
-  /* shadows */
-  box-shadow: var(--boxShadow);
+  /* Frosted layer lives on layout <header> (.marketplaceLayoutTopbar) or standalone root */
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 
   @media (--viewportMedium) {
     height: var(--topbarHeightDesktop);

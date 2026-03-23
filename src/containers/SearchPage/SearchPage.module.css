@@ -1,6 +1,7 @@
 @import '../../styles/customMediaQueries.css';
 
 .topbar {
+  composes: marketplaceLayoutTopbar from global;
   width: 100%;
 
   /* Top Bar's drop shadow should always be visible */

@@ -1,5 +1,9 @@
 @import '../../styles/customMediaQueries.css';
 
+.topbarGlassHost {
+  composes: marketplaceLayoutTopbar from global;
+}
+
 .mobileTopbar {
   /* Size */
   width: 100%;
@@ -11,8 +15,8 @@
   justify-content: space-between;
   align-items: center;
 
-  /* fill */
-  background-color: var(--colorWhite);
+  /* Frosted bar on Topbar root (.topbarGlassHost) */
+  background-color: transparent;
 
   /* shadows */
   box-shadow: none;

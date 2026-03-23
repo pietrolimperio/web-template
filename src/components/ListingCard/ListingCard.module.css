@@ -13,20 +13,20 @@
 
 .aspectRatioWrapper {
   transition: var(--transitionStyleButton);
-  background: var(--colorGrey100); /* Loading BG color */
-  border-radius: var(--borderRadiusMedium);
+  background: var(--colorSurfaceContainerLow);
+  border-radius: var(--borderRadiusXl);
 
   @media (--viewportMedium) {
     &:hover {
       transform: scale(1.02);
-      box-shadow: var(--boxShadowListingCard);
+      box-shadow: var(--boxShadowAmbient);
     }
   }
 }
 
 .rootForImage {
-  border: solid 1px var(--colorGrey100);
-  border-radius: var(--borderRadiusMedium);
+  border: none;
+  border-radius: var(--borderRadiusXl);
   width: 100%;
   height: 100%;
   object-fit: contain;

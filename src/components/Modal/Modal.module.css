@@ -12,7 +12,7 @@
 
     /* Add default background color to avoid bouncing scroll showing the
    page contents from behind the modal. */
-    background-color: var(--colorWhite);
+    background-color: var(--colorSurface);
 
     /* Additional styles for the modal window, dimming the background and positioning the modal */
     min-height: 100vh;
@@ -39,9 +39,10 @@
     flex-direction: column;
     padding: var(--modalPadding);
 
-    background-color: var(--colorWhite);
-    border-radius: var(--borderRadius);
+    background-color: var(--colorSurfaceContainerLowest);
+    border-radius: var(--borderRadiusXl);
     border-bottom: none;
+    box-shadow: var(--boxShadowAmbient);
 
     min-height: 100vh;
     height: 100%;
@@ -54,7 +55,6 @@
 
       padding: var(--modalPaddingMedium);
       margin-top: 1%;
-      border-bottom: 8px solid var(--marketplaceColor);
     }
   }
 }

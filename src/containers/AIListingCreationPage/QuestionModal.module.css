@@ -63,7 +63,7 @@
 }
 
 .closeButton:hover:not(:disabled) {
-  background-color: var(--matterColorAnti);
+  background-color: var(--matterColorMuted);
 }
 
 .closeButton:disabled {
@@ -96,7 +96,7 @@
 
 .progressText {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   white-space: nowrap;
 }
 
@@ -225,7 +225,7 @@
 .sliderValueUnit {
   font-size: 24px;
   font-weight: 500;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .slider {
@@ -275,7 +275,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Footer */
@@ -334,7 +334,7 @@
 }
 
 .secondaryButton:hover:not(:disabled) {
-  border-color: var(--matterColorAnti);
+  border-color: var(--matterColorMuted);
   background-color: var(--matterColorBright);
 }
 
@@ -567,7 +567,7 @@
   margin: 0 0 24px 0;
   font-size: 16px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .dialogButtons {

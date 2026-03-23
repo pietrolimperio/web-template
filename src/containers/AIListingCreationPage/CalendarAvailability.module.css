@@ -22,7 +22,7 @@
 
 .subtitle {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
 }
 
@@ -100,7 +100,7 @@
 
 .radioDescription {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 /* Weekday Selector */
@@ -243,7 +243,7 @@
 }
 
 .exceptionSeparator {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .removeExceptionButton {
@@ -268,7 +268,7 @@
 
 .emptyMessage {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-style: italic;
   margin: 16px 0 0 0;
 }
@@ -323,7 +323,7 @@
 }
 
 .secondaryButton:hover:not(:disabled) {
-  border-color: var(--matterColorAnti);
+  border-color: var(--matterColorMuted);
   background-color: var(--matterColorBright);
 }
 

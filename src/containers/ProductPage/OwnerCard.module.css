@@ -74,7 +74,7 @@
 
 .ownedByLabel {
   font-size: 14px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-weight: 400;
 }
 
@@ -268,7 +268,7 @@
 
 .insuranceText {
   font-size: 13px;
-  color: var(--matterColorBright);
+  color: var(--matterColor);
   line-height: 1.4;
 }
 
@@ -318,7 +318,7 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 14px;
 }
 
@@ -331,7 +331,7 @@
   width: 100%;
   height: 100%;
   gap: 8px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .mapPlaceholderIcon {

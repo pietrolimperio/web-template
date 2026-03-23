@@ -41,7 +41,7 @@
 
 .modalSubtitle {
   font-size: 16px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin: 0;
   line-height: 1.5;
 }
@@ -122,7 +122,7 @@
 }
 
 .cancelButton:hover {
-  border-color: var(--matterColorAnti);
+  border-color: var(--matterColorMuted);
   background-color: var(--matterColorBright);
 }
 
@@ -217,7 +217,7 @@
   margin: 0 0 24px 0;
   font-size: 16px;
   line-height: 1.6;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
 }
 
 .dialogButtons {

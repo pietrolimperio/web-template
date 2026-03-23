@@ -13,7 +13,7 @@
   transition: background-color 0.2s ease;
   
   &:hover {
-    background-color: var(--matterColorAnti);
+    background-color: var(--matterColorMuted);
   }
 }
 
@@ -116,7 +116,7 @@
   height: 32px;
   border: none;
   background: transparent;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 32px;
   line-height: 1;
   cursor: pointer;
@@ -208,7 +208,7 @@
 
 .languageEnglish {
   font-size: 13px;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   line-height: 1.4;
 }
 

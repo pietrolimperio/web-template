@@ -18,7 +18,7 @@
 
 .subtitle {
   font-size: 1rem;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   line-height: 1.5;
 }
 
@@ -39,7 +39,7 @@
 
 .sectionHint {
   font-size: 0.875rem;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin-bottom: 1rem;
 }
 
@@ -69,7 +69,7 @@
 }
 
 .perDay {
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   font-size: 0.875rem;
 }
 
@@ -165,7 +165,7 @@
 .hint {
   display: block;
   font-size: 0.75rem;
-  color: var(--matterColorAnti);
+  color: var(--matterColorMuted);
   margin-top: 0.25rem;
 }
 
@@ -203,7 +203,7 @@
 }
 
 .cancelButton:hover {
-  background-color: var(--matterColorAnti);
+  background-color: var(--matterColorMuted);
 }
 
 .footer {
@@ -225,7 +225,7 @@
 }
 
 .backButton:hover:not(:disabled) {
-  background-color: var(--matterColorAnti);
+  background-color: var(--matterColorMuted);
 }
 
 .backButton:disabled {
