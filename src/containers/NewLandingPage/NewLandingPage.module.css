@@ -6,10 +6,6 @@
   width: 100%;
   max-width: 100vw;
   min-width: 0;
-
-  @media (--viewportMedium) {
-    padding-top: var(--topbarHeightDesktop);
-  }
 }
 
 .topbar {
@@ -18,6 +14,12 @@
   top: 0;
   z-index: var(--zIndexTopbar);
 
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+
   @media (--viewportMedium) {
     position: fixed;
     top: 0;
@@ -25,6 +27,13 @@
     right: 0;
     width: 100%;
   }
+}
+
+.topbarScrolled {
+  background-color: var(--topbarGlassBackground);
+  backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  -webkit-backdrop-filter: blur(var(--topbarGlassBackdropBlur));
+  box-shadow: var(--topbarGlassHairline);
 }
 
 .main {

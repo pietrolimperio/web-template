@@ -26,6 +26,7 @@
 
 .input {
   border: 0;
+  background-color: transparent;
   cursor: pointer;
   text-overflow: ellipsis;
   height: 40px;

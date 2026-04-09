@@ -14,7 +14,7 @@
   padding: 0 12px 0 0;
 
   /* Frosted layer on parent header / Topbar root (.marketplaceLayoutTopbar) */
-  background-color: transparent;
+  background-color: #f1f1f1;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
@@ -27,11 +27,6 @@
 /* logo */
 .logoLink {
   border-bottom: 0px solid;
-  transition: var(--transitionStyleButton);
-}
-.logoLink:hover {
-  border-bottom: 4px solid var(--marketplaceColor);
-  border-radius: 0;
 }
 
 /* Search */

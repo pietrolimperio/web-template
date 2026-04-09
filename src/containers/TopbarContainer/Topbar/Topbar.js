@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import pickBy from 'lodash/pickBy';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
 import appSettings from '../../../config/settings';
@@ -147,6 +148,58 @@ const GenericError = props => {
   ) : null;
 };
 
+/* ------------------------------------------------------------------ */
+/*  Side-drawer portal (replaces full-screen Modal for mobile menu)    */
+/* ------------------------------------------------------------------ */
+
+const KEY_CODE_ESCAPE = 27;
+
+const MobileDrawer = ({ isOpen, onClose, onManageDisableScrolling, children }) => {
+  const [portalRoot, setPortalRoot] = useState(null);
+
+  useEffect(() => {
+    setPortalRoot(document.getElementById('portal-root'));
+  }, []);
+
+  useEffect(() => {
+    onManageDisableScrolling('TopbarMobileMenu', isOpen);
+    return () => onManageDisableScrolling('TopbarMobileMenu', false);
+  }, [isOpen]);
+
+  const handleKeyUp = useCallback(
+    e => {
+      if (e.keyCode === KEY_CODE_ESCAPE && isOpen) {
+        onClose();
+      }
+    },
+    [isOpen, onClose]
+  );
+
+  useEffect(() => {
+    document.addEventListener('keyup', handleKeyUp);
+    return () => document.removeEventListener('keyup', handleKeyUp);
+  }, [handleKeyUp]);
+
+  if (!isOpen || !portalRoot) return null;
+
+  const handleOverlayClick = e => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return ReactDOM.createPortal(
+    <div className={css.drawerModalRoot}>
+      {/* Overlay */}
+      <div className={css.drawerScrollLayer} onClick={handleOverlayClick}>
+        {/* Drawer panel */}
+        <div className={css.drawerContainer}>{children}</div>
+      </div>
+    </div>,
+    portalRoot
+  );
+};
+
 const TopbarComponent = props => {
   const {
     className,
@@ -276,6 +329,8 @@ const TopbarComponent = props => {
       customLinks={customLinks}
       showCreateListingsLink={showCreateListingsLink}
       inboxTab={topbarInboxTab}
+      currentLocale={currentLocale}
+      onLocaleChange={onLocaleChange}
     />
   );
 
@@ -395,16 +450,13 @@ const TopbarComponent = props => {
           onLocaleChange={onLocaleChange}
         />
       </div>
-      <Modal
-        id="TopbarMobileMenu"
-        containerClassName={css.modalContainer}
+      <MobileDrawer
         isOpen={isMobileMenuOpen}
         onClose={() => redirectToURLWithoutModalState(history, location, 'mobilemenu')}
-        usePortal
         onManageDisableScrolling={onManageDisableScrolling}
       >
         {authInProgress ? null : mobileMenu}
-      </Modal>
+      </MobileDrawer>
       <Modal
         id="TopbarMobileSearch"
         containerClassName={css.modalContainerSearchForm}

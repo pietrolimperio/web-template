@@ -10,13 +10,15 @@
   }
 
   @media (--viewportLarge) {
-    padding: 40px 0;
+    padding: 96px 0;
   }
 }
 
 .container {
   width: 100%;
-  padding: 0 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
   min-width: 0;
   box-sizing: border-box;
 
@@ -25,7 +27,7 @@
   }
 
   @media (--viewportLarge) {
-    padding: 0 clamp(48px, 5vw, 100px);
+    padding: 0 48px;
   }
 }
 
@@ -127,7 +129,7 @@
   }
 
   @media (min-width: 1400px) {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 

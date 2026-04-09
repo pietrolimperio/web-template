@@ -3,287 +3,315 @@
 .root {
   position: relative;
   width: 100%;
-  min-height: min(400px, 90dvh);
+  min-height: 480px;
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  background-image: url('../../../assets/hero-landing.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  /* Nessun overflow:hidden: il calendario del filtro date è position:absolute e deve poter uscire dal box */
+  background-color: var(--colorSurfaceContainerLow);
+  padding: calc(var(--topbarHeight) + 16px) 0 40px;
 
   @media (--viewportMedium) {
-    min-height: 560px;
+    min-height: 640px;
+    padding: calc(var(--topbarHeightDesktop) + 16px) 0 48px;
   }
 
   @media (--viewportLarge) {
-    min-height: 620px;
+    min-height: 800px;
+    padding: calc(var(--topbarHeightDesktop) + 24px) 0 48px;
   }
 }
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.18) 0%,
-    rgba(0, 0, 0, 0.08) 50%,
-    rgba(0, 0, 0, 0.22) 100%
-  );
-  z-index: 1;
-}
-
-.content {
+.container {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1200px;
-  padding: 32px 16px 36px;
-  display: flex;
-  flex-direction: column;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
   align-items: center;
-  gap: 20px;
   box-sizing: border-box;
 
   @media (--viewportMedium) {
-    padding: 56px 36px 48px;
-    gap: 32px;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    padding: 0 36px;
   }
 
   @media (--viewportLarge) {
-    padding: 64px 48px 56px;
-    gap: 40px;
+    padding: 0 48px;
   }
 }
 
-/* ── Heading ── */
+/* ── Left column ── */
 
-.headingArea {
-  text-align: center;
-  max-width: 680px;
-}
-
-.motto {
-  margin: 0 0 8px;
-  color: var(--colorWhite);
-  font-size: clamp(22px, 6vw, 50px);
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+.textColumn {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 
   @media (--viewportMedium) {
-    font-size: 40px;
-    margin-bottom: 16px;
+    gap: 32px;
+  }
+}
+
+.headline {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--colorOnSurface);
+
+  @media (--viewportMedium) {
+    font-size: 48px;
   }
 
   @media (--viewportLarge) {
-    font-size: 50px;
+    font-size: 64px;
   }
+}
+
+.headlineHighlight {
+  color: var(--marketplaceColorDark);
+  font-style: italic;
 }
 
 .subtitle {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: clamp(14px, 3.5vw, 18px);
-  font-weight: 400;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--colorGrey600);
+  max-width: 480px;
 
   @media (--viewportMedium) {
     font-size: 18px;
   }
-}
 
-/* ── Search bar ── */
-
-.searchArea {
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 0 4px;
-  box-sizing: border-box;
-}
-
-.searchBar {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 740px;
-  background-color: var(--colorWhite);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
-  padding: 8px;
-  overflow: visible;
-}
-
-.searchForm {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
-  gap: 0;
-
-  @media (--viewportMedium) {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  @media (--viewportLarge) {
+    font-size: 20px;
   }
 }
 
-.searchFormExpanded {
+/* ── Search bar (glass pill) ── */
+
+.searchBarGlass {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background-color: rgba(255, 255, 255, 0.6);
+  padding: 8px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(176, 47, 0, 0.1);
+
   @media (--viewportMedium) {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    border-radius: 999px;
+    padding: 12px;
+    max-width: 600px;
+  }
+}
+
+.searchForm {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: center;
   }
 }
 
 .searchField {
-  display: grid;
-  align-items: center;
-  min-height: 42px;
-  padding: 4px 0;
+  flex: 1;
+  padding: 2px 12px;
+  min-height: 40px;
 
   @media (--viewportMedium) {
-    padding: 0;
-    border-right: 1px solid var(--colorGrey100);
+    padding: 2px 16px;
   }
 }
 
-.categoryField {
+.searchDivider {
   display: none;
 
   @media (--viewportMedium) {
-    display: grid;
-    animation: fieldFadeIn 0.2s ease;
+    display: block;
+    width: 1px;
+    height: 32px;
+    background-color: var(--colorGrey200);
+    flex-shrink: 0;
   }
 }
 
-.keywordField {
-  @media (--viewportMedium) {
-    border-right: 1px solid var(--colorGrey100);
-  }
-}
-
-.searchField:last-of-type {
-  @media (--viewportMedium) {
-    border-right: none;
-  }
-}
-
-@keyframes fieldFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.submitButton {
-  min-height: 42px;
-  min-width: 90px;
-  padding: 0 24px;
-  white-space: nowrap;
-  border-radius: 8px;
-  margin-top: 4px;
-  font-weight: 700;
-  font-size: 15px;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    height: 46px;
-  }
-}
-
-/* ── CTA buttons ── */
-
-.ctaArea {
+.searchButton {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-
-  @media (--viewportMedium) {
-    flex-direction: row;
-    gap: 16px;
-  }
-}
-
-.ctaButton {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 32px;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-decoration: none;
-  white-space: nowrap;
+  width: 100%;
+  height: 44px;
   border-radius: 10px;
+  border: none;
+  background: var(--gradientPrimaryCTA);
+  color: white;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-  background-color: var(--colorWhite);
-  color: var(--marketplaceColor);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 4px;
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.24);
-    text-decoration: none;
-  }
-
-  &:active {
-    transform: translateY(0);
+    transform: scale(1.05);
   }
 
   @media (--viewportMedium) {
-    padding: 16px 36px;
-    font-size: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin-top: 0;
   }
 }
 
-/* Primary CTA swap: Esplora tutto on mobile, Pubblica annuncio from tablet up */
-.ctaShowMobileOnly {
-  @media (--viewportMedium) {
-    display: none;
-  }
-}
+/* ── Right column (editorial image) ── */
 
-.ctaShowDesktopOnly {
+.imageColumn {
   display: none;
+  position: relative;
+  z-index: 1;
+  height: 420px;
 
   @media (--viewportMedium) {
-    display: inline-flex;
+    display: block;
+  }
+
+  @media (--viewportLarge) {
+    height: 600px;
   }
 }
 
-.ctaExplore {
-  display: none;
+.imageBackdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(12, 159, 167, 0.1);
+  border-radius: 3rem;
+  transform: rotate(3deg) translateX(16px);
 
-  @media (--viewportMedium) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px 36px;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.2;
-    text-decoration: none;
-    white-space: nowrap;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-    background-color: var(--marketplaceColor);
-    color: var(--colorWhite);
-    border: 2px solid var(--marketplaceColor);
-
-    &:hover {
-      background-color: var(--marketplaceColorDark);
-      border-color: var(--marketplaceColorDark);
-      color: var(--colorWhite);
-      text-decoration: none;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
+  @media (--viewportLarge) {
+    border-radius: 4rem;
   }
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: rotate(-2deg);
+
+  @media (--viewportLarge) {
+    border-radius: 4rem;
+  }
+}
+
+.floatingCard {
+  position: absolute;
+  bottom: 36px;
+  left: -16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background-color: rgba(255, 255, 255, 0.82);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 220px;
+  z-index: 3;
+
+  @media (--viewportLarge) {
+    bottom: 48px;
+    left: -32px;
+    padding: 24px;
+    border-radius: 24px;
+    max-width: 240px;
+  }
+}
+
+.floatingCardBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pulseDot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--colorSuccess);
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.badgeText {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--colorGrey600);
+}
+
+.floatingCardTitle {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--colorOnSurface);
+}
+
+.floatingCardPrice {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--marketplaceColorDark);
+}
+
+/* ── Background decorations ── */
+
+.bgBlur {
+  position: absolute;
+  bottom: -96px;
+  left: -96px;
+  width: 384px;
+  height: 384px;
+  background-color: rgba(255, 87, 34, 0.05);
+  filter: blur(120px);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bgShape {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background-color: rgba(235, 235, 235, 0.3);
+  clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
+  z-index: 0;
+  pointer-events: none;
 }

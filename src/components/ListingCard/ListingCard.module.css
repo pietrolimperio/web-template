@@ -1,122 +1,129 @@
 @import '../../styles/customMediaQueries.css';
 
 .root {
-  /* Layout */
   display: flex;
   flex-direction: column;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #ebebeb;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 
-  /* Remove link's hover effect */
   &:hover {
     text-decoration: none;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
   }
 }
 
 .aspectRatioWrapper {
-  transition: var(--transitionStyleButton);
   background: var(--colorSurfaceContainerLow);
-  border-radius: var(--borderRadiusXl);
-
-  @media (--viewportMedium) {
-    &:hover {
-      transform: scale(1.02);
-      box-shadow: var(--boxShadowAmbient);
-    }
-  }
+  flex-shrink: 0;
 }
 
 .rootForImage {
   border: none;
-  border-radius: var(--borderRadiusXl);
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
 .info {
-  /* Layout */
   display: flex;
   flex-direction: column;
-  padding: 14px 0 2px 0;
-}
-
-.price {
-  composes: textSmall from global;
-  /* Layout */
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  margin-bottom: 4px;
-  color: var(--colorGrey700);
-}
-
-.priceValue {
-  /* Font */
-  font-weight: var(--fontWeightSemiBold);
-  color: var(--marketplaceColor);
-
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-}
-
-.perUnit {
-  /* Font */
-  font-weight: var(--fontWeightSemiBold);
-  color: var(--marketplaceColor);
-
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
+  flex: 1;
+  padding: 12px 14px 14px;
+  gap: 10px;
 }
 
 .mainInfo {
   display: flex;
   flex-direction: column;
+  gap: 3px;
+  flex: 1;
 }
 
 .title {
-  /* Font */
   composes: textSmall from global;
   font-weight: var(--fontWeightBold);
+  color: var(--colorGrey900);
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.authorInfo {
+  composes: marketplaceTinyFontStyles from global;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorGrey500);
+  margin: 0;
+}
+
+.estimatedPriceNew {
+  composes: marketplaceTinyFontStyles from global;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorGrey400);
+  margin: 2px 0 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+.price {
+  composes: textSmall from global;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 2px;
+  flex-shrink: 0;
   color: var(--colorGrey700);
   margin: 0;
 }
 
-.authorInfo {
-  /* Font */
-  composes: marketplaceTinyFontStyles from global;
-  font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey700);
+.priceValue {
+  font-weight: var(--fontWeightBold);
+  color: var(--marketplaceColor);
+  margin: 0;
+}
 
-  padding-top: 4px;
-  padding-bottom: 4px;
+.perUnit {
+  font-weight: var(--fontWeightRegular);
+  color: var(--colorGrey500);
+  font-size: 11px;
+  margin: 0;
+}
 
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
+.detailsBtn {
+  font-size: 11px;
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--marketplaceSecondaryColor, #0C9FA7);
+  border: 1.5px dashed var(--marketplaceSecondaryColor, #0C9FA7);
+  border-radius: 8px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
 
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
+  .root:hover & {
+    background: var(--marketplaceSecondaryColor, #0C9FA7);
+    color: #ffffff;
+    border-style: solid;
   }
 }
 
 .longWord {
-  /* fallback option */
   word-break: break-all;
-  /* use break-word if available */
   word-break: break-word;
   hyphens: auto;
 }

@@ -173,7 +173,7 @@
   --topbarHeightDesktop: 72px;
 
   /* Glass topbar (single layer on layout <header> or standalone root) */
-  --topbarGlassBackground: color-mix(in srgb, var(--colorSurfaceContainerLowest) 78%, transparent);
+  --topbarGlassBackground: #f1f1f1;
   --topbarGlassBackdropBlur: 16px;
   --topbarGlassHairline: 0 1px 0 color-mix(in srgb, var(--colorOnSurface) 4%, transparent);
 

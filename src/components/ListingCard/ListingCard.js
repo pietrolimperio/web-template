@@ -11,6 +11,7 @@ import {
 } from '../../util/configHelpers';
 import { lazyLoadWithDimensions } from '../../util/uiHelpers';
 import { formatMoney } from '../../util/currency';
+import { types as sdkTypes } from '../../util/sdkLoader';
 import { ensureListing, ensureUser } from '../../util/data';
 import { richText } from '../../util/richText';
 import { createSlug } from '../../util/urlHelpers';
@@ -24,6 +25,8 @@ import {
 } from '../../components';
 
 import css from './ListingCard.module.css';
+
+const { Money } = sdkTypes;
 
 const MIN_LENGTH_FOR_LONG_WORDS = 10;
 
@@ -48,6 +51,30 @@ const priceData = (price, currency, intl) => {
 
 const LazyImage = lazyLoadWithDimensions(ResponsiveImage, { loadAfterInitialRendering: 3000 });
 
+const EstimatedPriceNew = ({ publicData, config, intl }) => {
+  const raw = publicData?.estimatedPriceNew;
+  if (!raw) return null;
+
+  try {
+    let moneyValue;
+    if (typeof raw === 'object' && raw.amount != null && raw.currency) {
+      moneyValue = new Money(raw.amount, raw.currency);
+    } else if (typeof raw === 'number') {
+      moneyValue = new Money(raw, config.currency);
+    } else {
+      return null;
+    }
+    const formatted = formatMoney(intl, moneyValue);
+    return (
+      <div className={css.estimatedPriceNew}>
+        <FormattedMessage id="ListingCard.estimatedPriceNew" values={{ price: formatted }} />
+      </div>
+    );
+  } catch {
+    return null;
+  }
+};
+
 const PriceMaybe = props => {
   const { price, publicData, config, intl, listingTypeConfig } = props;
   const showPrice = displayPrice(listingTypeConfig);
@@ -56,10 +83,24 @@ const PriceMaybe = props => {
   }
 
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, listingTypeConfig);
-  const hasMultiplePriceVariants = isPriceVariationsInUse && publicData?.priceVariants?.length > 1;
+  const variants = publicData?.priceVariants || [];
+  const hasMultiplePriceVariants = isPriceVariationsInUse && variants.length > 1;
 
   const isBookable = isBookingProcessAlias(publicData?.transactionProcessAlias);
-  const { formattedPrice, priceTitle } = priceData(price, config.currency, intl);
+
+  // When multiple variants exist, find the lowest price among them
+  let priceToDisplay;
+  if (hasMultiplePriceVariants) {
+    const minSubunits = variants.reduce(
+      (min, v) => (v.priceInSubunits < min ? v.priceInSubunits : min),
+      Infinity
+    );
+    priceToDisplay = minSubunits < Infinity ? new Money(minSubunits, config.currency) : price;
+  } else {
+    priceToDisplay = price;
+  }
+
+  const { formattedPrice, priceTitle } = priceData(priceToDisplay, config.currency, intl);
 
   const priceValue = <span className={css.priceValue}>{formattedPrice}</span>;
   const pricePerUnit = isBookable ? (
@@ -221,13 +262,6 @@ export const ListingCard = props => {
         showListingImage={showListingImage}
       />
       <div className={css.info}>
-        <PriceMaybe
-          price={price}
-          publicData={publicData}
-          config={config}
-          intl={intl}
-          listingTypeConfig={foundListingTypeConfig}
-        />
         <div className={css.mainInfo}>
           {showListingImage && (
             <div className={css.title}>
@@ -237,11 +271,24 @@ export const ListingCard = props => {
               })}
             </div>
           )}
+          <EstimatedPriceNew publicData={publicData} config={config} intl={intl} />
           {showAuthorInfo ? (
             <div className={css.authorInfo}>
               <FormattedMessage id="ListingCard.author" values={{ authorName }} />
             </div>
           ) : null}
+        </div>
+        <div className={css.footer}>
+          <PriceMaybe
+            price={price}
+            publicData={publicData}
+            config={config}
+            intl={intl}
+            listingTypeConfig={foundListingTypeConfig}
+          />
+          <span className={css.detailsBtn}>
+            <FormattedMessage id="ListingCard.details" />
+          </span>
         </div>
       </div>
     </NamedLink>

@@ -1,186 +1,410 @@
 @import '../../../../styles/customMediaQueries.css';
 
+/* ============================
+   DRAWER LAYOUT
+   ============================ */
+
 .root {
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
-  height: auto;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.content {
-  flex-grow: 1;
+/* ============================
+   HEADER - GUEST
+   ============================ */
+
+.guestHeader {
+  padding: 32px 24px 16px;
+}
+
+.guestHeaderInner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.guestAvatarCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #fff3ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.guestAvatarIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--marketplaceColor);
+}
+
+.guestGreetingText {
+  display: flex;
+  flex-direction: column;
+}
+
+.guestGreetingName {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--colorGrey900);
+  font-family: 'sofiapro', Helvetica, Arial, sans-serif;
+}
+
+.brandLogo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ============================
+   HEADER - USER
+   ============================ */
+
+.userHeader {
+  padding: 32px 24px 24px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 12px;
 }
 
-.accountLinksWrapper,
-.customLinksWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.accountLinksWrapper {
-  margin-bottom: 36px;
-}
-
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100vw;
-  padding: 24px;
-  background-color: var(--colorWhite);
-  box-shadow: var(--boxShadowTop);
+.userAvatarWrapper {
+  position: relative;
 }
 
 .avatar {
-  /* Layout */
   flex-shrink: 0;
-  margin: var(--TopbarMobileMenu_topMargin) 0 0 0;
 }
 
-.greeting {
-  /* Font */
-  font-weight: var(--fontWeightBlack);
-  font-size: 24px;
-  line-height: 24px;
-
-  padding: 3px 0 3px 0;
-  margin-bottom: 1px;
-  margin-top: 16px;
-
-  @media (--viewportMedium) {
-    font-size: 40px;
-    line-height: 56px;
-    padding: 5px 0 3px 0;
-    /* x * 8px */
-    margin-top: 24px;
-  }
-}
-
-.logoutButton {
-  /* Position and dimensions */
-  display: inline;
-
-  /* Borders */
-  border: none;
-
-  /* Text size should be inherited */
-  text-decoration: none;
-
-  /* Logout font is smaller and gray since the action is not recommended. */
-  font-weight: var(--fontWeightSemiBold);
-  font-size: 18px;
-  line-height: 24px;
-
-  color: var(--colorGrey600);
-
-  /* Position component */
-  width: initial;
-  margin: 4px 0 24px 0;
-  padding: 0;
-
-  &:hover {
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  @media (--viewportMedium) {
-    margin: 0 0 36px 0;
-  }
-}
-
-.customLinkFont {
-  /* Font */
-  font-weight: var(--fontWeightBold);
-  font-size: 21px;
-  line-height: 24px;
-
-  padding: 4px 0 2px 0;
-  /* x * 6px */
-  margin-top: 24px;
-  margin-bottom: 18px;
-
-  @media (--viewportMedium) {
-    font-size: 30px;
-    line-height: 40px;
-    padding: 1px 0 7px 0;
-  }
-}
-
-.inbox {
-  /* Font */
-  composes: customLinkFont;
-  color: var(--marketplaceColor);
-  position: relative;
-
-  margin-top: auto;
-  margin-bottom: 13px;
-}
-
-.navigationLink {
-  /* Font */
-  composes: customLinkFont;
-  color: var(--marketplaceColor);
-
-  /* Layout */
-  margin-top: 0;
-  margin-bottom: 11px;
-}
-.currentPageLink {
-  color: var(--marketplaceColorDark);
-}
-
-.notificationBadge {
+.verifiedBadge {
   position: absolute;
-  top: 4px;
-  right: -26px;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background-color: var(--marketplaceColorSecondary);
+  border-radius: 50%;
+  border: 2px solid var(--colorWhite);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  /* This is inside a link - remove underline */
+.verifiedIcon {
+  width: 12px;
+  height: 12px;
+  fill: var(--colorWhite);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--colorGrey900);
+  font-family: 'sofiapro', Helvetica, Arial, sans-serif;
+}
+
+.headerCtaButton {
+  display: block;
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--gradientPrimaryCTA);
+  color: var(--colorWhite);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+  transition: transform 0.1s ease;
+  margin-top: 4px;
+
   &:hover {
+    text-decoration: none;
+    color: var(--colorWhite);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.userSubtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--marketplaceColorSecondary);
+  margin-top: 2px;
+}
+
+.userRating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--colorGrey600);
+}
+
+.ratingStar {
+  width: 14px;
+  height: 14px;
+  fill: var(--marketplaceColor);
+}
+
+/* ============================
+   NAVIGATION
+   ============================ */
+
+.navigation {
+  flex: 1;
+  padding: 4px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  color: var(--colorGrey600);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--colorGrey100);
     text-decoration: none;
   }
 }
 
+.navItemActive {
+  composes: navItem;
+  background-color: #fff3ed;
+  color: var(--marketplaceColorDark);
+  font-weight: 600;
+}
+
+.navItemActive .navIcon {
+  color: var(--marketplaceColor);
+}
+
+.navIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--colorGrey400);
+}
+
+.navIconActive {
+  composes: navIcon;
+  color: var(--marketplaceColor);
+}
+
+.navLabel {
+  flex: 1;
+}
+
+.navDivider {
+  height: 1px;
+  background-color: var(--colorGrey100);
+  margin: 8px 20px;
+}
+
+.notificationBadge {
+  position: relative;
+}
+
+.notificationDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--marketplaceColor);
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+/* ============================
+   CTA SECTION (GUEST)
+   ============================ */
+
+.ctaSection {
+  padding: 16px 24px;
+  margin-top: auto;
+}
+
+.ctaCard {
+  background-color: var(--colorGrey50);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaCardDecoration {
+  position: absolute;
+  right: -16px;
+  bottom: -16px;
+  width: 96px;
+  height: 96px;
+  background-color: rgba(12, 159, 167, 0.08);
+  border-radius: 50%;
+  filter: blur(24px);
+}
+
+.ctaCardContent {
+  position: relative;
+  z-index: 1;
+}
+
+.ctaTitle {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--colorGrey900);
+  margin: 0 0 8px;
+  font-family: 'sofiapro', Helvetica, Arial, sans-serif;
+}
+
+.ctaDescription {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--colorGrey500);
+  margin: 0 0 16px;
+}
+
+.ctaButton {
+  display: block;
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--gradientPrimaryCTA);
+  color: var(--colorWhite);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+  transition: transform 0.1s ease;
+
+  &:hover {
+    text-decoration: none;
+    color: var(--colorWhite);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ============================
+   FOOTER
+   ============================ */
+
+.footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.localeSelector {
+  /* Let the LocaleSelector handle its own layout */
+}
+
+.userFooterLocale {
+  padding: 0 0 8px;
+}
+
+/* ============================
+   LOGOUT (USER FOOTER)
+   ============================ */
+
+.logoutSection {
+  margin-top: auto;
+  padding: 8px 16px 24px;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: none;
+  background: none;
+  width: 100%;
+  cursor: pointer;
+  color: var(--colorGrey600);
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+
+  &:hover {
+    background-color: var(--colorGrey100);
+  }
+}
+
+.logoutIcon {
+  width: 22px;
+  height: 22px;
+  color: var(--colorGrey400);
+}
+
+/* ============================
+   CREATE LISTING FOOTER
+   ============================ */
+
+.createListingWrapper {
+  padding: 0 24px 16px;
+}
+
 .createNewListingLink {
   composes: buttonPrimary from global;
+  font-size: 15px;
 }
 
-.authenticationGreeting {
-  /* Font */
-  composes: h1 from global;
+/* ============================
+   CUSTOM LINKS
+   ============================ */
 
-  margin-bottom: 48px;
-  margin-top: var(--TopbarMobileMenu_topMargin);
-}
-.authenticationLinks {
-  white-space: nowrap;
+.customLinksWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 16px;
 }
 
-.signupLink {
-  text-decoration: none;
-  white-space: nowrap;
-  color: var(--marketplaceColor);
-}
-.loginLink {
-  text-decoration: none;
-  white-space: nowrap;
-  color: var(--marketplaceColor);
+.navigationLink {
+  composes: navItem;
 }
 
 .currentPage {
-  color: var(--colorBlack);
-
-  /* black left border */
-  border-left: 5px solid black;
-  margin-left: -24px;
-  padding-left: 19px;
+  composes: navItemActive;
 }
 
-.spacer {
-  width: 100%;
-  height: 124px;
+.menuItemBorder {
+  display: none;
 }

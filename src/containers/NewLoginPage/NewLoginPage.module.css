@@ -85,6 +85,7 @@
   color: var(--colorGrey500);
   margin: 0 0 0px 0;
   line-height: 1.5;
+  text-align: center;
 }
 
 /* Form styles */
@@ -233,6 +234,14 @@
 
 /* Mobile optimizations */
 @media (max-width: 767px) {
+  .formSubtitle + .signupContainer {
+    display: none;
+  }
+
+  .form {
+    margin-top: 10%;
+  }
+
   .formTitle {
     font-size: 28px;
   }

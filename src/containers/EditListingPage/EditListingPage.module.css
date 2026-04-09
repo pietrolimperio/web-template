@@ -15,8 +15,7 @@
   justify-content: space-between;
   align-items: center;
 
-  /* Frosted bar on Topbar root (.topbarGlassHost) */
-  background-color: transparent;
+  background-color: #f1f1f1;
 
   /* shadows */
   box-shadow: none;

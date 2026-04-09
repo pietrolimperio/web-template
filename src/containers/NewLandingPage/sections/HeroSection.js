@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import classNames from 'classnames';
+import React from 'react';
 import { Form as FinalForm } from 'react-final-form';
 import { useHistory } from 'react-router-dom';
 import { useConfiguration } from '../../../context/configurationContext';
@@ -7,12 +6,12 @@ import { useRouteConfiguration } from '../../../context/routeConfigurationContex
 import { FormattedMessage } from '../../../util/reactIntl';
 import { createResourceLocatorString } from '../../../util/routes';
 import { stringifyDateToISO8601 } from '../../../util/dates';
-import { NamedLink, Form, PrimaryButton } from '../../../components';
+import { Form } from '../../../components';
 
-import FilterCategories from '../../PageBuilder/Primitives/SearchCTA/FilterCategories/FilterCategories';
 import FilterKeyword from '../../PageBuilder/Primitives/SearchCTA/FilterKeyword/FilterKeyword';
 import FilterDateRange from '../../PageBuilder/Primitives/SearchCTA/FilterDateRange/FilterDateRange';
 
+import heroImage from '../../../assets/hero-landing-new.png';
 import css from './HeroSection.module.css';
 
 const isEmpty = value => {
@@ -28,20 +27,29 @@ const formatDateValue = (dateRange, queryParamName) => {
   return { [queryParamName]: value };
 };
 
+const SearchIcon = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
 const HeroSection = () => {
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
   const history = useHistory();
-  const [showCategories, setShowCategories] = useState(false);
-  const blurTimeoutRef = useRef(null);
-  const formRef = useRef(null);
-  const latestValuesRef = useRef({});
-
-  const categoryConfig = config.categoryConfiguration;
-  const hasCategories = categoryConfig?.categories?.length > 0;
 
   const onSubmit = values => {
-    let queryParams = {};
+    const queryParams = {};
     Object.entries(values).forEach(([key, value]) => {
       if (!isEmpty(value)) {
         if (key === 'dateRange') {
@@ -58,93 +66,75 @@ const HeroSection = () => {
 
   return (
     <section className={css.root}>
-      <div className={css.overlay} />
-      <div className={css.content}>
-        <div className={css.headingArea}>
-          <h1 className={css.motto}>
-            <FormattedMessage id="NewLandingPage.heroMotto" />
+      <div className={css.container}>
+        <div className={css.textColumn}>
+          <h1 className={css.headline}>
+            <FormattedMessage
+              id="NewLandingPage.heroMotto"
+              values={{
+                lineBreak: <br />,
+                highlight: chunks => (
+                  <span className={css.headlineHighlight}>{chunks}</span>
+                ),
+              }}
+            />
           </h1>
           <p className={css.subtitle}>
             <FormattedMessage id="NewLandingPage.heroSubtitle" />
           </p>
-        </div>
 
-        <div className={css.searchArea}>
-          <div className={css.searchBar}>
+          <div className={css.searchBarGlass}>
             <FinalForm
               onSubmit={onSubmit}
-              render={({ handleSubmit, values }) => {
-                latestValuesRef.current = values;
-
-                const handleFormFocus = () => {
-                  clearTimeout(blurTimeoutRef.current);
-                  setShowCategories(true);
-                };
-                const handleFormBlur = () => {
-                  blurTimeoutRef.current = setTimeout(() => {
-                    if (formRef.current && formRef.current.contains(document.activeElement)) {
-                      return;
-                    }
-                    const v = latestValuesRef.current;
-                    const hasKeyword = v?.keywords && v.keywords.trim().length > 0;
-                    const hasCat = v?.pub_categoryId != null && v.pub_categoryId !== '';
-                    const hasDate = v?.dateRange?.startDate && v?.dateRange?.endDate;
-                    if (!hasKeyword && !hasCat && !hasDate) {
-                      setShowCategories(false);
-                    }
-                  }, 350);
-                };
-
-                return (
-                  <div ref={formRef} onFocusCapture={handleFormFocus} onBlurCapture={handleFormBlur}>
-                    <Form
-                      role="search"
-                      onSubmit={handleSubmit}
-                      className={classNames(css.searchForm, {
-                        [css.searchFormExpanded]: showCategories && hasCategories,
-                      })}
-                    >
-                      {showCategories && hasCategories && (
-                        <div className={classNames(css.searchField, css.categoryField)}>
-                          <FilterCategories
-                            categories={categoryConfig.categories}
-                            alignLeft
-                            defaultShowAll
-                          />
-                        </div>
-                      )}
-                      <div className={classNames(css.searchField, css.keywordField)}>
-                        <FilterKeyword />
-                      </div>
-                      <div className={css.searchField}>
-                        <FilterDateRange config={config} alignLeft={false} />
-                      </div>
-                      <PrimaryButton className={css.submitButton} type="submit">
-                        <FormattedMessage id="NewLandingPage.heroSearch" />
-                      </PrimaryButton>
-                    </Form>
+              render={({ handleSubmit }) => (
+                <Form
+                  role="search"
+                  onSubmit={handleSubmit}
+                  className={css.searchForm}
+                >
+                  <div className={css.searchField}>
+                    <FilterKeyword />
                   </div>
-                );
-              }}
+                  <div className={css.searchDivider} />
+                  <div className={css.searchField}>
+                    <FilterDateRange config={config} alignLeft={false} />
+                  </div>
+                  <button type="submit" className={css.searchButton}>
+                    <SearchIcon />
+                  </button>
+                </Form>
+              )}
             />
           </div>
         </div>
 
-        <div className={css.ctaArea}>
-          <NamedLink name="SearchPage" className={classNames(css.ctaButton, css.ctaShowMobileOnly)}>
-            <FormattedMessage id="NewLandingPage.heroExplore" />
-          </NamedLink>
-          <NamedLink
-            name="AIListingCreationPage"
-            className={classNames(css.ctaButton, css.ctaShowDesktopOnly)}
-          >
-            <FormattedMessage id="NewLandingPage.heroCreateListing" />
-          </NamedLink>
-          <NamedLink name="LandingPage" to={{ hash: 'categories' }} className={css.ctaExplore}>
-            <FormattedMessage id="NewLandingPage.heroExplore" />
-          </NamedLink>
+        <div className={css.imageColumn}>
+          <div className={css.imageBackdrop} />
+          <img
+            src={heroImage}
+            alt=""
+            className={css.heroImage}
+            loading="eager"
+          />
+          <div className={css.floatingCard}>
+            <div className={css.floatingCardBadge}>
+              <span className={css.pulseDot} />
+              <span className={css.badgeText}>
+                <FormattedMessage id="NewLandingPage.heroAvailableNow" />
+              </span>
+            </div>
+            <p className={css.floatingCardTitle}>
+              <FormattedMessage id="NewLandingPage.heroSampleProduct" />
+            </p>
+            <p className={css.floatingCardPrice}>
+              <FormattedMessage id="NewLandingPage.heroSamplePrice" />
+            </p>
+          </div>
         </div>
       </div>
+
+      <div className={css.bgBlur} />
+      <div className={css.bgShape} />
     </section>
   );
 };
