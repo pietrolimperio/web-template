@@ -444,6 +444,10 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.shippingEnabled',
         'publicData.priceVariationsEnabled',
         'publicData.priceVariants',
+        'publicData.categoryId',
+        'publicData.subcategoryId',
+        'publicData.thirdCategoryId',
+        'publicData.estimatedPriceNew',
       ],
       'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
       'fields.image': [

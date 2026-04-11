@@ -85,6 +85,11 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.shippingEnabled',
         'publicData.priceVariationsEnabled',
         'publicData.priceVariants',
+        // ListingCard: category labels + new-price comparison (same fields as search / product page)
+        'publicData.categoryId',
+        'publicData.subcategoryId',
+        'publicData.thirdCategoryId',
+        'publicData.estimatedPriceNew',
       ],
       'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
       'fields.image': [

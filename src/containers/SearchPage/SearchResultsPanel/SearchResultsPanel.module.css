@@ -54,6 +54,8 @@
 
 .listingCard {
   width: 100%;
+  min-height: 0;
+  height: 100%;
 }
 
 .pagination {

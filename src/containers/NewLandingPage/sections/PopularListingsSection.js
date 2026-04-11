@@ -38,7 +38,7 @@ const PopularListingsSection = ({ listings = [], inProgress = false } = {}) => {
               <li key={l.id.uuid} className={css.gridItem}>
                 <ListingCard
                   listing={l}
-                  showAuthorInfo={false}
+                  portraitImage
                   renderSizes="(max-width: 425px) 160px, (max-width: 549px) 100vw, (max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
                 />
               </li>

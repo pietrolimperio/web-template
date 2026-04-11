@@ -135,6 +135,14 @@
 
 .gridItem {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Equal row height: card fills the cell like other product grids */
+.gridItem > * {
+  flex: 1;
+  min-height: 0;
 }
 
 /* Mobile: 2 columns, max 5 rows (10 items visible) */

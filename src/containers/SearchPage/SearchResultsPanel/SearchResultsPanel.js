@@ -80,6 +80,7 @@ const SearchResultsPanel = props => {
             className={css.listingCard}
             key={l.id.uuid}
             listing={l}
+            portraitImage
             renderSizes={cardRenderSizes(isMapVariant)}
             setActiveListing={setActiveListing}
           />
