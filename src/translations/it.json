@@ -1992,5 +1992,13 @@
   "PreviewListingPage.deleteDraftError": "Impossibile eliminare l'annuncio. Riprova più tardi.",
   "PreviewListingPage.resetToOriginal": "Ripristina annuncio originale",
   "PreviewListingPage.resetErrorTitle": "Errore",
-  "PreviewListingPage.resetError": "Impossibile ripristinare lo stato originale. Riprova più tardi."
+  "PreviewListingPage.resetError": "Impossibile ripristinare lo stato originale. Riprova più tardi.",
+
+  "ProductPage.condition.new": "Nuovo",
+  "ProductPage.condition.likeNew": "Come Nuovo",
+  "ProductPage.condition.used": "Usato",
+  "ProductPage.condition.refurbished": "Ricondizionato",
+  "ProductPage.conditionLabel": "Condizione",
+  "ProductPage.brandLabel": "Marca",
+  "ProductPage.relatedProducts": "Prodotti simili"
 }

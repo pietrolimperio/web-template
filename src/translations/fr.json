@@ -1956,5 +1956,13 @@
   "PreviewListingPage.deleteDraftError": "Impossible de supprimer l'annonce. Veuillez réessayer plus tard.",
   "PreviewListingPage.resetToOriginal": "Restaurer l'état d'origine",
   "PreviewListingPage.resetErrorTitle": "Erreur",
-  "PreviewListingPage.resetError": "Impossible de restaurer l'état d'origine. Veuillez réessayer plus tard."
+  "PreviewListingPage.resetError": "Impossible de restaurer l'état d'origine. Veuillez réessayer plus tard.",
+
+  "ProductPage.condition.new": "Neuf",
+  "ProductPage.condition.likeNew": "Comme neuf",
+  "ProductPage.condition.used": "Utilisé",
+  "ProductPage.condition.refurbished": "Reconditionné",
+  "ProductPage.conditionLabel": "État",
+  "ProductPage.brandLabel": "Marque",
+  "ProductPage.relatedProducts": "Produits similaires"
 }

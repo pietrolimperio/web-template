@@ -1956,5 +1956,13 @@
   "PreviewListingPage.deleteDraftError": "Die Anzeige konnte nicht gelöscht werden. Bitte versuchen Sie es später erneut.",
   "PreviewListingPage.resetToOriginal": "Auf ursprünglichen Zustand zurücksetzen",
   "PreviewListingPage.resetErrorTitle": "Fehler",
-  "PreviewListingPage.resetError": "Der ursprüngliche Zustand konnte nicht wiederhergestellt werden. Bitte versuchen Sie es später erneut."
+  "PreviewListingPage.resetError": "Der ursprüngliche Zustand konnte nicht wiederhergestellt werden. Bitte versuchen Sie es später erneut.",
+
+  "ProductPage.condition.new": "Neu",
+  "ProductPage.condition.likeNew": "Wie neu",
+  "ProductPage.condition.used": "Gebraucht",
+  "ProductPage.condition.refurbished": "Generalüberholt",
+  "ProductPage.conditionLabel": "Zustand",
+  "ProductPage.brandLabel": "Marke",
+  "ProductPage.relatedProducts": "Ähnliche Produkte"
 }

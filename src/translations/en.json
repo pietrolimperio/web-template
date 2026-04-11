@@ -2014,5 +2014,13 @@
   "PreviewListingPage.goToConfiguration": "Go to Configuration",
   "PreviewListingPage.guestDescription": "Login to edit the listing and publish it. ",
   "PreviewListingPage.loginLink": "Login",
-  "PreviewListingPage.guestTooltip": "Login to edit this field"
+  "PreviewListingPage.guestTooltip": "Login to edit this field",
+
+  "ProductPage.condition.new": "New",
+  "ProductPage.condition.likeNew": "Like New",
+  "ProductPage.condition.used": "Used",
+  "ProductPage.condition.refurbished": "Refurbished",
+  "ProductPage.conditionLabel": "Condition",
+  "ProductPage.brandLabel": "Brand",
+  "ProductPage.relatedProducts": "Similar products"
 }

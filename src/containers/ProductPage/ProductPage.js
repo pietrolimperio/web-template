@@ -123,11 +123,107 @@ import { validateCoupon, isLeazBackendApiAvailable } from '../../util/leazBacken
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
+import ProductListingCard from '../../components/ProductListingCard/ProductListingCard';
+import productListingCardCss from '../../components/ProductListingCard/ProductListingCard.module.css';
+
 import css from './ProductPage.module.css';
 
 const MIN_LENGTH_FOR_LONG_WORDS_IN_TITLE = 16;
 const TODAY = new Date();
 const MAX_BOOKING_DAYS = 80;
+
+const MOCK_REVIEWS = [
+  {
+    id: { uuid: 'mock-review-1' },
+    attributes: {
+      rating: 5,
+      content: 'Prodotto in condizioni perfette, esattamente come descritto. Il proprietario è stato molto disponibile e puntuale nella consegna. Consigliatissimo!',
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    },
+    author: {
+      id: { uuid: 'mock-author-1' },
+      type: 'user',
+      attributes: {
+        banned: false,
+        deleted: false,
+        profile: { displayName: 'Marco R.', abbreviatedName: 'MR' },
+      },
+    },
+  },
+  {
+    id: { uuid: 'mock-review-2' },
+    attributes: {
+      rating: 4,
+      content: 'Ottima esperienza di noleggio. Il prodotto funzionava benissimo. Unica nota: la riconsegna potrebbe essere più flessibile.',
+      createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+    },
+    author: {
+      id: { uuid: 'mock-author-2' },
+      type: 'user',
+      attributes: {
+        banned: false,
+        deleted: false,
+        profile: { displayName: 'Giulia L.', abbreviatedName: 'GL' },
+      },
+    },
+  },
+  {
+    id: { uuid: 'mock-review-3' },
+    attributes: {
+      rating: 5,
+      content: 'Fantastico! Ho noleggiato per un weekend e tutto è andato alla grande. Tornerò sicuramente.',
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+    },
+    author: {
+      id: { uuid: 'mock-author-3' },
+      type: 'user',
+      attributes: {
+        banned: false,
+        deleted: false,
+        profile: { displayName: 'Alessandro P.', abbreviatedName: 'AP' },
+      },
+    },
+  },
+];
+
+const MOCK_RELATED_PRODUCTS = [
+  {
+    id: 'related-1',
+    title: 'Zaino da Trekking 65L',
+    price: '€12',
+    category: 'Sport e Tempo Libero',
+    owner: 'Marco R.',
+    estimatedNewPrice: '€189',
+    image: 'https://images.unsplash.com/photo-1622260614153-03223fb72052?w=400&h=533&fit=crop',
+  },
+  {
+    id: 'related-2',
+    title: 'Tenda Campeggio 4 Posti',
+    price: '€25',
+    category: 'Outdoor',
+    owner: 'Giulia L.',
+    estimatedNewPrice: '€320',
+    image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=533&fit=crop',
+  },
+  {
+    id: 'related-3',
+    title: 'Macchina Fotografica Vintage',
+    price: '€18',
+    category: 'Fotografia',
+    owner: 'Alessandro P.',
+    estimatedNewPrice: '€450',
+    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=533&fit=crop',
+  },
+  {
+    id: 'related-4',
+    title: 'Set Valigie Premium',
+    price: '€30',
+    category: 'Viaggi',
+    owner: 'Sara M.',
+    estimatedNewPrice: '€280',
+    image: 'https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=400&h=533&fit=crop',
+  },
+];
 
 /**
  * Returns the best applicable automatic discount from an array.
@@ -1219,15 +1315,77 @@ export const ProductPageComponent = props => {
       }}
     >
       <LayoutSingleColumn className={css.pageRoot} topbar={topbar} footer={<FooterContainer />}>
-        <div className={css.contentWrapper}>
-          {/* Mobile Header - ActionBar, Title, Price, Author (visible only on mobile) */}
-          <div
-            className={classNames(
-              css.mobileHeader,
-              mounted && currentListing.id && isOwnListing && css.mobileHeaderWithActionBar
-            )}
-          >
-            {/* Action Bar (for own listing) */}
+        {/* ===== SPLIT HERO SECTION ===== */}
+        <section className={css.heroSection}>
+          {/* Left: Portrait Image Container */}
+          <div className={css.heroImageContainer}>
+            <div className={css.heroPortraitFrame} onClick={() => images.length > 0 && setImageModalOpen(true)}>
+              {images.length > 0 ? (
+                <img
+                  src={mainImageUrl}
+                  alt={title}
+                  className={css.heroImage}
+                />
+              ) : (
+                <ResponsiveImage
+                  className={css.heroImageFallback}
+                  image={null}
+                  variants={[]}
+                  alt={title}
+                />
+              )}
+
+              {/* Image navigation arrows */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className={classNames(css.heroImageNav, css.heroNavPrev)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
+                    }}
+                  >
+                    <IconArrowHead direction="left" size="big" />
+                  </button>
+                  <button
+                    type="button"
+                    className={classNames(css.heroImageNav, css.heroNavNext)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
+                    }}
+                  >
+                    <IconArrowHead direction="right" size="big" />
+                  </button>
+                  <div className={css.heroImageCounter}>
+                    {selectedImageIndex + 1} / {images.length}
+                  </div>
+                </>
+              )}
+
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  className={css.heroViewPhotos}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setImageModalOpen(true);
+                  }}
+                >
+                  <FormattedMessage
+                    id="ProductPage.viewPhotos"
+                    defaultMessage="Vedi {count} foto"
+                    values={{ count: images.length }}
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Product Info Panel */}
+          <div className={css.heroInfoPanel}>
+            {/* Action Bar for own listing */}
             {mounted && currentListing.id && isOwnListing && (
               <ActionBarMaybe
                 className={css.actionBar}
@@ -1244,12 +1402,173 @@ export const ProductPageComponent = props => {
               />
             )}
 
-            {/* Title */}
+            {/* Breadcrumb */}
+            {(() => {
+              const id1 = publicData?.categoryId;
+              const id2 = publicData?.subcategoryId;
+              const id3 = publicData?.thirdCategoryId;
+              const categories = config?.categoryConfiguration?.categories ?? [];
+              const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
+              const names = getCategoryNamesFromIds(categories, id1, id2, id3, shortLocale);
+              const categoryLabel = names.category ?? publicData?.category;
+              const subcategoryLabel = names.subcategory ?? publicData?.subcategory;
+              const thirdCategoryLabel = names.thirdCategory ?? publicData?.thirdCategory;
+              const parts = [categoryLabel, subcategoryLabel, thirdCategoryLabel].filter(Boolean);
+              if (!parts.length) return null;
+              return (
+                <nav className={css.heroBreadcrumb}>
+                  {parts.map((part, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span>/</span>}
+                      <NamedLink
+                        className={css.heroBreadcrumbLink}
+                        name="SearchPage"
+                        to={{ search: '' }}
+                      >
+                        {part}
+                      </NamedLink>
+                    </React.Fragment>
+                  ))}
+                </nav>
+              );
+            })()}
+
+            <h1 className={css.heroTitle}>
+              {(() => {
+                const words = title.split(/\s+/);
+                if (words.length <= 3) {
+                  return <span className={css.heroTitleAccent}>{title}</span>;
+                }
+                const leading = words.slice(0, -3).join(' ');
+                const trailing = words.slice(-3).join(' ');
+                return (
+                  <>
+                    {leading}{' '}<span className={css.heroTitleAccent}>{trailing}</span>
+                  </>
+                );
+              })()}
+            </h1>
+
+            {/* Author section */}
+            <div className={css.heroAuthorSection}>
+              <AvatarSmall user={ensuredAuthor} className={css.heroAuthorAvatar} />
+              <div className={css.heroAuthorInfo}>
+                <span className={css.heroAuthorName}>
+                  <FormattedMessage
+                    id="ProductPage.hostedBy"
+                    defaultMessage="Offerto da {name}"
+                    values={{
+                      name: (
+                        <NamedLink
+                          className={css.authorNameLink}
+                          name="ProfilePage"
+                          params={{ id: ensuredAuthor.id?.uuid }}
+                        >
+                          {authorDisplayName}
+                        </NamedLink>
+                      ),
+                    }}
+                  />
+                </span>
+                {authorReviewsCount > 0 && (
+                  <div className={css.heroAuthorRating}>
+                    <ReviewRating
+                      rating={authorAverageRatingRounded}
+                      className={css.authorReviewRating}
+                      reviewStarClassName={css.authorReviewStar}
+                    />
+                    <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Condition & Brand cards */}
+            {(() => {
+              const conditionRaw = publicData?.condition;
+              const brandRaw = publicData?.brand;
+              if (!conditionRaw && !brandRaw) return null;
+
+              const toCamelCase = str =>
+                str.replace(/(?:^\w|[A-Z]|\b\w)/g, (ch, i) =>
+                  i === 0 ? ch.toLowerCase() : ch.toUpperCase()
+                ).replace(/[\s\-_]+/g, '');
+              const conditionKey = conditionRaw ? toCamelCase(conditionRaw) : '';
+              const conditionMessageId = `ProductPage.condition.${conditionKey}`;
+              const conditionLabel = conditionRaw
+                ? intl.formatMessage({ id: conditionMessageId, defaultMessage: conditionRaw })
+                : null;
+
+              const fieldConfigs = listingConfig?.listingFields || [];
+              const brandLabel = (() => {
+                if (!brandRaw) return null;
+                const cfg = fieldConfigs.find(f => f.key === 'brand');
+                if (cfg?.enumOptions) {
+                  const match = cfg.enumOptions.find(o => `${o.option}` === `${brandRaw}`);
+                  if (match?.label) return match.label;
+                }
+                return String(brandRaw);
+              })();
+
+              return (
+                <div className={css.heroFeatureCards}>
+                  {conditionRaw && (
+                    <div className={css.heroFeatureCard}>
+                      <div className={css.heroFeatureCardIcon}>✓</div>
+                      <div className={css.heroFeatureCardContent}>
+                        <p className={css.heroFeatureCardLabel}>
+                          <FormattedMessage id="ProductPage.conditionLabel" defaultMessage="Condizione" />
+                        </p>
+                        <h3 className={css.heroFeatureCardTitle}>{conditionLabel}</h3>
+                      </div>
+                    </div>
+                  )}
+                  {brandRaw && (
+                    <div className={css.heroFeatureCard}>
+                      <div className={css.heroFeatureCardIcon}>🏷</div>
+                      <div className={css.heroFeatureCardContent}>
+                        <p className={css.heroFeatureCardLabel}>
+                          <FormattedMessage id="ProductPage.brandLabel" defaultMessage="Brand" />
+                        </p>
+                        <h3 className={css.heroFeatureCardTitle}>{brandLabel}</h3>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+
+        {/* ===== CONTENT AREA ===== */}
+        <div className={css.contentWrapper}>
+          {/* Mobile Header (visible only on mobile) */}
+          <div
+            className={classNames(
+              css.mobileHeader,
+              mounted && currentListing.id && isOwnListing && css.mobileHeaderWithActionBar
+            )}
+          >
+            {mounted && currentListing.id && isOwnListing && (
+              <ActionBarMaybe
+                className={css.actionBar}
+                isOwnListing={isOwnListing}
+                listing={currentListing}
+                showNoPayoutDetailsSet={noPayoutDetailsSetWithOwnListing}
+                currentUser={currentUser}
+                editParams={{
+                  id: listingId.uuid,
+                  slug: listingSlug,
+                  type: listingPathParamType,
+                  tab: listingTab,
+                }}
+              />
+            )}
+
             <H4 as="h1" className={css.listingTitle}>
               {richTitle}
             </H4>
 
-            {/* Price */}
             {price && (
               <>
                 <div className={css.priceContainer}>
@@ -1272,10 +1591,10 @@ export const ProductPageComponent = props => {
                     onClick={() => {
                       const el = document.getElementById('mobile-booking-form');
                       if (el) {
-                        const topbar = document.querySelector('[class*="Topbar_container"]') ||
+                        const topbarEl = document.querySelector('[class*="Topbar_container"]') ||
                                        document.querySelector('[class*="TopbarDesktop"]') ||
                                        document.querySelector('nav');
-                        const navbarHeight = topbar ? topbar.offsetHeight : 64;
+                        const navbarHeight = topbarEl ? topbarEl.offsetHeight : 64;
                         const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
                         window.scrollTo({ top: offset, behavior: 'smooth' });
                       }
@@ -1287,7 +1606,6 @@ export const ProductPageComponent = props => {
               </>
             )}
 
-            {/* Author */}
             <div className={css.authorSection}>
               <AvatarSmall user={ensuredAuthor} className={css.authorAvatar} />
               <div className={css.authorInfo}>
@@ -1325,10 +1643,10 @@ export const ProductPageComponent = props => {
                 onClick={() => {
                   const el = document.getElementById('owner-card');
                   if (el) {
-                    const topbar = document.querySelector('[class*="Topbar_container"]') ||
+                    const topbarEl = document.querySelector('[class*="Topbar_container"]') ||
                                    document.querySelector('[class*="TopbarDesktop"]') ||
                                    document.querySelector('nav');
-                    const navbarHeight = topbar ? topbar.offsetHeight : 64;
+                    const navbarHeight = topbarEl ? topbarEl.offsetHeight : 64;
                     const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
                     window.scrollTo({ top: offset, behavior: 'smooth' });
                   }
@@ -1340,329 +1658,161 @@ export const ProductPageComponent = props => {
           </div>
 
           <div className={css.mainContent}>
-            {/* Left Column - Images */}
-            <div className={css.imagesColumn}>
-              <div className={css.imagesSection}>
-                {images.length > 0 ? (
-                  <>
-                    {/* Main Image with navigation arrows */}
-                    <div className={css.mainImageWrapper}>
-                      {/* Previous Arrow */}
-                      {images.length > 1 && (
+            {/* Left Column - Details */}
+            <div className={css.detailsColumn}>
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className={css.thumbnailsContainer}>
+                  <div className={css.thumbnailsScroll}>
+                    {images.map((image, index) => {
+                      const imgVariants = image.attributes?.variants || {};
+                      const thumbUrl =
+                        imgVariants['scaled-small']?.url ||
+                        imgVariants['scaled-medium']?.url ||
+                        imgVariants['listing-card-2x']?.url ||
+                        imgVariants['listing-card']?.url;
+
+                      return (
                         <button
+                          key={image.id?.uuid || index}
                           type="button"
-                          className={classNames(css.imageNavButton, css.imageNavPrev)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
-                          }}
-                        >
-                          <IconArrowHead direction="left" size="big" />
-                        </button>
-                      )}
-
-                      <AspectRatioWrapper
-                        width={aspectWidth}
-                        height={aspectHeight}
-                        rootClassName={css.mainImageAspectBox}
-                      >
-                        {mainImageUrl && (
-                          <img
-                            src={mainImageUrl}
-                            alt={`${title} - Image ${selectedImageIndex + 1}`}
-                            className={css.mainImage}
-                            onClick={() => setImageModalOpen(true)}
-                            style={{ cursor: 'zoom-in' }}
-                          />
-                        )}
-                      </AspectRatioWrapper>
-
-                      {/* Next Arrow */}
-                      {images.length > 1 && (
-                        <button
-                          type="button"
-                          className={classNames(css.imageNavButton, css.imageNavNext)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
-                          }}
-                        >
-                          <IconArrowHead direction="right" size="big" />
-                        </button>
-                      )}
-
-                      {/* Image counter */}
-                      {images.length > 1 && (
-                        <div className={css.imageCounter}>
-                          {selectedImageIndex + 1} / {images.length}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Thumbnails */}
-                    {images.length > 1 && (
-                      <div className={css.thumbnailsContainer}>
-                        <div className={css.thumbnailsScroll}>
-                          {images.map((image, index) => {
-                            const variants = image.attributes?.variants || {};
-                            const imageUrl =
-                              variants['scaled-small']?.url ||
-                              variants['scaled-medium']?.url ||
-                              variants['listing-card-2x']?.url ||
-                              variants['listing-card']?.url;
-
-                            return (
-                              <button
-                                key={image.id?.uuid || index}
-                                type="button"
-                                className={classNames(css.thumbnail, {
-                                  [css.thumbnailActive]: index === selectedImageIndex,
-                                })}
-                                onClick={() => setSelectedImageIndex(index)}
-                              >
-                                <img
-                                  src={imageUrl}
-                                  alt={`Thumbnail ${index + 1}`}
-                                  className={css.thumbnailImage}
-                                  loading="lazy"
-                                />
-                              </button>
-                            );
+                          className={classNames(css.thumbnail, {
+                            [css.thumbnailActive]: index === selectedImageIndex,
                           })}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className={css.mainImageWrapper}>
-                    <AspectRatioWrapper
-                      width={aspectWidth}
-                      height={aspectHeight}
-                      rootClassName={css.mainImageAspectBox}
-                    >
-                      <ResponsiveImage
-                        className={css.mainImageFallback}
-                        image={null}
-                        variants={[]}
-                        alt={intl.formatMessage({
-                          id: 'ProductPage.noImagePlaceholder',
-                          defaultMessage: 'Nessuna immagine disponibile',
-                        })}
-                        noImageMessage={intl.formatMessage({
-                          id: 'ProductPage.noImagePlaceholder',
-                          defaultMessage: 'Nessuna immagine disponibile',
-                        })}
+                          onClick={() => setSelectedImageIndex(index)}
+                        >
+                          <img
+                            src={thumbUrl}
+                            alt={`Thumbnail ${index + 1}`}
+                            className={css.thumbnailImage}
+                            loading="lazy"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {description && (
+                <div className={css.descriptionSection}>
+                  <h3 className={css.sectionTitle}>
+                    <FormattedMessage id="ProductPage.description" defaultMessage="Descrizione" />
+                  </h3>
+                  <SectionTextMaybe text={description} showAsIngress />
+
+                  {(currentListing.attributes?.createdAt || currentListing.createdAt) && (
+                    <div className={css.listingCreationDate}>
+                      <FormattedMessage
+                        id="ProductPage.listingCreated"
+                        defaultMessage="Annuncio creato il {date}"
+                        values={{
+                          date: intl.formatDate(
+                            currentListing.attributes?.createdAt || currentListing.createdAt,
+                            { year: 'numeric', month: 'long', day: 'numeric' }
+                          ),
+                        }}
                       />
-                    </AspectRatioWrapper>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Custom listing fields / specs */}
+              <CustomListingFields
+                publicData={publicData}
+                metadata={metadata}
+                listingFieldConfigs={listingConfig.listingFields}
+                categoryConfiguration={config.categoryConfiguration}
+                intl={intl}
+              />
+
+              {/* Key Features */}
+              {(() => {
+                const keyFeatures = publicData.keyFeatures || publicData.key_features || [];
+                const keyFeaturesArray = Array.isArray(keyFeatures) ? keyFeatures : [];
+                return keyFeaturesArray.length > 0 && (
+                  <div className={css.detailsSection}>
+                    <h3 className={css.sectionTitle}>
+                      <FormattedMessage id="ProductPage.details" defaultMessage="Dettagli" />
+                    </h3>
+                    <ul className={css.keyFeaturesList}>
+                      {keyFeaturesArray.map((feature, index) => (
+                        <li key={index} className={css.keyFeatureItem}>
+                          <span className={css.keyFeatureBullet}></span>
+                          <span>{String(feature)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+
+              {/* Booking Form - Mobile */}
+              {isBooking && !isClosed && (
+                <div id="mobile-booking-form" className={css.mobileBookingForm}>
+                  <BookingForm
+                    onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
+                    listing={currentListing}
+                    isOwnListing={isOwnListing}
+                    onSubmit={handleOrderSubmit}
+                    intl={intl}
+                    config={config}
+                    monthlyTimeSlots={monthlyTimeSlots}
+                    onFetchTimeSlots={onFetchTimeSlots}
+                    onFetchTransactionLineItems={onFetchTransactionLineItems}
+                    lineItems={lineItems}
+                    fetchLineItemsInProgress={fetchLineItemsInProgress}
+                    fetchLineItemsError={fetchLineItemsError}
+                    dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
+                    marketplaceName={marketplaceName}
+                    payoutDetailsWarning={payoutDetailsWarning}
+                    currentUser={currentUser}
+                    onResendVerificationEmail={onResendVerificationEmail}
+                    sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+                    sendVerificationEmailError={sendVerificationEmailError}
+                    onManageDisableScrolling={onManageDisableScrolling}
+                    autoDiscounts={autoDiscounts}
+                  />
+                </div>
+              )}
+
+              {/* Owner Card with map */}
+              <div id="owner-card">
+                <OwnerCard
+                  author={ensuredAuthor}
+                  authorReviews={authorReviews}
+                  listing={currentListing}
+                  onContactUser={onContactUser}
+                  config={config}
+                  intl={intl}
+                  isOwnListing={isOwnListing}
+                  geolocation={geolocation}
+                  geocodedLocation={geocodedLocation}
+                  isGeocoding={isGeocoding}
+                />
+              </div>
+
+              {/* Reviews (use mock data when no real reviews exist) */}
+              <div className={css.reviewsSectionWrapper}>
+                {reviews.length === 0 && (
+                  <div className={css.reviewsBadgeOverlay}>
+                    <div className={css.testDriveBadge}>
+                      <span className={css.testDriveDot} />
+                      Test Drive
+                    </div>
                   </div>
                 )}
-
-                {/* Breadcrumb - resolve category names from IDs; use translations for current locale for display */}
-                  {(() => {
-                    const id1 = publicData?.categoryId;
-                    const id2 = publicData?.subcategoryId;
-                    const id3 = publicData?.thirdCategoryId;
-                    const categories = config?.categoryConfiguration?.categories ?? [];
-                    const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
-                    const names = getCategoryNamesFromIds(categories, id1, id2, id3, shortLocale);
-                    const categoryLabel = names.category ?? publicData?.category;
-                    const subcategoryLabel = names.subcategory ?? publicData?.subcategory;
-                    const thirdCategoryLabel = names.thirdCategory ?? publicData?.thirdCategory;
-                    const hasCategory = categoryLabel || id1 != null;
-                    if (!hasCategory) return null;
-                    return (
-                    <nav
-                      className={css.breadcrumb}
-                      aria-label={intl.formatMessage({
-                        id: 'ProductPage.breadcrumbNavigation',
-                        defaultMessage: 'Navigazione breadcrumb',
-                      })}
-                    >
-                      <ol className={css.breadcrumbList}>
-                        {!subcategoryLabel && !thirdCategoryLabel && id2 == null && id3 == null ? (
-                          <li className={css.breadcrumbListItem}>
-                            <span className={css.breadcrumbCurrent} aria-current="page">
-                              {categoryLabel ?? ''}
-                            </span>
-                          </li>
-                        ) : (
-                          <>
-                            <li className={css.breadcrumbListItem}>
-                              <NamedLink
-                                name="SearchPage"
-                                to={{ search: `?keywords=${encodeURIComponent(categoryLabel || '')}` }}
-                                className={css.breadcrumbItem}
-                              >
-                                {categoryLabel ?? ''}
-                              </NamedLink>
-                            </li>
-                            {(subcategoryLabel || id2 != null) && (
-                              <>
-                                <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
-                                  <span className={css.breadcrumbSeparator}>›</span>
-                                </li>
-                                <li className={css.breadcrumbListItem}>
-                                  {(thirdCategoryLabel || id3 != null) ? (
-                                    <NamedLink
-                                      name="SearchPage"
-                                      to={{
-                                        search: `?keywords=${encodeURIComponent(subcategoryLabel || '')}`,
-                                      }}
-                                      className={css.breadcrumbItem}
-                                    >
-                                      {subcategoryLabel ?? ''}
-                                    </NamedLink>
-                                  ) : (
-                                    <span className={css.breadcrumbCurrent} aria-current="page">
-                                      {subcategoryLabel ?? ''}
-                                    </span>
-                                  )}
-                                </li>
-                              </>
-                            )}
-                            {(thirdCategoryLabel || id3 != null) && (
-                              <>
-                                <li className={css.breadcrumbSeparatorItem} aria-hidden="true">
-                                  <span className={css.breadcrumbSeparator}>›</span>
-                                </li>
-                                <li className={css.breadcrumbListItem}>
-                                  <NamedLink
-                                    name="SearchPage"
-                                    to={{
-                                      search: `?keywords=${encodeURIComponent(thirdCategoryLabel || '')}`,
-                                    }}
-                                    className={css.breadcrumbItem}
-                                  >
-                                    {thirdCategoryLabel ?? ''}
-                                  </NamedLink>
-                                </li>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </ol>
-                    </nav>
-                    );
-                  })()}
-
-                  {/* Description */}
-                  {description && (
-                    <div className={css.descriptionSection}>
-                      <h3 className={css.sectionTitle}>
-                        <FormattedMessage id="ProductPage.description" defaultMessage="Descrizione" />
-                      </h3>
-                      <SectionTextMaybe text={description} showAsIngress />
-                      
-                      {/* Listing creation date - below description, aligned right */}
-                      {(currentListing.attributes?.createdAt || currentListing.createdAt) && (
-                        <div className={css.listingCreationDate}>
-                          <FormattedMessage
-                            id="ProductPage.listingCreated"
-                            defaultMessage="Annuncio creato il {date}"
-                            values={{
-                              date: intl.formatDate(
-                                currentListing.attributes?.createdAt || currentListing.createdAt,
-                                {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                }
-                              ),
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Details */}
-                  <CustomListingFields
-                    publicData={publicData}
-                    metadata={metadata}
-                    listingFieldConfigs={listingConfig.listingFields}
-                    categoryConfiguration={config.categoryConfiguration}
-                    intl={intl}
-                  />
-
-                  {/* Key Features */}
-                  {(() => {
-                    const keyFeatures = 
-                      publicData.keyFeatures ||
-                      publicData.key_features ||
-                      [];
-                    
-                    const keyFeaturesArray = Array.isArray(keyFeatures) ? keyFeatures : [];
-                    
-                    return keyFeaturesArray.length > 0 && (
-                      <div className={css.detailsSection}>
-                        <h3 className={css.sectionTitle}>
-                          <FormattedMessage id="ProductPage.details" defaultMessage="Dettagli" />
-                        </h3>
-                        <ul className={css.keyFeaturesList}>
-                          {keyFeaturesArray.map((feature, index) => (
-                            <li key={index} className={css.keyFeatureItem}>
-                              <span className={css.keyFeatureBullet}></span>
-                              <span>{String(feature)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Booking Form - Mobile (after details, before location) */}
-                  {isBooking && !isClosed && (
-                    <div id="mobile-booking-form" className={css.mobileBookingForm}>
-                      <BookingForm
-                        onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
-                        listing={currentListing}
-                        isOwnListing={isOwnListing}
-                        onSubmit={handleOrderSubmit}
-                        intl={intl}
-                        config={config}
-                        monthlyTimeSlots={monthlyTimeSlots}
-                        onFetchTimeSlots={onFetchTimeSlots}
-                        onFetchTransactionLineItems={onFetchTransactionLineItems}
-                        lineItems={lineItems}
-                        fetchLineItemsInProgress={fetchLineItemsInProgress}
-                        fetchLineItemsError={fetchLineItemsError}
-                        dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
-                        marketplaceName={marketplaceName}
-                        payoutDetailsWarning={payoutDetailsWarning}
-                        currentUser={currentUser}
-                        onResendVerificationEmail={onResendVerificationEmail}
-                        sendVerificationEmailInProgress={sendVerificationEmailInProgress}
-                        sendVerificationEmailError={sendVerificationEmailError}
-                        onManageDisableScrolling={onManageDisableScrolling}
-                        autoDiscounts={autoDiscounts}
-                      />
-                    </div>
-                  )}
-
-                  {/* Owner Card with location map */}
-                  <div id="owner-card">
-                    <OwnerCard
-                    author={ensuredAuthor}
-                    authorReviews={authorReviews}
-                    listing={currentListing}
-                    onContactUser={onContactUser}
-                    config={config}
-                    intl={intl}
-                    isOwnListing={isOwnListing}
-                    geolocation={geolocation}
-                    geocodedLocation={geocodedLocation}
-                    isGeocoding={isGeocoding}
-                  />
-                  </div>
-
-                  {/* Reviews */}
-                  <SectionReviews reviews={reviews} fetchReviewsError={fetchReviewsError} />
-                </div>
+                <SectionReviews
+                  reviews={reviews.length > 0 ? reviews : MOCK_REVIEWS}
+                  fetchReviewsError={fetchReviewsError}
+                />
+              </div>
             </div>
 
-            {/* Right Column - Title, Price, Author, Booking Form (Desktop) */}
+            {/* Right Column - Booking Card (Desktop) */}
             <div className={css.infoColumn}>
-              {/* Action Bar (for own listing) - Desktop only */}
               {mounted && currentListing.id && isOwnListing && (
                 <ActionBarMaybe
                   className={css.actionBar}
@@ -1679,12 +1829,10 @@ export const ProductPageComponent = props => {
                 />
               )}
 
-              {/* Title - Desktop only */}
               <H4 as="h1" className={css.listingTitle}>
                 {richTitle}
               </H4>
 
-              {/* Price - Desktop only */}
               {price && (
                 <div className={css.priceContainer}>
                   <span className={css.price}>{formattedPrice}</span>
@@ -1699,41 +1847,6 @@ export const ProductPageComponent = props => {
                 </div>
               )}
 
-              {/* Author - Desktop only */}
-              <div className={css.authorSection}>
-                <AvatarSmall user={ensuredAuthor} className={css.authorAvatar} />
-                <div className={css.authorInfo}>
-                  <span className={css.authorName}>
-                    <FormattedMessage
-                      id="ProductPage.hostedBy"
-                      defaultMessage="Offerto da {name}"
-                      values={{
-                        name: (
-                          <NamedLink
-                            className={css.authorNameLink}
-                            name="ProfilePage"
-                            params={{ id: ensuredAuthor.id?.uuid }}
-                          >
-                            {authorDisplayName}
-                          </NamedLink>
-                        ),
-                      }}
-                    />
-                    </span>
-                  {authorReviewsCount > 0 && (
-                    <div className={css.authorRating}>
-                      <ReviewRating
-                        rating={authorAverageRatingRounded}
-                        className={css.authorReviewRating}
-                        reviewStarClassName={css.authorReviewStar}
-                      />
-                      <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Booking Form - Desktop only */}
               {isBooking && !isClosed && (
                 <div className={css.desktopBookingForm}>
                   <BookingForm
@@ -1762,7 +1875,6 @@ export const ProductPageComponent = props => {
                 </div>
               )}
 
-              {/* Closed Listing Message */}
               {isClosed && (
                 <div className={css.closedListing}>
                   <FormattedMessage id="ProductPage.closedListing" defaultMessage="Questo annuncio è chiuso" />
@@ -1771,6 +1883,66 @@ export const ProductPageComponent = props => {
             </div>
           </div>
         </div>
+
+        {/* Related Products Carousel (mock) */}
+        <section className={css.relatedSection}>
+          <div className={css.relatedInner}>
+            <div className={css.relatedTitleRow}>
+              <h2 className={css.relatedTitle}>
+                <FormattedMessage id="ProductPage.relatedProducts" defaultMessage="Prodotti simili" />
+              </h2>
+              <div className={css.testDriveBadge}>
+                <span className={css.testDriveDot} />
+                Test Drive
+              </div>
+            </div>
+            <div className={css.relatedGrid}>
+              {MOCK_RELATED_PRODUCTS.map(product => (
+                <ProductListingCard
+                  key={product.id}
+                  portraitImage
+                  image={
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className={productListingCardCss.image}
+                      loading="lazy"
+                    />
+                  }
+                  favoriteButton={
+                    <button type="button" className={productListingCardCss.favoriteButton}>
+                      ♡
+                    </button>
+                  }
+                  category={product.category}
+                  title={product.title}
+                  owner={
+                    <FormattedMessage
+                      id="ProductPage.relatedCardOwner"
+                      defaultMessage="di {name}"
+                      values={{ name: product.owner }}
+                    />
+                  }
+                  pricePrimary={
+                    <span className={productListingCardCss.rentalPrice}>
+                      {product.price}{' '}
+                      <span className={productListingCardCss.priceUnit}>
+                        <FormattedMessage id="ProductPage.perDay" defaultMessage="/ giorno" />
+                      </span>
+                    </span>
+                  }
+                  priceCompare={
+                    <FormattedMessage
+                      id="ProductPage.insteadOf"
+                      defaultMessage="invece di {price}"
+                      values={{ price: product.estimatedNewPrice }}
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Inquiry Modal - for Contatta button */}
         <Modal

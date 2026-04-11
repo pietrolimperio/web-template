@@ -1956,5 +1956,13 @@
   "PreviewListingPage.deleteDraftError": "Não foi possível excluir o anúncio. Por favor, tente novamente mais tarde.",
   "PreviewListingPage.resetToOriginal": "Restaurar ao estado original",
   "PreviewListingPage.resetErrorTitle": "Erro",
-  "PreviewListingPage.resetError": "Não foi possível restaurar o estado original. Por favor, tente novamente mais tarde."
+  "PreviewListingPage.resetError": "Não foi possível restaurar o estado original. Por favor, tente novamente mais tarde.",
+
+  "ProductPage.condition.new": "Novo",
+  "ProductPage.condition.likeNew": "Como novo",
+  "ProductPage.condition.used": "Usado",
+  "ProductPage.condition.refurbished": "Recondicionado",
+  "ProductPage.conditionLabel": "Condição",
+  "ProductPage.brandLabel": "Marca",
+  "ProductPage.relatedProducts": "Produtos semelhantes"
 }
