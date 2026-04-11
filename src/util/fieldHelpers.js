@@ -104,6 +104,23 @@ export const pickCategoryFields = (data, categoryLevelKeys, level, categoryLevel
 };
 
 /**
+ * Read localStorage only in a browser with a working Storage API.
+ * In Node SSR, `localStorage` may exist as a stub without a real `getItem`.
+ * @param {string} key
+ * @returns {string | null}
+ */
+const safeLocalStorageGetItem = key => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const ls = window.localStorage;
+    if (!ls || typeof ls.getItem !== 'function') return null;
+    return ls.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Short locale (e.g. 'it', 'en') for category display. Prefers user-selected language (localStorage),
  * then config, then intl, then default 'en'.
  * @param {Object} [config] - from useConfiguration()
@@ -112,7 +129,7 @@ export const pickCategoryFields = (data, categoryLevelKeys, level, categoryLevel
  */
 export const getShortLocaleForCategoryDisplay = (config, intlLocale) => {
   const currentLocale =
-    (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) ||
+    safeLocalStorageGetItem('marketplace_locale') ||
     config?.localization?.locale ||
     intlLocale ||
     'it';

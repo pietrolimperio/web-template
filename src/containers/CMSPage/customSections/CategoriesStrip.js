@@ -14,7 +14,7 @@ import css from './CategoriesStrip.module.css';
 const CategoriesStrip = ({ sectionId, className }) => {
   const config = useConfiguration();
   const categories = config?.categoryConfiguration?.categories ?? [];
-  const shortLocale = getShortLocaleForCategoryDisplay();
+  const shortLocale = getShortLocaleForCategoryDisplay(config);
 
   if (categories.length === 0) {
     return null;
