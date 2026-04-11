@@ -283,7 +283,13 @@ const validVariantConfig = (hostedVariant, defaultVariant, validVariantTypes, fa
     const aspectWidth = Number.parseInt(w, 10);
     const aspectHeight = Number.parseInt(h, 10);
     return isValidVariant
-      ? { ...variant, aspectWidth, aspectHeight, variantPrefix: defaultVariant.variantPrefix }
+      ? {
+          ...variant,
+          aspectWidth,
+          aspectHeight,
+          aspectRatio: `${aspectWidth}/${aspectHeight}`,
+          variantPrefix: defaultVariant.variantPrefix,
+        }
       : fallback;
   }
 
