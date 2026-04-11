@@ -133,6 +133,7 @@ export { default as CustomExtendedDataField } from './CustomExtendedDataField/Cu
 export { default as OrderBreakdown } from './OrderBreakdown/OrderBreakdown';
 export { default as OrderPanel } from './OrderPanel/OrderPanel';
 export { default as ListingCard } from './ListingCard/ListingCard';
+export { default as ProductListingCard } from './ProductListingCard/ProductListingCard';
 export { default as Map } from './Map/Map';
 export { default as Page } from './Page/Page';
 export { default as Reviews } from './Reviews/Reviews';

@@ -631,7 +631,7 @@
   "LimitedAccessBanner.message": "Hai effettuato l’accesso come {firstName} {lastName}. Hai diritti di accesso limitati. Non puoi aggiungere i dettagli per i pagamenti in uscita, avviare transazioni, farle avanzare o inviare messaggi per conto dell’utente.",
   "ListingCard.author": "{authorName}",
   "ListingCard.details": "Dettagli",
-  "ListingCard.estimatedPriceNew": "Nuovo: {price}",
+  "ListingCard.estimatedPriceNew": "Invece di {price}",
   "ListingCard.perUnit": "{unitType, select, day {al giorno} night {a notte} hour {all’ora} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "Da {priceValue} {pricePerUnit}",

@@ -1,12 +1,8 @@
 @import '../../styles/customMediaQueries.css';
 
-.root {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border-radius: 16px;
+/* Extra styles on top of ProductListingCard (border, hover lift) */
+.listingCardRoot {
   border: 1px solid #ebebeb;
-  overflow: hidden;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 
   &:hover {
@@ -27,57 +23,6 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-}
-
-.info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: 12px 14px 14px;
-  gap: 10px;
-}
-
-.mainInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-}
-
-.title {
-  composes: textSmall from global;
-  font-weight: var(--fontWeightBold);
-  color: var(--colorGrey900);
-  margin: 0;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.authorInfo {
-  composes: marketplaceTinyFontStyles from global;
-  font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey500);
-  margin: 0;
-}
-
-.estimatedPriceNew {
-  composes: marketplaceTinyFontStyles from global;
-  font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey400);
-  margin: 2px 0 0;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: auto;
 }
 
 .price {
@@ -102,24 +47,6 @@
   color: var(--colorGrey500);
   font-size: 11px;
   margin: 0;
-}
-
-.detailsBtn {
-  font-size: 11px;
-  font-weight: var(--fontWeightSemiBold);
-  color: var(--marketplaceSecondaryColor, #0C9FA7);
-  border: 1.5px dashed var(--marketplaceSecondaryColor, #0C9FA7);
-  border-radius: 8px;
-  padding: 3px 9px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
-
-  .root:hover & {
-    background: var(--marketplaceSecondaryColor, #0C9FA7);
-    color: #ffffff;
-    border-style: solid;
-  }
 }
 
 .longWord {

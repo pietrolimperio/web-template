@@ -627,6 +627,7 @@
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "From {priceValue} {pricePerUnit}",
   "ListingCard.unsupportedPrice": "({currency})",
+  "ListingCard.estimatedPriceNew": "Em vez de {price}",
   "ListingCard.unsupportedPriceTitle": "Unsupported currency ({currency})",
   "ListingImageGallery.closeModal": "CLOSE",
   "ListingImageGallery.closeModalTitle": "Close modal",

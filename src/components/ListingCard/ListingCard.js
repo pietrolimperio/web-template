@@ -10,12 +10,16 @@ import {
   requireListingImage,
 } from '../../util/configHelpers';
 import { lazyLoadWithDimensions } from '../../util/uiHelpers';
-import { formatMoney } from '../../util/currency';
+import { formatMoney, parseEstimatedPriceNewToMoney } from '../../util/currency';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import { ensureListing, ensureUser } from '../../util/data';
 import { richText } from '../../util/richText';
 import { createSlug } from '../../util/urlHelpers';
 import { isBookingProcessAlias } from '../../transactions/transaction';
+import {
+  getCategoryNamesFromIds,
+  getShortLocaleForCategoryDisplay,
+} from '../../util/fieldHelpers';
 
 import {
   AspectRatioWrapper,
@@ -23,6 +27,7 @@ import {
   ResponsiveImage,
   ListingCardThumbnail,
 } from '../../components';
+import ProductListingCard from '../ProductListingCard/ProductListingCard';
 
 import css from './ListingCard.module.css';
 
@@ -52,23 +57,15 @@ const priceData = (price, currency, intl) => {
 const LazyImage = lazyLoadWithDimensions(ResponsiveImage, { loadAfterInitialRendering: 3000 });
 
 const EstimatedPriceNew = ({ publicData, config, intl }) => {
-  const raw = publicData?.estimatedPriceNew;
-  if (!raw) return null;
-
+  const moneyValue = parseEstimatedPriceNewToMoney(
+    publicData?.estimatedPriceNew,
+    config?.currency
+  );
+  if (!moneyValue) return null;
   try {
-    let moneyValue;
-    if (typeof raw === 'object' && raw.amount != null && raw.currency) {
-      moneyValue = new Money(raw.amount, raw.currency);
-    } else if (typeof raw === 'number') {
-      moneyValue = new Money(raw, config.currency);
-    } else {
-      return null;
-    }
     const formatted = formatMoney(intl, moneyValue);
     return (
-      <div className={css.estimatedPriceNew}>
-        <FormattedMessage id="ListingCard.estimatedPriceNew" values={{ price: formatted }} />
-      </div>
+      <FormattedMessage id="ListingCard.estimatedPriceNew" values={{ price: formatted }} />
     );
   } catch {
     return null;
@@ -203,6 +200,7 @@ const ListingCardImage = props => {
  * @param {string?} props.renderSizes for img/srcset
  * @param {Function?} props.setActiveListing
  * @param {boolean?} props.showAuthorInfo
+ * @param {boolean?} props.portraitImage — use 3:4 image area (same as ProductListingCard portrait)
  * @returns {JSX.Element} listing card to be used in search result panel etc.
  */
 export const ListingCard = props => {
@@ -216,9 +214,10 @@ export const ListingCard = props => {
     renderSizes,
     setActiveListing,
     showAuthorInfo = true,
+    portraitImage = false,
   } = props;
 
-  const classes = classNames(rootClassName || css.root, className);
+  const classes = classNames(css.listingCardRoot, rootClassName, className);
 
   const currentListing = ensureListing(listing);
   const id = currentListing.id.uuid;
@@ -228,16 +227,31 @@ export const ListingCard = props => {
   const author = ensureUser(listing.author);
   const authorName = author.attributes.profile.displayName;
 
+  const categories = config?.categoryConfiguration?.categories ?? [];
+  const shortLocale = getShortLocaleForCategoryDisplay(config, intl?.locale);
+  const names = getCategoryNamesFromIds(
+    categories,
+    publicData?.categoryId,
+    publicData?.subcategoryId,
+    publicData?.thirdCategoryId,
+    shortLocale
+  );
+  const categoryLabel =
+    names.thirdCategory || names.subcategory || names.category || null;
+
   const { listingType, cardStyle } = publicData || {};
   const validListingTypes = config.listing.listingTypes;
   const foundListingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
   const showListingImage = requireListingImage(foundListingTypeConfig);
 
+  const layoutImage = config.layout.listingImage || {};
   const {
-    aspectWidth = 1,
-    aspectHeight = 1,
+    aspectWidth: configAspectW = 1,
+    aspectHeight: configAspectH = 1,
     variantPrefix = 'listing-card',
-  } = config.layout.listingImage;
+  } = layoutImage;
+  const aspectWidth = portraitImage ? 3 : configAspectW;
+  const aspectHeight = portraitImage ? 4 : configAspectH;
 
   // Sets the listing as active in the search map when hovered (if the search map is enabled)
   const setActivePropsMaybe = setActiveListing
@@ -247,51 +261,55 @@ export const ListingCard = props => {
       }
     : null;
 
+  const priceCompareEl =
+    parseEstimatedPriceNewToMoney(publicData?.estimatedPriceNew, config?.currency) ? (
+      <EstimatedPriceNew publicData={publicData} config={config} intl={intl} />
+    ) : null;
+
   return (
-    <NamedLink className={classes} name="ProductPage" params={{ id, slug }}>
-      <ListingCardImage
-        renderSizes={renderSizes}
-        title={title}
-        currentListing={currentListing}
-        config={config}
-        setActivePropsMaybe={setActivePropsMaybe}
-        aspectWidth={aspectWidth}
-        aspectHeight={aspectHeight}
-        variantPrefix={variantPrefix}
-        style={cardStyle}
-        showListingImage={showListingImage}
-      />
-      <div className={css.info}>
-        <div className={css.mainInfo}>
-          {showListingImage && (
-            <div className={css.title}>
-              {richText(title, {
-                longWordMinLength: MIN_LENGTH_FOR_LONG_WORDS,
-                longWordClass: css.longWord,
-              })}
-            </div>
-          )}
-          <EstimatedPriceNew publicData={publicData} config={config} intl={intl} />
-          {showAuthorInfo ? (
-            <div className={css.authorInfo}>
-              <FormattedMessage id="ListingCard.author" values={{ authorName }} />
-            </div>
-          ) : null}
-        </div>
-        <div className={css.footer}>
-          <PriceMaybe
-            price={price}
-            publicData={publicData}
-            config={config}
-            intl={intl}
-            listingTypeConfig={foundListingTypeConfig}
-          />
-          <span className={css.detailsBtn}>
-            <FormattedMessage id="ListingCard.details" />
-          </span>
-        </div>
-      </div>
-    </NamedLink>
+    <ProductListingCard
+      as={NamedLink}
+      asProps={{ name: 'ProductPage', params: { id, slug } }}
+      className={classes}
+      image={
+        <ListingCardImage
+          renderSizes={renderSizes}
+          title={title}
+          currentListing={currentListing}
+          config={config}
+          setActivePropsMaybe={setActivePropsMaybe}
+          aspectWidth={aspectWidth}
+          aspectHeight={aspectHeight}
+          variantPrefix={variantPrefix}
+          style={cardStyle}
+          showListingImage={showListingImage}
+        />
+      }
+      category={categoryLabel}
+      title={
+        showListingImage
+          ? richText(title, {
+              longWordMinLength: MIN_LENGTH_FOR_LONG_WORDS,
+              longWordClass: css.longWord,
+            })
+          : null
+      }
+      owner={
+        showAuthorInfo ? (
+          <FormattedMessage id="ListingCard.author" values={{ authorName }} />
+        ) : null
+      }
+      pricePrimary={
+        <PriceMaybe
+          price={price}
+          publicData={publicData}
+          config={config}
+          intl={intl}
+          listingTypeConfig={foundListingTypeConfig}
+        />
+      }
+      priceCompare={priceCompareEl}
+    />
   );
 };
 

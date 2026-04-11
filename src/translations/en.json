@@ -641,7 +641,7 @@
   "LimitedAccessBanner.message": "You're logged in as {firstName} {lastName}. You have limited access rights. You can't add payout details, initiate transactions, move them forward, or send messages on the user's behalf.",
   "ListingCard.author": "{authorName}",
   "ListingCard.details": "Details",
-  "ListingCard.estimatedPriceNew": "New: {price}",
+  "ListingCard.estimatedPriceNew": "Instead of {price}",
   "ListingCard.perUnit": "{unitType, select, day {per day} night {per night} hour {per hour} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "From {priceValue} {pricePerUnit}",
