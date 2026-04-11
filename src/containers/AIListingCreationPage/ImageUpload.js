@@ -2,8 +2,11 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ExifReader from 'exifreader';
 import { useIntl } from '../../util/reactIntl';
+import { useConfiguration } from '../../context/configurationContext';
 import devLog from '../../util/devLog';
 import robotMascotSrc from '../../assets/stitch-product-upload/ai-upload-robot-mascot.png';
+import ImageCropModal from './ImageCropModal';
+import { autoCropImageBlob } from '../../util/imageCropCanvas';
 import css from './ImageUpload.module.css';
 
 // 🔧 TESTING FLAG: Set REACT_APP_SKIP_EXIF_VALIDATION=true in .env to skip EXIF validation
@@ -18,7 +21,27 @@ const UPLOAD_CONSTRAINTS = {
   },
 };
 
-/** Smartphone (non tablet): per etichetta “sfoglia o scatta” su file input / fotocamera */
+/** Listing width:height ratio (merged config exposes aspectWidth/aspectHeight). Default 3:4 like portrait cards. */
+function getListingCropAspectDimensions(listingImage) {
+  const li = listingImage || {};
+  if (
+    Number.isFinite(li.aspectWidth) &&
+    Number.isFinite(li.aspectHeight) &&
+    li.aspectHeight !== 0
+  ) {
+    return [li.aspectWidth, li.aspectHeight];
+  }
+  const s = li.aspectRatio || '3/4';
+  const parts = String(s)
+    .split('/')
+    .map(n => Number.parseInt(n, 10));
+  if (parts.length === 2 && parts.every(n => Number.isFinite(n)) && parts[1] !== 0) {
+    return parts;
+  }
+  return [3, 4];
+}
+
+/** Smartphone (not tablet): drives “browse or take photo” copy on file input / camera. */
 function detectSmartphone() {
   if (typeof window === 'undefined') return false;
   const ua = navigator.userAgent || '';
@@ -26,7 +49,7 @@ function detectSmartphone() {
   if (/iPhone|iPod/.test(ua)) return true;
   if (/Android/i.test(ua) && /Mobile/i.test(ua)) return true;
   if (/webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
-  /* Desktop devtools / browser senza UA mobile: schermo stretto + touch principale */
+  /* Desktop devtools / browser without mobile UA: narrow viewport + primary coarse pointer */
   if (
     window.innerWidth <= 480 &&
     typeof window.matchMedia === 'function' &&
@@ -54,13 +77,35 @@ const LightningIcon = () => (
   </svg>
 );
 
+/** Classic crop icon: two opposite corner brackets (standard crop-tool style). */
+const CropAdjustIcon = () => (
+  <svg className={css.adjustIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+    <path
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4 9V5a1 1 0 011-1h4M4 15v4a1 1 0 001 1h4m12-5V5a1 1 0 00-1-1h-4m0 16h4a1 1 0 001-1v-4"
+    />
+  </svg>
+);
+
 const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
   const intl = useIntl();
+  const config = useConfiguration();
+  const listingImageLayout = config?.layout?.listingImage || {};
+  const [cropAspectW, cropAspectH] = getListingCropAspectDimensions(listingImageLayout);
+  const cropAspectRatioConfig = `${cropAspectW}/${cropAspectH}`;
+
+  /** Cropped files (preview + passed to parent): listing JPEGs. */
   const [files, setFiles] = useState([]);
+  /** Original per slot: not replaced by crop; used to refine from the full-resolution file. */
+  const [originalFiles, setOriginalFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [errors, setErrors] = useState([]);
   const [validationInProgress, setValidationInProgress] = useState(false);
   const [isSmartphone, setIsSmartphone] = useState(false);
+
+  const [activeCropSession, setActiveCropSession] = useState(null);
 
   useEffect(() => {
     const update = () => setIsSmartphone(detectSmartphone());
@@ -214,9 +259,9 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
       setValidationInProgress(true);
       const newErrors = [];
       const validFiles = [];
-      const validPreviews = [];
 
-      if (files.length + acceptedFiles.length > UPLOAD_CONSTRAINTS.MAX_FILES) {
+      const pendingRefineSlot = activeCropSession ? 1 : 0;
+      if (files.length + pendingRefineSlot + acceptedFiles.length > UPLOAD_CONSTRAINTS.MAX_FILES) {
         newErrors.push(
           intl.formatMessage({ id: 'ImageUpload.errorMaxFiles' }, { maxFiles: UPLOAD_CONSTRAINTS.MAX_FILES })
         );
@@ -251,39 +296,132 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
         }
 
         validFiles.push(file);
-        validPreviews.push(URL.createObjectURL(file));
       }
 
-      const updatedFiles = [...files, ...validFiles];
-      const updatedPreviews = [...previewUrls, ...validPreviews];
+      const [aspectW, aspectH] = getListingCropAspectDimensions(config?.layout?.listingImage || {});
+      const pairs = [];
 
-      setFiles(updatedFiles);
-      setPreviewUrls(updatedPreviews);
+      for (const file of validFiles) {
+        const tempUrl = URL.createObjectURL(file);
+        try {
+          const blob = await autoCropImageBlob(tempUrl, aspectW, aspectH);
+          const baseName = file.name.replace(/\.[^.]+$/, '');
+          const processed = new File([blob], `${baseName}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          pairs.push({ original: file, processed });
+        } catch (err) {
+          console.error('autoCropImageBlob failed:', err);
+          newErrors.push(
+            intl.formatMessage({ id: 'ImageUpload.errorNormalizeImage' }, { fileName: file.name })
+          );
+        } finally {
+          URL.revokeObjectURL(tempUrl);
+        }
+      }
+
+      if (pairs.length > 0) {
+        const newProcessed = pairs.map(p => p.processed);
+        const newOriginals = pairs.map(p => p.original);
+        const newPreviews = newProcessed.map(f => URL.createObjectURL(f));
+        setFiles(prev => {
+          const nextFiles = [...prev, ...newProcessed];
+          setOriginalFiles(prevO => [...prevO, ...newOriginals]);
+          setPreviewUrls(prevP => {
+            const nextPreviews = [...prevP, ...newPreviews];
+            onImagesSelected(nextFiles, nextPreviews);
+            return nextPreviews;
+          });
+          return nextFiles;
+        });
+      }
+
       setErrors(newErrors);
       setValidationInProgress(false);
-
-      onImagesSelected(updatedFiles, updatedPreviews);
     },
-    [files, previewUrls, onImagesSelected, intl]
+    [files.length, intl, activeCropSession, config, onImagesSelected]
   );
+
+  const openRefineCrop = useCallback(
+    index => {
+      if (isAnalyzing || validationInProgress || activeCropSession) return;
+      const original = originalFiles[index];
+      const processed = files[index];
+      if (!original || !processed) return;
+      const url = URL.createObjectURL(original);
+      setActiveCropSession({
+        url,
+        replaceIndex: index,
+        isRefine: true,
+        baseName: original.name.replace(/\.[^.]+$/, ''),
+        revokeUrlOnClose: true,
+      });
+    },
+    [isAnalyzing, validationInProgress, activeCropSession, originalFiles, files]
+  );
+
+  const handleCropConfirm = useCallback(
+    async blob => {
+      if (!activeCropSession) return;
+      const session = activeCropSession;
+      if (session.revokeUrlOnClose && session.url) {
+        URL.revokeObjectURL(session.url);
+      }
+      const baseName = session.baseName || 'photo';
+      const croppedFile = new File([blob], `${baseName}.jpg`, {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+
+      if (session.replaceIndex != null) {
+        const i = session.replaceIndex;
+        const newPreview = URL.createObjectURL(croppedFile);
+        setFiles(prev => {
+          const nextFiles = [...prev];
+          nextFiles[i] = croppedFile;
+          setPreviewUrls(prevP => {
+            const nextP = [...prevP];
+            URL.revokeObjectURL(prevP[i]);
+            nextP[i] = newPreview;
+            onImagesSelected(nextFiles, nextP);
+            return nextP;
+          });
+          return nextFiles;
+        });
+      }
+
+      setActiveCropSession(null);
+    },
+    [activeCropSession, onImagesSelected]
+  );
+
+  const handleCropCancel = useCallback(() => {
+    if (activeCropSession?.revokeUrlOnClose && activeCropSession.url) {
+      URL.revokeObjectURL(activeCropSession.url);
+    }
+    setActiveCropSession(null);
+  }, [activeCropSession]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: UPLOAD_CONSTRAINTS.ACCEPTED_TYPES,
     maxFiles: UPLOAD_CONSTRAINTS.MAX_FILES,
     maxSize: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE,
-    disabled: isAnalyzing || validationInProgress,
+    disabled: isAnalyzing || validationInProgress || activeCropSession,
     noClick: true,
     noKeyboard: true,
   });
 
   const removeImage = index => {
     const newFiles = files.filter((_, i) => i !== index);
+    const newOriginals = originalFiles.filter((_, i) => i !== index);
     const newPreviews = previewUrls.filter((_, i) => i !== index);
 
     URL.revokeObjectURL(previewUrls[index]);
 
     setFiles(newFiles);
+    setOriginalFiles(newOriginals);
     setPreviewUrls(newPreviews);
     onImagesSelected(newFiles, newPreviews);
   };
@@ -298,16 +436,16 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
 
   const openFilePicker = e => {
     e.stopPropagation();
-    if (!isAnalyzing && !validationInProgress) {
+    if (!isAnalyzing && !validationInProgress && !activeCropSession) {
       open();
     }
   };
 
-  const panelDisabled = isAnalyzing || validationInProgress;
+  const panelDisabled = isAnalyzing || validationInProgress || activeCropSession;
   const isEmpty = files.length === 0;
 
   const atMaxFiles = files.length >= UPLOAD_CONSTRAINTS.MAX_FILES;
-  const showAddMoreBelowGrid = !atMaxFiles && !validationInProgress;
+  const showAddMoreBelowGrid = !atMaxFiles && !validationInProgress && !activeCropSession;
 
   const heroHeading = (
     <h2 className={css.heroTitle}>
@@ -418,8 +556,20 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
                 {files.map((_, index) => {
                   const url = previewUrls[index];
                   return (
-                    <div key={`filled-${index}`} className={`${css.slot} ${css.slotFilled}`}>
+                    <div key={`${url}-${index}`} className={`${css.slot} ${css.slotFilled}`}>
                       <img src={url} alt="" className={css.slotImage} />
+                      <button
+                        type="button"
+                        className={css.adjustSlotBtn}
+                        onClick={e => {
+                          e.stopPropagation();
+                          openRefineCrop(index);
+                        }}
+                        disabled={isAnalyzing || !!activeCropSession}
+                        aria-label={intl.formatMessage({ id: 'ImageUpload.adjustCropAriaLabel' })}
+                      >
+                        <CropAdjustIcon />
+                      </button>
                       <button
                         type="button"
                         className={css.removeSlotBtn}
@@ -487,7 +637,9 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
           e.stopPropagation();
           handleAnalyze();
         }}
-        disabled={isAnalyzing || validationInProgress || files.length === 0}
+        disabled={
+          isAnalyzing || validationInProgress || files.length === 0 || activeCropSession
+        }
       >
         {isAnalyzing ? (
           <>
@@ -511,6 +663,17 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
           ))}
         </div>
       )}
+
+      {activeCropSession ? (
+        <ImageCropModal
+          key={activeCropSession.url}
+          imageUrl={activeCropSession.url}
+          aspectRatioConfig={cropAspectRatioConfig}
+          isRefine={!!activeCropSession.isRefine}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
+      ) : null}
     </div>
   );
 };

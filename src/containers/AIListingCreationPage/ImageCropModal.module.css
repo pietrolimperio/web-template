@@ -1,0 +1,135 @@
+@import '../../styles/customMediaQueries.css';
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 18, 20, 0.72);
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(92vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--colorWhite, #fff);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+}
+
+.header {
+  padding: 16px 20px 8px;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--colorGrey900, #2d2f2f);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--colorGrey500, #5a5c5c);
+}
+
+.cropWrap {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 220px;
+  max-height: min(48vh, 420px);
+  background: var(--colorGrey100, #e7e8e8);
+}
+
+/* react-easy-crop root fills the frame */
+.cropWrap > div {
+  position: absolute !important;
+  inset: 0;
+}
+
+.zoomRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 8px;
+  flex-shrink: 0;
+}
+
+.zoomLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--colorGrey500, #5a5c5c);
+  white-space: nowrap;
+}
+
+.zoomSlider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--marketplaceColor, #ff5a02);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 12px 20px 18px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--colorGrey100, #e7e8e8);
+}
+
+.btn {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: var(--colorGrey100, #e7e8e8);
+  color: var(--colorGrey900, #2d2f2f);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.btnPrimary {
+  background: var(--marketplaceColor, #ff5a02);
+  color: var(--colorWhite, #fff);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+@media (--viewportMedium) {
+  .title {
+    font-size: 20px;
+  }
+
+  .cropWrap {
+    min-height: 280px;
+    max-height: min(52vh, 480px);
+  }
+}

@@ -58,7 +58,7 @@
   object-fit: contain;
 }
 
-/* Stesso mascot PNG nel pannello sinistro (dopo il primo upload) */
+/* Same mascot PNG in the left panel (after the first upload) */
 .robotMascotInPanel {
   max-width: 200px;
   margin-bottom: 16px;
@@ -89,7 +89,7 @@
   line-height: 1.5;
 }
 
-/* Wrapper: solo layout per il pulsante (drag su tutta la card via .stitchRoot) */
+/* Wrapper: layout only for the button (whole-card drag handled via .stitchRoot) */
 .emptyDropZone {
   width: 100%;
   max-width: 480px;
@@ -248,6 +248,38 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.adjustSlotBtn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  z-index: 2;
+}
+
+.adjustSlotBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.adjustSlotBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.adjustIcon {
+  width: 18px;
+  height: 18px;
 }
 
 .removeSlotBtn {
@@ -410,7 +442,7 @@
     padding: 24px 20px 28px;
   }
 
-  /* Con almeno un’immagine: robot + testo + Sfoglia nascosti; restano griglia e “Aggiungi altre foto” */
+  /* With at least one image: hide robot, copy, and browse CTA; grid and “add more photos” remain */
   .mainCard:not(.mainCardEmpty) .leftPanel {
     display: none;
   }
