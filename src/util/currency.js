@@ -188,6 +188,90 @@ export const convertUnitToSubUnit = (value, subUnitDivisor, useComma = false) =>
   }
 };
 
+/**
+ * Normalizza stringhe di prezzo "umane" (550.00, 75,00€, 1.234,56) in formato con punto decimale.
+ * @param {string} s
+ * @returns {string|null}
+ */
+const normalizeHumanPriceStringToDotDecimal = s => {
+  if (typeof s !== 'string' || !s.trim()) return null;
+  let t = s
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/[€$£¥]/g, '')
+    .replace(/EUR|USD|GBP/gi, '');
+  if (!t) return null;
+
+  const lastComma = t.lastIndexOf(',');
+  const lastDot = t.lastIndexOf('.');
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    t = lastComma > lastDot ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+  } else if (lastComma !== -1 && lastDot === -1) {
+    const parts = t.split(',');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      t = parts[0].replace(/\./g, '') + '.' + parts[1];
+    } else {
+      t = t.replace(/,/g, '');
+    }
+  } else if (lastDot !== -1 && lastComma === -1) {
+    const parts = t.split('.');
+    if (parts.length > 2) {
+      const last = parts[parts.length - 1];
+      if (last.length === 3) {
+        t = parts.join('');
+      }
+    }
+  }
+
+  return t;
+};
+
+/**
+ * Parsa `publicData.estimatedPriceNew` da backend: oggetto Money-like, numero (subunità intere o unità con decimali),
+ * oppure stringa (550.00, 75,00€, 1.234,56 …).
+ *
+ * @param {*} raw
+ * @param {string} defaultCurrency
+ * @returns {Money|null}
+ */
+export const parseEstimatedPriceNewToMoney = (raw, defaultCurrency) => {
+  if (raw == null || raw === '') return null;
+  const currency = defaultCurrency || 'EUR';
+
+  if (typeof raw === 'object' && raw.amount != null && raw.currency) {
+    return new Money(raw.amount, raw.currency);
+  }
+
+  if (typeof raw === 'number' && !Number.isNaN(raw)) {
+    try {
+      if (!Number.isInteger(raw)) {
+        const subUnit = convertUnitToSubUnit(String(raw), unitDivisor(currency), false);
+        return new Money(subUnit, currency);
+      }
+      return new Money(raw, currency);
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof raw === 'string') {
+    const dotStr = normalizeHumanPriceStringToDotDecimal(raw);
+    if (!dotStr) return null;
+    const mainUnit = parseFloat(dotStr);
+    if (Number.isNaN(mainUnit)) return null;
+    try {
+      const subUnit = convertUnitToSubUnit(mainUnit.toString(), unitDivisor(currency), false);
+      return new Money(subUnit, currency);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
 const isNumber = value => {
   return typeof value === 'number' && !isNaN(value);
 };
