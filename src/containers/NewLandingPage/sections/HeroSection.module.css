@@ -6,7 +6,7 @@
   min-height: 480px;
   display: flex;
   align-items: center;
-  /* Nessun overflow:hidden: il calendario del filtro date è position:absolute e deve poter uscire dal box */
+  /* No overflow:hidden: date filter calendar is position:absolute and must extend outside the box */
   background-color: var(--colorSurfaceContainerLow);
   padding: calc(var(--topbarHeight) + 16px) 0 40px;
 
@@ -231,14 +231,27 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   max-width: 220px;
   z-index: 3;
+  box-sizing: border-box;
 
   @media (--viewportLarge) {
     bottom: 48px;
     left: -32px;
     padding: 24px;
     border-radius: 24px;
-    max-width: 240px;
+    max-width: 260px;
   }
+}
+
+a.floatingCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+a.floatingCard:hover {
+  box-shadow: 0 24px 28px -5px rgba(0, 0, 0, 0.14);
+  transform: translateY(-2px);
 }
 
 .floatingCardBadge {
@@ -283,6 +296,27 @@
 }
 
 .floatingCardPrice {
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.floatingCardPriceValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--marketplaceColorDark);
+}
+
+.floatingCardPerUnit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--colorGrey600);
+}
+
+.floatingCardPriceFallback {
   margin: 0;
   font-size: 15px;
   font-weight: 700;

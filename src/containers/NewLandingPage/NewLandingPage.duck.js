@@ -56,6 +56,8 @@ const fetchPopularError = e => ({
 
 // ================ Thunks ================ //
 
+// TODO(hero-spotlight): Popular query also feeds `HeroSection` spotlight via `popularListings[0]` today.
+// Split or extend API when hero pick rules are defined (featured id, separate endpoint, etc.).
 export const loadData = (params, search, config) => (dispatch, getState, sdk) => {
   dispatch(fetchPopularRequest());
 

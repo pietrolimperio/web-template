@@ -1,12 +1,17 @@
 import React from 'react';
+import { object } from 'prop-types';
 import { Form as FinalForm } from 'react-final-form';
 import { useHistory } from 'react-router-dom';
 import { useConfiguration } from '../../../context/configurationContext';
 import { useRouteConfiguration } from '../../../context/routeConfigurationContext';
-import { FormattedMessage } from '../../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../../util/reactIntl';
 import { createResourceLocatorString } from '../../../util/routes';
 import { stringifyDateToISO8601 } from '../../../util/dates';
-import { Form } from '../../../components';
+import { formatMoney } from '../../../util/currency';
+import { ensureListing } from '../../../util/data';
+import { createSlug } from '../../../util/urlHelpers';
+import { isBookingProcessAlias } from '../../../transactions/transaction';
+import { Form, NamedLink } from '../../../components';
 
 import FilterKeyword from '../../PageBuilder/Primitives/SearchCTA/FilterKeyword/FilterKeyword';
 import FilterDateRange from '../../PageBuilder/Primitives/SearchCTA/FilterDateRange/FilterDateRange';
@@ -43,7 +48,73 @@ const SearchIcon = () => (
   </svg>
 );
 
-const HeroSection = () => {
+const HeroSpotlightCard = ({ listing }) => {
+  const intl = useIntl();
+  const ensured = ensureListing(listing);
+  const listingId = ensured.id?.uuid;
+  const { title = '', price, publicData } = ensured.attributes || {};
+  const slug = createSlug(title);
+  const isBookable = isBookingProcessAlias(publicData?.transactionProcessAlias);
+  const formattedPrice = price ? formatMoney(intl, price) : null;
+
+  const priceBlock = formattedPrice ? (
+    <p className={css.floatingCardPrice}>
+      <span className={css.floatingCardPriceValue}>{formattedPrice}</span>
+      {isBookable ? (
+        <>
+          {' '}
+          <span className={css.floatingCardPerUnit}>
+            <FormattedMessage id="ListingCard.perUnit" values={{ unitType: publicData?.unitType }} />
+          </span>
+        </>
+      ) : null}
+    </p>
+  ) : null;
+
+  const inner = (
+    <>
+      <div className={css.floatingCardBadge}>
+        <span className={css.pulseDot} />
+        <span className={css.badgeText}>
+          <FormattedMessage id="NewLandingPage.heroAvailableNow" />
+        </span>
+      </div>
+      <p className={css.floatingCardTitle}>{title}</p>
+      {priceBlock}
+    </>
+  );
+
+  if (listingId && slug) {
+    return (
+      <NamedLink name="ProductPage" params={{ id: listingId, slug }} className={css.floatingCard}>
+        {inner}
+      </NamedLink>
+    );
+  }
+
+  return <div className={css.floatingCard}>{inner}</div>;
+};
+
+const HeroSpotlightCardFallback = () => (
+  <div className={css.floatingCard}>
+    <div className={css.floatingCardBadge}>
+      <span className={css.pulseDot} />
+      <span className={css.badgeText}>
+        <FormattedMessage id="NewLandingPage.heroAvailableNow" />
+      </span>
+    </div>
+    <p className={css.floatingCardTitle}>
+      <FormattedMessage id="NewLandingPage.heroSampleProduct" />
+    </p>
+    <p className={css.floatingCardPriceFallback}>
+      <FormattedMessage id="NewLandingPage.heroSamplePrice" />
+    </p>
+  </div>
+);
+
+// TODO(hero-spotlight): `spotlightListing` source is provisional (see NewLandingPage). Define rules:
+// featured listing id(s), CMS pick, curated ranking, A/B, etc.
+const HeroSection = ({ spotlightListing }) => {
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
   const history = useHistory();
@@ -63,6 +134,12 @@ const HeroSection = () => {
     const to = createResourceLocatorString('SearchPage', routeConfiguration, {}, queryParams);
     history.push(to);
   };
+
+  const showLiveSpotlight =
+    spotlightListing &&
+    spotlightListing.id &&
+    spotlightListing.attributes &&
+    !spotlightListing.attributes.deleted;
 
   return (
     <section className={css.root}>
@@ -116,20 +193,11 @@ const HeroSection = () => {
             className={css.heroImage}
             loading="eager"
           />
-          <div className={css.floatingCard}>
-            <div className={css.floatingCardBadge}>
-              <span className={css.pulseDot} />
-              <span className={css.badgeText}>
-                <FormattedMessage id="NewLandingPage.heroAvailableNow" />
-              </span>
-            </div>
-            <p className={css.floatingCardTitle}>
-              <FormattedMessage id="NewLandingPage.heroSampleProduct" />
-            </p>
-            <p className={css.floatingCardPrice}>
-              <FormattedMessage id="NewLandingPage.heroSamplePrice" />
-            </p>
-          </div>
+          {showLiveSpotlight ? (
+            <HeroSpotlightCard listing={spotlightListing} />
+          ) : (
+            <HeroSpotlightCardFallback />
+          )}
         </div>
       </div>
 
@@ -137,6 +205,14 @@ const HeroSection = () => {
       <div className={css.bgShape} />
     </section>
   );
+};
+
+HeroSection.defaultProps = {
+  spotlightListing: null,
+};
+
+HeroSection.propTypes = {
+  spotlightListing: object,
 };
 
 export default HeroSection;

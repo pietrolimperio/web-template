@@ -71,7 +71,8 @@ const NewLandingPageComponent = props => {
                 <TopbarContainer currentPage="LandingPage" />
               </Topbar>
               <Main as="main" className={css.main}>
-                <HeroSection />
+                {/* TODO(hero-spotlight): Picking `popularListings[0]` is temporary; replace with dedicated fetch/config logic. */}
+                <HeroSection spotlightListing={popularListings[0]} />
                 <PopularListingsSection
                   listings={popularListings}
                   inProgress={fetchPopularInProgress}
