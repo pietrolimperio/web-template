@@ -601,9 +601,9 @@
   "LandingPage.schemaTitle": "{marketplaceName}",
 
   "NewLandingPage.schemaTitle": "Leaz – Noleggia tutto ciò che ti serve",
-  "NewLandingPage.schemaDescription": "Leaz è il marketplace dove puoi noleggiare tutto ciò di cui hai bisogno, per il tempo che ti serve.",
-  "NewLandingPage.heroMotto": "Tutto ciò che vuoi,{lineBreak}<highlight>per il tempo</highlight> che ti serve",
-  "NewLandingPage.heroSubtitle": "Il primo marketplace per il noleggio tra privati. Sostenibile, sicuro e curato per il tuo stile di vita.",
+  "NewLandingPage.schemaDescription": "Leaz è il primo marketplace per il noleggio sostenibile e sicuro, per ogni occasione.",
+  "NewLandingPage.heroMotto": "Tutto ciò che vuoi,{lineBreak}<highlight>per il tempo che ti serve</highlight>",
+  "NewLandingPage.heroSubtitle": "Il primo marketplace per il noleggio sostenibile, sicuro e per ogni occasione",
   "NewLandingPage.heroSearch": "Cerca",
   "NewLandingPage.heroCreateListing": "Pubblica un annuncio",
   "NewLandingPage.heroExplore": "Esplora tutto",

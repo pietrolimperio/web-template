@@ -611,8 +611,8 @@
 
   "NewLandingPage.schemaTitle": "Leaz – Rent anything you need",
   "NewLandingPage.schemaDescription": "Leaz is the marketplace where you can rent everything you need, only for the time you need it.",
-  "NewLandingPage.heroMotto": "Everything you want,{lineBreak}<highlight>for the time</highlight> you need",
-  "NewLandingPage.heroSubtitle": "The first marketplace for peer-to-peer rentals. Sustainable, safe, and curated for your lifestyle.",
+  "NewLandingPage.heroMotto": "Everything you want,{lineBreak}<highlight>for the time you need</highlight>",
+  "NewLandingPage.heroSubtitle": "The first marketplace for sustainable, secure rentals for every occasion.",
   "NewLandingPage.heroSearch": "Search",
   "NewLandingPage.heroCreateListing": "Post a listing",
   "NewLandingPage.heroExplore": "Explore all",
