@@ -28,6 +28,7 @@ import {
   ListingCardThumbnail,
 } from '../../components';
 import ProductListingCard from '../ProductListingCard/ProductListingCard';
+import plc from '../ProductListingCard/ProductListingCard.module.css';
 
 import css from './ListingCard.module.css';
 
@@ -65,7 +66,20 @@ const EstimatedPriceNew = ({ publicData, config, intl }) => {
   try {
     const formatted = formatMoney(intl, moneyValue);
     return (
-      <FormattedMessage id="ListingCard.estimatedPriceNew" values={{ price: formatted }} />
+      <span className={plc.estimatedPriceRow}>
+        <span className={plc.estimatedPriceLabel}>
+          <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />
+        </span>{' '}
+        <span
+          className={plc.estimatedPriceAmount}
+          title={intl.formatMessage(
+            { id: 'ListingCard.estimatedRetailPriceHint' },
+            { price: formatted }
+          )}
+        >
+          {formatted}
+        </span>
+      </span>
     );
   } catch {
     return null;

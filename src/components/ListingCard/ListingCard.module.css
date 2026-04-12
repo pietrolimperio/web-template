@@ -40,22 +40,24 @@
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
   color: var(--colorGrey700);
   margin: 0;
+  font-size: 14px;
 }
 
 .priceValue {
   font-weight: var(--fontWeightBold);
   color: var(--marketplaceColor);
   margin: 0;
+  font-size: 17px;
 }
 
 .perUnit {
   font-weight: var(--fontWeightRegular);
   color: var(--colorGrey500);
-  font-size: 11px;
+  font-size: 12px;
   margin: 0;
 }
 

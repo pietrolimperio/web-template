@@ -139,24 +139,39 @@
 
 /* Plain rental price line (e.g. mock / non-ListingCard price) */
 .rentalPrice {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 900;
   color: var(--marketplaceColor);
 }
 
 .priceUnit {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--colorGrey500, #5a5c5c);
 }
 
+/* Estimated retail: grey “instead of” label + amount with strike/underline in marketplace color */
 .priceCompare {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--colorGrey500, #5a5c5c);
   margin: 0;
-  line-height: 1.25;
   max-width: 100%;
+  line-height: 1.25;
+}
+
+.estimatedPriceRow {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.estimatedPriceLabel {
+  color: var(--colorGrey500, #5a5c5c);
+}
+
+.estimatedPriceAmount {
+  color: var(--colorGrey500, #5a5c5c);
+  text-decoration: line-through;
+  text-decoration-color: var(--marketplaceColor);
+  text-decoration-thickness: 1.5px;
 }
 
 .longWord {

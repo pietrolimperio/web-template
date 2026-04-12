@@ -1932,11 +1932,20 @@ export const ProductPageComponent = props => {
                     </span>
                   }
                   priceCompare={
-                    <FormattedMessage
-                      id="ProductPage.insteadOf"
-                      defaultMessage="invece di {price}"
-                      values={{ price: product.estimatedNewPrice }}
-                    />
+                    <span className={productListingCardCss.estimatedPriceRow}>
+                      <span className={productListingCardCss.estimatedPriceLabel}>
+                        <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />
+                      </span>{' '}
+                      <span
+                        className={productListingCardCss.estimatedPriceAmount}
+                        title={intl.formatMessage(
+                          { id: 'ListingCard.estimatedRetailPriceHint' },
+                          { price: product.estimatedNewPrice }
+                        )}
+                      >
+                        {product.estimatedNewPrice}
+                      </span>
+                    </span>
                   }
                 />
               ))}

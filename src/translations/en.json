@@ -654,6 +654,8 @@
   "ListingCard.ownerByline": "By {authorName}",
   "ListingCard.details": "Details",
   "ListingCard.estimatedPriceNew": "Instead of {price}",
+  "ListingCard.estimatedRetailPriceHint": "Estimated retail price: {price}",
+  "ListingCard.estimatedPriceInsteadOfLabel": "Instead of",
   "ListingCard.perUnit": "{unitType, select, day {per day} night {per night} hour {per hour} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "From {priceValue} {pricePerUnit}",
