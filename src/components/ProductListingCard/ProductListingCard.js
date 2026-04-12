@@ -5,7 +5,7 @@ import css from './ProductListingCard.module.css';
 
 /**
  * Shared product/listing card layout: image (flush top), body with optional category,
- * title, owner, and a bottom-aligned price row (rental + optional compare price).
+ * title, owner, and a bottom-aligned price block (rental line, optional compare below).
  *
  * @param {Object} props
  * @param {string} [props.className]
@@ -62,8 +62,10 @@ const ProductListingCard = props => {
         {owner ? <p className={css.owner}>{owner}</p> : null}
         {showPriceRow ? (
           <div className={css.priceRow}>
-            <div className={css.pricePrimary}>{pricePrimary}</div>
-            {priceCompare ? <div className={css.priceCompare}>{priceCompare}</div> : null}
+            <div className={css.pricePrimaryWrap}>
+              <div className={css.pricePrimary}>{pricePrimary}</div>
+              {priceCompare ? <div className={css.priceCompare}>{priceCompare}</div> : null}
+            </div>
           </div>
         ) : null}
       </div>

@@ -296,7 +296,7 @@ export const ListingCard = props => {
       }
       owner={
         showAuthorInfo ? (
-          <FormattedMessage id="ListingCard.author" values={{ authorName }} />
+          <FormattedMessage id="ListingCard.ownerByline" values={{ authorName }} />
         ) : null
       }
       pricePrimary={

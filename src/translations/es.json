@@ -626,6 +626,7 @@
   "LimitedAccessBanner.logout": "Cerrar sesión",
   "LimitedAccessBanner.message": "Has iniciado sesión como {firstName} {lastName}. Tienes derechos limitados. No puedes añadir detalles de pago, iniciar o tomar acción en transacciones, incluyendo enviar mensajes a nombre the este usuario.",
   "ListingCard.author": "{authorName}",
+  "ListingCard.ownerByline": "De {authorName}",
   "ListingCard.perUnit": "{unitType, select, day {por día} night {por noche} hour {por hora} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "Desde {priceValue} {pricePerUnit}",
@@ -1975,5 +1976,6 @@
   "ProductPage.condition.refurbished": "Reacondicionado",
   "ProductPage.conditionLabel": "Estado",
   "ProductPage.brandLabel": "Marca",
-  "ProductPage.relatedProducts": "Productos similares"
+  "ProductPage.relatedProducts": "Productos similares",
+  "ProductPage.relatedCardOwner": "De {name}"
 }

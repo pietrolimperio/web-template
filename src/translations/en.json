@@ -651,6 +651,7 @@
   "LimitedAccessBanner.logout": "Log out",
   "LimitedAccessBanner.message": "You're logged in as {firstName} {lastName}. You have limited access rights. You can't add payout details, initiate transactions, move them forward, or send messages on the user's behalf.",
   "ListingCard.author": "{authorName}",
+  "ListingCard.ownerByline": "By {authorName}",
   "ListingCard.details": "Details",
   "ListingCard.estimatedPriceNew": "Instead of {price}",
   "ListingCard.perUnit": "{unitType, select, day {per day} night {per night} hour {per hour} other {}}",
@@ -2033,5 +2034,6 @@
   "ProductPage.condition.refurbished": "Refurbished",
   "ProductPage.conditionLabel": "Condition",
   "ProductPage.brandLabel": "Brand",
-  "ProductPage.relatedProducts": "Similar products"
+  "ProductPage.relatedProducts": "Similar products",
+  "ProductPage.relatedCardOwner": "By {name}"
 }
