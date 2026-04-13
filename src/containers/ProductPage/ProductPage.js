@@ -259,6 +259,25 @@ const formatPrice = (price, intl) => {
   }
 };
 
+const hashStringToPositiveInt = str => {
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return h === -2147483648 ? 0 : Math.abs(h);
+};
+
+/** Ultime N parole in accent: N casuale ma stabile, con N < wordCount - 2 (quindi N ≤ wordCount - 3). */
+const heroTitleTrailingAccentWordCount = (listingIdUuid, rawTitle, wordCount) => {
+  if (wordCount <= 3) {
+    return wordCount;
+  }
+  const maxAccent = wordCount - 3;
+  const seed = `${listingIdUuid}\0${rawTitle}`;
+  const h = hashStringToPositiveInt(seed);
+  return 1 + (h % maxAccent);
+};
+
 // Price variant card component (display only, not clickable)
 const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
   const formatPriceVariantLabel = (variant) => {
@@ -1435,12 +1454,13 @@ export const ProductPageComponent = props => {
 
             <h1 className={css.heroTitle}>
               {(() => {
-                const words = title.split(/\s+/);
+                const words = title.split(/\s+/).filter(Boolean);
+                const n = heroTitleTrailingAccentWordCount(listingId.uuid, title, words.length);
                 if (words.length <= 3) {
                   return <span className={css.heroTitleAccent}>{title}</span>;
                 }
-                const leading = words.slice(0, -3).join(' ');
-                const trailing = words.slice(-3).join(' ');
+                const leading = words.slice(0, -n).join(' ');
+                const trailing = words.slice(-n).join(' ');
                 return (
                   <>
                     {leading}{' '}<span className={css.heroTitleAccent}>{trailing}</span>
