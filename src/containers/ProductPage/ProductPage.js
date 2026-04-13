@@ -28,6 +28,7 @@ import {
   isForbiddenError,
 } from '../../util/errors.js';
 import { hasPermissionToViewData, isUserAuthorized } from '../../util/userHelpers.js';
+import { isPriceVariationsEnabled } from '../../util/configHelpers';
 import {
   ensureListing,
   ensureOwnListing,
@@ -1227,7 +1228,35 @@ export const ProductPageComponent = props => {
   ) : null;
 
   const authorDisplayName = userDisplayNameAsString(ensuredAuthor, '');
-  const { formattedPrice } = priceData(price, config.currency, intl);
+  const foundListingTypeConfig = listingConfig.listingTypes?.find(c => c.listingType === listingType);
+  const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, foundListingTypeConfig);
+  const cardPriceVariants = publicData?.priceVariants || [];
+  const hasMultiplePriceVariants = isPriceVariationsInUse && cardPriceVariants.length > 1;
+  let priceForDisplay = price;
+  if (hasMultiplePriceVariants && price) {
+    const minSubunits = cardPriceVariants.reduce(
+      (min, v) => (v.priceInSubunits < min ? v.priceInSubunits : min),
+      Infinity
+    );
+    priceForDisplay = minSubunits < Infinity ? new Money(minSubunits, price.currency) : price;
+  }
+  const { formattedPrice } = priceData(priceForDisplay, config.currency, intl);
+  const { formattedPrice: formattedBasePrice } = priceData(price, config.currency, intl);
+  const listingCardStylePrice = (priceClassName, unitClassName) => (
+    <FormattedMessage
+      id={hasMultiplePriceVariants ? 'ListingCard.priceStartingFrom' : 'ListingCard.price'}
+      values={{
+        priceValue: <span className={priceClassName}>{formattedPrice}</span>,
+        pricePerUnit: isBooking ? (
+          <span className={unitClassName}>
+            <FormattedMessage id="ListingCard.perUnit" values={{ unitType }} />
+          </span>
+        ) : (
+          ''
+        ),
+      }}
+    />
+  );
   const marketplaceColor = config.branding?.marketplaceColor || '#4A90E2';
 
   // Calculate author reviews average and total
@@ -1472,11 +1501,8 @@ export const ProductPageComponent = props => {
             {/* Price + author (stessa riga: prezzo a sinistra, venditore a destra) */}
             <div className={css.heroAuthorSection}>
               {price ? (
-                <div className={css.heroAuthorRowPrice}>
-                  <span className={css.heroAuthorPrice}>{formattedPrice}</span>
-                  <span className={css.heroAuthorPriceUnit}>
-                    <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
-                  </span>
+                               <div className={css.heroAuthorRowPrice}>
+                  {listingCardStylePrice(css.heroAuthorPrice, css.heroAuthorPriceUnit)}
                 </div>
               ) : null}
               <div className={css.heroAuthorRight}>
@@ -1603,7 +1629,7 @@ export const ProductPageComponent = props => {
               <>
                 <div className={css.priceContainer}>
                   <div className={css.priceInfo}>
-                    <span className={css.price}>{formattedPrice}</span>
+                    <span className={css.price}>{formattedBasePrice}</span>
                     <span className={css.perUnit}>
                       <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
                     </span>
@@ -1749,6 +1775,34 @@ export const ProductPageComponent = props => {
                 </div>
               )}
 
+              {isBooking && !isClosed && (
+                <div id="mobile-booking-form" className={css.mobileBookingForm}>
+                  <BookingForm
+                    onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
+                    listing={currentListing}
+                    isOwnListing={isOwnListing}
+                    onSubmit={handleOrderSubmit}
+                    intl={intl}
+                    config={config}
+                    monthlyTimeSlots={monthlyTimeSlots}
+                    onFetchTimeSlots={onFetchTimeSlots}
+                    onFetchTransactionLineItems={onFetchTransactionLineItems}
+                    lineItems={lineItems}
+                    fetchLineItemsInProgress={fetchLineItemsInProgress}
+                    fetchLineItemsError={fetchLineItemsError}
+                    dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
+                    marketplaceName={marketplaceName}
+                    payoutDetailsWarning={payoutDetailsWarning}
+                    currentUser={currentUser}
+                    onResendVerificationEmail={onResendVerificationEmail}
+                    sendVerificationEmailInProgress={sendVerificationEmailInProgress}
+                    sendVerificationEmailError={sendVerificationEmailError}
+                    onManageDisableScrolling={onManageDisableScrolling}
+                    autoDiscounts={autoDiscounts}
+                  />
+                </div>
+              )}
+
               {/* Custom listing fields / specs */}
               <CustomListingFields
                 publicData={publicData}
@@ -1778,35 +1832,6 @@ export const ProductPageComponent = props => {
                   </div>
                 );
               })()}
-
-              {/* Booking Form - Mobile */}
-              {isBooking && !isClosed && (
-                <div id="mobile-booking-form" className={css.mobileBookingForm}>
-                  <BookingForm
-                    onFetchAvailabilityForCalendar={onFetchAvailabilityForCalendar}
-                    listing={currentListing}
-                    isOwnListing={isOwnListing}
-                    onSubmit={handleOrderSubmit}
-                    intl={intl}
-                    config={config}
-                    monthlyTimeSlots={monthlyTimeSlots}
-                    onFetchTimeSlots={onFetchTimeSlots}
-                    onFetchTransactionLineItems={onFetchTransactionLineItems}
-                    lineItems={lineItems}
-                    fetchLineItemsInProgress={fetchLineItemsInProgress}
-                    fetchLineItemsError={fetchLineItemsError}
-                    dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
-                    marketplaceName={marketplaceName}
-                    payoutDetailsWarning={payoutDetailsWarning}
-                    currentUser={currentUser}
-                    onResendVerificationEmail={onResendVerificationEmail}
-                    sendVerificationEmailInProgress={sendVerificationEmailInProgress}
-                    sendVerificationEmailError={sendVerificationEmailError}
-                    onManageDisableScrolling={onManageDisableScrolling}
-                    autoDiscounts={autoDiscounts}
-                  />
-                </div>
-              )}
 
               {/* Owner Card with map */}
               <div id="owner-card">
@@ -1842,14 +1867,18 @@ export const ProductPageComponent = props => {
             </div>
 
             {/* Right Column - Booking Card (Desktop) */}
-            <div className={css.infoColumn}>
+            <div
+              className={classNames(css.infoColumn, {
+                [css.infoColumnTabletInlineBooking]: isBooking && !isClosed,
+              })}
+            >
               <H4 as="h1" className={css.listingTitle}>
                 {richTitle}
               </H4>
 
               {price && (
                 <div className={css.priceContainer}>
-                  <span className={css.price}>{formattedPrice}</span>
+                  <span className={css.price}>{formattedBasePrice}</span>
                   <span className={css.perUnit}>
                     <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
                   </span>
