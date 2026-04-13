@@ -3,14 +3,16 @@ import { DEFAULT_LOCALE, getLocalizedPageId, getBasePageId } from '../../config/
 
 export const loadData = (params, search) => dispatch => {
   const pageIdFromUrl = params.pageId;
-  
+
+  const basePageId = getBasePageId(pageIdFromUrl);
+  if (basePageId === 'faq') {
+    return Promise.resolve();
+  }
+
   // Get current locale from localStorage (default: it-IT)
   const currentLocale = typeof window !== 'undefined' 
     ? (localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE)
     : DEFAULT_LOCALE;
-  
-  // Strip any existing locale suffix to get the base page ID
-  const basePageId = getBasePageId(pageIdFromUrl);
   
   // Build the localized page ID
   const localizedPageId = getLocalizedPageId(basePageId, currentLocale);

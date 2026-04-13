@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
 import NotFoundPage from '../../containers/NotFoundPage/NotFoundPage';
+import FaqPage from '../../containers/FaqPage/FaqPage';
 import { DEFAULT_LOCALE, getLocalizedPageId, getBasePageId } from '../../config/localeConfig';
 import { injectCustomSections, customSectionComponents } from './cmsPageInjections';
 import { NamedRedirect } from '../../components';
@@ -30,6 +31,14 @@ const PageBuilder = loadable(() =>
 export const CMSPageComponent = props => {
   const { params, pageAssetsData, inProgress, error } = props;
   const pageIdFromUrl = params.pageId || props.pageId;
+  const basePageIdEarly = getBasePageId(pageIdFromUrl);
+
+  if (basePageIdEarly === 'faq') {
+    if (pageIdFromUrl !== basePageIdEarly) {
+      return <NamedRedirect name="CMSPage" params={{ pageId: 'faq' }} />;
+    }
+    return <FaqPage />;
+  }
 
   if (!inProgress && error?.status === 404) {
     return <NotFoundPage staticContext={props.staticContext} />;
