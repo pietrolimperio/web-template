@@ -1469,37 +1469,47 @@ export const ProductPageComponent = props => {
               })()}
             </h1>
 
-            {/* Author section */}
+            {/* Price + author (stessa riga: prezzo a sinistra, venditore a destra) */}
             <div className={css.heroAuthorSection}>
-              <AvatarSmall user={ensuredAuthor} className={css.heroAuthorAvatar} />
-              <div className={css.heroAuthorInfo}>
-                <span className={css.heroAuthorName}>
-                  <FormattedMessage
-                    id="ProductPage.hostedBy"
-                    defaultMessage="Offerto da {name}"
-                    values={{
-                      name: (
-                        <NamedLink
-                          className={css.authorNameLink}
-                          name="ProfilePage"
-                          params={{ id: ensuredAuthor.id?.uuid }}
-                        >
-                          {authorDisplayName}
-                        </NamedLink>
-                      ),
-                    }}
-                  />
-                </span>
-                {authorReviewsCount > 0 && (
-                  <div className={css.heroAuthorRating}>
-                    <ReviewRating
-                      rating={authorAverageRatingRounded}
-                      className={css.authorReviewRating}
-                      reviewStarClassName={css.authorReviewStar}
+              {price ? (
+                <div className={css.heroAuthorRowPrice}>
+                  <span className={css.heroAuthorPrice}>{formattedPrice}</span>
+                  <span className={css.heroAuthorPriceUnit}>
+                    <FormattedMessage id="ProductPage.perUnit" values={{ unitType }} />
+                  </span>
+                </div>
+              ) : null}
+              <div className={css.heroAuthorRight}>
+                <AvatarSmall user={ensuredAuthor} className={css.heroAuthorAvatar} />
+                <div className={css.heroAuthorInfo}>
+                  <span className={css.heroAuthorName}>
+                    <FormattedMessage
+                      id="ProductPage.hostedBy"
+                      defaultMessage="Offerto da {name}"
+                      values={{
+                        name: (
+                          <NamedLink
+                            className={css.authorNameLink}
+                            name="ProfilePage"
+                            params={{ id: ensuredAuthor.id?.uuid }}
+                          >
+                            {authorDisplayName}
+                          </NamedLink>
+                        ),
+                      }}
                     />
-                    <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
-                  </div>
-                )}
+                  </span>
+                  {authorReviewsCount > 0 && (
+                    <div className={css.heroAuthorRating}>
+                      <ReviewRating
+                        rating={authorAverageRatingRounded}
+                        className={css.authorReviewRating}
+                        reviewStarClassName={css.authorReviewStar}
+                      />
+                      <span className={css.authorReviewsCount}>({authorReviewsCount})</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1833,22 +1843,6 @@ export const ProductPageComponent = props => {
 
             {/* Right Column - Booking Card (Desktop) */}
             <div className={css.infoColumn}>
-              {mounted && currentListing.id && isOwnListing && (
-                <ActionBarMaybe
-                  className={css.actionBar}
-                  isOwnListing={isOwnListing}
-                  listing={currentListing}
-                  showNoPayoutDetailsSet={noPayoutDetailsSetWithOwnListing}
-                  currentUser={currentUser}
-                  editParams={{
-                    id: listingId.uuid,
-                    slug: listingSlug,
-                    type: listingPathParamType,
-                    tab: listingTab,
-                  }}
-                />
-              )}
-
               <H4 as="h1" className={css.listingTitle}>
                 {richTitle}
               </H4>

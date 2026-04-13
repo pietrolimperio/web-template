@@ -247,7 +247,42 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 40px;
+}
+
+.heroAuthorRowPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.heroAuthorPrice {
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--colorOnSurface, #2d2f2f);
+  line-height: 1;
+
+  @media (--viewportMedium) {
+    font-size: 52px;
+  }
+}
+
+.heroAuthorPriceUnit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--colorGrey500, #5a5c5c);
+  white-space: nowrap;
+}
+
+.heroAuthorRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
 }
 
 .heroAuthorAvatar {
@@ -264,7 +299,7 @@
 }
 
 .heroAuthorName {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 900;
   color: var(--colorOnSurface, #2d2f2f);
 }
@@ -1211,7 +1246,6 @@
     padding-bottom: 0;
   }
 
-  .infoColumn .actionBar,
   .infoColumn .listingTitle,
   .infoColumn .priceContainer,
   .infoColumn .authorSection {
