@@ -54,6 +54,7 @@
 .actionBarWithCTAEnabled {
   display: inline-flex;
   flex-wrap: wrap;
+  align-items: center;
   padding: 0 8px;
 }
 
@@ -73,7 +74,9 @@
 
   @media (--viewportMedium) {
     flex-direction: row;
+    align-items: center;
     border-radius: var(--borderRadiusMedium);
+    padding: 12px 24px;
   }
 }
 
@@ -150,7 +153,8 @@
 
   @media (--viewportMedium) {
     width: auto;
-    margin: 20px 0 20px 15px;
+    margin: 0 0 0 15px;
+    align-self: center;
   }
 }
 
@@ -160,11 +164,20 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0 8px;
+  align-items: center;
+
+  @media (--viewportMedium) {
+    align-self: center;
+  }
 }
 
 .ownListingText {
   composes: h5 from global;
   margin: 0;
+
+  @media (--viewportMedium) {
+    align-self: center;
+  }
 
   &.CTAEnabled {
     margin: 0;
@@ -174,6 +187,11 @@
 .noShrink {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+
+  @media (--viewportMedium) {
+    align-self: center;
+  }
 }
 
 .ownListingTextPendingApproval {
@@ -205,12 +223,19 @@
     text-decoration: none;
   }
 
+  /* In riga (tablet/desktop) niente margin verticale: altrimenti il link scende rispetto al testo */
   @media (--viewportMedium) {
-    margin: 24px 0 0 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
   }
 
   &.CTAEnabled {
     margin: 24px 0 0 0;
+
+    @media (--viewportMedium) {
+      margin: 0;
+    }
   }
 }
 
@@ -243,6 +268,11 @@
 
 .editIcon {
   margin: -6px 7px 0 0;
+
+  @media (--viewportMedium) {
+    margin: 0 7px 0 0;
+    vertical-align: middle;
+  }
 }
 
 .rootForImage {
