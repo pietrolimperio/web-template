@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
 
 import { useConfiguration } from '../../context/configurationContext';
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
-import { FormattedMessage } from '../../util/reactIntl';
+import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { generateLinkProps } from '../../util/routes';
 import {
   LISTING_STATE_PENDING_APPROVAL,
@@ -72,6 +72,7 @@ const CTAButtonMaybe = props => {
  * @param {'edit' | 'draft'} props.editParams.type - The type
  * @param {string} props.editParams.tab - The tab (e.g. 'details' or 'pricing')
  * @param {boolean} props.showNoPayoutDetailsSet - Show info about missing payout details
+ * @param {boolean} [props.hideEditLabelOnMobile] - Solo icona matita sotto 768px (es. ProductPage)
  * @returns {JSX.Element} action bar maybe component
  */
 export const ActionBarMaybe = props => {
@@ -83,8 +84,24 @@ export const ActionBarMaybe = props => {
     currentUser,
     editParams,
     showNoPayoutDetailsSet,
+    hideEditLabelOnMobile = false,
   } = props;
-  const classes = classNames(rootClassName || css.actionBar, className);
+  const intl = useIntl();
+  const classes = classNames(rootClassName || css.actionBar, className, {
+    [css.actionBarHideEditLabelMobile]: hideEditLabelOnMobile,
+  });
+
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    if (!hideEditLabelOnMobile || typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsMobileViewport(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [hideEditLabelOnMobile]);
 
   const state = listing.attributes.state;
   const isPendingApproval = state === LISTING_STATE_PENDING_APPROVAL;
@@ -120,6 +137,8 @@ export const ActionBarMaybe = props => {
     }
 
     const message = isDraft ? 'ListingPage.finishListing' : 'ListingPage.editListing';
+    const editLinkAriaLabel =
+      hideEditLabelOnMobile && isMobileViewport ? intl.formatMessage({ id: message }) : undefined;
 
     const ownListingTextClasses = classNames(css.ownListingText, {
       [css.ownListingTextPendingApproval]: isPendingApproval,
@@ -142,9 +161,12 @@ export const ActionBarMaybe = props => {
             className={classNames(css.editListingLink, { [css.CTAEnabled]: isCTAEnabled })}
             name={isDraft ? "PreviewListingPageDraft" : "PreviewListingPage"}
             params={{ id: editParams.id }}
+            aria-label={editLinkAriaLabel}
           >
             <EditIcon className={css.editIcon} />
-            <FormattedMessage id={message} />
+            <span className={css.editListingLabel}>
+              <FormattedMessage id={message} />
+            </span>
           </NamedLink>
           <CTAButtonMaybe
             data={approvalToPublishOptions}

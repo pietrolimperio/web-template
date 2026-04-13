@@ -1364,7 +1364,12 @@ export const ProductPageComponent = props => {
     >
       <LayoutSingleColumn className={css.pageRoot} topbar={topbar} footer={<FooterContainer />}>
         {/* ===== SPLIT HERO SECTION ===== */}
-        <section className={css.heroSection}>
+        <section
+          className={classNames(css.heroSection, {
+            [css.heroSectionHasFixedActionBar]:
+              mounted && currentListing.id && isOwnListing,
+          })}
+        >
           {/* Left: Portrait Image Container */}
           <div className={css.heroImageContainer}>
             <div className={css.heroPortraitFrame} onClick={() => images.length > 0 && setImageModalOpen(true)}>
@@ -1441,6 +1446,7 @@ export const ProductPageComponent = props => {
                 listing={currentListing}
                 showNoPayoutDetailsSet={noPayoutDetailsSetWithOwnListing}
                 currentUser={currentUser}
+                hideEditLabelOnMobile
                 editParams={{
                   id: listingId.uuid,
                   slug: listingSlug,
@@ -1612,6 +1618,7 @@ export const ProductPageComponent = props => {
                 listing={currentListing}
                 showNoPayoutDetailsSet={noPayoutDetailsSetWithOwnListing}
                 currentUser={currentUser}
+                hideEditLabelOnMobile
                 editParams={{
                   id: listingId.uuid,
                   slug: listingSlug,
@@ -1646,14 +1653,30 @@ export const ProductPageComponent = props => {
                     className={css.mobileRequestToBookLink}
                     onClick={() => {
                       const el = document.getElementById('mobile-booking-form');
-                      if (el) {
-                        const topbarEl = document.querySelector('[class*="Topbar_container"]') ||
-                                       document.querySelector('[class*="TopbarDesktop"]') ||
-                                       document.querySelector('nav');
-                        const navbarHeight = topbarEl ? topbarEl.offsetHeight : 64;
-                        const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-                        window.scrollTo({ top: offset, behavior: 'smooth' });
+                      if (!el) return;
+
+                      const topbarEl =
+                        document.querySelector('[class*="Topbar_container"]') ||
+                        document.querySelector('[class*="TopbarDesktop"]') ||
+                        document.querySelector('nav');
+                      const navbarHeight = topbarEl ? topbarEl.offsetHeight : 64;
+
+                      let actionBarHeight = 0;
+                      if (mounted && currentListing.id && isOwnListing) {
+                        document.querySelectorAll(`div.${css.actionBar}`).forEach(node => {
+                          actionBarHeight = Math.max(actionBarHeight, node.offsetHeight);
+                        });
+                        if (actionBarHeight === 0) {
+                          actionBarHeight = 52;
+                        }
                       }
+
+                      const offset =
+                        el.getBoundingClientRect().top +
+                        window.scrollY -
+                        navbarHeight -
+                        actionBarHeight;
+                      window.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
                     }}
                   >
                     <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />

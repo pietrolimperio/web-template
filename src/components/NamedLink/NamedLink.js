@@ -58,6 +58,7 @@ export const NamedLink = withRouter(props => {
     className,
     style = {},
     activeClassName = 'NamedLink_active',
+    'aria-label': ariaLabel,
   } = props;
 
   const onOver = () => {
@@ -78,6 +79,7 @@ export const NamedLink = withRouter(props => {
     style,
     title,
     onClick,
+    ...(ariaLabel != null && ariaLabel !== '' ? { 'aria-label': ariaLabel } : null),
   };
 
   return (

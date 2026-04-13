@@ -32,6 +32,14 @@
   }
 }
 
+/* Action bar propria inserzione: fixed sotto topbar; riserva spazio così non copre l’immagine hero */
+@media (max-width: 767px) {
+  .heroSectionHasFixedActionBar {
+    --productPageActionBarHeight: 52px;
+    padding-top: var(--productPageActionBarHeight);
+  }
+}
+
 /* Left: Portrait Image Container */
 .heroImageContainer {
   position: relative;
@@ -282,7 +290,10 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: auto;
+
+  @media (--viewportMedium) {
+    margin-left: auto;
+  }
 }
 
 .heroAuthorAvatar {
@@ -459,7 +470,7 @@
 }
 
 .mobileHeader :global(.ListingPage_ownListingText__6je8F) {
-  margin: 14px 0;
+  margin: 0;
   flex-shrink: 0;
   font-size: 10px;
 }
@@ -552,6 +563,11 @@
     padding: 0 12px;
     box-sizing: border-box;
     min-height: var(--productPageActionBarHeight, 52px);
+    /* ListingPage .actionBar usa flex-direction: column sotto 768px; qui una sola riga (testo | icona) */
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
   }
 }
 
@@ -1239,17 +1255,13 @@
     margin-bottom: 24px;
   }
 
-  .mobileHeaderWithActionBar {
-    padding-top: var(--productPageActionBarHeight);
-  }
-
   .mobileHeader .priceContainer {
     margin-bottom: 0;
   }
 
   .mobileHeader .authorSection {
     margin-bottom: 0;
-    padding-bottom: 0;
+    padding-bottom: 16px;
   }
 
   .infoColumn .listingTitle,

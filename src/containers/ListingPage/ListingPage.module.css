@@ -164,18 +164,10 @@
 
 .ownListingText {
   composes: h5 from global;
-  margin: 14px 24px 0 0;
-
-  @media (--viewportMedium) {
-    margin: 24px 24px 24px 0;
-  }
+  margin: 0;
 
   &.CTAEnabled {
-    margin-bottom: 0;
-
-    @media (--viewportMedium) {
-      margin: 24px 0 0px 0;
-    }
+    margin: 0;
   }
 }
 
@@ -219,6 +211,23 @@
 
   &.CTAEnabled {
     margin: 24px 0 0 0;
+  }
+}
+
+.editListingLabel {
+  display: inline;
+}
+
+@media (max-width: 767px) {
+  .actionBarHideEditLabelMobile .editListingLabel {
+    display: none;
+  }
+
+  .actionBarHideEditLabelMobile .editListingLink {
+    margin: 14px 12px 12px 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
