@@ -87,6 +87,7 @@
 }
 
 .title {
+  /* Narrow viewports: crisp UI sans (card “compact” style) */
   font-family: var(--fontFamily);
   font-size: 15px;
   font-weight: 800;
@@ -102,6 +103,7 @@
 
   @media (--viewportMedium) {
     font-size: 17px;
+    font-family: var(--fontFamilyDisplay);
   }
 }
 
@@ -127,9 +129,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 0;
   min-width: 0;
   width: 100%;
+
+  @media (--viewportMedium) {
+    gap: 2px;
+  }
 }
 
 .pricePrimary {
@@ -139,6 +145,10 @@
 
 /* Plain rental price line (e.g. mock / non-ListingCard price) */
 .rentalPrice {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 4px;
   font-size: 18px;
   font-weight: 900;
   color: var(--marketplaceColor);
@@ -164,17 +174,45 @@
 }
 
 .estimatedPriceLabel {
+  /* Hidden on narrow screens: compare price sits alone under the rental line */
+  display: none;
   color: var(--colorGrey500, #5a5c5c);
+
+  @media (--viewportMedium) {
+    display: inline;
+  }
 }
 
 .estimatedPriceAmount {
-  color: var(--colorGrey500, #5a5c5c);
+  /* Narrow: same hue as primary price, strike in brand color */
+  color: var(--marketplaceColor);
   text-decoration: line-through;
   text-decoration-color: var(--marketplaceColor);
   text-decoration-thickness: 1.5px;
+
+  @media (--viewportMedium) {
+    color: var(--colorGrey500, #5a5c5c);
+  }
 }
 
 .longWord {
   word-break: break-word;
   hyphens: auto;
+}
+
+/* Mock / related cards: long unit on desktop, compact “/gg” on narrow */
+.unitSuffixFull {
+  display: none;
+
+  @media (--viewportMedium) {
+    display: inline;
+  }
+}
+
+.unitSuffixCompact {
+  display: inline;
+
+  @media (--viewportMedium) {
+    display: none;
+  }
 }

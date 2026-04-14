@@ -1991,17 +1991,22 @@ export const ProductPageComponent = props => {
                   }
                   pricePrimary={
                     <span className={productListingCardCss.rentalPrice}>
-                      {product.price}{' '}
+                      {product.price}
                       <span className={productListingCardCss.priceUnit}>
-                        <FormattedMessage id="ProductPage.perDay" defaultMessage="/ giorno" />
+                        <span className={productListingCardCss.unitSuffixCompact}>
+                          <FormattedMessage id="ListingCard.perUnitCompact" values={{ unitType: 'day' }} />
+                        </span>
+                        <span className={productListingCardCss.unitSuffixFull}>
+                          <FormattedMessage id="ProductPage.perDay" defaultMessage="/ giorno" />
+                        </span>
                       </span>
                     </span>
                   }
                   priceCompare={
                     <span className={productListingCardCss.estimatedPriceRow}>
                       <span className={productListingCardCss.estimatedPriceLabel}>
-                        <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />
-                      </span>{' '}
+                        <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />{' '}
+                      </span>
                       <span
                         className={productListingCardCss.estimatedPriceAmount}
                         title={intl.formatMessage(

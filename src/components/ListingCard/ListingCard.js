@@ -68,8 +68,8 @@ const EstimatedPriceNew = ({ publicData, config, intl }) => {
     return (
       <span className={plc.estimatedPriceRow}>
         <span className={plc.estimatedPriceLabel}>
-          <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />
-        </span>{' '}
+          <FormattedMessage id="ListingCard.estimatedPriceInsteadOfLabel" />{' '}
+        </span>
         <span
           className={plc.estimatedPriceAmount}
           title={intl.formatMessage(
@@ -121,17 +121,29 @@ const PriceMaybe = props => {
   ) : (
     ''
   );
+  const pricePerUnitCompact = isBookable ? (
+    <span className={css.perUnit}>
+      <FormattedMessage id="ListingCard.perUnitCompact" values={{ unitType: publicData?.unitType }} />
+    </span>
+  ) : (
+    ''
+  );
 
   return (
     <div className={css.price} title={priceTitle}>
-      {hasMultiplePriceVariants ? (
-        <FormattedMessage
-          id="ListingCard.priceStartingFrom"
-          values={{ priceValue, pricePerUnit }}
-        />
-      ) : (
-        <FormattedMessage id="ListingCard.price" values={{ priceValue, pricePerUnit }} />
-      )}
+      <span className={css.priceDesktopOnly}>
+        {hasMultiplePriceVariants ? (
+          <FormattedMessage
+            id="ListingCard.priceStartingFrom"
+            values={{ priceValue, pricePerUnit }}
+          />
+        ) : (
+          <FormattedMessage id="ListingCard.price" values={{ priceValue, pricePerUnit }} />
+        )}
+      </span>
+      <span className={css.priceMobileOnly}>
+        <FormattedMessage id="ListingCard.price" values={{ priceValue, pricePerUnit: pricePerUnitCompact }} />
+      </span>
     </div>
   );
 };

@@ -674,6 +674,7 @@
   "ListingCard.author": "{authorName}",
   "ListingCard.ownerByline": "Von {authorName}",
   "ListingCard.perUnit": "{unitType, select, day {pro Tag} night {pro Nacht} hour {pro Stunde} other {}}",
+  "ListingCard.perUnitCompact": "{unitType, select, day {/T} night {/N} hour {/Std} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "Ab {priceValue} {pricePerUnit}",
   "ListingCard.unsupportedPrice": "({currency})",

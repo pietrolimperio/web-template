@@ -40,11 +40,38 @@
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  gap: 4px;
   flex-shrink: 0;
   color: var(--colorGrey700);
   margin: 0;
   font-size: 14px;
+}
+
+/* Desktop: “Da …” / “From …” + full per-unit phrase */
+.priceDesktopOnly {
+  display: none;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
+
+  @media (--viewportMedium) {
+    display: flex;
+  }
+}
+
+/* Mobile: no “Da/From” prefix; compact unit suffix on one line with price */
+.priceMobileOnly {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: nowrap;
+  min-width: 0;
+
+  @media (--viewportMedium) {
+    display: none;
+  }
 }
 
 .priceValue {

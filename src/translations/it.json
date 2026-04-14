@@ -696,6 +696,7 @@
   "ListingCard.estimatedRetailPriceHint": "Prezzo di acquisto stimato: {price}",
   "ListingCard.estimatedPriceInsteadOfLabel": "Invece di",
   "ListingCard.perUnit": "{unitType, select, day {al giorno} night {a notte} hour {all’ora} other {}}",
+  "ListingCard.perUnitCompact": "{unitType, select, day {/gg} night {/nt} hour {/h} other {}}",
   "ListingCard.price": "{priceValue} {pricePerUnit}",
   "ListingCard.priceStartingFrom": "Da {priceValue} {pricePerUnit}",
   "ListingCard.unsupportedPrice": "({currency})",
