@@ -14,7 +14,7 @@
 
 .main {
   display: block;
-  background-color: var(--colorSurface);
+  background-color: var(--pageFirstSectionBackground);
   color: var(--colorOnSurface);
 }
 
@@ -409,19 +409,47 @@
   color: var(--colorGrey800);
 }
 
-.tag.faqResultCategoryPill {
-  margin-bottom: 8px;
-  padding: 4px 10px;
-  font-size: 10px;
-}
-
 .faqList {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+/* Solo in modalità ricerca: spazio per il chip a sbalzo sulla prima card */
+.faqListSearch {
+  gap: 22px;
+  padding-top: 14px;
+}
+
 .faqItem {
+  margin: 0;
+  background: var(--colorSurfaceContainerLow);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* Ricerca: chip sul bordo; il riquadro grigio è .faqItemSurface */
+.faqItemSearch {
+  position: relative;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.faqItemCategoryPill {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  z-index: 2;
+  margin: 0;
+  transform: translateY(-50%);
+  padding: 5px 12px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 14px -6px rgba(45, 47, 47, 0.18);
+}
+
+.faqItemSurface {
   background: var(--colorSurfaceContainerLow);
   border-radius: 22px;
   overflow: hidden;
@@ -460,7 +488,7 @@
 
 .chevron {
   flex-shrink: 0;
-  color: var(--colorGrey500);
+  color: var(--colorGrey800);
   transition: transform 0.2s ease;
 }
 

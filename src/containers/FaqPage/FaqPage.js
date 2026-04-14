@@ -423,7 +423,11 @@ const FaqPageComponent = props => {
                         )}
                       </span>
                     </div>
-                    <div className={css.faqList}>
+                    <div
+                      className={classNames(css.faqList, {
+                        [css.faqListSearch]: normalizedQuery,
+                      })}
+                    >
                       {displayedItems.map(item => {
                         const isOpen = openId === item.id;
                         const questionNodes = normalizedQuery
@@ -432,25 +436,16 @@ const FaqPageComponent = props => {
                         const answerNodes = normalizedQuery
                           ? highlightSearchMatches(item.answer, searchTokens, css.searchHighlight)
                           : item.answer;
-                        return (
-                          <div key={item.id} className={css.faqItem}>
-                            {normalizedQuery ? (
-                              <span
-                                className={classNames(
-                                  css.tag,
-                                  TAG_CLASS_BY_CATEGORY[
-                                    visualKeyForRow(item.category, categoryRows)
-                                  ] || css.tagAccount,
-                                  css.faqResultCategoryPill
-                                )}
-                              >
-                                {categoryTitleById[item.category] || item.category}
-                              </span>
-                            ) : null}
+                        const itemVisualKey = visualKeyForRow(item.category, categoryRows);
+
+                        const toggleBlock = (
+                          <>
                             <button
                               type="button"
                               id={`faq-q-${item.id}`}
-                              className={classNames(css.faqToggle, { [css.faqToggleOpen]: isOpen })}
+                              className={classNames(css.faqToggle, {
+                                [css.faqToggleOpen]: isOpen,
+                              })}
                               aria-expanded={isOpen}
                               aria-controls={`faq-a-${item.id}`}
                               onClick={() => setOpenId(isOpen ? '' : item.id)}
@@ -468,6 +463,29 @@ const FaqPageComponent = props => {
                                 {answerNodes}
                               </p>
                             ) : null}
+                          </>
+                        );
+
+                        if (normalizedQuery) {
+                          return (
+                            <div key={item.id} className={classNames(css.faqItem, css.faqItemSearch)}>
+                              <span
+                                className={classNames(
+                                  css.tag,
+                                  TAG_CLASS_BY_CATEGORY[itemVisualKey] || css.tagAccount,
+                                  css.faqItemCategoryPill
+                                )}
+                              >
+                                {categoryTitleById[item.category] || item.category}
+                              </span>
+                              <div className={css.faqItemSurface}>{toggleBlock}</div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div key={item.id} className={css.faqItem}>
+                            {toggleBlock}
                           </div>
                         );
                       })}
