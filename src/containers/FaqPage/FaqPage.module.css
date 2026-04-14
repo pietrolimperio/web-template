@@ -77,6 +77,13 @@
   box-shadow: 0 24px 40px -8px rgba(45, 47, 47, 0.06);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchShell:focus-within {
+  border-color: color-mix(in srgb, var(--marketplaceColor) 28%, var(--colorGrey200));
+  box-shadow: 0 24px 40px -8px rgba(45, 47, 47, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--marketplaceColor) 22%, transparent);
 }
 
 .searchIcon {
@@ -98,6 +105,15 @@
   line-height: 1.4;
   color: var(--colorOnSurface);
   outline: none;
+  box-shadow: none;
+
+  /* Evita bordo/ombra/outline globali su input:focus che rompono la pill */
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border: none;
+    box-shadow: none;
+  }
 
   &::placeholder {
     color: var(--colorGrey500);
