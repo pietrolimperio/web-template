@@ -172,8 +172,15 @@
   --topbarHeight: 60px;
   --topbarHeightDesktop: 72px;
 
-  /* Glass topbar (single layer on layout <header> or standalone root) */
-  --topbarGlassBackground: #f1f1f1;
+  /**
+   * First above-the-fold band: set on a page layout root to match the hero/first section.
+   * Topbar glass tint follows via --topbarGlassBackground.
+   */
+  --pageFirstSectionBackground: var(--colorSurface);
+
+  /* Glass topbar: stesso tint della prima sezione (--pageFirstSectionBackground). */
+  /* Se un layout ridefinisce --pageFirstSectionBackground, ridefinire anche --topbarGlassBackground     con lo stesso valore (vedi NewLandingPage): l’ereditarietà da :root usa il colore già risolto sul root. */
+  --topbarGlassBackground: var(--pageFirstSectionBackground);
   --topbarGlassBackdropBlur: 16px;
   --topbarGlassHairline: 0 1px 0 color-mix(in srgb, var(--colorOnSurface) 4%, transparent);
 

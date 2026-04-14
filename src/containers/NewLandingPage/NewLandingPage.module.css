@@ -6,6 +6,13 @@
   width: 100%;
   max-width: 100vw;
   min-width: 0;
+  --pageFirstSectionBackground: var(--colorSurfaceContainerLow);
+  /*
+   * Su :root --topbarGlassBackground è già risolto con il pageFirstSection del root;
+   * ereditato così resterebbe “bloccato” su quel colore. Riassegnarlo qui allinea
+   * topbar (anche scrolled) e hero alla stessa tinta.
+   */
+  --topbarGlassBackground: var(--pageFirstSectionBackground);
 }
 
 .topbar {
