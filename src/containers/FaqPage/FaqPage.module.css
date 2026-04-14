@@ -68,16 +68,33 @@
 
 .searchShell {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
   background: color-mix(in srgb, var(--colorSurfaceContainerLowest) 88%, transparent);
   border: 1px solid var(--colorGrey200);
-  border-radius: 999px;
+  border-radius: 22px;
   box-shadow: 0 24px 40px -8px rgba(45, 47, 47, 0.06);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 8px 8px 16px;
+    border-radius: 999px;
+  }
+}
+
+.searchFieldRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .searchShell:focus-within {
@@ -97,8 +114,13 @@
 }
 
 .searchInput {
-  flex: 1;
+  /* Override global `input { width: 100% }` così nel flex la riga non comprime il placeholder */
+  display: block;
+  width: auto;
+  flex: 1 1 0%;
   min-width: 0;
+  margin: 0;
+  padding: 4px 0;
   border: none;
   background: transparent;
   font-size: 16px;
@@ -106,6 +128,7 @@
   color: var(--colorOnSurface);
   outline: none;
   box-shadow: none;
+  text-overflow: ellipsis;
 
   /* Evita bordo/ombra/outline globali su input:focus che rompono la pill */
   &:focus,
@@ -118,11 +141,24 @@
   &::placeholder {
     color: var(--colorGrey500);
   }
+
+  &::-webkit-search-decoration,
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-results-button,
+  &::-webkit-search-results-decoration {
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  @media (--viewportMedium) {
+    padding: 6px 0;
+  }
 }
 
 .searchSubmit {
   flex-shrink: 0;
-  padding: 12px 24px;
+  width: 100%;
+  padding: 12px 20px;
   border: none;
   border-radius: 999px;
   font-size: 15px;
@@ -141,6 +177,7 @@
   }
 
   @media (--viewportMedium) {
+    width: auto;
     padding: 14px 28px;
     font-size: 16px;
   }

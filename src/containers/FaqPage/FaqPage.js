@@ -332,18 +332,20 @@ const FaqPageComponent = props => {
                     </h1>
                     <form className={css.searchForm} onSubmit={onSearchSubmit}>
                       <div className={css.searchShell}>
-                        <span className={css.searchIcon} aria-hidden>
-                          <IconSearch />
-                        </span>
-                        <input
-                          type="search"
-                          className={css.searchInput}
-                          value={query}
-                          onChange={e => setQuery(e.target.value)}
-                          placeholder={intl.formatMessage({ id: 'FaqPage.searchPlaceholder' })}
-                          autoComplete="off"
-                          aria-label={intl.formatMessage({ id: 'FaqPage.searchPlaceholder' })}
-                        />
+                        <div className={css.searchFieldRow}>
+                          <span className={css.searchIcon} aria-hidden>
+                            <IconSearch />
+                          </span>
+                          <input
+                            type="search"
+                            className={css.searchInput}
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder={intl.formatMessage({ id: 'FaqPage.searchPlaceholder' })}
+                            autoComplete="off"
+                            aria-label={intl.formatMessage({ id: 'FaqPage.searchPlaceholder' })}
+                          />
+                        </div>
                         <button type="submit" className={css.searchSubmit}>
                           <FormattedMessage id="FaqPage.searchButton" />
                         </button>
