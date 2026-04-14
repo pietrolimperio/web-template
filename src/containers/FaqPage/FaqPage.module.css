@@ -315,12 +315,15 @@
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 24px;
+  /* Spazio sotto la topbar sticky quando si fa scroll da tap categoria (mobile) */
+  scroll-margin-top: calc(var(--topbarHeight) + 16px);
 
   @media (--viewportMedium) {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 28px;
+    scroll-margin-top: 0;
   }
 }
 

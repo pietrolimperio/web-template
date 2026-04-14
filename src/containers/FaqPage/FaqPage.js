@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { bool } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
@@ -189,6 +189,9 @@ function buildStaticFaqPayload(intl) {
   return { categories, items, source: 'static' };
 }
 
+/** Allineato a `customMediaQueries.css`: --viewportMedium è min-width 768px */
+const MOBILE_MAX_WIDTH_QUERY = '(max-width: 767px)';
+
 const FaqPageComponent = props => {
   const { scrollingDisabled } = props;
   const intl = useIntl();
@@ -196,6 +199,7 @@ const FaqPageComponent = props => {
   const [remotePayload, setRemotePayload] = useState(null);
   const [activeCategory, setActiveCategory] = useState('rent');
   const [openId, setOpenId] = useState('');
+  const faqSectionHeaderRef = useRef(null);
 
   const staticPayload = useMemo(() => buildStaticFaqPayload(intl), [intl]);
 
@@ -277,6 +281,14 @@ const FaqPageComponent = props => {
     setActiveCategory(categoryId);
     setQuery('');
     setOpenId('');
+    if (typeof window !== 'undefined' && window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches) {
+      const el = faqSectionHeaderRef.current;
+      if (el) {
+        requestAnimationFrame(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    }
   };
 
   const pageTitle = intl.formatMessage({ id: 'FaqPage.schemaTitle' });
@@ -386,7 +398,7 @@ const FaqPageComponent = props => {
                   </section>
 
                   <section className={css.faqSection} aria-labelledby="faq-popular-title">
-                    <div className={css.faqSectionHeader}>
+                    <div ref={faqSectionHeaderRef} className={css.faqSectionHeader}>
                       <h2 id="faq-popular-title" className={css.faqSectionTitle}>
                         <FormattedMessage id="FaqPage.popularTitle" />
                       </h2>
