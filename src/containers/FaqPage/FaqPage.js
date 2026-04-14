@@ -195,7 +195,7 @@ const FaqPageComponent = props => {
   const [query, setQuery] = useState('');
   const [remotePayload, setRemotePayload] = useState(null);
   const [activeCategory, setActiveCategory] = useState('rent');
-  const [openId, setOpenId] = useState('rent-1');
+  const [openId, setOpenId] = useState('');
 
   const staticPayload = useMemo(() => buildStaticFaqPayload(intl), [intl]);
 
@@ -257,7 +257,7 @@ const FaqPageComponent = props => {
     }
     const match = displayedItems.some(item => item.id === openId);
     if (!match) {
-      setOpenId(displayedItems[0].id);
+      setOpenId('');
     }
   }, [displayedItems, openId]);
 
@@ -266,10 +266,7 @@ const FaqPageComponent = props => {
     if (!ids.has(activeCategory) && categoryRows[0]) {
       const next = categoryRows[0].id;
       setActiveCategory(next);
-      const firstItem = items.find(i => i.category === next);
-      if (firstItem) {
-        setOpenId(firstItem.id);
-      }
+      setOpenId('');
     }
   }, [categoryRows, activeCategory, items]);
 
@@ -279,10 +276,7 @@ const FaqPageComponent = props => {
     }
     setActiveCategory(categoryId);
     setQuery('');
-    const firstInCat = items.find(i => i.category === categoryId);
-    if (firstInCat) {
-      setOpenId(firstInCat.id);
-    }
+    setOpenId('');
   };
 
   const pageTitle = intl.formatMessage({ id: 'FaqPage.schemaTitle' });

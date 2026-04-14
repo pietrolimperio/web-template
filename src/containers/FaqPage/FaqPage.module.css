@@ -265,19 +265,9 @@
   color: var(--faq-theme-strong);
 }
 
-.categoryIconSvg {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  & svg {
-    display: block;
-    width: 26px;
-    height: auto;
-    max-height: 26px;
-  }
+.categoryIconFaq {
+  font-size: 22px;
+  line-height: 1;
 }
 
 .categoryTitle {
