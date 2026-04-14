@@ -729,6 +729,7 @@
   "ProductPage.ownListing": "Este es tu propio anuncio.",
   "ProductPage.payoutDetailsWarning": "Este anuncio no está disponible {processType, select, booking {para reservar} other {para comprar}}. Aún no has añadido tus datos de pago.",
   "ProductPage.payoutDetailsWarningLink": "Añade tus datos de pago",
+  "ProductPage.perDay": "/ día",
   "ProductPage.perUnit": "/{unitType, select, day {día} night {noche} hour {hora} item {artículo} other {{unitType}}}",
   "ProductPage.priceBreakdownTitle": "Resumen del precio",
   "ProductPage.priceVariantsTitle": "Elige una opción",

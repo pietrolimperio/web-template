@@ -746,6 +746,7 @@
   "ProductPage.ownListing": "Questo è il tuo annuncio.",
   "ProductPage.payoutDetailsWarning": "Questo annuncio non è disponibile {processType, select, booking {per la prenotazione} other {per l'acquisto}}. Non hai ancora aggiunto i tuoi dettagli di pagamento.",
   "ProductPage.payoutDetailsWarningLink": "Aggiungi i tuoi dettagli di pagamento",
+  "ProductPage.perDay": "/ giorno",
   "ProductPage.perUnit": "/{unitType, select, day {giorno} night {notte} hour {ora} item {articolo} other {{unitType}}}",
   "ProductPage.priceBreakdownTitle": "Riepilogo",
   "ProductPage.priceVariantsTitle": "Scegli un'opzione",

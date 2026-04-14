@@ -726,6 +726,7 @@
   "ProductPage.ownListing": "Dies ist deine eigene Anzeige.",
   "ProductPage.payoutDetailsWarning": "Diese Anzeige ist nicht verfügbar {processType, select, booking {zur Buchung} other {zum Kauf}}. Du hast deine Auszahlungsdetails noch nicht hinzugefügt.",
   "ProductPage.payoutDetailsWarningLink": "Füge deine Auszahlungsdetails hinzu",
+  "ProductPage.perDay": "/ Tag",
   "ProductPage.perUnit": "/{unitType, select, day {Tag} night {Nacht} hour {Stunde} item {Artikel} other {{unitType}}}",
   "ProductPage.priceBreakdownTitle": "Preisübersicht",
   "ProductPage.priceVariantsTitle": "Wähle eine Option",

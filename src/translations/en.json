@@ -756,6 +756,7 @@
   "ProductPage.ownListing": "This is your own listing.",
   "ProductPage.payoutDetailsWarning": "This listing is not available {processType, select, booking {for booking} other {for purchase}}. You have not added your payout details yet.",
   "ProductPage.payoutDetailsWarningLink": "Add your payout details",
+  "ProductPage.perDay": "/ day",
   "ProductPage.perUnit": "/{unitType, select, day {day} night {night} hour {hour} item {item} other {{unitType}}}",
   "ProductPage.priceBreakdownTitle": "Price breakdown",
   "ProductPage.priceVariantsTitle": "Choose an option",
