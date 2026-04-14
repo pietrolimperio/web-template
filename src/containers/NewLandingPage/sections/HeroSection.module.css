@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   /* No overflow:hidden: date filter calendar is position:absolute and must extend outside the box */
-  background-color: var(--colorSurfaceContainerLow);
+  background-color: var(--pageFirstSectionBackground);
   padding: calc(var(--topbarHeight) + 16px) 0 40px;
 
   @media (--viewportMedium) {

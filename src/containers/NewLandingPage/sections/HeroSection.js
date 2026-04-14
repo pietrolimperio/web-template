@@ -114,7 +114,7 @@ const HeroSpotlightCardFallback = () => (
 
 // TODO(hero-spotlight): `spotlightListing` source is provisional (see NewLandingPage). Define rules:
 // featured listing id(s), CMS pick, curated ranking, A/B, etc.
-const HeroSection = ({ spotlightListing }) => {
+const HeroSection = ({ spotlightListing = null }) => {
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
   const history = useHistory();
@@ -205,10 +205,6 @@ const HeroSection = ({ spotlightListing }) => {
       <div className={css.bgShape} />
     </section>
   );
-};
-
-HeroSection.defaultProps = {
-  spotlightListing: null,
 };
 
 HeroSection.propTypes = {
