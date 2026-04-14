@@ -14,11 +14,6 @@ import {
   NamedLink,
   IconSearch,
   IconArrowHead,
-  IconInquiry,
-  IconEdit,
-  IconKeys,
-  IconUser,
-  IconHelp,
 } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import FooterContainer from '../FooterContainer/FooterContainer';
@@ -77,36 +72,104 @@ const CATEGORY_CARDS = [
     category: 'rent',
     titleId: 'FaqPage.catRentTitle',
     bodyId: 'FaqPage.catRentBody',
-    iconClass: css.categoryIconRent,
-    Icon: IconInquiry,
+    themeClass: css.categoryThemeRent,
   },
   {
     category: 'lend',
     titleId: 'FaqPage.catLendTitle',
     bodyId: 'FaqPage.catLendBody',
-    iconClass: css.categoryIconLend,
-    Icon: IconEdit,
+    themeClass: css.categoryThemeLend,
   },
   {
     category: 'safety',
     titleId: 'FaqPage.catSafetyTitle',
     bodyId: 'FaqPage.catSafetyBody',
-    iconClass: css.categoryIconSafety,
-    Icon: IconKeys,
+    themeClass: css.categoryThemeSafety,
   },
   {
     category: 'account',
     titleId: 'FaqPage.catAccountTitle',
     bodyId: 'FaqPage.catAccountBody',
-    iconClass: css.categoryIconAccount,
-    Icon: IconUser,
+    themeClass: css.categoryThemeAccount,
   },
 ];
 
-const ICON_BY_CATEGORY_ID = CATEGORY_CARDS.reduce((acc, row) => {
-  acc[row.category] = { Icon: row.Icon, iconClass: row.iconClass };
+const THEME_CLASS_BY_CATEGORY = CATEGORY_CARDS.reduce((acc, row) => {
+  acc[row.category] = row.themeClass;
   return acc;
 }, {});
+
+const TAG_CLASS_BY_CATEGORY = {
+  rent: css.tagRent,
+  lend: css.tagLend,
+  safety: css.tagSafety,
+  account: css.tagAccount,
+};
+
+/** Ordine UI: usato come fallback quando l’API usa slug diversi da rent/lend/… */
+const FAQ_VISUAL_CATEGORY_ORDER = ['rent', 'lend', 'safety', 'account'];
+
+const FAQ_CATEGORY_ALIASES = {
+  rent: 'rent',
+  renting: 'rent',
+  noleggiare: 'rent',
+  noleggio: 'rent',
+  borrower: 'rent',
+  lend: 'lend',
+  lending: 'lend',
+  listing: 'lend',
+  lessor: 'lend',
+  affitto: 'lend',
+  host: 'lend',
+  safety: 'safety',
+  sicurezza: 'safety',
+  secure: 'safety',
+  trust: 'safety',
+  account: 'account',
+  profilo: 'account',
+  settings: 'account',
+  utente: 'account',
+  inaffitto: 'lend',
+  mettereinaffitto: 'lend',
+};
+
+/**
+ * Allinea id CMS/API agli slug usati per tema colore (card, icona, tag).
+ * Se l’id non è riconosciuto, usa l’indice della riga (0–3) come fallback.
+ */
+function resolveFaqCategoryVisualKey(rawId, rowIndex = 0) {
+  const raw = String(rawId || '')
+    .trim()
+    .toLowerCase();
+  const compact = raw.replace(/[\s_-]+/g, '');
+
+  if (FAQ_VISUAL_CATEGORY_ORDER.includes(raw)) {
+    return raw;
+  }
+  if (FAQ_VISUAL_CATEGORY_ORDER.includes(compact)) {
+    return compact;
+  }
+
+  const alias = FAQ_CATEGORY_ALIASES[raw] || FAQ_CATEGORY_ALIASES[compact];
+  if (alias) {
+    return alias;
+  }
+
+  if (
+    typeof rowIndex === 'number' &&
+    rowIndex >= 0 &&
+    rowIndex < FAQ_VISUAL_CATEGORY_ORDER.length
+  ) {
+    return FAQ_VISUAL_CATEGORY_ORDER[rowIndex];
+  }
+
+  return 'account';
+}
+
+function visualKeyForRow(categoryId, rows) {
+  const idx = rows.findIndex(r => r.id === categoryId);
+  return resolveFaqCategoryVisualKey(categoryId, idx >= 0 ? idx : 0);
+}
 
 function buildStaticFaqPayload(intl) {
   const items = FAQ_DEFINITIONS.map(def => ({
@@ -167,6 +230,11 @@ const FaqPageComponent = props => {
     });
     return map;
   }, [categoryRows]);
+
+  const activeVisualKey = useMemo(
+    () => visualKeyForRow(activeCategory, categoryRows),
+    [activeCategory, categoryRows]
+  );
 
   /** Full corpus: all FAQs from API when loaded, otherwise static i18n set (same as `items`). */
   const displayedItems = useMemo(() => {
@@ -295,27 +363,26 @@ const FaqPageComponent = props => {
                     className={css.categories}
                     aria-label={intl.formatMessage({ id: 'FaqPage.categoriesAriaLabel' })}
                   >
-                    {categoryRows.map(cat => {
-                      const iconMeta = ICON_BY_CATEGORY_ID[cat.id] || {
-                        Icon: IconHelp,
-                        iconClass: css.categoryIconAccount,
-                      };
-                      const { Icon: CategoryIcon, iconClass } = iconMeta;
+                    {categoryRows.map((cat, rowIndex) => {
+                      const visualKey = resolveFaqCategoryVisualKey(cat.id, rowIndex);
+                      const themeClass =
+                        THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount;
                       return (
                         <button
                           key={cat.id}
                           type="button"
-                          className={classNames(css.categoryCard, {
+                          className={classNames(css.categoryCard, themeClass, {
                             [css.categoryCardActive]:
                               !normalizedQuery && activeCategory === cat.id,
                           })}
                           aria-pressed={!normalizedQuery && activeCategory === cat.id}
                           onClick={() => selectCategory(cat.id)}
                         >
-                          <div className={classNames(css.categoryIcon, iconClass)}>
-                            <span className={css.categoryIconSvg}>
-                              <CategoryIcon />
-                            </span>
+                          <div className={css.categoryIcon}>
+                            <i
+                              className={classNames('fa-solid fa-question', css.categoryIconFaq)}
+                              aria-hidden
+                            />
                           </div>
                           <p className={css.categoryTitle}>{cat.title}</p>
                           <p className={css.categoryBody}>{cat.description}</p>
@@ -329,13 +396,22 @@ const FaqPageComponent = props => {
                       <h2 id="faq-popular-title" className={css.faqSectionTitle}>
                         <FormattedMessage id="FaqPage.popularTitle" />
                       </h2>
-                      <span className={css.tag}>
+                      <span
+                        className={classNames(
+                          css.tag,
+                          normalizedQuery
+                            ? css.tagSearch
+                            : TAG_CLASS_BY_CATEGORY[activeVisualKey] || css.tagAccount
+                        )}
+                      >
                         {normalizedQuery ? (
                           <FormattedMessage id="FaqPage.tagSearch" />
                         ) : tagForBadge ? (
                           tagForBadge
                         ) : (
-                          <FormattedMessage id={TAG_MESSAGE_ID[activeCategory] || 'FaqPage.tagRent'} />
+                          <FormattedMessage
+                            id={TAG_MESSAGE_ID[activeVisualKey] || 'FaqPage.tagRent'}
+                          />
                         )}
                       </span>
                     </div>
@@ -351,7 +427,15 @@ const FaqPageComponent = props => {
                         return (
                           <div key={item.id} className={css.faqItem}>
                             {normalizedQuery ? (
-                              <span className={css.faqResultCategory}>
+                              <span
+                                className={classNames(
+                                  css.tag,
+                                  TAG_CLASS_BY_CATEGORY[
+                                    visualKeyForRow(item.category, categoryRows)
+                                  ] || css.tagAccount,
+                                  css.faqResultCategoryPill
+                                )}
+                              >
                                 {categoryTitleById[item.category] || item.category}
                               </span>
                             ) : null}
