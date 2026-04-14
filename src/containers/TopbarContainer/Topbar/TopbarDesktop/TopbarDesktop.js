@@ -65,13 +65,13 @@ const GenericAvatarLink = () => {
   );
 };
 
-const AboutLink = ({ intl }) => {
+const FaqIconLink = ({ intl }) => {
   return (
     <NamedLink
       className={css.iconLink}
       name="CMSPage"
-      params={{ pageId: 'about' }}
-      title={intl.formatMessage({ id: 'TopbarDesktop.aboutLink' })}
+      params={{ pageId: 'faq' }}
+      title={intl.formatMessage({ id: 'TopbarDesktop.faqIconLink' })}
     >
       <span className={css.iconLinkWrapper}>
         <i className="fa-solid fa-question" />
@@ -202,8 +202,7 @@ const TopbarDesktop = props => {
   ) : null;
 
   const genericAvatarMaybe = isAuthenticatedOrJustHydrated ? null : <GenericAvatarLink />;
-  // About link is always visible for all users
-  const aboutLink = <AboutLink intl={intl} />;
+  const faqIconLink = <FaqIconLink intl={intl} />;
 
   const searchFormMaybe = showSearchForm ? (
     <TopbarSearchForm
@@ -243,7 +242,7 @@ const TopbarDesktop = props => {
         isAuthenticated={authenticatedOnClientSide}
       />
 
-      {aboutLink}
+      {faqIconLink}
       {inboxLinkMaybe}
       {profileMenuMaybe}
       {genericAvatarMaybe}
