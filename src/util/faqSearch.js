@@ -44,7 +44,8 @@ export function normalizeSearchQuery(raw) {
 export function foldAccents(str) {
   const s = String(str || '');
   try {
-    return s.normalize('NFD').replace(/\p{M}/gu, '');
+    // Blocco Combining Diacritical Marks (no \p{M}: evita bug Babel/transform regex in build)
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   } catch {
     return s;
   }
@@ -55,14 +56,13 @@ export function foldAccents(str) {
  * @param {string} str
  * @returns {string[]}
  */
+/** Latin esteso + cifre + apostrofo elisioni (no \p{L}/\p{N}: compatibile col transpiler). */
+const FAQ_WORD_RE = /[0-9a-z\u00c0-\u024f]+(?:'[0-9a-z\u00c0-\u024f]+)?/gi;
+
 export function extractWordsForFaqSearch(str) {
   const s = String(str || '');
-  try {
-    return [...s.toLowerCase().matchAll(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)?/gu)].map(m => m[0]);
-  } catch {
-    const t = s.toLowerCase();
-    return t.match(/[0-9a-z\u00c0-\u024f]+(?:'[0-9a-z\u00c0-\u024f]+)?/gi) || [];
-  }
+  const t = s.toLowerCase();
+  return t.match(FAQ_WORD_RE) || [];
 }
 
 /**
