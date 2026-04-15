@@ -3,6 +3,7 @@ import {
   stemForFaqMatch,
   foldAccents,
   expandHighlightTokens,
+  highlightSearchMatches,
 } from './faqSearch';
 
 describe('faqSearch stem / fold', () => {
@@ -55,11 +56,35 @@ describe('searchFaqItems', () => {
     const r = searchFaqItems(items, 'noleggio inesistente');
     expect(r).toHaveLength(0);
   });
+
+  it('accetta question/answer non-stringa (payload API / CMS)', () => {
+    const weird = [
+      {
+        id: 'x',
+        category: 'rent',
+        question: { text: 'Come funziona il noleggio?' },
+        answer: ['Puoi noleggiare oggetti.', 'Contatta il venditore.'],
+      },
+    ];
+    expect(searchFaqItems(weird, 'noleggio').map(x => x.id)).toContain('x');
+  });
 });
 
 describe('expandHighlightTokens', () => {
   it('includes inflected words in text for marking', () => {
     const t = expandHighlightTokens('Il noleggio è semplice', ['noleggi']);
     expect(t).toEqual(expect.arrayContaining(['noleggi', 'noleggio']));
+  });
+});
+
+describe('highlightSearchMatches', () => {
+  it('non lancia con testo non-stringa (es. oggetto CMS)', () => {
+    const out = highlightSearchMatches(
+      { text: 'Testo noleggio qui' },
+      ['noleggio'],
+      'hl'
+    );
+    expect(Array.isArray(out)).toBe(true);
+    expect(out.some(n => typeof n === 'object' && n != null && n.type === 'mark')).toBe(true);
   });
 });

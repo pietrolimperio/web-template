@@ -5,6 +5,35 @@
 
 import React from 'react';
 
+/**
+ * Converte question/answer FAQ in stringa ricercabile (API CMS, array, numeri, oggetti).
+ * Difende da TypeError su .toLowerCase / regex Unicode se il payload non è stringa pura.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+function faqFieldToPlainString(value) {
+  if (value == null) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(faqFieldToPlainString).filter(Boolean).join(' ');
+  }
+  if (typeof value === 'object') {
+    const nested = value.text ?? value.value;
+    if (nested != null && nested !== value) {
+      return faqFieldToPlainString(nested);
+    }
+  }
+  return String(value);
+}
+
 export function normalizeSearchQuery(raw) {
   return String(raw || '')
     .trim()
@@ -132,8 +161,8 @@ export function searchFaqItems(items, rawQuery) {
   const scored = [];
 
   items.forEach((item, index) => {
-    const hayQ = (item.question || '').toLowerCase();
-    const hayA = (item.answer || '').toLowerCase();
+    const hayQ = faqFieldToPlainString(item.question).toLowerCase();
+    const hayA = faqFieldToPlainString(item.answer).toLowerCase();
     let score = 0;
     for (const t of tokens) {
       const inQExact = hayQ.includes(t);
@@ -165,7 +194,7 @@ export function searchFaqItems(items, rawQuery) {
 }
 
 export function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(str ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -177,11 +206,11 @@ export function escapeRegExp(str) {
  */
 export function expandHighlightTokens(text, tokens) {
   const set = new Set();
-  const usable = [...tokens].filter(Boolean);
+  const usable = [...tokens].filter(t => typeof t === 'string' && t.length > 0);
   for (const t of usable) {
     set.add(t);
   }
-  const safe = String(text || '');
+  const safe = faqFieldToPlainString(text);
   const words = extractWordsForFaqSearch(safe);
   for (const t of usable) {
     const st = stemForFaqMatch(t);
@@ -206,7 +235,7 @@ export function expandHighlightTokens(text, tokens) {
  * @returns {Array<string|React.ReactElement>}
  */
 export function highlightSearchMatches(text, tokens, markClassName) {
-  const safe = String(text || '');
+  const safe = faqFieldToPlainString(text);
   const usable = expandHighlightTokens(safe, tokens).filter(t => t.length > 0);
   if (!usable.length) {
     return [safe];

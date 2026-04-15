@@ -22,6 +22,35 @@ const MAX_RETRIES_429 = 2;
 const cacheByLocale = new Map();
 
 /**
+ * Normalizza campi testo FAQ da JSON API (stringa, numero, array di blocchi, oggetti CMS).
+ * Evita TypeError quando il backend non restituisce stringhe pure.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeFaqTextField(value) {
+  if (value == null) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeFaqTextField).filter(Boolean).join(' ');
+  }
+  if (typeof value === 'object') {
+    const nested = value.text ?? value.value;
+    if (nested != null && nested !== value) {
+      return normalizeFaqTextField(nested);
+    }
+  }
+  return String(value);
+}
+
+/**
  * @param {unknown} data - raw JSON from API
  * @returns {{ categories: Array<{id: string, title: string, description: string, tag: string}>, items: Array<{id: string, category: string, question: string, answer: string}> } | null}
  */
@@ -52,8 +81,8 @@ export function normalizeFaqResponse(data) {
     if (!id || !category || typeof id !== 'string' || typeof category !== 'string') {
       continue;
     }
-    const question = row.question ?? row.q ?? '';
-    const answer = row.answer ?? row.a ?? row.body ?? '';
+    const question = normalizeFaqTextField(row.question ?? row.q ?? '');
+    const answer = normalizeFaqTextField(row.answer ?? row.a ?? row.body ?? '');
     if (!question && !answer) {
       continue;
     }
