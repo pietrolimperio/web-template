@@ -6,7 +6,11 @@ import classNames from 'classnames';
 
 import { useIntl, FormattedMessage } from '../../util/reactIntl';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
-import { fetchFaqContent } from '../../util/faqApi';
+import {
+  fetchFaqContent,
+  sanitizeFaqAccentColor,
+  sanitizeFaqIconUrl,
+} from '../../util/faqApi';
 import { searchFaqItems, tokenizeSearchQuery, highlightSearchMatches } from '../../util/faqSearch';
 import {
   Page,
@@ -184,9 +188,34 @@ function buildStaticFaqPayload(intl) {
     title: intl.formatMessage({ id: c.titleId }),
     description: intl.formatMessage({ id: c.bodyId }),
     tag: intl.formatMessage({ id: TAG_MESSAGE_ID[c.category] }),
+    color: '',
+    iconUrl: '',
   }));
 
   return { categories, items, source: 'static' };
+}
+
+function FaqCategoryCardIcon({ iconUrl, imgClassName, faqIconClassName }) {
+  const safeUrl = sanitizeFaqIconUrl(iconUrl);
+  const [imgFailed, setImgFailed] = useState(!safeUrl);
+
+  useEffect(() => {
+    setImgFailed(!safeUrl);
+  }, [safeUrl]);
+
+  if (!imgFailed && safeUrl) {
+    return (
+      <img
+        src={safeUrl}
+        alt=""
+        className={imgClassName}
+        loading="lazy"
+        decoding="async"
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+  return <i className={classNames('fa-solid fa-question', faqIconClassName)} aria-hidden />;
 }
 
 /** Allineato a `customMediaQueries.css`: --viewportMedium è min-width 768px */
@@ -249,6 +278,8 @@ const FaqPageComponent = props => {
   }, [items, normalizedQuery, activeCategory, query]);
 
   const activeCategoryRow = categoryRows.find(c => c.id === activeCategory);
+  const activeSectionAccent = sanitizeFaqAccentColor(activeCategoryRow?.color);
+
   const tagForBadge = normalizedQuery
     ? null
     : activeCategoryRow?.tag && activeCategoryRow.tag.trim() !== ''
@@ -373,8 +404,10 @@ const FaqPageComponent = props => {
                   >
                     {categoryRows.map((cat, rowIndex) => {
                       const visualKey = resolveFaqCategoryVisualKey(cat.id, rowIndex);
-                      const themeClass =
-                        THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount;
+                      const accent = sanitizeFaqAccentColor(cat.color);
+                      const themeClass = accent
+                        ? css.categoryThemeCustom
+                        : THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount;
                       return (
                         <button
                           key={cat.id}
@@ -383,13 +416,15 @@ const FaqPageComponent = props => {
                             [css.categoryCardActive]:
                               !normalizedQuery && activeCategory === cat.id,
                           })}
+                          style={accent ? { '--faq-theme': accent } : undefined}
                           aria-pressed={!normalizedQuery && activeCategory === cat.id}
                           onClick={() => selectCategory(cat.id)}
                         >
                           <div className={css.categoryIcon}>
-                            <i
-                              className={classNames('fa-solid fa-question', css.categoryIconFaq)}
-                              aria-hidden
+                            <FaqCategoryCardIcon
+                              iconUrl={cat.iconUrl}
+                              imgClassName={css.categoryIconImg}
+                              faqIconClassName={css.categoryIconFaq}
                             />
                           </div>
                           <p className={css.categoryTitle}>{cat.title}</p>
@@ -409,8 +444,15 @@ const FaqPageComponent = props => {
                           css.tag,
                           normalizedQuery
                             ? css.tagSearch
-                            : TAG_CLASS_BY_CATEGORY[activeVisualKey] || css.tagAccount
+                            : activeSectionAccent
+                              ? css.tagCustom
+                              : TAG_CLASS_BY_CATEGORY[activeVisualKey] || css.tagAccount
                         )}
+                        style={
+                          !normalizedQuery && activeSectionAccent
+                            ? { '--faq-tag-accent': activeSectionAccent }
+                            : undefined
+                        }
                       >
                         {normalizedQuery ? (
                           <FormattedMessage id="FaqPage.tagSearch" />
@@ -437,6 +479,8 @@ const FaqPageComponent = props => {
                           ? highlightSearchMatches(item.answer, searchTokens, css.searchHighlight)
                           : item.answer;
                         const itemVisualKey = visualKeyForRow(item.category, categoryRows);
+                        const itemCategoryRow = categoryRows.find(r => r.id === item.category);
+                        const itemPillAccent = sanitizeFaqAccentColor(itemCategoryRow?.color);
 
                         const toggleBlock = (
                           <>
@@ -472,9 +516,16 @@ const FaqPageComponent = props => {
                               <span
                                 className={classNames(
                                   css.tag,
-                                  TAG_CLASS_BY_CATEGORY[itemVisualKey] || css.tagAccount,
+                                  itemPillAccent
+                                    ? css.tagCustom
+                                    : TAG_CLASS_BY_CATEGORY[itemVisualKey] || css.tagAccount,
                                   css.faqItemCategoryPill
                                 )}
+                                style={
+                                  itemPillAccent
+                                    ? { '--faq-tag-accent': itemPillAccent }
+                                    : undefined
+                                }
                               >
                                 {categoryTitleById[item.category] || item.category}
                               </span>

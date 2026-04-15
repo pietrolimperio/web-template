@@ -22,6 +22,49 @@ const MAX_RETRIES_429 = 2;
 const cacheByLocale = new Map();
 
 /**
+ * Colore accent FAQ da API: solo hex sicuro per evitare injection in style/CSS.
+ * @param {unknown} raw
+ * @returns {string} hex o stringa vuota → fallback UI
+ */
+export function sanitizeFaqAccentColor(raw) {
+  const s = String(raw ?? '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '');
+  if (!s) {
+    return '';
+  }
+  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(s)) {
+    return s;
+  }
+  return '';
+}
+
+/**
+ * URL icona categoria: solo http(s), niente javascript: o altri schemi.
+ * @param {unknown} raw
+ * @returns {string}
+ */
+export function sanitizeFaqIconUrl(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) {
+    return '';
+  }
+  try {
+    const base =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://invalid.local';
+    const u = new URL(s, base);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+      return '';
+    }
+    return u.href;
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Normalizza campi testo FAQ da JSON API (stringa, numero, array di blocchi, oggetti CMS).
  * Evita TypeError quando il backend non restituisce stringhe pure.
  *
@@ -52,7 +95,7 @@ function normalizeFaqTextField(value) {
 
 /**
  * @param {unknown} data - raw JSON from API
- * @returns {{ categories: Array<{id: string, title: string, description: string, tag: string}>, items: Array<{id: string, category: string, question: string, answer: string}> } | null}
+ * @returns {{ categories: Array<{id: string, title: string, description: string, tag: string, color: string, iconUrl: string}>, items: Array<{id: string, category: string, question: string, answer: string}> } | null}
  */
 export function normalizeFaqResponse(data) {
   if (!data || typeof data !== 'object') {
@@ -71,7 +114,9 @@ export function normalizeFaqResponse(data) {
     const title = c.title ?? c.name ?? '';
     const description = c.description ?? c.body ?? c.subtitle ?? '';
     const tag = c.tag ?? c.badge ?? c.label ?? '';
-    categories.push({ id, title, description, tag });
+    const color = sanitizeFaqAccentColor(c.color ?? c.accentColor ?? '');
+    const iconUrl = sanitizeFaqIconUrl(c.iconUrl ?? c.icon_url ?? c.icon ?? '');
+    categories.push({ id, title, description, tag, color, iconUrl });
   }
 
   const items = [];

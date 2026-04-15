@@ -285,10 +285,17 @@
   --faq-theme-soft: var(--colorSurfaceContainerHighest);
 }
 
+/* Tema da API: --faq-theme impostato inline (solo colore hex validato) */
+.categoryThemeCustom {
+  --faq-theme-strong: color-mix(in srgb, var(--faq-theme) 72%, var(--colorGrey900));
+  --faq-theme-soft: color-mix(in srgb, var(--faq-theme) 22%, var(--colorSurfaceContainerLow));
+}
+
 .categoryThemeRent:hover,
 .categoryThemeLend:hover,
 .categoryThemeSafety:hover,
-.categoryThemeAccount:hover {
+.categoryThemeAccount:hover,
+.categoryThemeCustom:hover {
   background: color-mix(
     in srgb,
     var(--faq-theme) 12%,
@@ -299,7 +306,8 @@
 .categoryCardActive.categoryThemeRent,
 .categoryCardActive.categoryThemeLend,
 .categoryCardActive.categoryThemeSafety,
-.categoryCardActive.categoryThemeAccount {
+.categoryCardActive.categoryThemeAccount,
+.categoryCardActive.categoryThemeCustom {
   border-color: color-mix(in srgb, var(--faq-theme) 42%, var(--colorGrey300));
   box-shadow: 0 24px 40px -8px rgba(45, 47, 47, 0.1),
     0 0 0 1px color-mix(in srgb, var(--faq-theme) 14%, transparent);
@@ -321,6 +329,13 @@
 .categoryIconFaq {
   font-size: 22px;
   line-height: 1;
+}
+
+.categoryIconImg {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
 }
 
 .categoryTitle {
@@ -407,6 +422,12 @@
 .tagSearch {
   background: color-mix(in srgb, var(--colorGrey500) 18%, var(--colorSurfaceContainerLow));
   color: var(--colorGrey800);
+}
+
+/* Pill/tag da colore API: --faq-tag-accent impostato inline */
+.tagCustom {
+  background: color-mix(in srgb, var(--faq-tag-accent) 28%, var(--colorSurfaceContainerLow));
+  color: color-mix(in srgb, var(--faq-tag-accent) 58%, var(--colorGrey900));
 }
 
 .faqList {
