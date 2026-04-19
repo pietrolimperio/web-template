@@ -1,5 +1,29 @@
 @import '../../styles/customMediaQueries.css';
 
+.mobilePriceSection {
+  display: block;
+
+  @media (--viewportLarge) {
+    display: none;
+  }
+}
+
+.desktopPriceSection {
+  display: none;
+
+  @media (--viewportLarge) {
+    display: block;
+  }
+}
+
+.heroImageColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
 .root {
   display: flex;
   justify-content: center;
@@ -68,6 +92,80 @@
   color: var(--matterColorMuted);
   margin: 0 0 32px 0;
   text-align: center;
+}
+
+/* Layout allineato a ProductPage (hero + contentWrapper) */
+.previewProductLayout {
+  width: 100%;
+}
+
+.previewPageIntro {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 24px 16px;
+  text-align: center;
+
+  @media (--viewportMedium) {
+    padding: 32px 32px 20px;
+  }
+}
+
+.previewPageHeading {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--matterColor, var(--colorOnSurface));
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+
+  @media (--viewportMedium) {
+    font-size: 34px;
+  }
+}
+
+.previewPageDescription {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--matterColorMuted, var(--colorGrey500));
+  margin: 0;
+}
+
+.previewHeroTitleEditWrap {
+  margin-bottom: 24px;
+}
+
+.previewHeroTitleTextarea {
+  width: 100%;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--matterColorNegative);
+  font-family: var(--fontFamily);
+  margin-bottom: 12px;
+}
+
+.previewHeroEditLink {
+  margin-left: 12px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.previewHeroCardEdit {
+  flex-shrink: 0;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--marketplaceColor);
+  text-decoration: underline;
+  padding: 4px 8px;
+}
+
+.previewHeroInlineEdit {
+  width: 100%;
+  padding: 8px 0;
 }
 
 .previewCard {
@@ -967,6 +1065,24 @@
   font-size: 14px;
 }
 
+.noLocationSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--matterColorLight, #fafafa);
+  border: 1px dashed var(--matterColorNegative);
+  border-radius: 12px;
+}
+
+.noLocationMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--matterColorAnti, var(--colorGrey500));
+  font-size: 14px;
+}
+
 .priceSummary {
   display: flex;
   align-items: baseline;
@@ -1336,6 +1452,7 @@
   gap: 16px;
   flex-direction: column;
   align-items: center;
+  margin-top: 32px;
 
   @media (--viewportMedium) {
     flex-direction: row;
@@ -2776,6 +2893,10 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+.deleteButton {
+  background-color: var(--colorSurface);
 }
 
 .dialogSecondaryButton,
