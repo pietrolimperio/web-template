@@ -258,6 +258,7 @@ const GuestDrawerContent = ({ customLinks, currentPage, currentLocale, onLocaleC
             className={css.localeSelector}
             currentLocale={currentLocale}
             onLocaleChange={onLocaleChange}
+            showLabel
           />
         </div>
       </div>
@@ -383,6 +384,7 @@ const AuthenticatedDrawerContent = ({
             className={css.localeSelector}
             currentLocale={currentLocale}
             onLocaleChange={onLocaleChange}
+            showLabel
           />
         </div>
         <InlineTextButton rootClassName={css.logoutButton} onClick={onLogout}>

@@ -109,16 +109,16 @@ export const COUNTRIES = {
  * Human-readable labels for each locale
  */
 export const LANGUAGE_LABELS = {
-  [LOCALES.IT_IT]: { native: 'Italiano', english: 'Italian' },
-  [LOCALES.FR_FR]: { native: 'Français', english: 'French' },
-  [LOCALES.ES_ES]: { native: 'Español', english: 'Spanish' },
-  [LOCALES.CH_FR]: { native: 'Français (Suisse)', english: 'French (Swiss)' },
-  [LOCALES.CH_DE]: { native: 'Deutsch (Schweiz)', english: 'German (Swiss)' },
-  [LOCALES.CH_IT]: { native: 'Italiano (Svizzera)', english: 'Italian (Swiss)' },
-  [LOCALES.PT_PT]: { native: 'Português', english: 'Portuguese' },
-  [LOCALES.EN_GB]: { native: 'English (UK)', english: 'English (UK)' },
-  [LOCALES.DE_DE]: { native: 'Deutsch', english: 'German' },
-  [LOCALES.AT_DE]: { native: 'Deutsch (Österreich)', english: 'German (Austrian)' },
+  [LOCALES.IT_IT]: { native: 'Italiano', english: 'Italian', translationKey: 'LocaleSelector.languageItalian' },
+  [LOCALES.FR_FR]: { native: 'Français', english: 'French', translationKey: 'LocaleSelector.languageFrench' },
+  [LOCALES.ES_ES]: { native: 'Español', english: 'Spanish', translationKey: 'LocaleSelector.languageSpanish' },
+  [LOCALES.CH_FR]: { native: 'Français (Suisse)', english: 'French (Swiss)', translationKey: 'LocaleSelector.languageSwissFrench' },
+  [LOCALES.CH_DE]: { native: 'Deutsch (Schweiz)', english: 'German (Swiss)', translationKey: 'LocaleSelector.languageSwissGerman' },
+  [LOCALES.CH_IT]: { native: 'Italiano (Svizzera)', english: 'Italian (Swiss)', translationKey: 'LocaleSelector.languageSwissItalian' },
+  [LOCALES.PT_PT]: { native: 'Português', english: 'Portuguese', translationKey: 'LocaleSelector.languagePortuguese' },
+  [LOCALES.EN_GB]: { native: 'English (UK)', english: 'English (UK)', translationKey: 'LocaleSelector.languageEnglishUK' },
+  [LOCALES.DE_DE]: { native: 'Deutsch', english: 'German', translationKey: 'LocaleSelector.languageGerman' },
+  [LOCALES.AT_DE]: { native: 'Deutsch (Österreich)', english: 'German (Austrian)', translationKey: 'LocaleSelector.languageAustrian' },
 };
 
 /**
