@@ -3320,11 +3320,17 @@ export const PreviewListingPageComponent = props => {
   const priceAttr = listing.attributes?.price || null;
   let priceForDisplay = priceAttr;
   if (hasMultiplePriceVariants && priceAttr) {
-    const minSubunits = cardPriceVariants.reduce(
-      (min, v) => (v.priceInSubunits < min ? v.priceInSubunits : min),
-      Infinity
-    );
-    priceForDisplay = minSubunits < Infinity ? new Money(minSubunits, priceAttr.currency) : priceAttr;
+    const allFixedSubunits = [
+      priceAttr.amount,
+      ...cardPriceVariants.filter(v => v.priceInSubunits != null).map(v => v.priceInSubunits),
+    ];
+    const lowestFixedSubunits = Math.min(...allFixedSubunits);
+    const maxDiscount = cardPriceVariants
+      .filter(v => v.type === 'duration' && v.percentageDiscount != null)
+      .reduce((max, v) => Math.max(max, v.percentageDiscount), 0);
+    const discountedSubunits =
+      maxDiscount > 0 ? Math.round(lowestFixedSubunits * (1 - maxDiscount / 100)) : lowestFixedSubunits;
+    priceForDisplay = new Money(discountedSubunits, priceAttr.currency);
   }
   const { formattedPrice } = priceData(priceForDisplay, config.currency, intl);
   const { formattedPrice: formattedBasePriceStr } = priceData(priceAttr, config.currency, intl);

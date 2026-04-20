@@ -21,13 +21,13 @@
 /* ================ Split Hero Section ================ */
 .heroSection {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   min-height: auto;
   width: 100%;
   background-color: var(--colorGrey50, #f0f1f1);
 
   @media (--viewportLarge) {
-    grid-template-columns: 7fr 10fr;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 10fr);
     min-height: 600px;
   }
 }
@@ -48,6 +48,7 @@
   justify-content: center;
   background-color: #f9f9f9;
   padding: 24px;
+  min-width: 0;
   min-height: 400px;
 
   @media (--viewportMedium) {
@@ -168,6 +169,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-self: flex-start;
+  min-width: 0;
   padding: 32px 24px;
   background-color: var(--colorWhite, #ffffff);
 
@@ -210,6 +213,8 @@
   letter-spacing: -0.02em;
   color: var(--colorOnSurface, #2d2f2f);
   margin: 0 0 32px 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 
   @media (--viewportMedium) {
     font-size: 42px;

@@ -553,7 +553,7 @@ const PreviewListingPageProductLayout = props => {
             )}
           </div>
 
-          {(visibleImages.length > 0 || (isDraftMode && !isGuestPreview)) && (
+          {(visibleImages.length > 1 || (isDraftMode && !isGuestPreview)) && (
             <div className={productCss.thumbnailsContainer}>
               <div className={productCss.thumbnailsScroll}>
                 {isDraftMode && !isGuestPreview && (

@@ -97,6 +97,14 @@
 /* Layout allineato a ProductPage (hero + contentWrapper) */
 .previewProductLayout {
   width: 100%;
+
+  /* Safety net: clip any stray overflow on mobile.
+     overflow-x: hidden fallback for Safari < 16; clip preferred so the element
+     does not become a scroll container (preserves position: sticky at larger breakpoints). */
+  @media (max-width: 767px) {
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
 }
 
 .previewPageIntro {
@@ -1596,6 +1604,7 @@
   flex-direction: row;
   justify-content: center;
   padding-top: 1.5rem;
+  padding-bottom: 10px;
   border-top: 1px solid var(--matterColorNegative);
   justify-self: flex-end;
 
@@ -1668,9 +1677,19 @@
   }
 }
 
-/* Edit panel drawer - desktop: slide from right, mobile: centered modal */
+/* ─── Drawer backdrop keyframes ─────────────────────────────────────── */
+@keyframes drawerBackdropIn {
+  from { background-color: transparent; }
+  to   { background-color: rgba(0, 0, 0, 0.4); }
+}
+
+@keyframes drawerBackdropOut {
+  from { background-color: rgba(0, 0, 0, 0.4); }
+  to   { background-color: transparent; }
+}
+
+/* Edit panel drawer - desktop: slide from right, mobile/tablet: sheet from bottom / fade+scale */
 .editPanelDrawerScrollLayer {
-  /* Base: same as Modal scrollLayer */
   flex-grow: 1;
   display: flex;
   min-height: 100vh;
@@ -1683,17 +1702,33 @@
     align-items: flex-start;
     padding: 0;
     background-color: rgba(0, 0, 0, 0.4);
+    animation: drawerBackdropIn 0.3s ease forwards;
   }
 
-  /* Desktop: align drawer to the right */
   @media (--viewportLarge) {
     justify-content: flex-end !important;
     align-items: stretch !important;
   }
 }
 
+/* ─── Mobile (<768px): full-screen sheet slides up from bottom ───────── */
 .editPanelDrawerContainer {
-  /* Desktop: drawer from right, wider, with smoother base transition */
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s ease;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+
+  /* ─── Tablet (768px–1023px): fade + gentle scale up ─────────────── */
+  @media (--viewportMedium) {
+    transform: scale(0.96) translateY(12px);
+    opacity: 0;
+    transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.28s ease;
+  }
+
+  /* ─── Desktop (≥1024px): slide in from right ────────────────────── */
   @media (--viewportLarge) {
     flex-basis: auto !important;
     width: min(680px, 58vw) !important;
@@ -1709,28 +1744,53 @@
     border-bottom: none !important;
     border-left: 4px solid var(--marketplaceColor) !important;
     transform: translate3d(100%, 0, 0);
-    transition: transform 0.35s ease-out;
-    will-change: transform;
-    backface-visibility: hidden;
+    opacity: 1;
+    transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
   }
 }
 
-/* Drawer open: gentle slide in (longer, softer easing so it doesn’t feel violent) */
+/* Drawer open */
 .editPanelDrawerContainer.editPanelDrawerOpen {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s ease;
+
+  @media (--viewportMedium) {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.28s ease;
+  }
+
   @media (--viewportLarge) {
     transform: translate3d(0, 0, 0);
-    transition: transform 0.46s linear;
+    opacity: 1;
+    transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-/* Drawer closing: slide out */
+/* Drawer closing */
 .editPanelDrawerContainer.editPanelDrawerClosing {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.22s ease-in;
+
+  @media (--viewportMedium) {
+    transform: scale(0.96) translateY(12px);
+    opacity: 0;
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.2s ease-in;
+  }
+
   @media (--viewportLarge) {
     transform: translate3d(100%, 0, 0);
-    transition: transform 0.46s linear;
+    opacity: 1;
+    transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
   }
 }
 
