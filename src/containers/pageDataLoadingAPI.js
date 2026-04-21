@@ -4,7 +4,6 @@
 import { loadData as AIListingCreationPageLoader } from './AIListingCreationPage/AIListingCreationPage.duck';
 import { loadData as AuthenticationPageLoader } from './AuthenticationPage/AuthenticationPage.duck';
 import { loadData as LandingPageLoader } from './LandingPage/LandingPage.duck';
-import { loadData as NewLandingPageLoader } from './NewLandingPage/NewLandingPage.duck';
 import { setInitialValues as CheckoutPageInitialValues } from './CheckoutPage/CheckoutPage.duck';
 import { loadData as CMSPageLoader } from './CMSPage/CMSPage.duck';
 import { loadData as ContactDetailsPageLoader } from './ContactDetailsPage/ContactDetailsPage.duck';
@@ -36,9 +35,6 @@ const getPageDataLoadingAPI = () => {
     },
     LandingPage: {
       loadData: LandingPageLoader,
-    },
-    NewLandingPage: {
-      loadData: NewLandingPageLoader,
     },
     CheckoutPage: {
       setInitialValues: CheckoutPageInitialValues,

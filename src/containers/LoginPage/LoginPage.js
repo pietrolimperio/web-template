@@ -19,7 +19,7 @@ import { isGuestListingPendingPublish } from '../../util/guestListingStorage';
 import { Page, Form, PrimaryButton, FieldTextInput, NamedLink, IconSpinner } from '../../components';
 
 import logoImage from '../../assets/logo.png';
-import css from './NewLoginPage.module.css';
+import css from './LoginPage.module.css';
 
 /**
  * NewLoginPage - A modern, Webflow-inspired login page

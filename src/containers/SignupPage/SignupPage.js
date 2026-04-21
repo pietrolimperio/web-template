@@ -189,7 +189,7 @@ import {
 } from '../../components';
 
 import logoImage from '../../assets/logo.png';
-import css from './NewSignupStripePage.module.css';
+import css from './SignupPage.module.css';
 
 // Constants for Stripe onboarding return URLs
 const STRIPE_ONBOARDING_RETURN_URL_SUCCESS = 'success';
@@ -673,13 +673,13 @@ export const NewSignupStripePageComponent = ({
 
       // Get the onboarding link
       const successURL = `${rootURL}${createResourceLocatorString(
-        'NewSignupStripePageReturn',
+        'SignupPageReturn',
         routes,
         { returnURLType: STRIPE_ONBOARDING_RETURN_URL_SUCCESS },
         {}
       )}`;
       const failureURL = `${rootURL}${createResourceLocatorString(
-        'NewSignupStripePageReturn',
+        'SignupPageReturn',
         routes,
         { returnURLType: STRIPE_ONBOARDING_RETURN_URL_FAILURE },
         {}

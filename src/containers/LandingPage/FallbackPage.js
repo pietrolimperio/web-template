@@ -20,11 +20,11 @@ export const fallbackSections = error => ({
   meta: {
     pageTitle: {
       fieldType: 'metaTitle',
-      content: 'Home page',
+      content: 'New Landing Page',
     },
     pageDescription: {
       fieldType: 'metaDescription',
-      content: 'Home page fetch failed',
+      content: 'New landing page fetch failed',
     },
   },
 });
@@ -33,7 +33,7 @@ export const fallbackSections = error => ({
 //       It needs to be something that is not part of fetched assets but built-in text
 const SectionMaintenanceMode = props => {
   const { sectionId, error } = props;
-  // 404 means that the landing-page asset was not found from the expected asset path
+  // 404 means that the new-landing-page asset was not found from the expected asset path
   // which is defined in config.js
   const is404 = error?.status === 404;
 
@@ -43,7 +43,7 @@ const SectionMaintenanceMode = props => {
         <div className={css.content}>
           <h2>Oops, something went wrong!</h2>
           <p>
-            The marketplace is not fully operational at the moment.
+            The new landing page is not fully configured at the moment.
             <br />
             Try refreshing the page and if that does not solve the issue, contact the marketplace
             admins.
@@ -59,7 +59,7 @@ const SectionMaintenanceMode = props => {
   );
 };
 
-// This is the fallback page, in case there's no Landing Page asset defined in Console.
+// This is the fallback page, in case there's no New Landing Page asset defined in Console.
 const FallbackPage = props => {
   const { error, ...rest } = props;
   return (

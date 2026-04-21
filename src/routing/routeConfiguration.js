@@ -21,11 +21,9 @@ const EditListingPage = loadable(() => import(/* webpackChunkName: "EditListingP
 const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailVerificationPage" */ '../containers/EmailVerificationPage/EmailVerificationPage'));
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const MakeOfferPage = loadable(() => import(/* webpackChunkName: "MakeOfferPage" */ '../containers/MakeOfferPage/MakeOfferPage'));
-const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
-const NewLandingPage = loadable(() => import(/* webpackChunkName: "NewLandingPage" */ '../containers/NewLandingPage/NewLandingPage'));
-const NewLoginPage = loadable(() => import(/* webpackChunkName: "NewLoginPage" */ '../containers/NewLoginPage/NewLoginPage'));
-const NewSignupPage = loadable(() => import(/* webpackChunkName: "NewSignupPage" */ '../containers/NewSignupPage/NewSignupPage'));
-const NewSignupStripePage = loadable(() => import(/* webpackChunkName: "NewSignupStripePage" */ '../containers/NewSignupStripePage/NewSignupStripePage'));
+const LandingPageComponent = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
+const LoginPageComponent = loadable(() => import(/* webpackChunkName: "LoginPage" */ '../containers/LoginPage/LoginPage'));
+const SignupPageComponent = loadable(() => import(/* webpackChunkName: "SignupPage" */ '../containers/SignupPage/SignupPage'));
 const ListingPageCoverPhoto = loadable(() => import(/* webpackChunkName: "ListingPageCoverPhoto" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCoverPhoto'));
 const ListingPageCarousel = loadable(() => import(/* webpackChunkName: "ListingPageCarousel" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCarousel'));
 const ProductPage = loadable(() => import(/* webpackChunkName: "ProductPage" */ '../containers/ProductPage/ProductPage'));
@@ -84,8 +82,8 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
     {
       path: '/',
       name: 'LandingPage',
-      component: NewLandingPage,
-      loadData: pageDataLoadingAPI.NewLandingPage.loadData,
+      component: LandingPageComponent,
+      loadData: pageDataLoadingAPI.LandingPage.loadData,
     },
     {
       path: '/new-landing',
@@ -270,43 +268,38 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
     {
       path: '/login',
       name: 'LoginPage',
-      component: NewLoginPage,
+      component: LoginPageComponent,
     },
     {
       path: '/old-login',
       name: 'OldLoginPage',
-      component: AuthenticationPage,
-      extraProps: { tab: 'login' },
+      component: () => <NamedRedirect name="LoginPage" />,
     },
     {
       path: '/old-signup',
       name: 'OldSignupPage',
-      component: NewSignupPage,
+      component: () => <NamedRedirect name="SignupPage" />,
     },
     {
       path: '/original-signup',
       name: 'OriginalSignupPage',
-      component: AuthenticationPage,
-      extraProps: { tab: 'signup' },
-      loadData: pageDataLoadingAPI.AuthenticationPage.loadData,
+      component: () => <NamedRedirect name="SignupPage" />,
     },
     // Stripe-first signup page (main signup endpoint)
     {
       path: '/signup',
       name: 'SignupPage',
-      component: NewSignupStripePage,
+      component: SignupPageComponent,
     },
     {
       path: '/signup/:returnURLType',
-      name: 'NewSignupStripePageReturn',
-      component: NewSignupStripePage,
+      name: 'SignupPageReturn',
+      component: SignupPageComponent,
     },
     {
       path: '/old-signup/:userType',
       name: 'SignupForUserTypePage',
-      component: AuthenticationPage,
-      extraProps: { tab: 'signup' },
-      loadData: pageDataLoadingAPI.AuthenticationPage.loadData,
+      component: () => <NamedRedirect name="SignupPage" />,
     },
     {
       path: '/confirm',

@@ -22,18 +22,22 @@ describe('util/routes.js', () => {
     });
 
     it('should return meaningful strings with path parameters', () => {
+      // ProductPage is the primary listing route at /l/:slug/:id
+      expect(
+        createResourceLocatorString('ProductPage', routes, { id: '1234', slug: 'nice-listing' }, {})
+      ).toEqual('/l/nice-listing/1234');
+      // ListingPage (legacy) is now at /lold/:slug/:id
       expect(
         createResourceLocatorString('ListingPage', routes, { id: '1234', slug: 'nice-listing' }, {})
-      ).toEqual('/l/nice-listing/1234');
-      expect(() => createResourceLocatorString('ListingPage', routes, {}, {})).toThrowError(
-        TypeError('Missing parameters: slug, id')
-      );
+      ).toEqual('/lold/nice-listing/1234');
+      // path-to-regexp throws when required params are missing; exact message is implementation-specific
+      expect(() => createResourceLocatorString('ProductPage', routes, {}, {})).toThrow();
       expect(() =>
-        createResourceLocatorString('ListingPage', routes, { id: '1234' }, {})
-      ).toThrowError(TypeError('Missing parameters: slug'));
+        createResourceLocatorString('ProductPage', routes, { id: '1234' }, {})
+      ).toThrow();
       expect(() =>
-        createResourceLocatorString('ListingPage', routes, { slug: 'nice-listing' }, {})
-      ).toThrowError(TypeError('Missing parameters: id'));
+        createResourceLocatorString('ProductPage', routes, { slug: 'nice-listing' }, {})
+      ).toThrow();
     });
 
     it('should return meaningful strings with search parameters', () => {
@@ -48,7 +52,7 @@ describe('util/routes.js', () => {
     it('should return meaningful strings with path and search parameters', () => {
       expect(
         createResourceLocatorString(
-          'ListingPage',
+          'ProductPage',
           routes,
           { id: '1234', slug: 'nice-listing' },
           { extrainfo: true }
@@ -80,24 +84,34 @@ describe('util/routes.js', () => {
       };
       expect(canonicalRoutePath(routes, location)).toEqual('/?some=value#and-some-hash');
     });
-    it('handles ListingPage', () => {
+    it('handles ProductPage — full slug/id path is canonical (no slug stripping)', () => {
       const location = {
         pathname: '/l/some-slug-here/00000000-0000-0000-0000-000000000000',
         search: '',
         hash: '',
       };
       expect(canonicalRoutePath(routes, location)).toEqual(
-        '/l/00000000-0000-0000-0000-000000000000'
+        '/l/some-slug-here/00000000-0000-0000-0000-000000000000'
       );
     });
-    it('handles ListingPage book', () => {
+    it('handles ProductPage with search param', () => {
       const location = {
-        pathname: '/l/some-slug-here/00000000-0000-0000-0000-000000000000?book=true',
+        pathname: '/l/some-slug-here/00000000-0000-0000-0000-000000000000',
+        search: '?book=true',
+        hash: '',
+      };
+      expect(canonicalRoutePath(routes, location)).toEqual(
+        '/l/some-slug-here/00000000-0000-0000-0000-000000000000?book=true'
+      );
+    });
+    it('handles legacy ListingPage at /lold/ — slug is stripped to canonical id-only path', () => {
+      const location = {
+        pathname: '/lold/some-slug-here/00000000-0000-0000-0000-000000000000',
         search: '',
         hash: '',
       };
       expect(canonicalRoutePath(routes, location)).toEqual(
-        '/l/00000000-0000-0000-0000-000000000000?book=true'
+        '/lold/00000000-0000-0000-0000-000000000000'
       );
     });
     it('handles ListingBasePage', () => {

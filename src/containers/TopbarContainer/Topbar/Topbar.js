@@ -374,11 +374,10 @@ const TopbarComponent = props => {
     searchFormDisplay === SEARCH_DISPLAY_NOT_LANDING_PAGE && resolvedCurrentPage !== 'LandingPage';
 
   // SCROLL-TRIGGERED SEARCH BAR LOGIC:
-  // On Landing/CMS/NewLanding pages: hide search initially, show after scrolling
+  // On Landing/CMS pages: hide search initially, show after scrolling
   // On other pages: follow normal configuration
   const isLandingOrCMSPage =
     resolvedCurrentPage === 'LandingPage' ||
-    resolvedCurrentPage === 'NewLandingPage' ||
     resolvedCurrentPage?.startsWith('CMSPage:');
 
   const showSearchForm = isLandingOrCMSPage
