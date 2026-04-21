@@ -18,13 +18,12 @@ exports[`EditListingDeliveryForm matches snapshot 1`] = `
         >
           <div
             class="aspectPadding"
-            style="padding-bottom: 100%;"
           >
             <div
               class="aspectBox"
             >
               <input
-                accept="image/*"
+                accept="image/png, image/jpeg, image/jpg"
                 class="addImageInput"
                 id="addImage"
                 name="addImage"

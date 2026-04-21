@@ -22,6 +22,9 @@ beforeAll(() => {
           }),
       }),
     },
+    createRequest: jest.fn(() => ({
+      send: () => Promise.resolve({ body: { features: [] } }),
+    })),
   });
 });
 

@@ -166,12 +166,14 @@ describe('CheckoutPage', () => {
 
     const billingDetails = 'StripePaymentForm.billingDetails';
     expect(screen.getByRole('heading', { name: billingDetails })).toBeInTheDocument();
-    expect(getTextbox('StripePaymentForm.billingDetailsNameLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.addressLine1Label')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.addressLine2Label')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.postalCodeLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.cityLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.stateLabel')).toBeInTheDocument();
+    // With shipping, "same address as shipping" checkbox is checked by default
+    // so billing name/address fields are hidden until the checkbox is unchecked
+    expect(
+      screen.getByRole('checkbox', { name: /StripePaymentForm.sameBillingAndShippingAddress/ })
+    ).toBeChecked();
+    expect(
+      screen.queryByRole('textbox', { name: 'StripePaymentForm.billingDetailsNameLabel' })
+    ).not.toBeInTheDocument();
     expect(getTextbox('StripePaymentForm.messageLabel')).toBeInTheDocument();
 
     expect(

@@ -52,8 +52,19 @@ exports[`ListingCard matches snapshot 1`] = `
             class="price"
             title="55"
           >
-            <span>
-              ListingCard.price
+            <span
+              class="priceDesktopOnly"
+            >
+              <span>
+                ListingCard.price
+              </span>
+            </span>
+            <span
+              class="priceMobileOnly"
+            >
+              <span>
+                ListingCard.price
+              </span>
             </span>
           </div>
         </div>

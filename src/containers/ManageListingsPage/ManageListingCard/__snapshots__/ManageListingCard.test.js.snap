@@ -13,7 +13,6 @@ exports[`ManageListingCard matches snapshot (purchase) 1`] = `
     >
       <div
         class="aspectPadding"
-        style="padding-bottom: 100%;"
       >
         <div
           class="aspectBox"
@@ -208,7 +207,7 @@ exports[`ManageListingCard matches snapshot (purchase) 1`] = `
     >
       <a
         class="manageLink"
-        href="/l/listing1-title/listing1/edit/details"
+        href="/l/edit/listing1"
       >
         <span>
           ManageListingCard.editListing

@@ -754,6 +754,7 @@ describe('EditListingPage', () => {
           transactionProcessAlias: 'default-purchase/release-1',
           unitType: 'item',
           category: 'cat_1',
+          shippingEnabled: false,
         },
       },
       {

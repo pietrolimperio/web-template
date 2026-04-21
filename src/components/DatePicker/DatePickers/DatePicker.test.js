@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { act } from 'react';
 import { createIntl, createIntlCache } from 'react-intl';
 import '@testing-library/jest-dom';
 
@@ -218,7 +218,7 @@ describe('SingleDatePicker', () => {
     intl,
   };
 
-  it('shows selected date', () => {
+  it('shows selected date', async () => {
     const startDay = removeTimezoneOffset(new Date('2024-08-11'));
     render(<SingleDatePicker {...props} />);
 
@@ -227,7 +227,7 @@ describe('SingleDatePicker', () => {
       screen.queryByRole('button', { name: `${calendarDateString} is selected` })
     ).not.toBeInTheDocument();
 
-    const inputDateFormatOptions = { day: 'numeric', month: 'short', weekday: 'short' };
+    const inputDateFormatOptions = { day: 'numeric', month: 'short', weekday: 'short', year: 'numeric' };
     const todayInputString = intl.formatDate(startDay, inputDateFormatOptions);
     userEvent.click(screen.getByDisplayValue(todayInputString));
 
@@ -238,7 +238,16 @@ describe('SingleDatePicker', () => {
     expect(calendarDateBtn).toHaveAttribute('tabIndex', '0');
     expect(calendarDateBtn).toHaveClass('dateSelected');
 
-    userEvent.keyboard('[ArrowRight][Enter]');
+    // Focus the calendar cell so keyboard events reach the DatePicker's onKeyDown handler
+    calendarDateBtn.focus();
+    await act(async () => {
+      userEvent.keyboard('[ArrowRight]');
+    });
+    // Separate act flushes the setCurrentDate(Aug 12) update and focusDate(Aug 12) effect
+    // before Enter fires, so onSelectDate(currentDate) sees Aug 12
+    await act(async () => {
+      userEvent.keyboard('[Enter]');
+    });
     const nextDayInputString = intl.formatDate(addDays(startDay, 1), inputDateFormatOptions);
     expect(screen.getByDisplayValue(nextDayInputString)).toBeInTheDocument();
     expect(screen.queryByDisplayValue(todayInputString)).not.toBeInTheDocument();

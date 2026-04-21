@@ -58,7 +58,7 @@ describe('NoAccessPageComponent', () => {
         />
       );
     });
-    const theNotFoundHeading = '404';
+    const theNotFoundHeading = 'NotFoundPage.heading';
     const found = screen.queryByText(theNotFoundHeading);
     expect(found).toBeInTheDocument();
   });

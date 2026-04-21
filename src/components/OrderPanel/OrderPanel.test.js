@@ -517,6 +517,8 @@ describe('OrderPanel', () => {
             address: 'Main Street 123',
             building: 'A 1',
           },
+          shippingEnabled: false,
+          pickupEnabled: false,
         },
       },
       {

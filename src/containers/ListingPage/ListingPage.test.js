@@ -231,6 +231,7 @@ describe('ListingPage variants', () => {
         initialState,
         config,
         routeConfiguration,
+        initialPath: `/lold/${slug}/${id}`,
       }
     );
 
@@ -287,6 +288,7 @@ describe('ListingPage variants', () => {
         initialState,
         config,
         routeConfiguration,
+        initialPath: `/lold/${slug}/${id}`,
       }
     );
     await waitFor(() => {

@@ -8,6 +8,8 @@ import {
   getHostedConfiguration,
   renderWithProviders as render,
   testingLibrary,
+  createFakeDispatch,
+  dispatchedActions,
 } from '../../util/testHelpers';
 import { fireEvent } from '@testing-library/react';
 
@@ -241,8 +243,8 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/showListing/pending',
-        meta: { arg: { listingId: 'new-listing-id' } },
+        type: 'app/MakeOfferPage/SHOW_LISTING_REQUEST',
+        payload: { listingId: 'new-listing-id' },
       };
 
       expect(reducer(previousState, action)).toEqual({
@@ -261,8 +263,8 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/showListing/fulfilled',
-        payload: { id: 'listing-id' },
+        type: 'app/MakeOfferPage/SHOW_LISTING__SUCCESS',
+        payload: { listing: { id: 'listing-id' } },
       };
 
       expect(reducer(previousState, action)).toEqual({
@@ -280,7 +282,7 @@ describe('Duck', () => {
 
       const error = storableError(new Error('Listing not found'));
       const action = {
-        type: 'MakeOfferPage/showListing/rejected',
+        type: 'app/MakeOfferPage/SHOW_LISTING_ERROR',
         payload: error,
       };
 
@@ -299,8 +301,8 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/showTransaction/pending',
-        meta: { arg: { transactionId: 'transaction-id' } },
+        type: 'app/MakeOfferPage/SHOW_TRANSACTION_REQUEST',
+        payload: { transactionId: 'transaction-id' },
       };
 
       expect(reducer(previousState, action)).toEqual({
@@ -318,7 +320,7 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/showTransaction/fulfilled',
+        type: 'app/MakeOfferPage/SHOW_TRANSACTION_SUCCESS',
         payload: { id: 'transaction-id' },
       };
 
@@ -336,7 +338,7 @@ describe('Duck', () => {
 
       const error = storableError(new Error('Transaction not found'));
       const action = {
-        type: 'MakeOfferPage/showTransaction/rejected',
+        type: 'app/MakeOfferPage/SHOW_TRANSACTION_ERROR',
         payload: error,
       };
 
@@ -354,7 +356,7 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/makeOffer/pending',
+        type: 'app/MakeOfferPage/MAKE_OFFER_REQUEST',
       };
 
       expect(reducer(previousState, action)).toEqual({
@@ -372,7 +374,7 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'MakeOfferPage/makeOffer/fulfilled',
+        type: 'app/MakeOfferPage/MAKE_OFFER_SUCCESS',
         payload: { id: 'transaction-id' },
       };
 
@@ -391,7 +393,7 @@ describe('Duck', () => {
 
       const error = storableError(new Error('Make offer error'));
       const action = {
-        type: 'MakeOfferPage/makeOffer/rejected',
+        type: 'app/MakeOfferPage/MAKE_OFFER_ERROR',
         payload: error,
       };
 
@@ -421,35 +423,22 @@ describe('Duck', () => {
       };
 
       const sdk = {
-        currentUser: { show: sdkFn(fakeResponse(currentUser)) },
         listings: { show: sdkFn(fakeResponse(listing)) },
         ownListings: { show: sdkFn(fakeResponse(listing)) },
-        authInfo: sdkFn({}),
       };
 
-      let actions = [];
-      const store = configureStore({
-        initialState: testInitialState,
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+      const getState = () => testInitialState;
+      const dispatch = createFakeDispatch(getState, sdk);
 
       return loadData({ id: listingId }, null, config)(dispatch, getState, sdk).then(data => {
-        const relevantActions = actions.filter(
-          action => !action.type.startsWith('user/fetchCurrentUser/')
-        );
-
-        expect(relevantActions[0]).toEqual(setInitialState());
+        const actions = dispatchedActions(dispatch);
+        expect(actions[0]).toEqual(setInitialState());
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showListing/pending')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING_REQUEST')
         ).toBe(true);
-        expect(relevantActions.some(action => action.type === 'marketplaceData/addEntities')).toBe(
-          true
-        );
+        expect(actions.some(action => action.type === 'app/marketplaceData/ADD_MARKETPLACE_ENTITIES')).toBe(true);
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showListing/fulfilled')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING__SUCCESS')
         ).toBe(true);
       });
     });
@@ -466,37 +455,25 @@ describe('Duck', () => {
       };
 
       const sdk = {
-        currentUser: { show: sdkFn(fakeResponse(currentUser)) },
         transactions: { show: sdkFn(fakeResponse(transaction)) },
-        authInfo: sdkFn({}),
       };
 
-      let actions = [];
-      const store = configureStore({
-        initialState: testInitialState,
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+      const getState = () => testInitialState;
+      const dispatch = createFakeDispatch(getState, sdk);
 
       return loadData({ id: listingId }, `?transactionId=${transactionId}`, config)(
         dispatch,
         getState,
         sdk
       ).then(data => {
-        const relevantActions = actions.filter(
-          action => !action.type.startsWith('user/fetchCurrentUser/')
-        );
-        expect(relevantActions[0]).toEqual(setInitialState());
+        const actions = dispatchedActions(dispatch);
+        expect(actions[0]).toEqual(setInitialState());
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showTransaction/pending')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_TRANSACTION_REQUEST')
         ).toBe(true);
-        expect(relevantActions.some(action => action.type === 'marketplaceData/addEntities')).toBe(
-          true
-        );
+        expect(actions.some(action => action.type === 'app/marketplaceData/ADD_MARKETPLACE_ENTITIES')).toBe(true);
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showTransaction/fulfilled')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_TRANSACTION_SUCCESS')
         ).toBe(true);
       });
     });
@@ -514,40 +491,23 @@ describe('Duck', () => {
 
       const privateConfig = {
         ...config,
-        accessControl: {
-          marketplace: {
-            private: true,
-          },
-        },
+        accessControl: { marketplace: { private: true } },
       };
 
-      const sdk = {
-        currentUser: { show: sdkFn(fakeResponse(currentUser)) },
-        authInfo: sdkFn({}),
-      };
-
-      let actions = [];
-      const store = configureStore({
-        initialState: testInitialState,
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+      const sdk = {};
+      const getState = () => testInitialState;
+      const dispatch = createFakeDispatch(getState, sdk);
 
       return loadData({ id: listingId }, null, privateConfig)(dispatch, getState, sdk).then(
         data => {
-          const relevantActions = actions.filter(
-            action => !action.type.startsWith('user/fetchCurrentUser/')
-          );
-
-          expect(relevantActions[0]).toEqual(setInitialState());
+          const actions = dispatchedActions(dispatch);
+          expect(actions[0]).toEqual(setInitialState());
           // Check that no data loading actions are dispatched
           expect(
-            relevantActions.some(action => action.type === 'MakeOfferPage/showListing/pending')
+            actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING_REQUEST')
           ).toBe(false);
           expect(
-            relevantActions.some(action => action.type === 'MakeOfferPage/showTransaction/pending')
+            actions.some(action => action.type === 'app/MakeOfferPage/SHOW_TRANSACTION_REQUEST')
           ).toBe(false);
         }
       );
@@ -566,34 +526,21 @@ describe('Duck', () => {
       };
 
       const sdk = {
-        currentUser: { show: sdkFn(fakeResponse(currentUser)) },
         ownListings: { show: sdkFn(fakeResponse(listing)) },
-        authInfo: sdkFn({}),
       };
 
-      let actions = [];
-      const store = configureStore({
-        initialState: testInitialState,
-        sdk,
-        extraMiddlewares: [logger(actions)],
-      });
-      const dispatch = store.dispatch;
-      const getState = store.getState;
+      const getState = () => testInitialState;
+      const dispatch = createFakeDispatch(getState, sdk);
 
       return loadData({ id: listingId }, null, config)(dispatch, getState, sdk).then(data => {
-        const relevantActions = actions.filter(
-          action => !action.type.startsWith('user/fetchCurrentUser/')
-        );
-
-        expect(relevantActions[0]).toEqual(setInitialState());
+        const actions = dispatchedActions(dispatch);
+        expect(actions[0]).toEqual(setInitialState());
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showListing/pending')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING_REQUEST')
         ).toBe(true);
-        expect(relevantActions.some(action => action.type === 'marketplaceData/addEntities')).toBe(
-          true
-        );
+        expect(actions.some(action => action.type === 'app/marketplaceData/ADD_MARKETPLACE_ENTITIES')).toBe(true);
         expect(
-          relevantActions.some(action => action.type === 'MakeOfferPage/showListing/fulfilled')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING__SUCCESS')
         ).toBe(true);
       });
     });

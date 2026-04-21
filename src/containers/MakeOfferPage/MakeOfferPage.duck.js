@@ -58,6 +58,8 @@ const initialState = {
   transaction: null,
   makeOfferInProgress: false,
   makeOfferError: null,
+  showTransactionInProgress: false,
+  showTransactionError: null,
 };
 
 export default function makeOfferPageReducer(state = initialState, action = {}) {
@@ -67,12 +69,12 @@ export default function makeOfferPageReducer(state = initialState, action = {}) 
       return { ...initialState, ...payload };
 
     case MAKE_OFFER_REQUEST:
-      return { ...state, makeOfferError: null };
+      return { ...state, makeOfferInProgress: true, makeOfferError: null };
     case MAKE_OFFER_SUCCESS:
-      return { ...state, transaction: payload };
+      return { ...state, makeOfferInProgress: false, transaction: payload };
     case MAKE_OFFER_ERROR:
       console.error(payload); // eslint-disable-line no-console
-      return { ...state, makeOfferError: payload };
+      return { ...state, makeOfferInProgress: false, makeOfferError: payload };
 
     case SHOW_LISTING_REQUEST:
       return {
@@ -89,7 +91,7 @@ export default function makeOfferPageReducer(state = initialState, action = {}) 
     case SHOW_TRANSACTION_REQUEST:
       return {
         ...state,
-        transaction: payload.transaction,
+        transaction: payload.transactionId,
         showTransactionError: null,
         showTransactionInProgress: true,
       };
@@ -110,6 +112,11 @@ export default function makeOfferPageReducer(state = initialState, action = {}) 
 export const setInitialValues = initialValues => ({
   type: SET_INITIAL_VALUES,
   payload: pick(initialValues, Object.keys(initialState)),
+});
+
+export const setInitialState = () => ({
+  type: SET_INITIAL_VALUES,
+  payload: {},
 });
 
 export const makeOfferRequest = () => ({ type: MAKE_OFFER_REQUEST });
@@ -360,8 +367,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
   const state = getState();
   const currentUser = state.user?.currentUser;
 
-  // Clear old line-items
-  dispatch(setInitialValues({ lineItems: null }));
+  dispatch(setInitialState());
 
   // In private marketplace mode, this page won't fetch data if the user is unauthorized
   const isAuthorized = currentUser && isUserAuthorized(currentUser);

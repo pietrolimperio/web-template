@@ -328,6 +328,7 @@ describe('SearchPage', () => {
         initialState,
         config,
         routeConfiguration,
+        initialPath: '/s',
         messages: { 'FieldSelectTree.screenreader.option': 'Choose {optionName}.' },
       }
     );
@@ -382,8 +383,8 @@ describe('SearchPage', () => {
       expect(getByText('l1 title')).toBeInTheDocument();
       // Has listing with title
       expect(getByText('l2 title')).toBeInTheDocument();
-      // 2 listings with the same price
-      expect(getAllByText('ListingCard.price')).toHaveLength(2);
+      // 2 listings with the same price (2 DOM elements per card: mobile + desktop)
+      expect(getAllByText('ListingCard.price')).toHaveLength(4);
     });
 
     // Test category intercation: click "Fish"
@@ -420,6 +421,7 @@ describe('SearchPage', () => {
       initialState,
       config,
       routeConfiguration,
+      initialPath: '/s',
       messages: {
         'SearchPage.screenreader.openFilterButton': 'Filter: {label}',
         'FieldSelectTree.screenreader.option': 'Choose {optionName}.',
@@ -474,8 +476,8 @@ describe('SearchPage', () => {
       expect(getByText('l1 title')).toBeInTheDocument();
       // Has listing with title
       expect(getByText('l2 title')).toBeInTheDocument();
-      // 2 listings with the same price
-      expect(getAllByText('ListingCard.price')).toHaveLength(2);
+      // 2 listings with the same price (2 DOM elements per card: mobile + desktop)
+      expect(getAllByText('ListingCard.price')).toHaveLength(4);
     });
 
     // Test category intercation

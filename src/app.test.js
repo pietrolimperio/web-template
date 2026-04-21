@@ -4,6 +4,18 @@ import { getHostedConfiguration } from './util/testHelpers';
 import { ClientApp } from './app';
 import configureStore from './store';
 
+// Mock @loadable/component to return empty fallback components synchronously
+// so that dynamic imports don't cause SyntaxError retry loops in the test environment.
+jest.mock('@loadable/component', () => {
+  const React = require('react');
+  return (loader, opts = {}) => {
+    const Fallback = (opts && opts.fallback) ? opts.fallback : () => null;
+    const LoadableComponent = () => React.createElement(Fallback);
+    LoadableComponent.preload = () => {};
+    return LoadableComponent;
+  };
+});
+
 const jsdomScroll = window.scroll;
 beforeAll(() => {
   // Mock window.scroll - otherwise, Jest/JSDOM will print a not-implemented error.
@@ -29,7 +41,15 @@ describe('Application - JSDOM environment', () => {
       },
     };
     const resolvePageAssetCall = () => Promise.resolve(pageData);
-    const fakeSdk = { assetByVersion: resolvePageAssetCall, assetByAlias: resolvePageAssetCall };
+    const resolveListingsCall = () => Promise.resolve({ data: { data: [], included: [] } });
+    const resolveEmptyCall = () => Promise.resolve({ data: {} });
+    const fakeSdk = {
+      assetByVersion: resolvePageAssetCall,
+      assetByAlias: resolvePageAssetCall,
+      listings: { query: resolveListingsCall },
+      currentUser: { show: resolveEmptyCall },
+      authInfo: resolveEmptyCall,
+    };
     const store = configureStore({}, fakeSdk);
     const div = document.createElement('div');
     const root = ReactDOMClient.createRoot(div);

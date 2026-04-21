@@ -41,9 +41,8 @@ describe('Application - node environment', () => {
     const loginPath = '/login';
     const signupPath = '/signup';
     const urlRedirects = {
-      '/l/new': signupPath,
-      '/l/listing-title-slug/1234/new/description': signupPath,
-      '/l/listing-title-slug/1234/checkout': signupPath,
+      '/l/listing-title-slug/1234/new/description': loginPath,
+      '/l/listing-title-slug/1234/checkout': loginPath,
       '/profile-settings': loginPath,
       '/inbox': loginPath,
       '/inbox/orders': loginPath,
