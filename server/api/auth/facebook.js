@@ -45,7 +45,12 @@ const strategyOptions = {
 const verifyCallback = (req, accessToken, refreshToken, profile, done) => {
   const { email, first_name, last_name } = profile._json;
   const state = req.query.state;
-  const queryParams = JSON.parse(state);
+  let queryParams = {};
+  try {
+    queryParams = JSON.parse(state);
+  } catch (e) {
+    return done(new Error('Invalid state parameter in Facebook OAuth callback'));
+  }
 
   const { from, defaultReturn, defaultConfirm, userType } = queryParams;
 

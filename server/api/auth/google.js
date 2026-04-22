@@ -49,7 +49,12 @@ const verifyCallback = (req, accessToken, refreshToken, rawReturn, profile, done
 
   const { email, given_name, family_name } = profile._json;
   const state = req.query.state;
-  const queryParams = JSON.parse(state);
+  let queryParams = {};
+  try {
+    queryParams = JSON.parse(state);
+  } catch (e) {
+    return done(new Error('Invalid state parameter in Google OAuth callback'));
+  }
 
   const { from, defaultReturn, defaultConfirm, userType } = queryParams;
 

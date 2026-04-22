@@ -5,6 +5,15 @@ const log = require('../../log.js');
 const sdkUtils = require('../../api-util/sdk');
 
 const CLIENT_ID = process.env.REACT_APP_SHARETRIBE_SDK_CLIENT_ID;
+
+// Ensure redirect paths are relative and on the same origin.
+// Rejects absolute URLs, protocol-relative URLs (//attacker.com), etc.
+const safeRedirectPath = path => {
+  if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) {
+    return path;
+  }
+  return '/';
+};
 const CLIENT_SECRET = process.env.SHARETRIBE_SDK_CLIENT_SECRET;
 const TRANSIT_VERBOSE = process.env.REACT_APP_SHARETRIBE_SDK_TRANSIT_VERBOSE === 'true';
 const USING_SSL = process.env.REACT_APP_SHARETRIBE_USING_SSL === 'true';
@@ -97,9 +106,9 @@ module.exports = (err, user, req, res, idpClientId, idpId) => {
         // login will add their defaul #_#_ which breaks the routing in frontend.
 
         if (from) {
-          res.redirect(`${rootUrl}${from}#`);
+          res.redirect(`${rootUrl}${safeRedirectPath(from)}#`);
         } else {
-          res.redirect(`${rootUrl}${defaultReturn}#`);
+          res.redirect(`${rootUrl}${safeRedirectPath(defaultReturn)}#`);
         }
       }
     })
@@ -130,6 +139,6 @@ module.exports = (err, user, req, res, idpClientId, idpId) => {
         }
       );
 
-      res.redirect(`${rootUrl}${defaultConfirm}#`);
+      res.redirect(`${rootUrl}${safeRedirectPath(defaultConfirm)}#`);
     });
 };
