@@ -58,6 +58,12 @@ function FloatTile({ top, right, w, h, label, rotate, delay, imgUrl }) {
 }
 
 function HeroIllustration({ listings = [] }) {
+  // TODO(landing-followup): Once hero items come from backend configuration, decouple this
+  // illustration from `popularListings` and revisit the memo dependency so image swaps are driven
+  // by the configured hero payload rather than only by the listing count.
+  // TODO(landing-followup): Once hero items come from backend configuration, decouple this
+  // illustration from `popularListings` and revisit the memo dependency so image swaps are driven
+  // by the configured hero payload rather than only by the listing count.
   const shuffledImgs = useMemo(() => {
     const imgs = listings
       .map(l => l?.images?.[0]?.attributes?.variants?.['listing-card']?.url)
