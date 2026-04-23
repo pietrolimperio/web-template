@@ -8,6 +8,7 @@ import { createSlug } from '../../../util/urlHelpers';
 import { formatMoney, parseEstimatedPriceNewToMoney } from '../../../util/currency';
 import { types as sdkTypes } from '../../../util/sdkLoader';
 import { isPriceVariationsEnabled } from '../../../util/configHelpers';
+import { isBookingProcessAlias } from '../../../transactions/transaction';
 import { useConfiguration } from '../../../context/configurationContext';
 import { useReveal } from '../hooks/useReveal';
 
@@ -48,6 +49,7 @@ const ListingCardNew = ({ listing, index }) => {
     : null;
 
   const unitType = publicData?.unitType;
+  const isBookable = isBookingProcessAlias(publicData?.transactionProcessAlias);
 
   // Price variants: show "Da X" if multiple variants exist
   const variants = publicData?.priceVariants || [];
@@ -70,7 +72,9 @@ const ListingCardNew = ({ listing, index }) => {
   const imgUrl = firstImage?.attributes?.variants?.['listing-card']?.url;
 
   const priceValue = <strong>{formattedPrice}</strong>;
-  const pricePerUnit = unitType ? (
+  // TODO(landing-followup): Keep landing-page price labels aligned with the shared ListingCard.
+  // Only bookable listings should render a per-unit suffix.
+  const pricePerUnit = unitType && isBookable ? (
     <span><FormattedMessage id="ListingCard.perUnit" values={{ unitType }} /></span>
   ) : null;
 
