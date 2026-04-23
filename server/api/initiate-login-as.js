@@ -69,6 +69,8 @@ code_challenge_method=S256`;
   const cookieOpts = {
     maxAge: 1000 * 30, // 30 seconds
     secure: USING_SSL,
+    httpOnly: true,
+    sameSite: 'lax',
   };
 
   res.cookie(stateKey, state, cookieOpts);

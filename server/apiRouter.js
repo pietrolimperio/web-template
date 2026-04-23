@@ -23,6 +23,33 @@ const { authenticateGoogle, authenticateGoogleCallback } = require('./api/auth/g
 
 const router = express.Router();
 
+// ================ Rate limiting ================ //
+
+// Simple sliding-window rate limiter (no external dependency).
+// Stores { count, windowStart } per IP in a Map; clears stale entries lazily.
+const makeRateLimiter = (maxRequests, windowMs) => {
+  const store = new Map();
+  return (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = store.get(ip);
+    if (!entry || now - entry.windowStart >= windowMs) {
+      store.set(ip, { count: 1, windowStart: now });
+      return next();
+    }
+    if (entry.count >= maxRequests) {
+      return res.status(429).json({ error: 'Too many requests, please try again later.' });
+    }
+    entry.count += 1;
+    return next();
+  };
+};
+
+// 60 req/min for general API endpoints
+const generalLimiter = makeRateLimiter(60, 60 * 1000);
+// 20 req/min for privileged transaction endpoints (tighter budget)
+const privilegedLimiter = makeRateLimiter(20, 60 * 1000);
+
 // ================ API router middleware: ================ //
 
 // Parse Transit body first to a string
@@ -49,35 +76,35 @@ router.use((req, res, next) => {
 
 // ================ API router endpoints: ================ //
 
-router.get('/initiate-login-as', initiateLoginAs);
-router.get('/login-as', loginAs);
-router.post('/transaction-line-items', transactionLineItems);
-router.post('/initiate-privileged', initiatePrivileged);
-router.post('/transition-privileged', transitionPrivileged);
+router.get('/initiate-login-as', generalLimiter, initiateLoginAs);
+router.get('/login-as', generalLimiter, loginAs);
+router.post('/transaction-line-items', privilegedLimiter, transactionLineItems);
+router.post('/initiate-privileged', privilegedLimiter, initiatePrivileged);
+router.post('/transition-privileged', privilegedLimiter, transitionPrivileged);
 
 // Create user with identity provider (e.g. Facebook or Google)
 // This endpoint is called to create a new user after user has confirmed
 // they want to continue with the data fetched from IdP (e.g. name and email)
-router.post('/auth/create-user-with-idp', createUserWithIdp);
+router.post('/auth/create-user-with-idp', generalLimiter, createUserWithIdp);
 
 // Facebook authentication endpoints
 
 // This endpoint is called when user wants to initiate authenticaiton with Facebook
-router.get('/auth/facebook', authenticateFacebook);
+router.get('/auth/facebook', generalLimiter, authenticateFacebook);
 
 // This is the route for callback URL the user is redirected after authenticating
 // with Facebook. In this route a Passport.js custom callback is used for calling
 // loginWithIdp endpoint in Sharetribe Auth API to authenticate user to the marketplace
-router.get('/auth/facebook/callback', authenticateFacebookCallback);
+router.get('/auth/facebook/callback', generalLimiter, authenticateFacebookCallback);
 
 // Google authentication endpoints
 
 // This endpoint is called when user wants to initiate authenticaiton with Google
-router.get('/auth/google', authenticateGoogle);
+router.get('/auth/google', generalLimiter, authenticateGoogle);
 
 // This is the route for callback URL the user is redirected after authenticating
 // with Google. In this route a Passport.js custom callback is used for calling
 // loginWithIdp endpoint in Sharetribe Auth API to authenticate user to the marketplace
-router.get('/auth/google/callback', authenticateGoogleCallback);
+router.get('/auth/google/callback', generalLimiter, authenticateGoogleCallback);
 
 module.exports = router;

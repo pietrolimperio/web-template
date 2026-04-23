@@ -113,7 +113,6 @@ const defaultDirectives = {
   scriptSrc: [
     self,
     (req, res) => `'nonce-${res.locals.cspNonce}'`,
-    unsafeEval,
     'maps.googleapis.com',
     'api.mapbox.com',
     '*.googletagmanager.com',

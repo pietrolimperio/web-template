@@ -520,7 +520,7 @@ const validSchemaOptions = (enumOptions, schemaType) => {
 const filterTypes = ['SelectSingleFilter', 'SelectMultipleFilter'];
 const validFilterType = (filterType, schemaType) => {
   const isEnumSchemaType = ['enum', 'multi-enum'].includes(schemaType);
-  const isUndefined = typeof searchMode === 'undefined';
+  const isUndefined = typeof filterType === 'undefined';
   const isKnownFilterType = filterTypes.includes(filterType);
   const shouldHaveFilterType = isEnumSchemaType && (isKnownFilterType || isUndefined);
   const isValid = !isEnumSchemaType || shouldHaveFilterType;

@@ -934,7 +934,9 @@ export const PreviewListingPageComponent = props => {
 
     // Basic validation
     if (!value || (typeof value === 'string' && !value.trim())) {
-      alert(intl.formatMessage({ id: 'PreviewListingPage.fieldRequired' }));
+      setNotificationType('error');
+      setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.fieldRequired' }));
+      setNotificationMessage(null);
       return;
     }
 
@@ -1011,7 +1013,9 @@ export const PreviewListingPageComponent = props => {
       setEditingField(null);
     } catch (error) {
       console.error('Failed to update listing:', error);
-      alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationType('error');
+      setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationMessage(null);
     } finally {
       setUpdatingListing(false);
     }
@@ -1294,7 +1298,9 @@ export const PreviewListingPageComponent = props => {
       setNotificationMessage(null);
     } catch (error) {
       console.error('Failed to remove key feature:', error);
-      alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationType('error');
+      setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationMessage(null);
     } finally {
       setUpdatingListing(false);
     }
@@ -1334,7 +1340,9 @@ export const PreviewListingPageComponent = props => {
       setNotificationMessage(null);
     } catch (error) {
       console.error('Failed to add key feature:', error);
-      alert(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationType('error');
+      setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.updateError' }));
+      setNotificationMessage(null);
     } finally {
       setUpdatingListing(false);
     }
@@ -1997,7 +2005,9 @@ export const PreviewListingPageComponent = props => {
           if (!response) {
             setHasPublished(false);
             setIsPublishing(false);
-            alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+            setNotificationType('error');
+            setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+            setNotificationMessage(null);
             return;
           }
           handleSuccessfulPublish(response);
@@ -2005,7 +2015,9 @@ export const PreviewListingPageComponent = props => {
         .catch(e => {
           setHasPublished(false); // Reset on error
           setIsPublishing(false);
-          alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+          setNotificationType('error');
+          setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+          setNotificationMessage(null);
         });
       return;
     }
@@ -2019,7 +2031,9 @@ export const PreviewListingPageComponent = props => {
           if (!response) {
             setHasPublished(false);
             setIsPublishing(false);
-            alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+            setNotificationType('error');
+            setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+            setNotificationMessage(null);
             return;
           }
           handleSuccessfulPublish(response);
@@ -2027,7 +2041,9 @@ export const PreviewListingPageComponent = props => {
         .catch(e => {
           setHasPublished(false); // Reset on error
           setIsPublishing(false);
-          alert(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+          setNotificationType('error');
+          setNotificationTitle(intl.formatMessage({ id: 'PreviewListingPage.publishError' }));
+          setNotificationMessage(null);
         });
     } else {
       // Stripe account missing or incomplete - show onboarding modal

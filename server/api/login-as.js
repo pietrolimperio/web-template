@@ -2,6 +2,14 @@ const sdkUtils = require('../api-util/sdk');
 
 const CLIENT_ID = process.env.REACT_APP_SHARETRIBE_SDK_CLIENT_ID;
 const ROOT_URL = process.env.REACT_APP_MARKETPLACE_ROOT_URL;
+
+// Ensure redirect paths are relative and on the same origin.
+const safeRedirectPath = path => {
+  if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) {
+    return path;
+  }
+  return '/';
+};
 const USING_SSL = process.env.REACT_APP_SHARETRIBE_USING_SSL === 'true';
 
 // redirect_uri param used when initiating a login as authentication flow and
@@ -49,6 +57,6 @@ module.exports = (req, res) => {
       redirect_uri: loginAsRedirectUri,
       code_verifier: codeVerifier,
     })
-    .then(() => res.redirect(targetPath || '/'))
+    .then(() => res.redirect(safeRedirectPath(targetPath)))
     .catch(() => res.status(401).send('Unable to authenticate as a user'));
 };

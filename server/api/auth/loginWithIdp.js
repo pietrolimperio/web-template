@@ -136,6 +136,8 @@ module.exports = (err, user, req, res, idpClientId, idpId) => {
         },
         {
           maxAge: 15 * 60 * 1000, // 15 minutes
+          httpOnly: true,
+          sameSite: 'lax',
         }
       );
 

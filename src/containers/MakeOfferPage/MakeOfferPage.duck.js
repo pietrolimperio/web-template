@@ -38,7 +38,7 @@ const getImageVariants = listingImageConfig => {
 export const SET_INITIAL_VALUES = 'app/MakeOfferPage/SET_INITIAL_VALUES';
 
 export const SHOW_LISTING_REQUEST = 'app/MakeOfferPage/SHOW_LISTING_REQUEST';
-export const SHOW_LISTING_SUCCESS = 'app/MakeOfferPage/SHOW_LISTING__SUCCESS';
+export const SHOW_LISTING_SUCCESS = 'app/MakeOfferPage/SHOW_LISTING_SUCCESS';
 export const SHOW_LISTING_ERROR = 'app/MakeOfferPage/SHOW_LISTING_ERROR';
 
 export const SHOW_TRANSACTION_REQUEST = 'app/MakeOfferPage/SHOW_TRANSACTION_REQUEST';
@@ -91,7 +91,6 @@ export default function makeOfferPageReducer(state = initialState, action = {}) 
     case SHOW_TRANSACTION_REQUEST:
       return {
         ...state,
-        transaction: payload.transactionId,
         showTransactionError: null,
         showTransactionInProgress: true,
       };
@@ -198,6 +197,7 @@ export const showListing = (listingId, config, isOwn = false) => (dispatch, getS
     })
     .catch(e => {
       dispatch(showListingError(storableError(e)));
+      throw e;
     });
 };
 
