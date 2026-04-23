@@ -124,3 +124,166 @@ Editorial design pass beyond the topbar alone: tokens, typography, contrast, and
 
 ### Documentation
 - **`DESIGN.md`:** This strategy doc and implementation notes (§7–§8).
+
+---
+
+## 9. Landing Page Design System (April 2026)
+
+This section documents the patterns established in the full landing page redesign. Use these as the canonical reference when building new sections or pages.
+
+### Font stack
+| Token | Value | Use |
+|---|---|---|
+| `--fontFamilyDisplay` | `'Geist', 'Manrope', sans-serif` | Section titles, listing titles, price figures, quote text |
+| `--fontFamily` | `'Inter'` (unchanged) | Body copy, descriptions |
+| `--fontFamilyMono` | `'JetBrains Mono', ui-monospace, 'SF Mono', monospace` | Kickers, labels, mono tags |
+
+Both Geist and JetBrains Mono are loaded via Google Fonts in `public/index.html`.
+
+### Kicker convention
+Small mono label above every section heading. Pattern:
+
+```jsx
+<span className={css.kicker}>— Label text</span>
+<h2 className={css.sectionTitle}>Main heading</h2>
+```
+
+```css
+.kicker {
+  font-family: var(--fontFamilyMono);
+  font-size: 12px;
+  color: var(--colorGrey500);
+  letter-spacing: 0.02em;
+  margin-bottom: 18px;
+}
+```
+
+### Section-heading layout
+Section headers use a flex row: left column holds kicker + title, right holds a "see all" link (where applicable).
+
+```css
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+```
+
+"See all" links are text-only (no underline, no border-bottom). Hover changes color to `--marketplaceColor` only:
+
+```css
+.seeAll { text-decoration: none; transition: color 0.15s; }
+.seeAll:hover { color: var(--marketplaceColor); text-decoration: none; }
+```
+
+### Section title scale
+```css
+.sectionTitle {
+  font-family: var(--fontFamilyDisplay);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.02;
+  font-weight: 400;
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
+}
+```
+
+### Striped placeholder backgrounds
+Used on cards when a real image is absent. Six hue variants keyed by index:
+
+```css
+.stripes0 { background: repeating-linear-gradient(45deg, oklch(0.90 0.03 45)  0 16px, oklch(0.94 0.015 45)  16px 32px); }
+.stripes1 { background: repeating-linear-gradient(45deg, oklch(0.92 0.03 350) 0 16px, oklch(0.95 0.015 350) 16px 32px); }
+.stripes2 { background: repeating-linear-gradient(45deg, oklch(0.88 0.04 170) 0 16px, oklch(0.93 0.02  170) 16px 32px); }
+.stripes3 { background: repeating-linear-gradient(45deg, oklch(0.89 0.05 135) 0 16px, oklch(0.94 0.02  135) 16px 32px); }
+.stripes4 { background: repeating-linear-gradient(45deg, oklch(0.90 0.03 75)  0 16px, oklch(0.94 0.015 75)  16px 32px); }
+.stripes5 { background: repeating-linear-gradient(45deg, oklch(0.91 0.03 20)  0 16px, oklch(0.94 0.015 20)  16px 32px); }
+```
+
+Assign by `(index % 6)`. Use the same direction and step size (16px/32px) for visual consistency across sections.
+
+### Mono badge overlay
+Small pill overlaid on card images (category key, listing type, etc.):
+
+```css
+.monoLabel {
+  position: absolute; bottom: 12px; left: 12px;
+  font-family: var(--fontFamilyMono);
+  font-size: 11px; color: var(--colorGrey600);
+  background: var(--colorWhite);
+  padding: 3px 7px; border-radius: 4px;
+  border: 1px solid var(--colorGrey200);
+}
+```
+
+### Scroll-reveal animation
+Shared hook: `src/containers/LandingPage/hooks/useReveal.js` (IntersectionObserver, threshold 0.15, fires once).
+
+```jsx
+const [ref, shown] = useReveal();
+<div ref={ref} className={`${css.reveal} ${shown ? css.revealIn : ''}`}>…</div>
+```
+
+```css
+.reveal    { opacity: 0; transform: translateY(24px); transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.revealIn  { opacity: 1; transform: none; }
+```
+
+Stagger sibling cards with `transition-delay` (e.g. `0.1s`, `0.2s`, `0.3s`).
+
+### Card hover lift
+Standard hover for interactive cards:
+
+```css
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(30, 20, 10, 0.06), 0 12px 36px rgba(30, 20, 10, 0.06);
+  border-color: var(--colorGrey400);
+}
+```
+
+### Price display
+- Actual price: `--marketplaceColor`, display font, weight 600
+- Per-unit label: `--colorGrey500`, 13px
+- "Da X" prefix for listings with price variants (use `ListingCard.priceStartingFrom` i18n key)
+- Estimated retail / compare-at: `--colorGrey400`, `text-decoration: line-through` via `<del>`
+
+### Search bar shape
+The hero search pill uses a **rounded rectangle** (not a full pill):
+
+```css
+.search {
+  border-radius: 14px; padding: 5px;
+  border: 1px solid var(--colorGrey200);
+  box-shadow: 0 4px 16px rgba(30, 20, 10, 0.06), 0 12px 36px rgba(30, 20, 10, 0.06);
+}
+.searchField  { padding: 8px 16px; border-radius: 8px; }
+.searchLabel  { font-family: var(--fontFamilyMono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+.searchBtn    { border-radius: 10px; min-height: 42px; font-weight: 600; font-size: 15px; }
+```
+
+### Section padding rhythm
+```
+Desktop  : padding: 72px 40px
+Tablet   : padding: 56px 24px   (≤960px)
+Mobile   : padding: 32px 20px   (≤599px, hero only — other sections inherit tablet)
+Max-width: 1440px, margin: 0 auto
+```
+
+Alt-background sections (TrustSection) wrap content in an `.inner` div and apply `background` on the outer `.section` element so the tint bleeds full-width.
+
+### Responsive breakpoints
+| Breakpoint | Behaviour |
+|---|---|
+| `≤960px` | Tablet: keep row layouts, reduce padding/gap, reduce font sizes |
+| `≤599px` | Mobile: collapse to single column, hide hero illustration, wrap search bar |
+| `≤380px` | Extra-small: categories collapse to 1 col |
+
+### Landing page changelog
+- **`src/containers/LandingPage/LandingPage.js`:** Section order — Hero → HowItWorks → Categories → PopularListings → Trust → Testimonials → FinalCTA → Partners. Topbar scroll threshold: 480px.
+- **`src/containers/LandingPage/hooks/useReveal.js`:** Shared scroll-reveal hook.
+- **`src/containers/LandingPage/sections/`:** HeroSection, HowItWorksSection, CategoriesSection, PopularListingsSection, TrustSection, TestimonialsSection, FinalCTASection (all new/rewritten). CTASection deleted.
+- **`src/styles/marketplaceDefaults.css`:** Added `--fontFamilyMono`; updated `--fontFamilyDisplay` to Geist.
+- **`public/index.html`:** Added Geist + JetBrains Mono Google Fonts link.
+- **`src/translations/it.json` / `en.json`:** All keys under `NewLandingPage.*`.
