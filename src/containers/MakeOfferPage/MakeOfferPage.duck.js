@@ -197,6 +197,7 @@ export const showListing = (listingId, config, isOwn = false) => (dispatch, getS
     })
     .catch(e => {
       dispatch(showListingError(storableError(e)));
+      throw e;
     });
 };
 

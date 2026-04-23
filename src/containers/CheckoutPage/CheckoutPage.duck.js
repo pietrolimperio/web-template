@@ -42,6 +42,7 @@ const initialState = {
   initiateOrderError: null,
   confirmPaymentError: null,
   stripeCustomerFetched: false,
+  stripeCustomerFetchError: null,
   initiateInquiryInProgress: false,
   initiateInquiryError: null,
 };

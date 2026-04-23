@@ -202,7 +202,7 @@ export const graph = {
         [transitions.PROVIDER_REJECT_COUNTER_OFFER]: states.OFFER_PENDING,
         [transitions.OPERATOR_REJECT_FROM_CUSTOMER_COUNTER_OFFER]: states.OFFER_REJECTED,
         [transitions.CUSTOMER_WITHDRAW_COUNTER_OFFER]: states.OFFER_PENDING,
-        [transitions.PROVIDER_ACCEPT_COUNTER_OFFER]: states.OFFER_PENDING,
+        [transitions.PROVIDER_ACCEPT_COUNTER_OFFER]: states.PENDING_PAYMENT,
         [transitions.PROVIDER_MAKE_COUNTER_OFFER]: states.OFFER_PENDING,
       },
     },
