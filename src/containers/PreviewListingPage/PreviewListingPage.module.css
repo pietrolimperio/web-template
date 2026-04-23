@@ -101,7 +101,7 @@
   /* Safety net: clip any stray overflow on mobile.
      overflow-x: hidden fallback for Safari < 16; clip preferred so the element
      does not become a scroll container (preserves position: sticky at larger breakpoints). */
-  @media (max-width: 767px) {
+  @media (--viewportBelowMedium) {
     overflow-x: hidden;
     overflow-x: clip;
   }
@@ -285,7 +285,7 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 767px) {
+@media (--viewportBelowMedium) {
   .resetToOriginalContainer {
     justify-content: center;
     margin-bottom: 0;
@@ -406,7 +406,7 @@
 }
 
 .thumbnailDeleteButton:hover:not(:disabled) {
-  background-color: #c82333;
+  background-color: var(--colorFailDark, #c82333);
   transform: translateX(-50%) scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
@@ -430,7 +430,7 @@
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: #333;
+  background-color: var(--colorGrey800);
   color: white;
   padding: 12px 16px;
   border-radius: 8px;
@@ -450,7 +450,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: #333;
+  border-top-color: var(--colorGrey800);
 }
 
 @keyframes fadeInTooltip {
@@ -1933,9 +1933,9 @@
 }
 
 .priceVariantError {
-  color: #dc3545;
-  background-color: #fff5f5;
-  border: 1px solid #dc3545;
+  color: var(--colorFail);
+  background-color: var(--colorFailLight);
+  border: 1px solid var(--colorFail);
   border-radius: 6px;
   padding: 12px 16px;
   margin-top: 1rem;
@@ -1946,7 +1946,7 @@
 .priceExample {
   margin-top: 8px;
   font-size: 0.875rem;
-  color: #666;
+  color: var(--colorGrey600);
   font-style: italic;
 }
 
@@ -2125,7 +2125,7 @@
   gap: 1rem;
   margin-bottom: 1.5rem;
 
-  @media (max-width: 767px) {
+  @media (--viewportBelowMedium) {
     flex-direction: column;
   }
 }
@@ -2157,7 +2157,7 @@
   gap: 16px;
   width: 100%;
 
-  @media (max-width: 767px) {
+  @media (--viewportBelowMedium) {
     flex-direction: column;
   }
 }
@@ -2310,7 +2310,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--colorOnSurface);
   margin-bottom: 0.5rem;
 }
 
@@ -2375,10 +2375,10 @@
 
 .chipCard {
   padding: 0.75rem 1.5rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--colorGrey200);
   border-radius: 24px;
   background: white;
-  color: #2c3e50;
+  color: var(--colorOnSurface);
   font-size: 0.938rem;
   font-weight: 500;
   cursor: pointer;
@@ -2423,7 +2423,7 @@
 .fieldLabel {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--colorOnSurface);
 }
 
 .twoColumns {
@@ -2434,7 +2434,7 @@
 
 .input {
   padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--colorGrey200);
   border-radius: 8px;
   font-size: 0.938rem;
   transition: border-color 0.2s ease;
@@ -2446,19 +2446,19 @@
 }
 
 .inputInvalid {
-  border-color: #e74c3c;
+  border-color: var(--colorFail);
 }
 
 .locationOptionsSection {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #ecf0f1;
+  border-top: 1px solid var(--colorSurfaceContainerHighest);
 }
 
 .locationOptionsTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--colorOnSurface);
   margin: 0 0 1rem 0;
 }
 
@@ -2468,7 +2468,7 @@
   left: 0;
   margin-top: 8px;
   padding: 8px 12px;
-  background: #e74c3c;
+  background: var(--colorFail);
   color: white;
   border-radius: 4px;
   font-size: 12px;
@@ -2584,7 +2584,7 @@
 /* ========================================
    MOBILE FLAT DESIGN - Remove decorations
    ======================================== */
-@media (max-width: 767px) {
+@media (--viewportBelowMedium) {
   /* Remove padding from root, add horizontal margin */
   .root {
     padding: 12px 5px;
@@ -2889,7 +2889,7 @@
   padding: 12px 2.5rem 12px 1rem;
   min-height: 48px;
   line-height: 1.5;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--colorGrey200);
   border-radius: 8px;
   font-size: 0.938rem;
   transition: border-color 0.2s ease;
@@ -2905,8 +2905,8 @@
 }
 
 .cascadingDropdownSelect:disabled {
-  background-color: #f8f9fa;
-  color: #9ca3af;
+  background-color: var(--colorSurfaceContainerLow);
+  color: var(--colorGrey400);
   cursor: not-allowed;
 }
 
