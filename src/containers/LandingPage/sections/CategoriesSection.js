@@ -6,81 +6,84 @@ import {
 } from '../../../util/fieldHelpers';
 import { FormattedMessage } from '../../../util/reactIntl';
 import { NamedLink } from '../../../components';
+import { useReveal } from '../hooks/useReveal';
 
 import css from './CategoriesSection.module.css';
 
-const FallbackIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={css.cardIcon}
-  >
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-    <polyline points="16 3 12 7 8 3" />
-  </svg>
-);
+const STRIPE_CLASSES = [
+  css.stripes0,
+  css.stripes1,
+  css.stripes2,
+  css.stripes3,
+  css.stripes4,
+  css.stripes5,
+];
+
+function Reveal({ children, delay = 0, className = '' }) {
+  const [ref, shown] = useReveal();
+  return (
+    <div
+      ref={ref}
+      className={`${css.reveal} ${shown ? css.revealIn : ''} ${className}`}
+      style={{ transitionDelay: `${delay}s` }}
+    >
+      {children}
+    </div>
+  );
+}
 
 const CategoriesSection = () => {
   const config = useConfiguration();
   const categories = config?.categoryConfiguration?.categories ?? [];
   const shortLocale = getShortLocaleForCategoryDisplay(config);
 
-  if (categories.length === 0) {
-    return null;
-  }
+  if (categories.length === 0) return null;
+
+  const visibleCategories = categories.slice(0, 3);
 
   return (
-    <section id="categories" className={css.root}>
-      <div className={css.container}>
-        <div className={css.header}>
-          <div>
-            <h2 className={css.title}>
-              <FormattedMessage id="NewLandingPage.categoriesTitle" />
-            </h2>
-            <p className={css.subtitle}>
-              <FormattedMessage id="NewLandingPage.categoriesSubtitle" />
-            </p>
-          </div>
-          <NamedLink name="SearchPage" className={css.viewAllLink}>
-            <FormattedMessage id="NewLandingPage.categoriesViewAll" />
-            <span className={css.arrow}>&rarr;</span>
-          </NamedLink>
+    <section className={css.section}>
+      <Reveal className={css.sectionHead}>
+        <div>
+          <span className={css.kicker}>
+            <FormattedMessage id="NewLandingPage.categoriesKicker" />
+          </span>
+          <h2 className={css.sectionTitle}>
+            <FormattedMessage id="NewLandingPage.categoriesTitle" />
+          </h2>
         </div>
+        <NamedLink name="SearchPage" className={css.seeAll}>
+          <FormattedMessage id="NewLandingPage.categoriesViewAll" /> →
+        </NamedLink>
+      </Reveal>
 
-        <div className={css.grid}>
-          {categories.map(cat => {
-            const displayName =
-              getCategoryDisplayName(cat, shortLocale) || cat.name;
-            const searchQuery = `?pub_categoryId=${encodeURIComponent(cat.id)}`;
+      <div className={css.grid}>
+        {visibleCategories.map((cat, i) => {
+          const displayName = getCategoryDisplayName(cat, shortLocale) || cat.name;
+          const searchQuery = `?pub_categoryId=${encodeURIComponent(cat.id)}`;
+          const stripeClass = STRIPE_CLASSES[i % STRIPE_CLASSES.length];
 
-            return (
+          return (
+            <Reveal key={cat.id} delay={i * 0.06}>
               <NamedLink
-                key={cat.id}
                 name="SearchPage"
                 to={{ search: searchQuery }}
                 className={css.card}
               >
-                <span className={css.iconCircle}>
+                <div className={css.catVisual}>
                   {cat.imageUrl ? (
-                    <img
-                      src={cat.imageUrl}
-                      alt=""
-                      className={css.cardImage}
-                      loading="lazy"
-                    />
+                    <img src={cat.imageUrl} alt="" className={css.catImage} loading="lazy" />
                   ) : (
-                    <FallbackIcon />
+                    <div className={`${css.catStripes} ${stripeClass}`} />
                   )}
-                </span>
-                <span className={css.cardName}>{displayName}</span>
+                </div>
+                <div className={css.catMeta}>
+                  <h3 className={css.catLabel}>{displayName}</h3>
+                </div>
               </NamedLink>
-            );
-          })}
-        </div>
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );

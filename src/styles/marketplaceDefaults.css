@@ -101,8 +101,9 @@
   /* ================ Font ================ */
   --fontFamily: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-  --fontFamilyDisplay: 'Manrope', var(--fontFamily);
-  --fontLetterSpacingDisplayTight: -0.02em;
+  --fontFamilyDisplay: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --fontFamilyMono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --fontLetterSpacingDisplayTight: -0.03em;
 
   --fontWeightRegular: 400;
   --fontWeightMedium: 500;

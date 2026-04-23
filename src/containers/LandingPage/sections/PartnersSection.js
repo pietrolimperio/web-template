@@ -55,12 +55,12 @@ const PartnersSection = () => {
     <section className={css.root}>
       <div className={css.container}>
         <div className={css.header}>
+          <span className={css.kicker}>
+            <FormattedMessage id="NewLandingPage.partnersKicker" />
+          </span>
           <h2 className={css.title}>
             <FormattedMessage id="NewLandingPage.partnersTitle" />
           </h2>
-          <p className={css.subtitle}>
-            <FormattedMessage id="NewLandingPage.partnersSubtitle" />
-          </p>
         </div>
       </div>
       <div className={css.track} aria-hidden="true">

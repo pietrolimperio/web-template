@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { bool, array, object } from 'prop-types';
+import { bool, array } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
@@ -7,32 +7,29 @@ import classNames from 'classnames';
 import { useIntl } from '../../util/reactIntl';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 import { getListingsById } from '../../ducks/marketplaceData.duck';
-import { propTypes } from '../../util/types';
 
 import { LayoutComposer, Page } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import FooterContainer from '../FooterContainer/FooterContainer';
 
 import HeroSection from './sections/HeroSection';
+import HowItWorksSection from './sections/HowItWorksSection';
 import CategoriesSection from './sections/CategoriesSection';
 import PopularListingsSection from './sections/PopularListingsSection';
+import TrustSection from './sections/TrustSection';
+import TestimonialsSection from './sections/TestimonialsSection';
+import FinalCTASection from './sections/FinalCTASection';
 import PartnersSection from './sections/PartnersSection';
-import ValuePropositionSection from './sections/ValuePropositionSection';
-import CTASection from './sections/CTASection';
 
 import css from './LandingPage.module.css';
 
 const NewLandingPageComponent = props => {
-  const {
-    scrollingDisabled,
-    popularListings,
-    fetchPopularInProgress,
-  } = props;
+  const { scrollingDisabled, popularListings, fetchPopularInProgress } = props;
   const intl = useIntl();
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const handleScroll = useCallback(() => {
-    setHasScrolled(window.scrollY > 60);
+    setHasScrolled(window.scrollY > 480);
   }, []);
 
   useEffect(() => {
@@ -71,15 +68,16 @@ const NewLandingPageComponent = props => {
                 <TopbarContainer currentPage="LandingPage" />
               </Topbar>
               <Main as="main" className={css.main}>
-                {/* TODO(hero-spotlight): Picking `popularListings[0]` is temporary; replace with dedicated fetch/config logic. */}
-                <HeroSection spotlightListing={popularListings[0]} />
+                <HeroSection listings={popularListings} />
+                <HowItWorksSection />
+                <CategoriesSection />
                 <PopularListingsSection
                   listings={popularListings}
                   inProgress={fetchPopularInProgress}
                 />
-                <ValuePropositionSection />
-                <CategoriesSection />
-                <CTASection />
+                <TrustSection />
+                <TestimonialsSection />
+                <FinalCTASection />
                 <PartnersSection />
               </Main>
               <Footer>

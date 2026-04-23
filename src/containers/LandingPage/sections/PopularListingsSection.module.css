@@ -1,159 +1,240 @@
 @import '../../../styles/customMediaQueries.css';
 
-.root {
-  width: 100%;
-  padding: 48px 0;
-  background-color: white;
-
-  @media (--viewportMedium) {
-    padding: 64px 0;
-  }
-
-  @media (--viewportLarge) {
-    padding: 96px 0;
-  }
-}
-
-.container {
-  width: 100%;
-  max-width: 1280px;
+.section {
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px;
-  min-width: 0;
-  box-sizing: border-box;
-
-  @media (--viewportMedium) {
-    padding: 0 36px;
-  }
-
-  @media (--viewportLarge) {
-    padding: 0 48px;
-  }
+  padding: 72px 40px;
 }
 
-.header {
+.sectionHead {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 28px;
-
-  @media (--viewportMedium) {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 36px;
-  }
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
-.headerText {
-  flex: 1;
-}
-
-.title {
-  margin: 0 0 8px;
-  font-size: clamp(20px, 5.5vw, 34px);
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--colorGrey900);
-
-  @media (--viewportMedium) {
-    font-size: 30px;
-  }
-
-  @media (--viewportLarge) {
-    font-size: 34px;
-  }
-}
-
-.subtitle {
-  margin: 0;
-  font-size: 15px;
+.kicker {
+  display: inline-block;
+  font-family: var(--fontFamilyMono);
+  font-size: 12px;
   color: var(--colorGrey500);
-  line-height: 1.5;
-
-  @media (--viewportMedium) {
-    font-size: 16px;
-  }
+  letter-spacing: 0.02em;
+  margin-bottom: 18px;
 }
 
-.viewAllLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  font-weight: 600;
+.sectionTitle {
+  font-family: var(--fontFamilyDisplay);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.02;
+  font-weight: 400;
+  letter-spacing: var(--fontLetterSpacingDisplayTight);
+  margin: 0;
+  color: var(--colorOnSurface);
+  text-wrap: balance;
+}
+
+.seeAll {
+  font-size: 14px;
+  color: var(--colorOnSurface);
+  padding-bottom: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.seeAll:hover {
   color: var(--marketplaceColor);
   text-decoration: none;
-  white-space: nowrap;
-  transition: gap 0.15s ease;
-
-  &:hover {
-    text-decoration: none;
-    gap: 10px;
-  }
-}
-
-.arrow {
-  font-size: 18px;
-  transition: transform 0.15s ease;
-}
-
-.viewAllLink:hover .arrow {
-  transform: translateX(2px);
-}
-
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-
-  @media (--viewportMedium) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-
-  @media (--viewportLarge) {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-  }
-
-  @media (min-width: 1400px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 
-.gridItem {
-  min-width: 0;
+/* ── Listing card ─────────────────────────────────────── */
+.listing {
+  display: block;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.listing:hover {
+  text-decoration: none;
+}
+
+.listingImg {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: var(--colorGrey100);
+}
+
+.listingPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.listingStripes {
+  position: absolute;
+  inset: 0;
+}
+
+.stripes0 { background: repeating-linear-gradient(30deg, oklch(0.90 0.03 45) 0 18px, oklch(0.94 0.015 45) 18px 36px); }
+.stripes1 { background: repeating-linear-gradient(30deg, oklch(0.92 0.03 350) 0 18px, oklch(0.95 0.015 350) 18px 36px); }
+.stripes2 { background: repeating-linear-gradient(30deg, oklch(0.88 0.04 170) 0 18px, oklch(0.93 0.02 170) 18px 36px); }
+.stripes3 { background: repeating-linear-gradient(30deg, oklch(0.89 0.05 135) 0 18px, oklch(0.94 0.02 135) 18px 36px); }
+
+.listingMono {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-family: var(--fontFamilyMono);
+  font-size: 10.5px;
+  color: var(--colorGrey600);
+  background: var(--colorWhite);
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--colorGrey200);
+}
+
+.heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--colorWhite);
+  border: 1px solid var(--colorGrey200);
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--colorGrey500);
+  transition: all 0.15s;
 }
 
-/* Equal row height: card fills the cell like other product grids */
-.gridItem > * {
-  flex: 1;
-  min-height: 0;
+.heart:hover {
+  color: var(--marketplaceColor);
+  background: #fff;
+  transform: scale(1.08);
 }
 
-/* Mobile: 2 columns, max 5 rows (10 items visible) */
-@media (max-width: 767px) {
-  .gridItem:nth-child(n + 11) {
-    display: none;
+.listingBody {
+  padding: 0 2px;
+}
+
+.listingTitle {
+  font-family: var(--fontFamilyDisplay);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px;
+  line-height: 1.2;
+  color: var(--colorOnSurface);
+}
+
+.listingOwner {
+  font-size: 13px;
+  color: var(--colorGrey500);
+  margin: 0 0 8px;
+}
+
+.listingPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.listingPrice strong {
+  font-family: var(--fontFamilyDisplay);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--marketplaceColor);
+}
+
+.listingPrice span {
+  font-size: 13px;
+  color: var(--colorGrey500);
+}
+
+.compareAt {
+  font-size: 13px;
+  color: var(--colorGrey400);
+  text-decoration: line-through;
+  font-style: normal;
+}
+
+/* ── Spinner ──────────────────────────────────────────── */
+.spinner {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.spinnerIcon {
+  width: 32px;
+  height: 32px;
+  animation: spinAnim 0.8s linear infinite;
+  color: var(--marketplaceColor);
+}
+
+@keyframes spinAnim {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Reveal animation ─────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.revealIn {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+/* Tablet: 3-col, reduced font sizes */
+@media (max-width: 960px) {
+  .section {
+    padding: 56px 24px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .sectionHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .listingTitle {
+    font-size: 15px;
+  }
+
+  .listingPrice strong {
+    font-size: 16px;
   }
 }
 
-@media (min-width: 768px) {
-  .gridItem:nth-child(n + 11) {
-    display: list-item;
+/* Mobile: 1-col */
+@media (max-width: 599px) {
+  .grid {
+    grid-template-columns: 1fr;
   }
 }

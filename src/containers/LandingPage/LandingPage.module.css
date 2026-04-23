@@ -6,12 +6,8 @@
   width: 100%;
   max-width: 100vw;
   min-width: 0;
-  --pageFirstSectionBackground: var(--colorSurfaceContainerLow);
-  /*
-   * Su :root --topbarGlassBackground è già risolto con il pageFirstSection del root;
-   * ereditato così resterebbe “bloccato” su quel colore. Riassegnarlo qui allinea
-   * topbar (anche scrolled) e hero alla stessa tinta.
-   */
+  /* Match hero background so the scrolled glass topbar blends in */
+  --pageFirstSectionBackground: var(--colorSurface);
   --topbarGlassBackground: var(--pageFirstSectionBackground);
 }
 
@@ -48,4 +44,9 @@
   flex-direction: column;
   overflow-x: hidden;
   min-width: 0;
+
+  /* On desktop the topbar is position:fixed — push content below it */
+  @media (--viewportMedium) {
+    padding-top: var(--topbarHeightDesktop);
+  }
 }
