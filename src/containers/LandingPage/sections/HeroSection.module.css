@@ -7,7 +7,7 @@
   max-width: 1440px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
   gap: 40px;
   align-items: center;
   min-height: 560px;
@@ -16,7 +16,8 @@
 .heroInner {
   position: relative;
   z-index: 2;
-  max-width: 680px;
+  max-width: 540px;
+  min-width: 0;
 }
 
 /* ── Hero title ───────────────────────────────────────── */
@@ -29,6 +30,11 @@
   margin: 0 0 28px;
   color: var(--colorOnSurface);
   text-wrap: balance;
+}
+
+.heroLead,
+.heroTitleLine {
+  display: block;
 }
 
 /* Rotator: all words stacked in a CSS grid cell — width = widest word, no layout shift */
@@ -62,6 +68,11 @@
   /* keep in flow to hold the grid cell width */
 }
 
+.rotatorMobile {
+  display: inline;
+  transition: transform 0.3s cubic-bezier(0.6, 0.2, 0.2, 1), opacity 0.3s;
+}
+
 .heroTitleSuffix {
   white-space: nowrap;
 }
@@ -74,6 +85,7 @@
   color: var(--colorGrey700);
   max-width: 520px;
   margin: 0 0 32px;
+  justify-self: end;
 }
 
 .heroMottoAccent {
@@ -86,6 +98,7 @@
   color: var(--colorGrey500);
   max-width: 520px;
   margin: 0 0 12px;
+  overflow-wrap: anywhere;
 }
 
 /* ── Search bar ───────────────────────────────────────── */
@@ -95,17 +108,17 @@
   background: var(--colorWhite);
   border: 1px solid var(--colorGrey200);
   border-radius: 14px;
-  padding: 5px;
+  padding: 3px;
   box-shadow: 0 4px 16px rgba(30, 20, 10, 0.06), 0 12px 36px rgba(30, 20, 10, 0.06);
   max-width: 640px;
 }
 
 .searchField {
   flex: 1;
-  padding: 8px 16px;
+  padding: 4px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   border-radius: 8px;
   cursor: text;
   min-width: 0;
@@ -114,10 +127,10 @@
 /* Date field needs position:relative so the picker dropdown anchors to it */
 .searchFieldDate {
   flex: 1;
-  padding: 8px 16px;
+  padding: 4px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   border-radius: 8px;
   min-width: 0;
   position: relative;
@@ -125,7 +138,7 @@
 
 .searchLabel {
   font-family: var(--fontFamilyMono);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--colorGrey500);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -142,11 +155,14 @@
   border: none;
   background: none;
   outline: none;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--colorOnSurface);
   padding: 0;
   width: 100%;
   font-family: inherit;
+  min-width: 0;
+  height: 30px;
+  line-height: 1.2;
 }
 
 /* dateRoot overrides FilterDateRange's own .root class — keep position:relative */
@@ -161,17 +177,23 @@
   border: none;
   background: none;
   outline: none;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--colorOnSurface);
   padding: 0;
   font-family: inherit;
   cursor: pointer;
 }
 
+.dateRoot button {
+  height: 30px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .searchDivider {
   width: 1px;
   background: var(--colorGrey200);
-  margin: 10px 0;
+  margin: 8px 0;
   flex-shrink: 0;
 }
 
@@ -179,18 +201,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 22px;
+  padding: 0 18px;
   background: var(--marketplaceColor);
   color: #fff;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   transition: background 0.15s, transform 0.15s;
   font-family: inherit;
   flex-shrink: 0;
-  min-height: 42px;
+  min-height: 36px;
 }
 
 .searchBtn:hover {
@@ -205,16 +227,19 @@
 /* ── Hero illustration ────────────────────────────────── */
 .heroIllo {
   position: relative;
-  height: 540px;
+  height: 620px;
   width: 100%;
+  --tile-scale: 1;
+  transform: scale(1);
+  transform-origin: center right;
 }
 
 .illoCircle {
   position: absolute;
-  top: 30%;
-  right: 15%;
-  width: 320px;
-  height: 320px;
+  top: 28%;
+  right: 12%;
+  width: 500px;
+  height: 500px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--marketplaceColor) 12%, transparent);
   z-index: 0;
@@ -223,12 +248,12 @@
 
 .illoRing {
   position: absolute;
-  top: 10%;
-  right: 40%;
-  width: 180px;
-  height: 180px;
+  top: 8%;
+  right: 36%;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
-  border: 1.5px dashed var(--colorGrey400);
+  border: 1.5px dashed var(--marketplaceColorSecondary);
   opacity: 0.35;
   animation: spin 40s linear infinite;
 }
@@ -248,7 +273,8 @@
   overflow: hidden;
   background: var(--colorWhite);
   border: 1px solid var(--colorGrey200);
-  transform: rotate(var(--rot));
+  transform: rotate(var(--rot)) scale(var(--tile-scale));
+  transform-origin: center center;
   box-shadow: 0 4px 16px rgba(30, 20, 10, 0.06), 0 12px 36px rgba(30, 20, 10, 0.06);
   animation: floatTileAnim 6s ease-in-out infinite;
   z-index: 1;
@@ -258,8 +284,8 @@
 .floatTile:nth-child(3) { animation-delay: -3s; }
 
 @keyframes floatTileAnim {
-  0%, 100% { transform: rotate(var(--rot)) translateY(0); }
-  50% { transform: rotate(var(--rot)) translateY(-12px); }
+  0%, 100% { transform: rotate(var(--rot)) scale(var(--tile-scale)) translateY(0); }
+  50% { transform: rotate(var(--rot)) scale(var(--tile-scale)) translateY(-12px); }
 }
 
 .tileImg {
@@ -306,7 +332,21 @@
   }
 
   .heroIllo {
-    height: 420px;
+    height: 430px;
+    --tile-scale: 0.72;
+    transform: scale(1);
+  }
+
+  .illoCircle {
+    width: 340px;
+    height: 340px;
+    right: 8%;
+  }
+
+  .illoRing {
+    width: 210px;
+    height: 210px;
+    right: 30%;
   }
 
   .heroTitle {
@@ -322,28 +362,82 @@
     min-height: auto;
   }
 
+  .heroInner {
+    max-width: none;
+  }
+
   .heroTitle {
     font-size: clamp(30px, 9vw, 48px);
+    text-align: center;
+    line-height: 1.04;
+  }
+
+  .heroLead,
+  .heroTitleLine {
+    display: block;
   }
 
   .heroTitleSuffix {
     white-space: normal;
   }
 
+  .rotator {
+    white-space: normal;
+  }
+
+  .heroTitleLine {
+    margin-top: 0.04em;
+  }
+
   .heroIllo {
     display: none;
   }
 
+  .heroSub,
+  .heroMotto {
+    max-width: none;
+  }
+
+  .heroSub {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
   .search {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 8px;
+    gap: 0;
+    width: 100%;
   }
 
   .searchDivider {
     display: none;
   }
 
+  .searchField,
+  .searchFieldDate {
+    width: 100%;
+    padding: 8px 12px;
+  }
+
+  .searchField {
+    border-bottom: 1px solid var(--colorGrey200);
+  }
+
+  .searchFieldDate {
+    border-bottom: 1px solid var(--colorGrey200);
+  }
+
+  .keywordRoot input,
+  .dateRoot button {
+    height: 34px;
+  }
+
   .searchBtn {
     width: 100%;
     justify-content: center;
+    min-height: 52px;
+    margin-top: 10px;
   }
 }

@@ -27,7 +27,7 @@
   font-family: var(--fontFamilyDisplay);
   font-size: clamp(36px, 5vw, 64px);
   line-height: 1.02;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: var(--fontLetterSpacingDisplayTight);
   margin: 0;
   color: var(--colorOnSurface);
@@ -57,7 +57,9 @@
 
 /* ── Listing card ─────────────────────────────────────── */
 .listing {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
@@ -130,6 +132,9 @@
 }
 
 .listingBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 0 2px;
 }
 
@@ -138,15 +143,30 @@
   font-size: 19px;
   font-weight: 600;
   letter-spacing: -0.015em;
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   line-height: 1.2;
   color: var(--colorOnSurface);
+  min-height: calc(1.2em * 3);
+}
+
+.listingMeta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .listingOwner {
   font-size: 13px;
   color: var(--colorGrey500);
   margin: 0 0 8px;
+}
+
+.listingPriceBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .listingPrice {
@@ -170,6 +190,8 @@
 }
 
 .compareAt {
+  display: block;
+  margin-top: 0;
   font-size: 13px;
   color: var(--colorGrey400);
   text-decoration: line-through;
@@ -225,6 +247,7 @@
 
   .listingTitle {
     font-size: 15px;
+    min-height: calc(1.2em * 3);
   }
 
   .listingPrice strong {
@@ -232,9 +255,44 @@
   }
 }
 
-/* Mobile: 1-col */
+/* Mobile: 2-col */
 @media (max-width: 599px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .listingImg {
+    margin-bottom: 10px;
+    border-radius: 12px;
+  }
+
+  .heart {
+    width: 28px;
+    height: 28px;
+  }
+
+  .listingTitle {
+    font-size: 14px;
+    margin-bottom: 6px;
+    min-height: calc(1.2em * 3);
+  }
+
+  .listingOwner {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .listingPrice {
+    gap: 4px 6px;
+  }
+
+  .listingPrice strong {
+    font-size: 15px;
+  }
+
+  .listingPrice span,
+  .compareAt {
+    font-size: 12px;
   }
 }

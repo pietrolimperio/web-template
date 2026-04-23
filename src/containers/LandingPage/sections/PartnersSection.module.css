@@ -51,7 +51,7 @@
   margin: 0;
   font-family: var(--fontFamilyDisplay);
   font-size: clamp(28px, 4vw, 48px);
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.05;
   letter-spacing: var(--fontLetterSpacingDisplayTight);
   color: var(--colorOnSurface);

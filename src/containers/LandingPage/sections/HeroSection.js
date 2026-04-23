@@ -23,7 +23,6 @@ const ROTATING_WORDS_IDS = [
   'NewLandingPage.rotatingWord4',
   'NewLandingPage.rotatingWord5',
   'NewLandingPage.rotatingWord6',
-  'NewLandingPage.rotatingWord7',
 ];
 
 const isEmpty = v => v == null || (v.hasOwnProperty('length') && v.length === 0);
@@ -37,9 +36,9 @@ const formatDateValue = (dateRange, queryParamName) => {
 };
 
 const TILE_DEFS = [
-  { delay: 0,   top: '8%',  right: '6%',  w: 180, h: 220, label: 'trapano', rotate: -6 },
-  { delay: 0.2, top: '54%', right: '22%', w: 150, h: 150, label: 'casco',   rotate:  5 },
-  { delay: 0.4, top: '22%', right: '32%', w: 120, h: 180, label: 'tenda',   rotate: -3 },
+  { delay: 0,   top: '8%',  right: '6%',  w: 260, h: 300, label: 'trapano', rotate: -6 },
+  { delay: 0.2, top: '54%', right: '22%', w: 300, h: 300, label: 'casco',   rotate:  5 },
+  { delay: 0.4, top: '22%', right: '32%', w: 200, h: 260, label: 'tenda',   rotate: -3 },
 ];
 
 function FloatTile({ top, right, w, h, label, rotate, delay, imgUrl }) {
@@ -89,6 +88,7 @@ const HeroSection = ({ listings = [] }) => {
   const history = useHistory();
   const [wordIdx, setWordIdx] = useState(0);
   const [wordVisible, setWordVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -99,6 +99,27 @@ const HeroSection = ({ listings = [] }) => {
       }, 280);
     }, 2400);
     return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 599px)');
+    const handleChange = event => {
+      setIsMobile(event.matches);
+    };
+
+    setIsMobile(mediaQuery.matches);
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
   }, []);
 
   const onSubmit = values => {
@@ -121,23 +142,34 @@ const HeroSection = ({ listings = [] }) => {
     <section className={css.hero}>
       <div className={css.heroInner}>
         <h1 className={css.heroTitle}>
-          <FormattedMessage id="NewLandingPage.heroTitle1" />
-          <br />
-          {/* Stack all words in the same CSS grid cell so width = widest word → no layout shift */}
-          <span className={css.rotator} aria-live="polite">
-            {ROTATING_WORDS_IDS.map((id, i) => (
-              <span
-                key={id}
-                className={`${css.rotatorWord} ${i === wordIdx ? (wordVisible ? css.rotatorIn : css.rotatorOut) : css.rotatorHidden}`}
-                aria-hidden={i !== wordIdx}
-              >
-                {intl.formatMessage({ id })}
-              </span>
-            ))}
+          <span className={css.heroLead}>
+            <FormattedMessage id="NewLandingPage.heroTitle1" />
           </span>
-          {' '}
-          <span className={css.heroTitleSuffix}>
-            <FormattedMessage id="NewLandingPage.heroTitle2" />
+          <span className={css.heroTitleLine}>
+            {isMobile ? (
+              <span
+                className={`${css.rotator} ${css.rotatorMobile} ${wordVisible ? css.rotatorIn : css.rotatorOut}`}
+                aria-live="polite"
+              >
+                {intl.formatMessage({ id: ROTATING_WORDS_IDS[wordIdx] })}
+              </span>
+            ) : (
+              <span className={css.rotator} aria-live="polite">
+                {ROTATING_WORDS_IDS.map((id, i) => (
+                  <span
+                    key={id}
+                    className={`${css.rotatorWord} ${i === wordIdx ? (wordVisible ? css.rotatorIn : css.rotatorOut) : css.rotatorHidden}`}
+                    aria-hidden={i !== wordIdx}
+                  >
+                    {intl.formatMessage({ id })}
+                  </span>
+                ))}
+              </span>
+            )}
+            {' '}
+            <span className={css.heroTitleSuffix}>
+              <FormattedMessage id="NewLandingPage.heroTitle2" />
+            </span>
           </span>
         </h1>
         <p className={css.heroSub}>

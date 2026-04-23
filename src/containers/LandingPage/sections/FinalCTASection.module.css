@@ -39,7 +39,7 @@
   position: relative;
   font-family: var(--fontFamilyDisplay);
   font-size: clamp(40px, 6vw, 72px);
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: var(--fontLetterSpacingDisplayTight);
   line-height: 1.02;
   margin: 0 0 18px;

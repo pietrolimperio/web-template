@@ -39,7 +39,7 @@ const CategoriesSection = () => {
 
   if (categories.length === 0) return null;
 
-  const visibleCategories = categories.slice(0, 3);
+  const visibleCategories = categories.slice(0, 4);
 
   return (
     <section className={css.section}>

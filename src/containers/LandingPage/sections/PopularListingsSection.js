@@ -40,14 +40,6 @@ const ListingCardNew = ({ listing, index }) => {
   const slug = createSlug(title);
   const stripeClass = STRIPE_CLASSES[index % STRIPE_CLASSES.length];
 
-  const authorName = ensured.author?.attributes?.profile?.displayName;
-  const city = publicData?.location?.address?.split(',').slice(-2, -1)[0]?.trim()
-    || publicData?.city
-    || null;
-  const ownerLine = authorName
-    ? (city ? `${authorName} · ${city}` : authorName)
-    : null;
-
   const unitType = publicData?.unitType;
   const isBookable = isBookingProcessAlias(publicData?.transactionProcessAlias);
 
@@ -94,30 +86,33 @@ const ListingCardNew = ({ listing, index }) => {
       </div>
       <div className={css.listingBody}>
         <h3 className={css.listingTitle}>{title}</h3>
-        {ownerLine && <p className={css.listingOwner}>{ownerLine}</p>}
-        {formattedPrice && (
-          <div className={css.listingPrice}>
-            {hasMultipleVariants ? (
-              <FormattedMessage
-                id="ListingCard.priceStartingFrom"
-                values={{ priceValue, pricePerUnit: pricePerUnit || '' }}
-              />
-            ) : (
-              <>
-                {priceValue}
-                {pricePerUnit}
-              </>
-            )}
-            {formattedEstimated && (
-              <del className={css.compareAt}>
-                <FormattedMessage
-                  id="ListingCard.estimatedPriceNew"
-                  values={{ price: formattedEstimated }}
-                />
-              </del>
-            )}
-          </div>
-        )}
+        <div className={css.listingMeta}>
+          {formattedPrice && (
+            <div className={css.listingPriceBlock}>
+              <div className={css.listingPrice}>
+                {hasMultipleVariants ? (
+                  <FormattedMessage
+                    id="ListingCard.priceStartingFrom"
+                    values={{ priceValue, pricePerUnit: pricePerUnit || '' }}
+                  />
+                ) : (
+                  <>
+                    {priceValue}
+                    {pricePerUnit}
+                  </>
+                )}
+              </div>
+              {formattedEstimated && (
+                <del className={css.compareAt}>
+                  <FormattedMessage
+                    id="ListingCard.estimatedPriceNew"
+                    values={{ price: formattedEstimated }}
+                  />
+                </del>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
