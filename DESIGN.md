@@ -293,3 +293,9 @@ Alt-background sections (TrustSection) wrap content in an `.inner` div and apply
 - **Missing localized strings:** the April 2026 landing-page copy currently only exists in `it` and `en`; complete the remaining supported locales before treating the redesign as rollout-ready.
 - **Popular listing price semantics:** align the landing-page custom card with the shared `ListingCard` so per-unit labels only appear for bookable listings.
 - **Hero data source:** replace the current hero illustration dependency on `popularListings` with a backend-configured source, then revisit image memoization against the final payload shape.
+
+### Landing page follow-ups
+- **Italian copy review first:** validate the new `NewLandingPage.*` Italian strings before propagating equivalent messaging to `fr`, `es`, `de`, and `pt`.
+- **Missing localized strings:** the April 2026 landing-page copy currently only exists in `it` and `en`; complete the remaining supported locales before treating the redesign as rollout-ready.
+- **Popular listing price semantics:** align the landing-page custom card with the shared `ListingCard` so per-unit labels only appear for bookable listings.
+- **Hero data source:** replace the current hero illustration dependency on `popularListings` with a backend-configured source, then revisit image memoization against the final payload shape.
