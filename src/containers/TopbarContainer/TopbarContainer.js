@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import loadable from '@loadable/component';
 
 import { propTypes } from '../../util/types';
-import { DEFAULT_LOCALE } from '../../config/localeConfig';
 
 import { sendVerificationEmail, hasCurrentUserErrors } from '../../ducks/user.duck';
 import { logout, authenticationInProgress } from '../../ducks/auth.duck';
@@ -29,41 +28,8 @@ const Topbar = loadable(() => import(/* webpackChunkName: "Topbar" */ './Topbar/
 export const TopbarContainerComponent = props => {
   const { notificationCount = 0, hasGenericError, ...rest } = props;
 
-  // Locale state management
-  const [currentLocale, setCurrentLocale] = useState(() => {
-    // Get locale from localStorage or use default (it-IT)
-    // Safe for server-side rendering: check if localStorage is available
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      return localStorage.getItem('marketplace_locale') || DEFAULT_LOCALE;
-    }
-    return DEFAULT_LOCALE;
-  });
-
-  // Handle locale change
-  const handleLocaleChange = newLocale => {
-    // Save to localStorage (only in browser)
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.setItem('marketplace_locale', newLocale);
-    }
-    
-    // Update state
-    setCurrentLocale(newLocale);
-    
-    // Reload page to apply new translations
-    // Note: In the future, this could be done without full page reload
-    if (typeof window !== 'undefined') {
-      window.location.reload();
-    }
-  };
-
   return (
-    <Topbar
-      notificationCount={notificationCount}
-      showGenericError={hasGenericError}
-      currentLocale={currentLocale}
-      onLocaleChange={handleLocaleChange}
-      {...rest}
-    />
+    <Topbar notificationCount={notificationCount} showGenericError={hasGenericError} {...rest} />
   );
 };
 

@@ -16,7 +16,6 @@ import {
   NamedLink,
   NotificationBadge,
 } from '../../../../components';
-import LocaleSelector from '../../../../components/LocaleSelector/LocaleSelector';
 
 import logoImage from '../../../../assets/logo.png';
 import css from './TopbarMobileMenu.module.css';
@@ -160,7 +159,7 @@ const CustomLinkComponent = ({ linkConfig, currentPage }) => {
 /*  GUEST drawer                                                       */
 /* ------------------------------------------------------------------ */
 
-const GuestDrawerContent = ({ customLinks, currentPage, currentLocale, onLocaleChange }) => {
+const GuestDrawerContent = ({ customLinks, currentPage }) => {
   const extraLinks = customLinks.map((linkConfig, i) => (
     <CustomLinkComponent
       key={`${linkConfig.text}_${i}`}
@@ -209,22 +208,14 @@ const GuestDrawerContent = ({ customLinks, currentPage, currentLocale, onLocaleC
           </span>
         </NamedLink>
 
-        <NamedLink
-          name="CMSPage"
-          params={{ pageId: 'how-it-works' }}
-          className={css.navItem}
-        >
+        <NamedLink name="CMSPage" params={{ pageId: 'how-it-works' }} className={css.navItem}>
           <IconInfo className={css.navIcon} />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.howItWorks" />
           </span>
         </NamedLink>
 
-        <NamedLink
-          name="CMSPage"
-          params={{ pageId: 'help' }}
-          className={css.navItem}
-        >
+        <NamedLink name="CMSPage" params={{ pageId: 'help' }} className={css.navItem}>
           <IconHelp className={css.navIcon} />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.help" />
@@ -251,16 +242,6 @@ const GuestDrawerContent = ({ customLinks, currentPage, currentLocale, onLocaleC
             </NamedLink>
           </div>
         </div>
-
-        {/* Footer with locale selector */}
-        <div className={css.footer}>
-          <LocaleSelector
-            className={css.localeSelector}
-            currentLocale={currentLocale}
-            onLocaleChange={onLocaleChange}
-            showLabel
-          />
-        </div>
       </div>
     </nav>
   );
@@ -278,8 +259,6 @@ const AuthenticatedDrawerContent = ({
   customLinks,
   onLogout,
   showCreateListingsLink,
-  currentLocale,
-  onLocaleChange,
 }) => {
   const user = ensureCurrentUser(currentUser);
   const displayName = user.attributes.profile.firstName;
@@ -288,7 +267,9 @@ const AuthenticatedDrawerContent = ({
     const isAccountSettingsPage =
       page === 'AccountSettingsPage' && ACCOUNT_SETTINGS_PAGES.includes(currentPage);
     const isInboxPage = currentPage?.indexOf('InboxPage') === 0 && page?.indexOf('InboxPage') === 0;
-    return currentPage === page || isAccountSettingsPage || isInboxPage ? css.navItemActive : css.navItem;
+    return currentPage === page || isAccountSettingsPage || isInboxPage
+      ? css.navItemActive
+      : css.navItem;
   };
 
   const hasNotifications = notificationCount > 0;
@@ -330,7 +311,13 @@ const AuthenticatedDrawerContent = ({
           params={{ tab: inboxTab }}
           className={currentPageClass(`InboxPage:${inboxTab}`)}
         >
-          <IconInventory className={currentPageClass(`InboxPage:${inboxTab}`) === css.navItemActive ? css.navIconActive : css.navIcon} />
+          <IconInventory
+            className={
+              currentPageClass(`InboxPage:${inboxTab}`) === css.navItemActive
+                ? css.navIconActive
+                : css.navIcon
+            }
+          />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.inboxLink" />
           </span>
@@ -340,22 +327,28 @@ const AuthenticatedDrawerContent = ({
         </NamedLink>
 
         {showCreateListingsLink ? (
-          <NamedLink
-            name="ManageListingsPage"
-            className={currentPageClass('ManageListingsPage')}
-          >
-            <IconShoppingBasket className={currentPageClass('ManageListingsPage') === css.navItemActive ? css.navIconActive : css.navIcon} />
+          <NamedLink name="ManageListingsPage" className={currentPageClass('ManageListingsPage')}>
+            <IconShoppingBasket
+              className={
+                currentPageClass('ManageListingsPage') === css.navItemActive
+                  ? css.navIconActive
+                  : css.navIcon
+              }
+            />
             <span className={css.navLabel}>
               <FormattedMessage id="TopbarMobileMenu.yourListingsLink" />
             </span>
           </NamedLink>
         ) : null}
 
-        <NamedLink
-          name="ProfileSettingsPage"
-          className={currentPageClass('ProfileSettingsPage')}
-        >
-          <IconFavorite className={currentPageClass('ProfileSettingsPage') === css.navItemActive ? css.navIconActive : css.navIcon} />
+        <NamedLink name="ProfileSettingsPage" className={currentPageClass('ProfileSettingsPage')}>
+          <IconFavorite
+            className={
+              currentPageClass('ProfileSettingsPage') === css.navItemActive
+                ? css.navIconActive
+                : css.navIcon
+            }
+          />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.profileSettingsLink" />
           </span>
@@ -363,11 +356,14 @@ const AuthenticatedDrawerContent = ({
 
         <div className={css.navDivider} />
 
-        <NamedLink
-          name="AccountSettingsPage"
-          className={currentPageClass('AccountSettingsPage')}
-        >
-          <IconSettings className={currentPageClass('AccountSettingsPage') === css.navItemActive ? css.navIconActive : css.navIcon} />
+        <NamedLink name="AccountSettingsPage" className={currentPageClass('AccountSettingsPage')}>
+          <IconSettings
+            className={
+              currentPageClass('AccountSettingsPage') === css.navItemActive
+                ? css.navIconActive
+                : css.navIcon
+            }
+          />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.accountSettingsLink" />
           </span>
@@ -379,14 +375,6 @@ const AuthenticatedDrawerContent = ({
 
       {/* Footer: locale + logout */}
       <div className={css.logoutSection}>
-        <div className={css.userFooterLocale}>
-          <LocaleSelector
-            className={css.localeSelector}
-            currentLocale={currentLocale}
-            onLocaleChange={onLocaleChange}
-            showLabel
-          />
-        </div>
         <InlineTextButton rootClassName={css.logoutButton} onClick={onLogout}>
           <IconLogout className={css.logoutIcon} />
           <FormattedMessage id="TopbarMobileMenu.logoutLink" />
@@ -425,19 +413,10 @@ const TopbarMobileMenu = props => {
     customLinks,
     onLogout,
     showCreateListingsLink,
-    currentLocale,
-    onLocaleChange,
   } = props;
 
   if (!isAuthenticated) {
-    return (
-      <GuestDrawerContent
-        customLinks={customLinks}
-        currentPage={currentPage}
-        currentLocale={currentLocale}
-        onLocaleChange={onLocaleChange}
-      />
-    );
+    return <GuestDrawerContent customLinks={customLinks} currentPage={currentPage} />;
   }
 
   return (
@@ -449,8 +428,6 @@ const TopbarMobileMenu = props => {
       customLinks={customLinks}
       onLogout={onLogout}
       showCreateListingsLink={showCreateListingsLink}
-      currentLocale={currentLocale}
-      onLocaleChange={onLocaleChange}
     />
   );
 };

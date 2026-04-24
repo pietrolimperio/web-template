@@ -99,6 +99,10 @@
   }
 }
 
+.localeSelectorWrapper {
+  margin-top: 24px;
+}
+
 .icon {
   font-size: 28px;
   margin: 15px 15px 0px 0px;

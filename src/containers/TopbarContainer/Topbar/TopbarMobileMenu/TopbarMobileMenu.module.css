@@ -318,31 +318,12 @@
 }
 
 /* ============================
-   FOOTER
-   ============================ */
-
-.footer {
-  padding: 16px 24px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.localeSelector {
-  /* Let the LocaleSelector handle its own layout */
-}
-
-.userFooterLocale {
-  padding: 0 0 8px;
-}
-
-/* ============================
    LOGOUT (USER FOOTER)
    ============================ */
 
 .logoutSection {
   margin-top: auto;
-  padding: 8px 16px 24px;
+  padding: 24px 16px 24px;
 }
 
 .logoutButton {

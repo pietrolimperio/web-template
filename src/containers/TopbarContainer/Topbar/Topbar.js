@@ -226,8 +226,6 @@ const TopbarComponent = props => {
     showGenericError,
     config,
     routeConfiguration,
-    currentLocale,
-    onLocaleChange,
   } = props;
 
   const handleSubmit = values => {
@@ -329,8 +327,6 @@ const TopbarComponent = props => {
       customLinks={customLinks}
       showCreateListingsLink={showCreateListingsLink}
       inboxTab={topbarInboxTab}
-      currentLocale={currentLocale}
-      onLocaleChange={onLocaleChange}
     />
   );
 
@@ -445,8 +441,6 @@ const TopbarComponent = props => {
           showSearchForm={showSearchForm}
           showCreateListingsLink={showCreateListingsLink}
           inboxTab={topbarInboxTab}
-          currentLocale={currentLocale}
-          onLocaleChange={onLocaleChange}
         />
       </div>
       <MobileDrawer

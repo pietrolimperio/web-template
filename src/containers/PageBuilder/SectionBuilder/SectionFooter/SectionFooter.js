@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { LinkedLogo } from '../../../../components';
+import { LinkedLogo, LocaleSelector } from '../../../../components';
 
 import Field from '../../Field';
 import BlockBuilder from '../../BlockBuilder';
@@ -82,6 +82,8 @@ const SectionFooter = props => {
     blocks = [],
     options,
     linkLogoToExternalSite,
+    currentLocale,
+    onLocaleChange,
   } = props;
 
   // If external mapping has been included for fields
@@ -134,6 +136,15 @@ const SectionFooter = props => {
             {showSocialMediaLinks ? (
               <div className={css.icons}>
                 <BlockBuilder blocks={linksWithBlockId} sectionId={sectionId} options={options} />
+              </div>
+            ) : null}
+            {currentLocale && onLocaleChange ? (
+              <div className={css.localeSelectorWrapper}>
+                <LocaleSelector
+                  currentLocale={currentLocale}
+                  onLocaleChange={onLocaleChange}
+                  showLabel
+                />
               </div>
             ) : null}
             <Field data={copyright} className={css.copyright} />

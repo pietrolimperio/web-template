@@ -8,7 +8,6 @@ import {
   IconWithBadge,
   InlineTextButton,
   LinkedLogo,
-  LocaleSelector,
   Menu,
   MenuLabel,
   MenuContent,
@@ -171,8 +170,6 @@ const TopbarDesktop = props => {
     showSearchForm,
     showCreateListingsLink,
     inboxTab,
-    currentLocale,
-    onLocaleChange,
   } = props;
   const [mounted, setMounted] = useState(false);
 
@@ -246,12 +243,6 @@ const TopbarDesktop = props => {
       {inboxLinkMaybe}
       {profileMenuMaybe}
       {genericAvatarMaybe}
-
-      <LocaleSelector
-        className={css.localeSelector}
-        currentLocale={currentLocale}
-        onLocaleChange={onLocaleChange}
-      />
     </nav>
   );
 };
