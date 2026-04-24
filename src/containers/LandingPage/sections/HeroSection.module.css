@@ -106,45 +106,51 @@
   display: flex;
   align-items: stretch;
   background: var(--colorWhite);
-  border: 1px solid var(--colorGrey200);
-  border-radius: 14px;
-  padding: 3px;
-  box-shadow: 0 4px 16px rgba(30, 20, 10, 0.06), 0 12px 36px rgba(30, 20, 10, 0.06);
-  max-width: 640px;
+  border: 1px solid color-mix(in srgb, var(--colorGrey200) 75%, white);
+  border-radius: 20px;
+  padding: 7px 10px;
+  box-shadow: 0 8px 28px rgba(30, 20, 10, 0.08), 0 2px 8px rgba(30, 20, 10, 0.05);
+  max-width: 780px;
+  width: 100%;
 }
 
 .searchField {
   flex: 1;
-  padding: 4px 14px;
+  padding: 4px 18px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 2px;
   border-radius: 8px;
   cursor: text;
   min-width: 0;
+  height: 78px;
 }
 
 /* Date field needs position:relative so the picker dropdown anchors to it */
 .searchFieldDate {
   flex: 1;
-  padding: 4px 14px;
+  padding: 4px 18px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 2px;
   border-radius: 8px;
   min-width: 0;
   position: relative;
+  height: 78px;
 }
 
 .searchLabel {
   font-family: var(--fontFamilyMono);
-  font-size: 9px;
-  color: var(--colorGrey500);
+  font-size: 10px;
+  color: var(--colorGrey600);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   display: block;
   margin: 0;
   padding: 0;
+  font-weight: 700;
 }
 
 .keywordRoot {
@@ -155,14 +161,21 @@
   border: none;
   background: none;
   outline: none;
-  font-size: 13px;
-  color: var(--colorOnSurface);
+  font-size: 14px;
+  color: var(--colorGrey700);
   padding: 0;
   width: 100%;
-  font-family: inherit;
+  font-family: var(--fontFamilySans);
+  font-weight: 600;
   min-width: 0;
   height: 30px;
   line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.keywordRoot input::placeholder {
+  color: var(--colorGrey500);
+  opacity: 1;
 }
 
 /* dateRoot overrides FilterDateRange's own .root class — keep position:relative */
@@ -177,11 +190,13 @@
   border: none;
   background: none;
   outline: none;
-  font-size: 13px;
-  color: var(--colorOnSurface);
+  font-size: 14px;
+  color: var(--colorGrey700);
   padding: 0;
-  font-family: inherit;
+  font-family: var(--fontFamilySans);
+  font-weight: 600;
   cursor: pointer;
+  letter-spacing: -0.01em;
 }
 
 .dateRoot button {
@@ -190,29 +205,53 @@
   padding-right: 0;
 }
 
+.dateToggle {
+  display: flex;
+  align-items: center;
+  height: 30px !important;
+  padding: 0 !important;
+}
+
+.dateToggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dateLabel {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
 .searchDivider {
   width: 1px;
   background: var(--colorGrey200);
-  margin: 8px 0;
+  margin: 10px 0;
   flex-shrink: 0;
 }
 
 .searchBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 18px;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 30px;
   background: var(--marketplaceColor);
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 16px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   transition: background 0.15s, transform 0.15s;
-  font-family: inherit;
+  font-family: var(--fontFamilySans);
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: 64px;
+  letter-spacing: -0.01em;
+  place-self: center;
+}
+
+.searchBtnIcon {
+  flex-shrink: 0;
 }
 
 .searchBtn:hover {
@@ -323,7 +362,7 @@
 
 /* ── Responsive ───────────────────────────────────────── */
 
-/* Tablet: keep two-column layout, just tighten spacing */
+/* Tablet: keep two-column layout, tighten spacing, and stack search fields */
 @media (max-width: 960px) {
   .hero {
     padding: 40px 24px 56px;
@@ -351,6 +390,45 @@
 
   .heroTitle {
     font-size: clamp(36px, 5.5vw, 72px);
+  }
+
+  .search {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 8px;
+    gap: 0;
+    width: 100%;
+  }
+
+  .searchDivider {
+    display: none;
+  }
+
+  .searchField,
+  .searchFieldDate {
+    width: 100%;
+    padding: 10px 12px;
+    height: auto;
+  }
+
+  .searchField {
+    border-bottom: 1px solid var(--colorGrey200);
+  }
+
+  .searchFieldDate {
+    border-bottom: 1px solid var(--colorGrey200);
+  }
+
+  .dateToggle {
+    height: 34px !important;
+  }
+
+  .searchBtn {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 10px;
+    border-radius: 12px;
+    font-size: 15px;
   }
 }
 
@@ -418,7 +496,7 @@
   .searchField,
   .searchFieldDate {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
   }
 
   .searchField {
@@ -430,8 +508,14 @@
   }
 
   .keywordRoot input,
-  .dateRoot button {
+  .dateRoot button,
+  .dateRoot input {
     height: 34px;
+    font-size: 14px;
+  }
+
+  .dateToggle {
+    height: 34px !important;
   }
 
   .searchBtn {
@@ -439,5 +523,7 @@
     justify-content: center;
     min-height: 52px;
     margin-top: 10px;
+    border-radius: 12px;
+    font-size: 15px;
   }
 }

@@ -20,7 +20,16 @@ import css from './FilterDateRange.module.css';
 const FilterDateRange = props => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDates, setSelectedDates] = useState(null);
-  const { className, rootClassName, config, alignLeft } = props;
+  const {
+    className,
+    rootClassName,
+    config,
+    alignLeft,
+    showIcon = true,
+    openAbove = false,
+    toggleButtonClassName,
+    labelClassName,
+  } = props;
   const intl = useIntl();
 
   useEffect(() => {
@@ -61,18 +70,19 @@ const FilterDateRange = props => {
   // Compute the CSS class for the label with an "active" modifier if there is a selection or if the picker is open.
   const labelClasses = classNames(css.label, {
     [css.active]: selectedDates || isOpen,
-  });
+    [css.noIcon]: !showIcon,
+  }, labelClassName);
 
   return (
     <OutsideClickHandler className={classes} onOutsideClick={() => setIsOpen(false)}>
       <div
         role="button"
-        className={css.toggleButton}
+        className={classNames(css.toggleButton, toggleButtonClassName)}
         onClick={() => setIsOpen(prevState => !prevState)}
         tabIndex={0}
         onKeyDown={() => setIsOpen(prevState => !prevState)}
       >
-        <IconDate />
+        {showIcon ? <IconDate /> : null}
         <span className={labelClasses}>
           {selectedDates
             ? selectedDates
@@ -85,6 +95,7 @@ const FilterDateRange = props => {
           showClearButton
           className={classNames(css.datePicker, {
             [css.alignLeft]: alignLeft,
+            [css.openAbove]: openAbove,
           })}
           name="dateRange"
           minimumNights={isNightlyMode ? 1 : 0}

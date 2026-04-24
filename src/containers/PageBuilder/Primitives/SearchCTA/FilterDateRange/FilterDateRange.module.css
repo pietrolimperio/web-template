@@ -33,6 +33,19 @@
   }
 }
 
+.openAbove {
+  top: auto;
+  bottom: calc(100% + 4px);
+  margin-top: 0;
+}
+
+@media (--viewportLarge) {
+  .openAbove {
+    top: auto;
+    bottom: calc(100% + 4px);
+  }
+}
+
 .toggleButton {
   display: flex;
   align-items: center;
@@ -65,6 +78,10 @@
   margin-left: 8px;
   color: var(--colorGrey300);
   white-space: nowrap;
+}
+
+.noIcon {
+  margin-left: 0;
 }
 
 .active {
