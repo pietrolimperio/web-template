@@ -72,34 +72,14 @@ export const AIListingCreationPageComponent = ({
 }) => {
   const config = useConfiguration();
 
-  // 🔧 TESTING MODE: Set to true to skip directly to location step
-  const TEST_MODE_LOCATION = false;
-
   // Check if user is guest (not authenticated)
   const isGuest = !isAuthenticated || !currentUser?.id;
 
   // State management
-  const [step, setStep] = useState(TEST_MODE_LOCATION ? STEP_PRICE_QUESTION : STEP_UPLOAD);
-  const [uploadedImages, setUploadedImages] = useState(
-    TEST_MODE_LOCATION ? [new File(['test'], 'test.jpg', { type: 'image/jpeg' })] : []
-  );
-  const [imagePreviewUrls, setImagePreviewUrls] = useState(
-    TEST_MODE_LOCATION ? ['https://via.placeholder.com/400'] : []
-  );
-  const [productAnalysis, setProductAnalysis] = useState(
-    TEST_MODE_LOCATION
-      ? {
-          category: 'Test Category',
-          subcategory: 'Test Subcategory',
-          fields: {
-            title: 'Test Product',
-            description: 'Test Description',
-          },
-          questions: [],
-          confidence: 'high',
-        }
-      : null
-  );
+  const [step, setStep] = useState(STEP_UPLOAD);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+  const [productAnalysis, setProductAnalysis] = useState(null);
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [totalQuestionsAsked, setTotalQuestionsAsked] = useState(0);
   const [roundNumber, setRoundNumber] = useState(0);
