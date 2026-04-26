@@ -60,6 +60,7 @@ export { default as NotificationBadge } from './NotificationBadge/NotificationBa
 export { default as NotificationBanner } from './NotificationBanner/NotificationBanner';
 export { default as ListingCardThumbnail } from './ListingCardThumbnail/ListingCardThumbnail';
 export { default as OutsideClickHandler } from './OutsideClickHandler/OutsideClickHandler';
+export { default as PageErrorBoundary } from './PageErrorBoundary/PageErrorBoundary';
 export { default as Promised } from './Promised/Promised';
 export { default as PropertyGroup } from './PropertyGroup/PropertyGroup';
 export { default as RangeSlider } from './RangeSlider/RangeSlider';

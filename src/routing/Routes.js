@@ -12,7 +12,7 @@ import { useConfiguration } from '../context/configurationContext';
 
 import { locationChanged } from '../ducks/routing.duck';
 
-import { NamedRedirect } from '../components';
+import { NamedRedirect, PageErrorBoundary } from '../components';
 import NotFoundPage from '../containers/NotFoundPage/NotFoundPage';
 
 import LoadableComponentErrorBoundary from './LoadableComponentErrorBoundary/LoadableComponentErrorBoundary';
@@ -159,12 +159,14 @@ class RouteComponentRenderer extends Component {
     const isBannedFromAuthPages = restrictedPageWithCurrentUser && isBanned(currentUser);
     return canShow ? (
       <LoadableComponentErrorBoundary>
-        <RouteComponent
-          params={match.params}
-          location={location}
-          staticContext={staticContext}
-          {...extraProps}
-        />
+        <PageErrorBoundary>
+          <RouteComponent
+            params={match.params}
+            location={location}
+            staticContext={staticContext}
+            {...extraProps}
+          />
+        </PageErrorBoundary>
       </LoadableComponentErrorBoundary>
     ) : isBannedFromAuthPages ? (
       <NamedRedirect name="LandingPage" />
