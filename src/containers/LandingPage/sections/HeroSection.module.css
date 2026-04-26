@@ -169,13 +169,33 @@
   font-weight: 600;
   min-width: 0;
   height: 30px;
-  line-height: 1.2;
+  line-height: 30px;
   letter-spacing: -0.01em;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  caret-color: var(--colorGrey700);
+  transition: none;
+}
+
+.keywordRoot input:hover,
+.keywordRoot input:focus,
+.keywordRoot input:focus-visible {
+  border: 0 !important;
+  outline: none;
+  box-shadow: none;
+  transition: none;
 }
 
 .keywordRoot input::placeholder {
   color: var(--colorGrey500);
   opacity: 1;
+}
+
+.keywordRoot input:focus::placeholder,
+.keywordRoot input:focus-visible::placeholder {
+  color: transparent;
 }
 
 /* dateRoot overrides FilterDateRange's own .root class — keep position:relative */

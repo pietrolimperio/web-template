@@ -2,19 +2,23 @@
 
 /* Extra styles on top of ProductListingCard (border, hover lift) */
 .listingCardRoot {
-  border: 1px solid #ebebeb;
+  border: none;
+  border-radius: 16px;
+  box-shadow: none;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 
   &:hover {
     text-decoration: none;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgb(15 23 42 / 10%);
+    transform: translateY(-3px);
   }
 }
 
 .aspectRatioWrapper {
-  background: var(--colorSurfaceContainerLow);
+  background: linear-gradient(135deg, #ffe7e1 0%, #fff3ef 100%);
   flex-shrink: 0;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .rootForImage {
@@ -76,9 +80,9 @@
 
 .priceValue {
   font-weight: var(--fontWeightBold);
-  color: var(--marketplaceColor);
+  color: var(--colorGrey700);
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .perUnit {

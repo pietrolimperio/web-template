@@ -6,7 +6,7 @@
 .contentWrapper {
   display: flex;
   flex-wrap: wrap;
-  max-width: 300px;
+  max-width: 100%;
   padding-top: 5px;
   padding-bottom: 5px;
   margin-top: 0px;
@@ -41,15 +41,28 @@
 
 .inputsWrapper {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: nowrap;
 
   @media (--viewportMedium) {
     padding-bottom: 5px;
   }
 }
 
+.valueField {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
 .minValue,
 .maxValue {
-  width: 48px;
+  width: 64px;
+  min-width: 0;
   text-align: center;
 
   -moz-appearance: textfield;
@@ -66,7 +79,7 @@
 }
 
 .valueInSidebar {
-  width: 72px;
+  width: 100%;
 }
 
 .invalidInput:focus {
@@ -74,11 +87,21 @@
 }
 
 .valueSeparator {
-  margin: 6px 8px 0 8px;
+  margin: 0;
+  flex: 0 0 auto;
 
   @media (--viewportMedium) {
-    margin: 5px 8px 0 8px;
+    margin: 0;
   }
+}
+
+.currencyCode {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--colorGrey500);
+  text-transform: uppercase;
 }
 
 .sliderWrapper {

@@ -39,18 +39,20 @@ const MainPanelHeader = props => {
   return (
     <div className={classes}>
       <div className={css.searchOptions}>
-        <h1 className={css.searchResultSummary}>
-          <span className={css.resultsFound}>
-            {searchInProgress ? (
-              <FormattedMessage id="MainPanelHeader.loadingResults" />
-            ) : (
-              <FormattedMessage
-                id="MainPanelHeader.foundResults"
-                values={{ count: resultsCount }}
-              />
-            )}
-          </span>
-        </h1>
+        <div className={css.searchSummaryContainer}>
+          <h1 className={css.searchResultSummary}>
+            <span className={css.resultsFound}>
+              {searchInProgress ? (
+                <FormattedMessage id="MainPanelHeader.loadingResults" />
+              ) : (
+                <FormattedMessage
+                  id="MainPanelHeader.foundResults"
+                  values={{ count: resultsCount }}
+                />
+              )}
+            </span>
+          </h1>
+        </div>
         {isSortByActive ? (
           <div className={css.sortyByWrapper}>
             <span className={css.sortyBy}>

@@ -12,7 +12,12 @@ import {
   dispatchedActions,
 } from '../../util/testHelpers';
 
-import { loadData, searchListingsRequest, searchListingsSuccess } from './SearchPage.duck';
+import {
+  loadData,
+  searchListings,
+  searchListingsRequest,
+  searchListingsSuccess,
+} from './SearchPage.duck';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
 const { screen, userEvent, waitFor } = testingLibrary;
@@ -57,6 +62,7 @@ const listingTypes = [
 const capitalizeFirstLetter = str => str.charAt(0).toUpperCase() + str.slice(1);
 const addSpaces = str => str.split('-').join(' ');
 const labelize = str => addSpaces(capitalizeFirstLetter(str));
+const getFilterToggleButton = labelNode => labelNode.closest('button');
 
 const generateCategories = optionStrings => {
   return optionStrings.reduce((converted, entry) => {
@@ -154,6 +160,24 @@ const listingFields = [
       label: 'Amenities',
     },
   },
+  {
+    key: 'handByHandAvailable',
+    scope: 'public',
+    schemaType: 'boolean',
+    filterConfig: {
+      indexForSearch: true,
+      label: 'Hand by hand',
+      group: 'primary',
+      toggleOnly: true,
+      orderAfter: 'price',
+    },
+    showConfig: {
+      label: 'Hand by hand',
+    },
+    saveConfig: {
+      label: 'Hand by hand',
+    },
+  },
 ];
 
 const listingTypeOptions = listingTypes.map(lt => ({ option: lt.id, label: labelize(lt.id) }));
@@ -188,6 +212,13 @@ const defaultFiltersConfig = [
     label: 'Keyword',
   },
 ];
+
+const datesFilterConfig = {
+  key: 'dates',
+  schemaType: 'dates',
+  availability: 'time-full',
+  dateRangeMode: 'day',
+};
 
 const sortConfig = {
   active: true,
@@ -285,6 +316,7 @@ const getSearchParams = config => {
       'publicData.cardStyle',
       // These help rendering of 'purchase' listings,
       // when transitioning from search page to listing page
+      'publicData.handByHandAvailable',
       'publicData.pickupEnabled',
       'publicData.shippingEnabled',
       'publicData.priceVariationsEnabled',
@@ -356,16 +388,20 @@ describe('SearchPage', () => {
       expect(getByText('Amenities')).toBeInTheDocument();
       // Has Single Select Test filter
       expect(getByText('Single Select Test')).toBeInTheDocument();
+      // Has boolean filter
+      expect(screen.getAllByText('Consegna a mano').length).toBeGreaterThan(0);
       expect(getByText('Enum 1')).toBeInTheDocument();
       expect(getByText('Enum 2')).toBeInTheDocument();
 
       // Has Category filter
-      expect(getByText('FilterComponent.categoryLabel')).toBeInTheDocument();
-      expect(getByText('Dogs')).toBeInTheDocument();
+      const categoryFilterButton = getFilterToggleButton(getByText('FilterComponent.categoryLabel'));
+      expect(categoryFilterButton).toBeInTheDocument();
+      expect(categoryFilterButton).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
       expect(queryByText('Poodle')).not.toBeInTheDocument();
-      expect(getByText('Cats')).toBeInTheDocument();
       expect(queryByText('Burmese')).not.toBeInTheDocument();
-      expect(getByText('Fish')).toBeInTheDocument();
       expect(queryByText('Freshwater')).not.toBeInTheDocument();
 
       // Has Listing type filter
@@ -387,9 +423,18 @@ describe('SearchPage', () => {
       expect(getAllByText('ListingCard.price')).toHaveLength(4);
     });
 
-    // Test category intercation: click "Fish"
     await waitFor(() => {
-      userEvent.click(getByRole('button', { name: 'Choose Fish.' }));
+      userEvent.click(getFilterToggleButton(getByText('FilterComponent.categoryLabel')));
+    });
+
+    expect(getFilterToggleButton(getByText('FilterComponent.categoryLabel'))).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    // Test category interaction: select "Fish"
+    await waitFor(() => {
+      userEvent.click(screen.getByLabelText('Fish'));
     });
 
     expect(getByText('Dogs')).toBeInTheDocument();
@@ -397,7 +442,7 @@ describe('SearchPage', () => {
     expect(getByText('Cats')).toBeInTheDocument();
     expect(queryByText('Burmese')).not.toBeInTheDocument();
     // Subcategories of Fish should be visible
-    expect(getByText('Fish')).toBeInTheDocument();
+    expect(screen.getAllByText('Fish').length).toBeGreaterThan(0);
     expect(getByText('Freshwater')).toBeInTheDocument();
     expect(getByText('Saltwater')).toBeInTheDocument();
   });
@@ -449,6 +494,8 @@ describe('SearchPage', () => {
       expect(queryByText('Amenities')).not.toBeInTheDocument();
       // Has Single Select Test filter
       expect(getByText('Single Select Test')).toBeInTheDocument();
+      // Has boolean filter
+      expect(screen.getAllByText('Consegna a mano').length).toBeGreaterThan(0);
       expect(queryByText('Enum 1')).not.toBeInTheDocument();
       expect(queryByText('Enum 2')).not.toBeInTheDocument();
 
@@ -480,7 +527,7 @@ describe('SearchPage', () => {
       expect(getAllByText('ListingCard.price')).toHaveLength(4);
     });
 
-    // Test category intercation
+    // Test category interaction
     await waitFor(() => {
       userEvent.click(getByRole('button', { name: 'Filter: FilterComponent.categoryLabel' }));
     });
@@ -491,16 +538,16 @@ describe('SearchPage', () => {
     expect(getByText('Fish')).toBeInTheDocument();
     expect(queryByText('Freshwater')).not.toBeInTheDocument();
 
-    // Test category intercation: click "Fish"
+    // Test category interaction: select "Fish"
     await waitFor(() => {
-      userEvent.click(getByRole('button', { name: 'Choose Fish.' }));
+      userEvent.click(screen.getByLabelText('Fish'));
     });
     expect(getByText('Dogs')).toBeInTheDocument();
     expect(queryByText('Poodle')).not.toBeInTheDocument();
     expect(getByText('Cats')).toBeInTheDocument();
     expect(queryByText('Burmese')).not.toBeInTheDocument();
     // Subcategories of Fish should be visible
-    expect(getByText('Fish')).toBeInTheDocument();
+    expect(screen.getAllByText('Fish').length).toBeGreaterThan(0);
     expect(getByText('Freshwater')).toBeInTheDocument();
     expect(getByText('Saltwater')).toBeInTheDocument();
   });
@@ -530,18 +577,29 @@ describe('SearchPage', () => {
       expect(queryByText('Cat')).not.toBeInTheDocument();
 
       // Has Category filter
-      expect(getByText('FilterComponent.categoryLabel')).toBeInTheDocument();
-      expect(getByText('Dogs')).toBeInTheDocument();
+      const categoryFilterButton = getFilterToggleButton(getByText('FilterComponent.categoryLabel'));
+      expect(categoryFilterButton).toBeInTheDocument();
+      expect(categoryFilterButton).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
       expect(queryByText('Poodle')).not.toBeInTheDocument();
-      expect(getByText('Cats')).toBeInTheDocument();
       expect(queryByText('Burmese')).not.toBeInTheDocument();
-      expect(getByText('Fish')).toBeInTheDocument();
       expect(queryByText('Freshwater')).not.toBeInTheDocument();
     });
 
-    // Test category intercation: click "Fish"
     await waitFor(() => {
-      userEvent.click(getByRole('button', { name: 'Choose Cats.' }));
+      userEvent.click(getFilterToggleButton(getByText('FilterComponent.categoryLabel')));
+    });
+
+    expect(getFilterToggleButton(getByText('FilterComponent.categoryLabel'))).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    // Test category interaction: select "Cats"
+    await waitFor(() => {
+      userEvent.click(screen.getByLabelText('Cats'));
     });
 
     // Has no Cat filter (primary)
@@ -549,7 +607,7 @@ describe('SearchPage', () => {
 
     expect(getByText('Dogs')).toBeInTheDocument();
     expect(queryByText('Poodle')).not.toBeInTheDocument();
-    expect(getByText('Cats')).toBeInTheDocument();
+    expect(screen.getAllByText('Cats').length).toBeGreaterThan(0);
     // Subcategories of Cats should be visible
     expect(queryByText('Burmese')).toBeInTheDocument();
     expect(queryByText('Egyptian mau')).toBeInTheDocument();
@@ -627,6 +685,277 @@ describe('SearchPage', () => {
       expect(queryByText('Sell bicycles')).not.toBeInTheDocument();
     });
   });
+
+  it('keeps dates out of the filter list and exposes the inline keyword/date search instead', async () => {
+    const baseConfig = getConfig('grid');
+    const config = {
+      ...baseConfig,
+      search: {
+        ...baseConfig.search,
+        mainSearch: {
+          searchType: 'keywords',
+        },
+        defaultFilters: [...defaultFiltersConfig, datesFilterConfig],
+      },
+    };
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    const { queryByText } = render(<SearchPage {...props} />, {
+      initialState,
+      config,
+      routeConfiguration,
+    });
+
+    await waitFor(() => {
+      expect(queryByText('FilterComponent.datesLabel')).not.toBeInTheDocument();
+      expect(screen.getByTestId('search-page-date-trigger')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByTestId('search-page-date-trigger'));
+    });
+
+    expect(screen.getByTestId('search-page-date-picker')).toBeInTheDocument();
+  });
+
+  it('opens the topbar date picker from the Quando section in keyword search mode', async () => {
+    const baseConfig = getConfig('grid');
+    const config = {
+      ...baseConfig,
+      search: {
+        ...baseConfig.search,
+        mainSearch: {
+          searchType: 'keywords',
+        },
+      },
+    };
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    render(<SearchPage {...props} />, {
+      initialState,
+      config,
+      routeConfiguration,
+      initialPath: '/s',
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('topbar-date-trigger')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByTestId('topbar-date-trigger'));
+    });
+
+    expect(screen.getByTestId('topbar-date-picker')).toBeInTheDocument();
+  });
+
+  it('disables category chips that have no matching listings when the full result set is loaded', async () => {
+    const config = getConfig('grid');
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const lCats = createListing('lcats', {
+      publicData: { categoryId: 'cats' },
+    });
+    const lFreshwater = createListing('lfreshwater', {
+      publicData: { categoryId: 'fish', subcategoryId: 'freshwater' },
+    });
+    const fullResultState = {
+      SearchPage: {
+        ...initialState.SearchPage,
+        currentPageResultIds: [lCats.id, lFreshwater.id],
+        pagination: { paginationUnsupported: true, totalItems: 2, totalPages: 1, page: 1, perPage: 2 },
+        searchParams: { pub_category: 'categoryId:fish' },
+      },
+      marketplaceData: {
+        entities: {
+          listing: {
+            [lCats.id.uuid]: lCats,
+            [lFreshwater.id.uuid]: lFreshwater,
+          },
+        },
+      },
+    };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    const { getByText } = render(<SearchPage {...props} />, {
+      initialState: fullResultState,
+      config,
+      routeConfiguration,
+      initialPath: '/s?pub_category=categoryId:fish',
+    });
+
+    await waitFor(() => {
+      expect(getByText('FilterComponent.categoryLabel')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      userEvent.click(getFilterToggleButton(getByText('FilterComponent.categoryLabel')));
+    });
+
+    const dogButtons = screen.getAllByRole('button', { name: 'Dogs' });
+    expect(dogButtons.every(button => button.disabled)).toBe(true);
+
+    await waitFor(() => {
+      const freshwaterButtons = screen.getAllByRole('button', { name: 'Fish / Freshwater' });
+      const saltwaterButtons = screen.getAllByRole('button', { name: 'Fish / Saltwater' });
+
+      expect(freshwaterButtons.every(button => !button.disabled)).toBe(true);
+      expect(saltwaterButtons.every(button => button.disabled)).toBe(true);
+    });
+  });
+
+  it('keeps category chips selectable when only a partial result page is loaded', async () => {
+    const config = getConfig('grid');
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const lBird = createListing('lbird', {
+      publicData: { categoryId: 'birds' },
+    });
+    const paginatedState = {
+      SearchPage: {
+        ...initialState.SearchPage,
+        currentPageResultIds: [lBird.id],
+        pagination: { page: 1, perPage: 1, totalItems: 2, totalPages: 2 },
+        searchParams: {},
+      },
+      marketplaceData: {
+        entities: {
+          listing: {
+            [lBird.id.uuid]: lBird,
+          },
+        },
+      },
+    };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    const { getByText } = render(<SearchPage {...props} />, {
+      initialState: paginatedState,
+      config,
+      routeConfiguration,
+      initialPath: '/s',
+    });
+
+    await waitFor(() => {
+      expect(getByText('FilterComponent.categoryLabel')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      userEvent.click(getFilterToggleButton(getByText('FilterComponent.categoryLabel')));
+    });
+
+    const dogButtons = screen.getAllByRole('button', { name: 'Dogs' });
+    expect(dogButtons.every(button => !button.disabled)).toBe(true);
+  });
+
+  it('filters grid results by multi-branch category selections from the URL', async () => {
+    const config = getConfig('grid');
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const lCategory = createListing('lcategory', {
+      publicData: { categoryId: 'cats' },
+    });
+    const lSubcategory = createListing('lsubcat', {
+      publicData: { categoryId: 'fish', subcategoryId: 'freshwater' },
+    });
+    const lOther = createListing('lother', {
+      publicData: { categoryId: 'birds' },
+    });
+    const stateWithCategoryFilter = {
+      SearchPage: {
+        ...initialState.SearchPage,
+        currentPageResultIds: [lCategory.id, lSubcategory.id, lOther.id],
+        pagination: { paginationUnsupported: true },
+        searchParams: { pub_category: 'categoryId:cats,subcategoryId:freshwater' },
+      },
+      marketplaceData: {
+        entities: {
+          listing: {
+            [lCategory.id.uuid]: lCategory,
+            [lSubcategory.id.uuid]: lSubcategory,
+            [lOther.id.uuid]: lOther,
+          },
+        },
+      },
+    };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    const { getByText, queryByText } = render(<SearchPage {...props} />, {
+      initialState: stateWithCategoryFilter,
+      config,
+      routeConfiguration,
+      initialPath: '/s?pub_category=categoryId:cats,subcategoryId:freshwater',
+    });
+
+    await waitFor(() => {
+      expect(getByText('lcategory title')).toBeInTheDocument();
+      expect(getByText('lsubcat title')).toBeInTheDocument();
+      expect(queryByText('lother title')).not.toBeInTheDocument();
+    });
+  });
+
+  it('clears selected subcategories when their selected parent category is deselected', async () => {
+    const config = getConfig('grid');
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const props = { ...commonProps };
+    const searchRouteConfig = routeConfiguration.find(conf => conf.name === 'SearchPage');
+    const SearchPage = searchRouteConfig.component;
+
+    const { getByText } = render(<SearchPage {...props} />, {
+      initialState,
+      config,
+      routeConfiguration,
+      initialPath: '/s',
+      messages: { 'FieldSelectTree.screenreader.option': 'Choose {optionName}.' },
+    });
+
+    await waitFor(() => {
+      expect(getByText('FilterComponent.categoryLabel')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      userEvent.click(getFilterToggleButton(getByText('FilterComponent.categoryLabel')));
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByLabelText('Fish'));
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByLabelText('Fish / Freshwater'));
+    });
+
+    expect(screen.getByRole('button', { name: 'Fish' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Fish / Freshwater' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
+    await waitFor(() => {
+      userEvent.click(screen.getByRole('button', { name: 'Fish' }));
+    });
+
+    expect(screen.getByRole('button', { name: 'Fish' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Fish' })).not.toHaveFocus();
+
+    await waitFor(() => {
+      userEvent.click(screen.getByRole('button', { name: 'Fish' }));
+    });
+
+    expect(screen.getByRole('button', { name: 'Fish' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Fish / Freshwater' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
 });
 
 describe('Duck', () => {
@@ -700,6 +1029,42 @@ describe('Duck', () => {
     // update this test accordingly!
     return loadData(null, null, config)(dispatch, getState, sdk).then(data => {
       expect(dispatchedActions(dispatch)).toEqual([]);
+    });
+  });
+
+  it('searchListings() keeps numeric category ids in API params', () => {
+    const numericCategoryConfig = {
+      ...config,
+      categoryConfiguration: {
+        ...config.categoryConfiguration,
+        categories: [
+          {
+            id: 10,
+            name: 'Parent',
+            subcategories: [{ id: 11, name: 'Child' }],
+          },
+        ],
+      },
+    };
+
+    const sdk = {
+      listings: { query: jest.fn(() => Promise.resolve(fakeResponse([l1, l2]))) },
+    };
+    const dispatch = jest.fn(action => action);
+    const getState = () => initialState;
+    const searchParams = {
+      pub_categoryId: '10',
+      pub_subcategoryId: '11',
+      page: 1,
+    };
+
+    return searchListings(searchParams, numericCategoryConfig)(dispatch, getState, sdk).then(() => {
+      expect(sdk.listings.query).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pub_categoryId: '10',
+          pub_subcategoryId: '11',
+        })
+      );
     });
   });
 });

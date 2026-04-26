@@ -73,6 +73,7 @@ const RangeInput = props => {
     max: defaultMaxValue,
     step,
     isInSideBar,
+    currencyCode,
     initialValues,
     intl,
     getLabelForRangeInput,
@@ -204,49 +205,55 @@ const RangeInput = props => {
               {intl.formatMessage({ id: 'IntegerRangeFilter.rangeInputsLabel' })}
             </span>
           ) : null}
-          <input
-            className={classNames(css.minValue, {
-              [css.valueInSidebar]: isInSideBar,
-              [css.invalidInput]: isMinInvalid,
-            })}
-            type="number"
-            name={`${name}_min`}
-            min={defaultMinValue}
-            max={defaultMaxValue}
-            step={step}
-            placeholder={defaultMinValue}
-            value={fieldValues.minValue}
-            onChange={handleMinValueChange}
-            onBlur={handleMinValueBlur}
-            role="slider"
-            aria-valuenow={fieldValues.minValue}
-            aria-valuetext={labelForRangeInput(fieldValues.minValue, 'min')}
-            aria-valuemin={defaultMinValue}
-            aria-valuemax={defaultMaxValue}
-            aria-label={labelForRangeInput(fieldValues.minValue, 'min')}
-          ></input>
+          <div className={css.valueField}>
+            <input
+              className={classNames(css.minValue, {
+                [css.valueInSidebar]: isInSideBar,
+                [css.invalidInput]: isMinInvalid,
+              })}
+              type="number"
+              name={`${name}_min`}
+              min={defaultMinValue}
+              max={defaultMaxValue}
+              step={step}
+              placeholder={defaultMinValue}
+              value={fieldValues.minValue}
+              onChange={handleMinValueChange}
+              onBlur={handleMinValueBlur}
+              role="slider"
+              aria-valuenow={fieldValues.minValue}
+              aria-valuetext={labelForRangeInput(fieldValues.minValue, 'min')}
+              aria-valuemin={defaultMinValue}
+              aria-valuemax={defaultMaxValue}
+              aria-label={labelForRangeInput(fieldValues.minValue, 'min')}
+            ></input>
+            {currencyCode ? <span className={css.currencyCode}>{currencyCode}</span> : null}
+          </div>
           <span className={css.valueSeparator}>-</span>
-          <input
-            className={classNames(css.maxValue, {
-              [css.valueInSidebar]: isInSideBar,
-              [css.invalidInput]: isMaxInvalid,
-            })}
-            type="number"
-            name={`${name}_max`}
-            min={defaultMinValue}
-            max={defaultMaxValue}
-            placeholder={defaultMaxValue}
-            step={step}
-            value={fieldValues.maxValue}
-            onChange={handleMaxValueChange}
-            onBlur={handleMaxValueBlur}
-            role="slider"
-            aria-valuenow={fieldValues.maxValue}
-            aria-valuetext={labelForRangeInput(fieldValues.maxValue, 'max')}
-            aria-valuemin={defaultMinValue}
-            aria-valuemax={defaultMaxValue}
-            aria-label={labelForRangeInput(fieldValues.maxValue, 'max')}
-          ></input>
+          <div className={css.valueField}>
+            <input
+              className={classNames(css.maxValue, {
+                [css.valueInSidebar]: isInSideBar,
+                [css.invalidInput]: isMaxInvalid,
+              })}
+              type="number"
+              name={`${name}_max`}
+              min={defaultMinValue}
+              max={defaultMaxValue}
+              placeholder={defaultMaxValue}
+              step={step}
+              value={fieldValues.maxValue}
+              onChange={handleMaxValueChange}
+              onBlur={handleMaxValueBlur}
+              role="slider"
+              aria-valuenow={fieldValues.maxValue}
+              aria-valuetext={labelForRangeInput(fieldValues.maxValue, 'max')}
+              aria-valuemin={defaultMinValue}
+              aria-valuemax={defaultMaxValue}
+              aria-label={labelForRangeInput(fieldValues.maxValue, 'max')}
+            ></input>
+            {currencyCode ? <span className={css.currencyCode}>{currencyCode}</span> : null}
+          </div>
         </div>
       </div>
       <div className={css.sliderWrapper}>

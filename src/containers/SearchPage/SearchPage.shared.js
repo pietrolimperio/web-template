@@ -3,7 +3,10 @@ import intersection from 'lodash/intersection';
 import { SCHEMA_TYPE_ENUM, SCHEMA_TYPE_MULTI_ENUM } from '../../util/types';
 import { createResourceLocatorString, matchPathname } from '../../util/routes';
 import {
+  CATEGORY_MULTI_FILTER_PARAM,
+  convertCategoriesToSelectTreeOptions,
   isAnyFilterActive,
+  getValidCategorySelectionTokens,
   parseSelectFilterOptions,
   constructQueryParamName,
 } from '../../util/search';
@@ -17,6 +20,9 @@ import {
 } from '../../util/dates';
 import { isFieldForCategory, isFieldForListingType } from '../../util/fieldHelpers';
 
+const idsMatch = (left, right) =>
+  left != null && right != null && `${left}` === `${right}`;
+
 const validURLParamForCategoryData = (categoryLevelKeys, categories, level, params) => {
   const keyAtLevel = categoryLevelKeys?.[level - 1];
   if (!keyAtLevel) return {};
@@ -24,7 +30,7 @@ const validURLParamForCategoryData = (categoryLevelKeys, categories, level, para
   const levelValue =
     typeof params?.[levelKey] !== 'undefined' ? `${params?.[levelKey]}` : undefined;
 
-  const foundCategory = categories.find(cat => cat.id === levelValue);
+  const foundCategory = categories.find(cat => idsMatch(cat.id, levelValue));
   const subcategories = foundCategory?.subcategories || [];
   return foundCategory && subcategories.length > 0
     ? {
@@ -69,6 +75,15 @@ export const omitLimitedListingFieldParams = (searchParams, filterConfigs) => {
         searchParams
       )
     : {};
+  const validCategoryTreeSelections = categorySearchConfig
+    ? getValidCategorySelectionTokens(
+        searchParams?.[CATEGORY_MULTI_FILTER_PARAM],
+        convertCategoriesToSelectTreeOptions(
+          listingCategories,
+          categorySearchConfig?.nestedParams
+        )
+      )
+    : [];
 
   const validListingTypeParamNames =
     activeListingTypes && listingTypeSearchConfig
@@ -80,7 +95,10 @@ export const omitLimitedListingFieldParams = (searchParams, filterConfigs) => {
     const foundConfig = listingFieldsConfig.find(
       f => constructQueryParamName(f.key, f.scope) === searchParamKey
     );
-    const currentCategories = Object.values(validNestedCategoryParamNames);
+    const currentCategories = [
+      ...Object.values(validNestedCategoryParamNames),
+      ...validCategoryTreeSelections.map(token => token.split(':')[1]),
+    ];
     const isForCategory = isFieldForCategory(currentCategories, foundConfig);
     const currentListingType = listingTypePathParam
       ? [listingTypePathParam]
@@ -165,6 +183,8 @@ export const validURLParamForExtendedData = (
               isSchemaTypeMultiEnum && searchMode ? `${searchMode}:${validValues}` : validValues,
           }
         : {};
+    } else if (schemaType === 'boolean' && filterConfig?.toggleOnly) {
+      return paramValue === 'true' ? { [queryParamName]: paramValue } : {};
     } else {
       // Generic filter - remove empty params
       return paramValue.length > 0 ? { [queryParamName]: paramValue } : {};
@@ -193,7 +213,7 @@ export const validFilterParams = (params, filterConfigs, dropNonFilterParams = t
   );
   const builtInFilterParamNames = defaultFiltersConfig.flatMap(f => {
     if (f.schemaType === 'category' && f.nestedParams?.length) {
-      return f.nestedParams.map(k => constructQueryParamName(k, 'public'));
+      return [CATEGORY_MULTI_FILTER_PARAM, ...f.nestedParams.map(k => constructQueryParamName(k, 'public'))];
     }
     if (f.schemaType === 'listingType') return [`pub_${f.key}`];
     return [f.key];
@@ -211,6 +231,15 @@ export const validFilterParams = (params, filterConfigs, dropNonFilterParams = t
         params
       )
     : {};
+  const validCategoryTreeSelections = categorySearchConfig
+    ? getValidCategorySelectionTokens(
+        params?.[CATEGORY_MULTI_FILTER_PARAM],
+        convertCategoriesToSelectTreeOptions(
+          listingCategories,
+          categorySearchConfig?.nestedParams
+        )
+      )
+    : [];
   const isParamNameNestedEnumRelated = (paramName, nestedParams, isNestedEnum) => {
     if (!isNestedEnum || !nestedParams?.length) return false;
     return nestedParams.some(k => paramName === constructQueryParamName(k, 'public'));
@@ -247,7 +276,16 @@ export const validFilterParams = (params, filterConfigs, dropNonFilterParams = t
 
   // TODO: Currently this only supports category filter with nested param names (categoryId, subcategoryId, thirdCategoryId).
   //       This needs more work to make other enum fields to understand nested keys.
-  return { ...listingFieldsAndBuiltInFilterParamNames, ...validNestedCategoryParamNames };
+  const categoryTreeParamMaybe =
+    validCategoryTreeSelections.length > 0
+      ? { [CATEGORY_MULTI_FILTER_PARAM]: validCategoryTreeSelections.join(',') }
+      : {};
+
+  return {
+    ...listingFieldsAndBuiltInFilterParamNames,
+    ...validNestedCategoryParamNames,
+    ...categoryTreeParamMaybe,
+  };
 };
 
 /**
@@ -439,6 +477,15 @@ export const pickListingFieldFilters = params => {
         searchParams
       )
     : {};
+  const validCategoryTreeSelections = categories
+    ? getValidCategorySelectionTokens(
+        searchParams?.[CATEGORY_MULTI_FILTER_PARAM],
+        convertCategoriesToSelectTreeOptions(
+          categories,
+          categoryConfiguration.nestedParams ?? categoryConfiguration.categoryLevelKeys
+        )
+      )
+    : [];
 
   const { listingType: listingTypeParam } = currentPathParams;
   const listingTypeParamMaybe = listingTypeParam ? { pub_listingType: listingTypeParam } : {};
@@ -449,7 +496,10 @@ export const pickListingFieldFilters = params => {
       })
     : {};
 
-  const currentCategories = Object.values(validNestedCategoryParamNames);
+  const currentCategories = [
+    ...Object.values(validNestedCategoryParamNames),
+    ...validCategoryTreeSelections.map(token => token.split(':')[1]),
+  ];
   const currentListingType = Object.values(validListingTypeParamNames);
   const pickedFields = listingFields.reduce((picked, fieldConfig) => {
     const isTargetCategory = isFieldForCategory(currentCategories, fieldConfig);
@@ -482,6 +532,30 @@ export const groupListingFieldConfigs = (configs, activeListingTypes) =>
     },
     [[], []]
   );
+
+export const orderFiltersForDisplay = filters => {
+  const ordered = [...filters];
+
+  filters.forEach(filter => {
+    const targetKey = filter?.filterConfig?.orderAfter;
+    if (!targetKey) {
+      return;
+    }
+
+    const currentIndex = ordered.findIndex(candidate => candidate.key === filter.key);
+    const targetIndex = ordered.findIndex(candidate => candidate.key === targetKey);
+
+    if (currentIndex === -1 || targetIndex === -1 || currentIndex === targetIndex + 1) {
+      return;
+    }
+
+    const [movedFilter] = ordered.splice(currentIndex, 1);
+    const nextTargetIndex = ordered.findIndex(candidate => candidate.key === targetKey);
+    ordered.splice(nextTargetIndex + 1, 0, movedFilter);
+  });
+
+  return ordered;
+};
 
 export const createSearchResultSchema = (
   listings,

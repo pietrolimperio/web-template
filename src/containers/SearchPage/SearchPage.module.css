@@ -53,6 +53,7 @@
   @media (--viewportMedium) {
     flex-direction: row;
     justify-content: center;
+    background: var(--colorSurfaceContainerLow);
   }
 }
 
@@ -64,11 +65,11 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 24px 0 0 24px;
+    padding: 24px 0 24px 24px;
   }
   @media (--viewportLarge) {
     /* Layout */
-    padding: 40px 0 0 36px;
+    padding: 32px 0 24px 36px;
 
     flex-direction: column;
     justify-content: flex-start;
@@ -78,30 +79,31 @@
   }
 
   @media (min-width: 1440px) {
-    padding: 40px 0 0 calc((100vw - 1368px) / 2);
+    padding: 32px 0 24px calc((100vw - 1368px) / 2);
   }
   @media (--viewportXLarge) {
-    padding: 40px 0 0 calc((100vw - 1800px) / 2);
+    padding: 32px 0 24px calc((100vw - 1800px) / 2);
   }
 }
 
 .filterColumnContent {
   display: flex;
   flex-direction: column;
-  width: 210px;
-  padding: 8px 24px 0 0;
+  width: 312px;
+  min-height: 320px;
+  padding: 24px 24px 18px;
+  border-radius: 16px;
+  background: var(--colorWhite);
+  box-shadow: 0 1px 3px rgb(23 26 31 / 8%);
+  position: sticky;
+  top: calc(var(--topbarHeightDesktop) + 20px);
 
   @media (--viewportMedium) {
-    padding: 8px 24px 24px 0;
+    margin-top: 4px;
   }
 
   @media (--viewportLarge) {
-    width: 240px;
-    padding: 8px 36px 24px 0;
-  }
-
-  @media (min-width: 1440px) {
-    padding: 8px 60px 24px 0;
+    width: 328px;
   }
 }
 .filter:first-child {
@@ -110,12 +112,12 @@
 
 .resetAllButton {
   composes: h5 from global;
-  font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey600);
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--colorGrey500);
 
   /* Layout */
-  display: inline;
-  margin: 17px 0 0 0;
+  display: inline-flex;
+  margin: auto 0 0;
   padding: 0;
 
   /* Override button styles */
@@ -126,12 +128,12 @@
 
   &:focus,
   &:hover {
-    color: var(--colorGrey800);
+    color: var(--marketplaceColor);
   }
 
   @media (--viewportMedium) {
-    margin: 24px 0 0 0;
-    padding: 3px 0 5px 0;
+    margin: auto 0 0;
+    padding: 3px 0 2px;
   }
 }
 
@@ -147,11 +149,9 @@
      * Calculate right padding to match Footer right border
      * and left padding together with border should be 60px.
      */
-    padding: 24px 24px 0 24px;
-    background-color: var(--colorWhite);
-    border-left-width: 1px;
-    border-left-style: solid;
-    border-left-color: var(--colorGrey100);
+    padding: 28px 24px 0;
+    background-color: transparent;
+    border-left: none;
   }
 
   @media (--viewportLarge) {
@@ -159,14 +159,14 @@
      * Calculate right padding to match Footer right border
      * and left padding together with border should be 60px.
      */
-    padding: 40px 36px 0 36px;
+    padding: 32px 36px 0;
   }
 
   @media (min-width: 1440px) {
-    padding: 40px calc((100vw - 1368px) / 2) 0 59px;
+    padding: 32px calc((100vw - 1368px) / 2) 0 48px;
   }
   @media (--viewportXLarge) {
-    padding: 40px calc((100vw - 1800px) / 2) 0 59px;
+    padding: 32px calc((100vw - 1800px) / 2) 0 48px;
   }
 }
 
@@ -174,10 +174,13 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: 2px 0 0 0;
+  padding: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--colorWhite);
+  box-shadow: 0 1px 2px rgb(23 26 31 / 6%);
 
   @media (--viewportMedium) {
-    padding: 0;
+    padding: 20px 24px 0;
     /**
      * .container is using flexbox,
      * This specifies that searchResultContainer is taking 60% from the viewport width
@@ -186,8 +189,42 @@
   }
 
   @media (--viewportLarge) {
+    padding: 24px 30px 0;
     flex-basis: 62.5%;
   }
+}
+
+.responsiveSearchFormWrapper {
+  padding: 16px 0 0;
+
+  @media (--viewportMedium) {
+    padding: 20px 0 12px;
+  }
+
+  @media (--viewportLarge) {
+    display: none;
+  }
+}
+
+.responsiveSearchForm {
+  width: 100%;
+}
+
+.responsiveSearchFormField {
+  width: 100%;
+}
+
+.responsiveSearchShell {
+  width: 100%;
+  margin: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  box-shadow: 0 1px 2px rgb(23 26 31 / 5%);
+}
+
+.responsiveDatePickerPopup {
+  right: 0;
+  width: min(320px, 100%);
 }
 
 .error {
@@ -204,6 +241,7 @@
 
   @media (--viewportMedium) {
     display: flex;
+    margin-bottom: 6px;
   }
 }
 
@@ -254,6 +292,7 @@
 
 .listingsForGridVariant {
   composes: listings;
+  padding-bottom: 24px;
 }
 
 .listingsForMapVariant {

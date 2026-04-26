@@ -7,6 +7,7 @@ import appSettings from '../../../config/settings';
 import { useConfiguration } from '../../../context/configurationContext';
 import { useRouteConfiguration } from '../../../context/routeConfigurationContext';
 import { useScrollTrigger } from '../../../hooks/useScrollTrigger';
+import { stringifyDateToISO8601 } from '../../../util/dates';
 
 import { FormattedMessage, useIntl } from '../../../util/reactIntl';
 import { isMainSearchTypeKeywords, isOriginInUse } from '../../../util/search';
@@ -120,23 +121,23 @@ const GenericError = props => {
   const intl = useIntl();
   const [isDismissed, setIsDismissed] = useState(false);
   const isVisible = show && !isDismissed;
-  
+
   const classes = classNames(css.genericError, {
     [css.genericErrorVisible]: isVisible,
   });
-  
+
   const handleClose = () => {
     setIsDismissed(true);
   };
-  
+
   return isVisible ? (
     <div className={classes} role="alert">
       <div className={css.genericErrorContent}>
         <p className={css.genericErrorText}>
           <FormattedMessage id="Topbar.genericError" />
         </p>
-        <button 
-          className={css.genericErrorClose} 
+        <button
+          className={css.genericErrorClose}
           onClick={handleClose}
           type="button"
           aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}
@@ -230,10 +231,19 @@ const TopbarComponent = props => {
 
   const handleSubmit = values => {
     const { currentSearchParams, history, location, config, routeConfiguration } = props;
+    const datesValue = values?.dates;
+    const datesMaybe =
+      datesValue?.startDate && datesValue?.endDate
+        ? {
+            dates: `${stringifyDateToISO8601(datesValue.startDate)},${stringifyDateToISO8601(
+              datesValue.endDate
+            )}`,
+          }
+        : { dates: null };
 
     const topbarSearchParams = () => {
       if (isMainSearchTypeKeywords(config)) {
-        return { keywords: values?.keywords };
+        return { keywords: values?.keywords, ...datesMaybe };
       }
       // topbar search defaults to 'location' search
       const { search, selectedPlace } = values?.location || {};
@@ -244,6 +254,7 @@ const TopbarComponent = props => {
         ...originMaybe,
         address: search,
         bounds,
+        ...datesMaybe,
       };
     };
     const searchParams = {
@@ -298,10 +309,13 @@ const TopbarComponent = props => {
     ? 'sales'
     : 'orders';
 
-  const { mobilemenu, mobilesearch, keywords, address, origin, bounds } = parse(location.search, {
-    latlng: ['origin'],
-    latlngBounds: ['bounds'],
-  });
+  const { mobilemenu, mobilesearch, keywords, address, origin, bounds, dates } = parse(
+    location.search,
+    {
+      latlng: ['origin'],
+      latlngBounds: ['bounds'],
+    }
+  );
 
   // Custom links are sorted so that group="primary" are always at the beginning of the list.
   const sortedCustomLinks = sortCustomLinks(config.topbar?.customLinks);
@@ -358,27 +372,8 @@ const TopbarComponent = props => {
     [css.scrolled]: isScrolled,
   });
 
-  const { display: searchFormDisplay = SEARCH_DISPLAY_ALWAYS } = config?.topbar?.searchBar || {};
-
-  // Search form is shown conditionally depending on configuration and
-  // the current page.
-  const showSearchOnAllPages = searchFormDisplay === SEARCH_DISPLAY_ALWAYS;
-  const showSearchOnSearchPage =
-    searchFormDisplay === SEARCH_DISPLAY_ONLY_SEARCH_PAGE &&
-    ['SearchPage', 'SearchPageWithListingType'].includes(resolvedCurrentPage);
-  const showSearchNotOnLandingPage =
-    searchFormDisplay === SEARCH_DISPLAY_NOT_LANDING_PAGE && resolvedCurrentPage !== 'LandingPage';
-
-  // SCROLL-TRIGGERED SEARCH BAR LOGIC:
-  // On Landing/CMS pages: hide search initially, show after scrolling
-  // On other pages: follow normal configuration
-  const isLandingOrCMSPage =
-    resolvedCurrentPage === 'LandingPage' ||
-    resolvedCurrentPage?.startsWith('CMSPage:');
-
-  const showSearchForm = isLandingOrCMSPage
-    ? isScrolled // Show only when scrolled on landing/CMS pages
-    : showSearchOnAllPages || showSearchOnSearchPage || showSearchNotOnLandingPage;
+  // Leaz search bar should only be visible on dedicated search routes.
+  const showSearchForm = ['SearchPage', 'SearchPageWithListingType'].includes(resolvedCurrentPage);
 
   const mobileSearchButtonMaybe = showSearchForm ? (
     <Button
@@ -436,6 +431,7 @@ const TopbarComponent = props => {
           notificationCount={notificationCount}
           onLogout={handleLogout}
           onSearchSubmit={handleSubmit}
+          selectedDates={dates}
           config={config}
           customLinks={customLinks}
           showSearchForm={showSearchForm}

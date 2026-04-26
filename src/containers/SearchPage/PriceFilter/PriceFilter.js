@@ -98,6 +98,7 @@ const PriceFilter = props => {
       initialValues={initialValues}
       formatValidRangeValues={formatValidRangeValues}
       queryParamNames={queryParamNames}
+      currencyCode={marketplaceCurrency}
       getLabelForRangeInput={getLabelForRangeInput}
       getAriaLabel={() => getAriaLabel(label, formattedRangeForAriaLabel)}
       {...rest}

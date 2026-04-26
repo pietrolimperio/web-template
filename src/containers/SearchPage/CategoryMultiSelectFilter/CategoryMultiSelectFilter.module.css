@@ -1,0 +1,118 @@
+.root {
+  width: 100%;
+}
+
+.popupSize {
+  min-width: 360px;
+}
+
+.optionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.optionItem {
+  margin: 0;
+}
+
+.optionChip {
+  width: 100%;
+  border: 1px solid var(--colorGrey100);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--colorWhite);
+  color: var(--colorGrey700);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+
+  &:hover,
+  &:focus {
+    border-color: var(--marketplaceColor);
+    box-shadow: 0 8px 18px rgb(23 26 31 / 8%);
+    outline: none;
+  }
+}
+
+.optionChipSelected {
+  border-color: var(--marketplaceColor);
+  background: rgb(255 90 2 / 8%);
+  box-shadow: 0 10px 22px rgb(255 90 2 / 12%);
+}
+
+.optionChipParentSelected {
+  border-color: rgb(255 90 2 / 28%);
+  background: var(--colorWhite);
+}
+
+.optionChipDisabled {
+  border-color: var(--colorGrey100);
+  background: var(--colorSurfaceContainerLow);
+  color: var(--colorGrey400);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.optionChipDisabled:hover,
+.optionChipDisabled:focus {
+  border-color: var(--colorGrey100);
+  box-shadow: none;
+}
+
+.optionText {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightSemiBold);
+}
+
+.suboptionsPanel {
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--colorSurfaceContainerLow);
+}
+
+.suboptionsHeader {
+  margin-bottom: 10px;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--colorGrey500);
+  font-weight: var(--fontWeightBold);
+}
+
+.suboptions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suboptions .optionItem {
+  margin: 0;
+}
+
+.suboptions .optionChip {
+  width: auto;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+}
+
+.suboptions .optionText {
+  font-size: 13px;
+  font-weight: var(--fontWeightMedium);
+}

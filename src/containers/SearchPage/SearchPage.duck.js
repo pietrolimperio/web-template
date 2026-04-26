@@ -9,7 +9,12 @@ import {
   daysBetween,
   getStartOf,
 } from '../../util/dates';
-import { constructQueryParamName, isOriginInUse, isStockInUse } from '../../util/search';
+import {
+  CATEGORY_MULTI_FILTER_PARAM,
+  constructQueryParamName,
+  isOriginInUse,
+  isStockInUse,
+} from '../../util/search';
 import { hasPermissionToViewData, isUserAuthorized } from '../../util/userHelpers';
 import { parse } from '../../util/urlHelpers';
 
@@ -18,7 +23,8 @@ import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 // Pagination page size might need to be dynamic on responsive page layouts
 // Current design has max 3 columns 12 is divisible by 2 and 3
 // So, there's enough cards to fill all columns on full pagination pages
-const RESULT_PAGE_SIZE = 24;
+export const RESULT_PAGE_SIZE = 24;
+const CATEGORY_MULTI_FETCH_PAGE_SIZE = 100;
 
 // ================ Action types ================ //
 
@@ -47,6 +53,35 @@ const resultIds = data => {
   return listings
     .filter(l => !l.attributes.deleted && l.attributes.state === 'published')
     .map(l => l.id);
+};
+
+const combineSearchResponses = responses => {
+  const combinedData = responses.flatMap(response => response?.data?.data || []);
+  const includedByKey = responses.reduce((picked, response) => {
+    const included = response?.data?.included || [];
+    included.forEach(entity => {
+      const entityId = entity?.id?.uuid || entity?.id;
+      const key = `${entity?.type}:${entityId}`;
+      if (entityId != null && !picked[key]) {
+        picked[key] = entity;
+      }
+    });
+    return picked;
+  }, {});
+
+  return {
+    data: {
+      data: combinedData,
+      included: Object.values(includedByKey),
+      meta: {
+        paginationUnsupported: true,
+        totalItems: combinedData.length,
+        totalPages: 1,
+        page: 1,
+        perPage: combinedData.length,
+      },
+    },
+  };
 };
 
 const listingPageReducer = (state = initialState, action = {}) => {
@@ -105,6 +140,9 @@ export const searchListingsError = e => ({
 export const searchListings = (searchParams, config) => (dispatch, getState, sdk) => {
   dispatch(searchListingsRequest(searchParams));
 
+  const idsMatch = (left, right) =>
+    left != null && right != null && `${left}` === `${right}`;
+
   // SearchPage can enforce listing query to only those listings with valid listingType
   // NOTE: this only works if you have set 'enum' type search schema to listing's public data fields
   //       - listingType
@@ -134,7 +172,7 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
     const levelKey = constructQueryParamName(keyAtLevel, 'public');
     const levelValue =
       typeof params?.[levelKey] !== 'undefined' ? `${params?.[levelKey]}` : undefined;
-    const foundCategory = categories.find(cat => cat.id === levelValue);
+    const foundCategory = categories.find(cat => idsMatch(cat.id, levelValue));
     const subcategories = foundCategory?.subcategories || [];
     return foundCategory && subcategories.length > 0
       ? {
@@ -315,6 +353,7 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
   };
 
   const {
+    page,
     perPage,
     price,
     dates,
@@ -323,8 +362,10 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
     mapSearch,
     listingTypePathParam,
     isListingTypeVariant,
+    [CATEGORY_MULTI_FILTER_PARAM]: categoryTreeSelections,
     ...restOfParams
   } = searchParams;
+  const isCategoryMultiFilterActive = !!categoryTreeSelections;
   // The params related to default filters are prepared one-by-one
   // We could consider moving them to the prepareAPIParams function too.
   const priceMaybe = priceSearchParams(price);
@@ -360,11 +401,30 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
     ...stockMaybe,
     ...seatsMaybe,
     ...sortMaybe,
-    perPage,
+    page: isCategoryMultiFilterActive ? 1 : page,
+    perPage: isCategoryMultiFilterActive ? CATEGORY_MULTI_FETCH_PAGE_SIZE : perPage,
   };
 
-  return sdk.listings
+  const queryPromise = sdk.listings
     .query(params)
+    .then(firstResponse => {
+      if (!isCategoryMultiFilterActive) {
+        return firstResponse;
+      }
+
+      const totalPages = firstResponse?.data?.meta?.totalPages || 1;
+      if (totalPages <= 1) {
+        return combineSearchResponses([firstResponse]);
+      }
+
+      const remainingPagePromises = Array.from({ length: totalPages - 1 }, (_, index) =>
+        sdk.listings.query({ ...params, page: index + 2 })
+      );
+
+      return Promise.all([firstResponse, ...remainingPagePromises]).then(combineSearchResponses);
+    });
+
+  return queryPromise
     .then(response => {
       const listingFields = config?.listing?.listingFields;
       const sanitizeConfig = { listingFields };
@@ -440,6 +500,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.cardStyle',
         // These help rendering of 'purchase' listings,
         // when transitioning from search page to listing page
+        'publicData.handByHandAvailable',
         'publicData.pickupEnabled',
         'publicData.shippingEnabled',
         'publicData.priceVariationsEnabled',

@@ -1,17 +1,24 @@
 import React from 'react';
 
 // utils
-import { SCHEMA_TYPE_ENUM, SCHEMA_TYPE_MULTI_ENUM, SCHEMA_TYPE_LONG } from '../../util/types';
+import {
+  SCHEMA_TYPE_BOOLEAN,
+  SCHEMA_TYPE_ENUM,
+  SCHEMA_TYPE_MULTI_ENUM,
+  SCHEMA_TYPE_LONG,
+} from '../../util/types';
 import { convertCategoriesToSelectTreeOptions, constructQueryParamName } from '../../util/search';
 
 // component imports
 import SelectSingleFilter from './SelectSingleFilter/SelectSingleFilter';
 import SelectMultipleFilter from './SelectMultipleFilter/SelectMultipleFilter';
+import CategoryMultiSelectFilter from './CategoryMultiSelectFilter/CategoryMultiSelectFilter';
 import BookingDateRangeFilter from './BookingDateRangeFilter/BookingDateRangeFilter';
 import KeywordFilter from './KeywordFilter/KeywordFilter';
 import PriceFilter from './PriceFilter/PriceFilter';
 import IntegerRangeFilter from './IntegerRangeFilter/IntegerRangeFilter';
 import SeatsFilter from './SeatsFilter/SeatsFilter';
+import BooleanFilter from './BooleanFilter/BooleanFilter';
 
 /**
  * FilterComponent is used to map configured filter types
@@ -25,6 +32,7 @@ const FilterComponent = props => {
     initialValues,
     getHandleChangedValueFn,
     listingCategories,
+    availableCategoryTokens,
     marketplaceCurrency,
     intl,
     ...rest
@@ -51,20 +59,26 @@ const FilterComponent = props => {
   // Default filters: price, keywords, dates
   switch (schemaType) {
     case 'category': {
-      const { scope, isNestedEnum, nestedParams } = config;
+      const { scope, nestedParams, categoryLevelKeys } = config;
       const queryParamNames = nestedParams?.map(p => constructQueryParamName(p, scope));
       const label = intl.formatMessage({ id: 'FilterComponent.categoryLabel' });
+      const shortLocale = intl.locale?.split('-')[0];
 
       return (
-        <SelectSingleFilter
+        <CategoryMultiSelectFilter
           id={componentId}
           name={key}
           label={label}
-          queryParamNames={queryParamNames}
-          initialValues={initialValues(queryParamNames, liveEdit)}
+          initialValues={initialValues([constructQueryParamName(key, scope), ...queryParamNames], liveEdit)}
           onSubmit={getHandleChangedValueFn(useHistoryPush)}
-          options={convertCategoriesToSelectTreeOptions(listingCategories)}
-          isNestedEnum={isNestedEnum}
+          options={convertCategoriesToSelectTreeOptions(
+            listingCategories,
+            categoryLevelKeys || nestedParams,
+            shortLocale,
+            2
+          )}
+          availableTokens={availableCategoryTokens}
+          legacyQueryParamNames={queryParamNames}
           getAriaLabel={getAriaLabel}
           {...rest}
         />
@@ -206,6 +220,24 @@ const FilterComponent = props => {
           options={enumOptions}
           schemaType={schemaType}
           searchMode={searchMode}
+          {...rest}
+        />
+      );
+    }
+    case SCHEMA_TYPE_BOOLEAN: {
+      const { scope, filterConfig = {} } = config;
+      const { label, toggleOnly } = filterConfig;
+      const queryParamNames = [constructQueryParamName(key, scope)];
+      return (
+        <BooleanFilter
+          id={componentId}
+          label={label}
+          getAriaLabel={getAriaLabel}
+          name={name}
+          queryParamNames={queryParamNames}
+          initialValues={initialValues(queryParamNames, liveEdit)}
+          onSubmit={getHandleChangedValueFn(useHistoryPush)}
+          toggleOnly={toggleOnly}
           {...rest}
         />
       );

@@ -32,7 +32,7 @@ import css from './FilterPlain.module.css';
 class FilterPlainComponent extends Component {
   constructor(props) {
     super(props);
-    this.state = { isOpen: true };
+    this.state = { isOpen: props.initiallyOpen !== false };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleClear = this.handleClear.bind(this);
@@ -78,7 +78,12 @@ class FilterPlainComponent extends Component {
     return (
       <div className={classes}>
         <div className={css.filterHeader}>
-          <button className={css.labelButton} onClick={this.toggleIsOpen} aria-label={ariaLabel}>
+          <button
+            className={css.labelButton}
+            onClick={this.toggleIsOpen}
+            aria-label={ariaLabel}
+            aria-expanded={this.state.isOpen}
+          >
             <span className={css.labelButtonContent}>
               <span className={css.labelWrapper}>
                 <span className={css.label}>

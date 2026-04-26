@@ -167,6 +167,7 @@ const TopbarDesktop = props => {
     onLogout,
     onSearchSubmit,
     initialSearchFormValues = {},
+    selectedDates,
     showSearchForm,
     showCreateListingsLink,
     inboxTab,
@@ -207,6 +208,7 @@ const TopbarDesktop = props => {
       desktopInputRoot={css.topbarSearchWithLeftPadding}
       onSubmit={onSearchSubmit}
       initialValues={initialSearchFormValues}
+      selectedDates={selectedDates}
       appConfig={config}
     />
   ) : (

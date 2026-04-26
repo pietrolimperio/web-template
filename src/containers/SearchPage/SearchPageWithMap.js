@@ -10,11 +10,17 @@ import { useConfiguration } from '../../context/configurationContext';
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 
 import { useIntl, FormattedMessage } from '../../util/reactIntl';
+import { stringifyDateToISO8601 } from '../../util/dates';
 import {
+  CATEGORY_MULTI_FILTER_PARAM,
+  convertCategoriesToSelectTreeOptions,
+  filterListingsByCategorySelections,
+  getAvailableCategorySelectionTokens,
   isAnyFilterActive,
   isMainSearchTypeKeywords,
   isOriginInUse,
   getQueryParamNames,
+  parseCategoryMultiFilter,
 } from '../../util/search';
 import {
   NO_ACCESS_PAGE_USER_PENDING_APPROVAL,
@@ -38,10 +44,12 @@ import { manageDisableScrolling, isScrollingDisabled } from '../../ducks/ui.duck
 
 import { H3, H5, ModalInMobile, NamedRedirect, Page } from '../../components';
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
+import TopbarSearchForm from '../../containers/TopbarContainer/Topbar/TopbarSearchForm/TopbarSearchForm';
 
 import { setActiveListing } from './SearchPage.duck';
 import {
   groupListingFieldConfigs,
+  orderFiltersForDisplay,
   initialValues,
   searchParamsPicker,
   validUrlQueryParamsFromProps,
@@ -68,6 +76,7 @@ import css from './SearchPage.module.css';
 
 const MODAL_BREAKPOINT = 768; // Search is in modal on mobile layout
 const SEARCH_WITH_MAP_DEBOUNCE = 300; // Little bit of debounce before search is initiated.
+const LOCAL_RESULTS_PER_PAGE = 24;
 
 // Primary filters have their content in dropdown-popup.
 // With this offset we move the dropdown to the left a few pixels on desktop layout.
@@ -337,6 +346,7 @@ export class SearchPageComponent extends Component {
   render() {
     const {
       intl,
+      history,
       listings = [],
       location,
       onManageDisableScrolling,
@@ -398,6 +408,8 @@ export class SearchPageComponent extends Component {
     );
 
     const validQueryParams = urlQueryParams;
+    const isCategoryMultiFilterActive = !!validQueryParams[CATEGORY_MULTI_FILTER_PARAM];
+    const currentPageFromURL = Number.parseInt(parse(location.search)?.page || '1', 10);
 
     const isWindowDefined = typeof window !== 'undefined';
     const isMobileLayout = isWindowDefined && window.innerWidth < MODAL_BREAKPOINT;
@@ -410,33 +422,75 @@ export class SearchPageComponent extends Component {
     );
     const builtInFilters = isKeywordSearch
       ? defaultFiltersConfig.filter(
-          f => !['keywords', 'category', 'listingType'].includes(f.key)
+          f => !['keywords', 'category', 'listingType', 'dates'].includes(f.key)
         )
-      : defaultFiltersConfig.filter(f => !['category', 'listingType'].includes(f.key));
+      : defaultFiltersConfig.filter(f => !['category', 'listingType', 'dates'].includes(f.key));
     const [customPrimaryFilters, customSecondaryFilters] = groupListingFieldConfigs(
       listingFieldsConfig,
       activeListingTypes
     );
-    const availablePrimaryFilters = [
+    const availablePrimaryFilters = orderFiltersForDisplay([
       ...builtInPrimaryFilters,
       ...customPrimaryFilters,
       ...builtInFilters,
-    ];
-    const availableFilters = [
+    ]);
+    const availableFilters = orderFiltersForDisplay([
       ...builtInPrimaryFilters,
       ...customPrimaryFilters,
       ...builtInFilters,
       ...customSecondaryFilters,
-    ];
+    ]);
+    const filteredListings = isCategoryMultiFilterActive
+      ? filterListingsByCategorySelections(
+          listings,
+          parseCategoryMultiFilter(validQueryParams[CATEGORY_MULTI_FILTER_PARAM])
+        )
+      : listings;
+    const hasCompleteCategoryAvailabilityData =
+      !searchInProgress &&
+      searchParamsAreInSync &&
+      (isCategoryMultiFilterActive ||
+        pagination?.paginationUnsupported ||
+        pagination?.totalPages === 1);
+    const availableCategoryTokens = hasCompleteCategoryAvailabilityData
+      ? getAvailableCategorySelectionTokens(
+          listings,
+          convertCategoriesToSelectTreeOptions(
+            listingCategories,
+            categoryConfiguration.categoryLevelKeys ?? categoryConfiguration.nestedParams,
+            intl.locale?.split('-')[0],
+            2
+          )
+        )
+      : undefined;
+    const localTotalPages = Math.max(1, Math.ceil(filteredListings.length / LOCAL_RESULTS_PER_PAGE));
+    const localPage = Math.min(
+      Math.max(Number.isNaN(currentPageFromURL) ? 1 : currentPageFromURL, 1),
+      localTotalPages
+    );
+    const localPagination = isCategoryMultiFilterActive
+      ? {
+          page: localPage,
+          perPage: LOCAL_RESULTS_PER_PAGE,
+          totalItems: filteredListings.length,
+          totalPages: localTotalPages,
+        }
+      : null;
+    const paginatedListings = isCategoryMultiFilterActive
+      ? filteredListings.slice(
+          (localPage - 1) * LOCAL_RESULTS_PER_PAGE,
+          localPage * LOCAL_RESULTS_PER_PAGE
+        )
+      : listings;
 
     const hasSecondaryFilters = !!(customSecondaryFilters && customSecondaryFilters.length > 0);
 
     // Selected aka active filters
     const selectedFilters = validQueryParams;
     const keysOfSelectedFilters = Object.keys(selectedFilters);
-    const selectedFiltersCountForMobile = isKeywordSearch
-      ? keysOfSelectedFilters.filter(f => f !== 'keywords').length
-      : keysOfSelectedFilters.length;
+    const selectedFiltersCountForMobile = keysOfSelectedFilters.filter(
+      f => !['keywords', 'dates'].includes(f)
+    ).length;
     const isValidDatesFilter =
       searchParamsInURL.dates == null ||
       (searchParamsInURL.dates != null && searchParamsInURL.dates === selectedFilters.dates);
@@ -460,7 +514,9 @@ export class SearchPageComponent extends Component {
 
     const hasPaginationInfo = !!pagination && pagination.totalItems != null;
     const totalItems =
-      searchParamsAreInSync && hasPaginationInfo
+      isCategoryMultiFilterActive
+        ? filteredListings.length
+        : searchParamsAreInSync && hasPaginationInfo
         ? pagination.totalItems
         : pagination?.paginationUnsupported
         ? listings.length
@@ -500,6 +556,32 @@ export class SearchPageComponent extends Component {
         showCreateListingsLink={showCreateListingsLink}
       />
     );
+    const handleResponsiveSearchSubmit = values => {
+      const datesValue = values?.dates;
+      const datesMaybe =
+        datesValue?.startDate && datesValue?.endDate
+          ? {
+              dates: `${stringifyDateToISO8601(datesValue.startDate)},${stringifyDateToISO8601(
+                datesValue.endDate
+              )}`,
+            }
+          : { dates: null };
+
+      const nextSearchParams = {
+        ...validQueryParams,
+        keywords: values?.keywords,
+        ...datesMaybe,
+      };
+
+      const { routeName, pathParams } = getSearchPageResourceLocatorStringParams(
+        routeConfiguration,
+        location
+      );
+
+      history.push(
+        createResourceLocatorString(routeName, routeConfiguration, pathParams, nextSearchParams)
+      );
+    };
 
     // Parse page heading to be included in the title
     const pageHeading = searchInProgress
@@ -508,7 +590,7 @@ export class SearchPageComponent extends Component {
 
     const { bounds, origin } = searchParamsInURL || {};
     const { title, description, schema } = createSearchResultSchema(
-      listings,
+      filteredListings,
       searchParamsInURL || {},
       intl,
       routeConfiguration,
@@ -533,6 +615,22 @@ export class SearchPageComponent extends Component {
       >
         <TopbarContainer rootClassName={topbarClasses} currentSearchParams={validQueryParams} />
         <div className={css.container} role="main">
+          {isKeywordSearch ? (
+            <div className={css.responsiveSearchFormWrapper}>
+              <TopbarSearchForm
+                className={css.responsiveSearchForm}
+                keywordSearchWrapperClassName={css.responsiveSearchFormField}
+                stitchSearchShellClassName={css.responsiveSearchShell}
+                datePickerPopupClassName={css.responsiveDatePickerPopup}
+                onSubmit={handleResponsiveSearchSubmit}
+                initialValues={{ keywords: searchParamsInURL?.keywords || '' }}
+                selectedDates={searchParamsInURL?.dates}
+                appConfig={config}
+                testIdPrefix="search-page"
+                inputIdPrefix="search-page-keyword-search"
+              />
+            </div>
+          ) : null}
           <div className={css.searchResultContainer}>
             <SearchFiltersMobile
               className={css.searchFiltersMobileMap}
@@ -563,6 +661,7 @@ export class SearchPageComponent extends Component {
                     idPrefix="SearchFiltersMobile"
                     config={filterConfig}
                     listingCategories={listingCategories}
+                    availableCategoryTokens={availableCategoryTokens}
                     marketplaceCurrency={marketplaceCurrency}
                     urlQueryParams={validQueryParams}
                     initialValues={initialValues(this.props, this.state.currentQueryParams)}
@@ -595,6 +694,7 @@ export class SearchPageComponent extends Component {
                       idPrefix="SearchFiltersPrimary"
                       config={filterConfig}
                       listingCategories={listingCategories}
+                      availableCategoryTokens={availableCategoryTokens}
                       marketplaceCurrency={marketplaceCurrency}
                       urlQueryParams={validQueryParams}
                       initialValues={initialValues(this.props, this.state.currentQueryParams)}
@@ -627,6 +727,7 @@ export class SearchPageComponent extends Component {
                         idPrefix="SearchFiltersSecondary"
                         config={filterConfig}
                         listingCategories={listingCategories}
+                        availableCategoryTokens={availableCategoryTokens}
                         marketplaceCurrency={marketplaceCurrency}
                         urlQueryParams={validQueryParams}
                         initialValues={initialValues(this.props, this.state.currentQueryParams)}
@@ -656,8 +757,8 @@ export class SearchPageComponent extends Component {
                 ) : null}
                 <SearchResultsPanel
                   className={css.searchListingsPanel}
-                  listings={listings}
-                  pagination={listingsAreLoaded ? pagination : null}
+                  listings={paginatedListings}
+                  pagination={isCategoryMultiFilterActive ? localPagination : listingsAreLoaded ? pagination : null}
                   search={parse(location.search)}
                   setActiveListing={onActivateListing}
                   isMapVariant
@@ -685,7 +786,7 @@ export class SearchPageComponent extends Component {
                   center={origin}
                   isSearchMapOpenOnMobile={this.state.isSearchMapOpenOnMobile}
                   location={location}
-                  listings={listings || []}
+                  listings={filteredListings || []}
                   onMapMoveEnd={this.onMapMoveEnd}
                   onCloseAsModal={() => {
                     onManageDisableScrolling('SearchPage_map', false);

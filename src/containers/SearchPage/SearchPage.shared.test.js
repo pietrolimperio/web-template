@@ -309,6 +309,42 @@ describe('SearchPage.helpers', () => {
       expect(validParams).toEqual(urlParams);
     });
 
+    it('keeps category and subcategory params when configured category ids are numeric', () => {
+      const numericCategoryFilterConfigs = {
+        ...filterConfigs,
+        listingCategories: [
+          {
+            id: 10,
+            name: 'Parent',
+            subcategories: [{ id: 11, name: 'Child' }],
+          },
+        ],
+      };
+      const params = { pub_categoryId: '10', pub_subcategoryId: '11' };
+
+      const validParams = validFilterParams(params, numericCategoryFilterConfigs);
+
+      expect(validParams).toEqual(params);
+    });
+
+    it('keeps multi-branch category tree selections when they match the configured tree', () => {
+      const params = { pub_category: 'categoryId:a,subcategoryId:b' };
+      const nestedCategoryFilterConfigs = {
+        ...filterConfigs,
+        listingCategories: [
+          {
+            id: 'a',
+            name: 'A',
+            subcategories: [{ id: 'b', name: 'B' }],
+          },
+        ],
+      };
+
+      const validParams = validFilterParams(params, nestedCategoryFilterConfigs);
+
+      expect(validParams).toEqual(params);
+    });
+
     it('takes empty params, when "dropNonFilterParams" is false', () => {
       const validParams = validFilterParams({}, filterConfigs, false);
       expect(validParams).toEqual({});

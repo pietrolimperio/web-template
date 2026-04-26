@@ -11,12 +11,12 @@
 .sortByMenuLabel {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: auto;
-  height: 35px;
-  min-height: 35px;
+  height: 40px;
+  min-height: 40px;
 
-  padding: 0 18px;
+  padding: 0 14px;
   margin: 0 9px 0 0;
 
   transition: all var(--transitionStyleButton);
@@ -35,7 +35,7 @@
 
   /* Button borders */
   border: 1px solid var(--colorGrey100);
-  border-radius: var(--borderRadiusMedium);
+  border-radius: 12px;
 
   background-color: var(--colorWhite);
 
@@ -53,15 +53,15 @@
   }
 
   @media (--viewportMedium) {
-    gap: 36px;
+    gap: 16px;
     height: auto;
     min-height: 0;
-    padding: var(--marketplaceButtonSmallDesktopPadding);
+    padding: 10px 14px;
     margin: 0;
 
-    font-weight: var(--fontWeightMedium);
+    font-weight: var(--fontWeightSemiBold);
     font-size: 13px;
-    line-height: 20px;
+    line-height: 18px;
 
     &:hover,
     &:focus {

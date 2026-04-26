@@ -106,6 +106,7 @@ const IntegerRangeFilter = props => {
     showAsPopup = true,
     formatValidRangeValues,
     getLabelForRangeInput,
+    currencyCode,
     ...rest
   } = props;
 
@@ -172,6 +173,7 @@ const IntegerRangeFilter = props => {
         min={min}
         name={name}
         step={step}
+        currencyCode={currencyCode}
         initialValues={resolvedInitialValues}
         intl={intl}
         getLabelForRangeInput={getLabelForRangeInput}
@@ -199,6 +201,7 @@ const IntegerRangeFilter = props => {
         min={min}
         name={name}
         step={step}
+        currencyCode={currencyCode}
         initialValues={resolvedInitialValues}
         intl={intl}
         getLabelForRangeInput={getLabelForRangeInput}

@@ -34,6 +34,8 @@
   min-width: 320px;
   height: 100%;
   margin-right: auto;
+  display: flex;
+  align-items: center;
   /* No second fill: same frosted layer as parent header (.marketplaceLayoutTopbar) */
   background-color: transparent;
   animation: slideInFromTop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -45,6 +47,8 @@
   min-width: 320px;
   height: 100%;
   margin-right: auto;
+  display: flex;
+  align-items: center;
 }
 
 .search {
@@ -71,12 +75,14 @@
 }
 
 .topbarSearchWithLeftPadding {
+  width: 100%;
   padding-left: 24px;
   padding-right: 24px;
   height: var(--topbarHeightDesktop);
 
   @media (--viewportLarge) {
-    padding-left: 34px;
+    padding-left: 36px;
+    padding-right: 28px;
   }
 }
 
