@@ -41,7 +41,7 @@ module.exports = (err, user, req, res, idpClientId, idpId) => {
         {
           status: err.status,
           code: err.code,
-          message: err.message,
+          message: 'Authentication failed',
         },
         {
           maxAge: 15 * 60 * 1000, // 15 minutes
