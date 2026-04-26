@@ -597,7 +597,7 @@ const PreviewListingPageProductLayout = props => {
                         onClick={() => setSelectedImageIndex(index)}
                         aria-label={intl.formatMessage({ id: 'PreviewListingPage.selectImage' }, { index: index + 1 })}
                       >
-                        <img src={imageUrl} alt={`Thumbnail ${index + 1}`} className={css.thumbnailImage} loading="lazy" />
+                        <img src={imageUrl} alt={`${listingTitleStr} — image ${index + 1}`} className={css.thumbnailImage} loading="lazy" />
                       </button>
                       {isDraftMode && !isGuestPreview && (
                         <div className={css.thumbnailDeleteButtonWrapper}>
