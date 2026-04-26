@@ -303,8 +303,11 @@ export const PreviewListingPageComponent = props => {
   const ensuredCurrentUser = ensureCurrentUser(currentUser);
   const currentUserLoaded = !!ensuredCurrentUser.id;
 
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [modalOpen, setModalOpen] = useState({ payout: false, verification: false });
+  const showPayoutModal = modalOpen.payout;
+  const showVerificationModal = modalOpen.verification;
+  const setShowPayoutModal = v => setModalOpen(prev => ({ ...prev, payout: typeof v === 'function' ? v(prev.payout) : v }));
+  const setShowVerificationModal = v => setModalOpen(prev => ({ ...prev, verification: typeof v === 'function' ? v(prev.verification) : v }));
   // Pre-select country based on locale (e.g., 'IT' for 'it-IT')
   const [selectedCountry, setSelectedCountry] = useState(() => getCountryForLocale(intl.locale));
   const [isCreatingStripeAccount, setIsCreatingStripeAccount] = useState(false);
@@ -349,9 +352,10 @@ export const PreviewListingPageComponent = props => {
   const [drawerOpening, setDrawerOpening] = useState(null); // same values: drive open transition with class after first paint
 
   // Image deletion confirmation dialog state
-  const [showDeleteImageDialog, setShowDeleteImageDialog] = useState(false);
-  const [imageToDelete, setImageToDelete] = useState(null);
-  const [imageToDeleteIndex, setImageToDeleteIndex] = useState(null);
+  const [imageDeleteDialog, setImageDeleteDialog] = useState({ show: false, id: null, index: null });
+  const showDeleteImageDialog = imageDeleteDialog.show;
+  const imageToDelete = imageDeleteDialog.id;
+  const imageToDeleteIndex = imageDeleteDialog.index;
   
   // Notification banner state
   const [notificationTitle, setNotificationTitle] = useState(null);
@@ -793,12 +797,12 @@ export const PreviewListingPageComponent = props => {
   }, [isFetchingUserForLocation, currentUser, currentListing, isGuestPreview, listingFetched, onUpdateListing, config]);
 
   // Handler functions for editing
-  const handleEditField = fieldName => {
+  const handleEditField = useCallback(fieldName => {
     // Disable editing for guest users
     if (isGuestPreview) {
       return;
     }
-    
+
     // Evita la modifica di alcuni campi su annunci pubblicati (non draft)
     if (
       !isDraftMode &&
@@ -810,7 +814,7 @@ export const PreviewListingPageComponent = props => {
       return;
     }
     setEditingField(fieldName);
-  };
+  }, [isGuestPreview, isDraftMode]);
 
   // Verify changes before publishing (only in draft mode)
   const verifyChangesBeforePublish = async () => {
@@ -1021,34 +1025,34 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleCancelEdit = fieldName => {
+  const handleCancelEdit = useCallback(fieldName => {
     // Restore original value
     if (fieldName === 'title') {
-      setFieldValues({ ...fieldValues, title: currentListing.attributes?.title || '' });
+      setFieldValues(prev => ({ ...prev, title: currentListing.attributes?.title || '' }));
     } else if (fieldName === 'description') {
-      setFieldValues({ ...fieldValues, description: currentListing.attributes?.description || '' });
+      setFieldValues(prev => ({ ...prev, description: currentListing.attributes?.description || '' }));
     } else if (fieldName === 'price') {
-      setFieldValues({
-        ...fieldValues,
+      setFieldValues(prev => ({
+        ...prev,
         price: currentListing.attributes?.price?.amount / 100 || 0,
-      });
+      }));
     } else if (fieldName === 'brand') {
-      setFieldValues({
-        ...fieldValues,
+      setFieldValues(prev => ({
+        ...prev,
         brand: currentListing.attributes?.publicData?.brand || '',
-      });
+      }));
     } else if (fieldName === 'condition') {
-      setFieldValues({
-        ...fieldValues,
+      setFieldValues(prev => ({
+        ...prev,
         condition: currentListing.attributes?.publicData?.condition || 'Used',
-      });
+      }));
     }
     setEditingField(null);
-  };
+  }, [currentListing]);
 
-  const handleChangeField = (fieldName, value) => {
-    setFieldValues({ ...fieldValues, [fieldName]: value });
-  };
+  const handleChangeField = useCallback((fieldName, value) => {
+    setFieldValues(prev => ({ ...prev, [fieldName]: value }));
+  }, []);
 
   // Check if a sensitive/editable field has actually changed from its original value (for save button enable/disable)
   const hasSensitiveFieldChanged = fieldName => {
@@ -1348,17 +1352,17 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleImageClick = index => {
+  const handleImageClick = useCallback(index => {
     const visibleImages = getVisibleImages(currentListing.images || []);
     if (index >= 0 && index < visibleImages.length) {
       setSelectedImageIndex(index);
       setShowImageModal(true);
     }
-  };
+  }, [currentListing]);
 
-  const handleCloseImageModal = () => {
+  const handleCloseImageModal = useCallback(() => {
     setShowImageModal(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (!showImageModal) return;
@@ -1369,19 +1373,19 @@ export const PreviewListingPageComponent = props => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [showImageModal]);
 
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     const visibleImages = getVisibleImages(currentListing.images || []);
     if (visibleImages && visibleImages.length > 0) {
       setSelectedImageIndex(prev => (prev + 1) % visibleImages.length);
     }
-  };
+  }, [currentListing]);
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     const visibleImages = getVisibleImages(currentListing.images || []);
     if (visibleImages && visibleImages.length > 0) {
       setSelectedImageIndex(prev => (prev - 1 + visibleImages.length) % visibleImages.length);
     }
-  };
+  }, [currentListing]);
 
   const handleHandByHandToggle = async (e) => {
     e?.preventDefault();
@@ -1604,9 +1608,7 @@ export const PreviewListingPageComponent = props => {
       return;
     }
     // Show confirmation dialog
-    setImageToDelete(imageId);
-    setImageToDeleteIndex(imageIndex);
-    setShowDeleteImageDialog(true);
+    setImageDeleteDialog({ show: true, id: imageId, index: imageIndex });
   };
 
   const confirmImageDelete = async () => {
@@ -1617,7 +1619,7 @@ export const PreviewListingPageComponent = props => {
       return;
     }
 
-    setShowDeleteImageDialog(false);
+    setImageDeleteDialog({ show: false, id: null, index: null });
     setDeletingImageId(imageToDelete);
     
     try { 
@@ -1675,15 +1677,12 @@ export const PreviewListingPageComponent = props => {
       setNotificationType('error');
     } finally {
       setDeletingImageId(null);
-      setImageToDelete(null);
-      setImageToDeleteIndex(null);
+      setImageDeleteDialog({ show: false, id: null, index: null });
     }
   };
 
   const cancelImageDelete = () => {
-    setShowDeleteImageDialog(false);
-    setImageToDelete(null);
-    setImageToDeleteIndex(null);
+    setImageDeleteDialog({ show: false, id: null, index: null });
   };
 
   const handleRegenerateField = async fieldName => {
@@ -2134,11 +2133,11 @@ export const PreviewListingPageComponent = props => {
     handlePublish,
   ]);
 
-  const handlePayoutModalClose = () => {
+  const handlePayoutModalClose = useCallback(() => {
     setShowPayoutModal(false);
     // Reset to locale-based default instead of empty
     setSelectedCountry(getCountryForLocale(intl.locale));
-  };
+  }, [intl.locale]);
 
   // Helper to get Stripe account link after account is created/exists
   const getStripeAccountLinkAndRedirect = (accountId, isNewAccount = false, needsVerification = false) => {
@@ -2223,9 +2222,9 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     history.push(`/l/new?draft=${listingId.uuid}`);
-  };
+  }, [history, listingId]);
 
   // Initialize price modal state when opening
   useEffect(() => {
