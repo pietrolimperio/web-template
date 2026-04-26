@@ -5,7 +5,7 @@
 .layout {
   min-height: calc(100vh - var(--topbarHeight));
   /* AI-assisted flow: subtle primary-fixed wash (DESIGN.md §5) */
-  background-color: color-mix(in srgb, var(--colorPrimaryFixed) 28%, var(--colorSurface));
+  background-color: var(--colorSurface);
 }
 
 .content {
