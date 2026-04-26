@@ -4,7 +4,6 @@ import ExifReader from 'exifreader';
 import { useIntl } from '../../util/reactIntl';
 import { useConfiguration } from '../../context/configurationContext';
 import devLog from '../../util/devLog';
-import robotMascotSrc from '../../assets/stitch-product-upload/ai-upload-robot-mascot.png';
 import ImageCropModal from './ImageCropModal';
 import { autoCropImageBlob } from '../../util/imageCropCanvas';
 import css from './ImageUpload.module.css';
@@ -41,43 +40,12 @@ function getListingCropAspectDimensions(listingImage) {
   return [3, 4];
 }
 
-/** Smartphone (not tablet): drives “browse or take photo” copy on file input / camera. */
-function detectSmartphone() {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  if (/iPad|Tablet|Kindle|Silk|PlayBook|Nexus 7|Nexus 9/i.test(ua)) return false;
-  if (/iPhone|iPod/.test(ua)) return true;
-  if (/Android/i.test(ua) && /Mobile/i.test(ua)) return true;
-  if (/webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
-  /* Desktop devtools / browser without mobile UA: narrow viewport + primary coarse pointer */
-  if (
-    window.innerWidth <= 480 &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(pointer: coarse)').matches
-  ) {
-    return true;
-  }
-  return false;
-}
-
-const CloudUploadIcon = () => (
-  <svg className={css.browseIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 21l-3-3m0 0l-3 3m3-3v8"
-    />
-  </svg>
-);
-
 const LightningIcon = () => (
   <svg className={css.lightningIcon} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
     <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
   </svg>
 );
 
-/** Classic crop icon: two opposite corner brackets (standard crop-tool style). */
 const CropAdjustIcon = () => (
   <svg className={css.adjustIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
     <path
@@ -89,34 +57,52 @@ const CropAdjustIcon = () => (
   </svg>
 );
 
-const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
+const CameraIcon = () => (
+  <svg className={css.cameraIcon} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path d="M12 15.5A3.5 3.5 0 018.5 12 3.5 3.5 0 0112 8.5a3.5 3.5 0 013.5 3.5 3.5 3.5 0 01-3.5 3.5M16.5 6l-1.76-2H9.26L7.5 6H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-3.5z" />
+  </svg>
+);
+
+const LightbulbIcon = () => (
+  <svg className={css.lightbulbIcon} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path d="M12 2a7 7 0 017 7c0 2.62-1.42 4.91-3.5 6.16V17a1 1 0 01-1 1h-5a1 1 0 01-1-1v-1.84A7.001 7.001 0 0112 2zm-2 19h4v1h-4v-1zm-1-2h6v1H9v-1z" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className={css.placeholderIcon} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+  </svg>
+);
+
+const ImageIcon = () => (
+  <svg className={css.placeholderIcon} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden>
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 15l-5-5L5 21" />
+  </svg>
+);
+
+const BackArrowIcon = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
+
+const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing, onBack }) => {
   const intl = useIntl();
   const config = useConfiguration();
   const listingImageLayout = config?.layout?.listingImage || {};
   const [cropAspectW, cropAspectH] = getListingCropAspectDimensions(listingImageLayout);
   const cropAspectRatioConfig = `${cropAspectW}/${cropAspectH}`;
 
-  /** Cropped files (preview + passed to parent): listing JPEGs. */
   const [files, setFiles] = useState([]);
-  /** Original per slot: not replaced by crop; used to refine from the full-resolution file. */
   const [originalFiles, setOriginalFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [errors, setErrors] = useState([]);
   const [validationInProgress, setValidationInProgress] = useState(false);
-  const [isSmartphone, setIsSmartphone] = useState(false);
 
   const [activeCropSession, setActiveCropSession] = useState(null);
-
-  useEffect(() => {
-    const update = () => setIsSmartphone(detectSmartphone());
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  const browseFilesButtonMessageId = isSmartphone
-    ? 'ImageUpload.browseFilesButtonSmartphone'
-    : 'ImageUpload.browseFilesButton';
 
   const checkImageHeuristics = async (file, arrayBuffer, exifError = null) => {
     const fileName = file.name.toLowerCase();
@@ -442,21 +428,15 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
   };
 
   const panelDisabled = isAnalyzing || validationInProgress || activeCropSession;
-  const isEmpty = files.length === 0;
-
   const atMaxFiles = files.length >= UPLOAD_CONSTRAINTS.MAX_FILES;
-  const showAddMoreBelowGrid = !atMaxFiles && !validationInProgress && !activeCropSession;
 
-  const heroHeading = (
-    <h2 className={css.heroTitle}>
-      <span className={css.heroTitleDesktop}>
-        {intl.formatMessage({ id: 'ImageUpload.heroTitle' })}
-      </span>
-      <span className={css.heroTitleMobile}>
-        {intl.formatMessage({ id: 'ImageUpload.heroTitleShort' })}
-      </span>
-    </h2>
-  );
+  // Show up to 3 placeholder slots after filled ones, with progressive fading
+  const placeholderCount = atMaxFiles ? 0 : Math.min(3, UPLOAD_CONSTRAINTS.MAX_FILES - files.length);
+  const placeholderOpacityClass = i => {
+    if (i === 0) return '';
+    if (i === 1) return css.slotPlaceholderFaded;
+    return css.slotPlaceholderMoreFaded;
+  };
 
   return (
     <div
@@ -465,195 +445,162 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
     >
       <input {...getInputProps()} />
 
-      <div className={`${css.mainCard} ${isEmpty ? css.mainCardEmpty : ''}`}>
-        {isEmpty ? (
-          <div className={css.emptyLayout}>
-            <img
-              src={robotMascotSrc}
-              alt=""
-              className={css.robotMascot}
-              decoding="async"
-            />
-            {heroHeading}
-            {SKIP_EXIF_VALIDATION ? (
-              <p className={`${css.heroSubtitleLine1} ${css.heroSubtitleTesting}`}>
-                {intl.formatMessage(
+      {/* Step indicator */}
+      <div className={css.stepIndicator}>
+        <span className={css.stepLabel}>
+          {intl.formatMessage({ id: 'ImageUpload.stepIndicator' })}
+        </span>
+        <span className={css.stepDash} />
+        <span className={css.stepDetailsLabel}>
+          {intl.formatMessage({ id: 'ImageUpload.stepDetails' })}
+        </span>
+      </div>
+
+      {/* Page heading */}
+      <h1 className={css.pageHeading}>
+        {intl.formatMessage({ id: 'ImageUpload.headingPart1' })}
+        <br />
+        <span className={css.pageHeadingAccent}>
+          {intl.formatMessage({ id: 'ImageUpload.headingPart2' })}
+        </span>
+      </h1>
+
+      {/* Two-column content grid */}
+      <div className={css.contentGrid}>
+        {/* Left: drop zone */}
+        <div
+          className={`${css.dropZone} ${isDragActive ? css.dropZoneActive : ''} ${panelDisabled ? css.dropZoneDisabled : ''}`}
+          onClick={openFilePicker}
+          role="button"
+          tabIndex={panelDisabled ? -1 : 0}
+          onKeyDown={e => e.key === 'Enter' && openFilePicker(e)}
+          aria-label={intl.formatMessage({ id: 'ImageUpload.dropzoneTitle' })}
+        >
+          <div className={css.organicIcon}>
+            <CameraIcon />
+          </div>
+          <h3 className={css.dropzoneTitle}>
+            {intl.formatMessage({ id: 'ImageUpload.dropzoneTitle' })}
+          </h3>
+          <p className={css.dropzoneSubtitle}>
+            {SKIP_EXIF_VALIDATION
+              ? intl.formatMessage(
                   { id: 'ImageUpload.hintTestingMode' },
                   {
                     maxFiles: UPLOAD_CONSTRAINTS.MAX_FILES,
                     maxSize: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE / 1024 / 1024,
                   }
-                )}
-              </p>
-            ) : (
-              <>
-                <p className={css.heroSubtitleLine1}>
-                  {intl.formatMessage({ id: 'ImageUpload.heroSubtitleLine1' })}
-                </p>
-                <p className={css.heroSubtitleLine2}>
-                  {intl.formatMessage(
-                    { id: 'ImageUpload.heroSubtitleLine2' },
-                    { maxSize: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE / 1024 / 1024 }
+                )
+              : intl.formatMessage({ id: 'ImageUpload.dropzoneSubtitle' })}
+          </p>
+        </div>
+
+        {/* Right: gallery card */}
+        <div className={css.galleryCard}>
+          <div className={css.galleryHeader}>
+            <h4 className={css.galleryTitle}>
+              {intl.formatMessage({ id: 'ImageUpload.photosLabel' })}
+            </h4>
+            <span className={css.countBadge}>
+              {files.length} / {UPLOAD_CONSTRAINTS.MAX_FILES}
+            </span>
+          </div>
+
+          <div className={css.photoGrid}>
+            {/* Filled image slots */}
+            {files.map((_, index) => {
+              const url = previewUrls[index];
+              return (
+                <div key={`${url}-${index}`} className={`${css.slot} ${css.slotFilled}`}>
+                  <img src={url} alt="" className={css.slotImage} />
+                  <div className={css.slotOverlay}>
+                    <button
+                      type="button"
+                      className={css.adjustSlotBtn}
+                      onClick={e => {
+                        e.stopPropagation();
+                        openRefineCrop(index);
+                      }}
+                      disabled={isAnalyzing || !!activeCropSession}
+                      aria-label={intl.formatMessage({ id: 'ImageUpload.adjustCropAriaLabel' })}
+                    >
+                      <CropAdjustIcon />
+                    </button>
+                    <button
+                      type="button"
+                      className={css.removeSlotBtn}
+                      onClick={e => {
+                        e.stopPropagation();
+                        removeImage(index);
+                      }}
+                      disabled={isAnalyzing}
+                      aria-label={intl.formatMessage(
+                        { id: 'ImageUpload.removeImageAriaLabel' },
+                        { index: index + 1 }
+                      )}
+                    >
+                      <svg
+                        className={css.removeIcon}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  {index === 0 && (
+                    <div className={css.mainBadge}>
+                      {intl.formatMessage({ id: 'ImageUpload.mainPhotoLabel' })}
+                    </div>
                   )}
-                </p>
-              </>
-            )}
-            <div className={css.emptyDropZone}>
-              <button
-                type="button"
-                className={css.browseButton}
-                onClick={openFilePicker}
-                disabled={panelDisabled}
+                </div>
+              );
+            })}
+
+            {/* Placeholder slots */}
+            {Array.from({ length: placeholderCount }).map((_, i) => (
+              <div
+                key={`placeholder-${i}`}
+                className={`${css.slot} ${css.slotPlaceholder} ${placeholderOpacityClass(i)}`}
+                onClick={i === 0 && !panelDisabled ? openFilePicker : undefined}
+                role={i === 0 && !panelDisabled ? 'button' : undefined}
+                tabIndex={i === 0 && !panelDisabled ? 0 : -1}
+                onKeyDown={i === 0 && !panelDisabled ? e => e.key === 'Enter' && openFilePicker(e) : undefined}
               >
-                <CloudUploadIcon />
-                {intl.formatMessage({ id: browseFilesButtonMessageId })}
-              </button>
+                {i === 0 ? <ImageIcon /> : <PlusIcon />}
+              </div>
+            ))}
+          </div>
+
+          {validationInProgress && (
+            <div className={css.gridBelowStatus}>
+              <div className={css.gridBelowSpinner} />
+              <span>{intl.formatMessage({ id: 'ImageUpload.validatingImages' })}</span>
+            </div>
+          )}
+
+          {/* Editorial tip */}
+          <div className={css.editorialTip}>
+            <LightbulbIcon />
+            <div>
+              <strong className={css.editorialTipTitle}>
+                {intl.formatMessage({ id: 'ImageUpload.editorialTipTitle' })}
+              </strong>
+              <p className={css.editorialTipBody}>
+                {intl.formatMessage({ id: 'ImageUpload.editorialTipBody' })}
+              </p>
             </div>
           </div>
-        ) : (
-          <>
-            <div className={css.leftPanel}>
-              <img
-                src={robotMascotSrc}
-                alt=""
-                className={`${css.robotMascot} ${css.robotMascotInPanel}`}
-                decoding="async"
-              />
-              {heroHeading}
-              <p className={css.heroSubtitle}>
-                {SKIP_EXIF_VALIDATION
-                  ? intl.formatMessage(
-                      { id: 'ImageUpload.hintTestingMode' },
-                      {
-                        maxFiles: UPLOAD_CONSTRAINTS.MAX_FILES,
-                        maxSize: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE / 1024 / 1024,
-                      }
-                    )
-                  : intl.formatMessage(
-                      { id: 'ImageUpload.heroSubtitle' },
-                      { maxSize: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE / 1024 / 1024 }
-                    )}
-              </p>
-              <button
-                type="button"
-                className={css.browseButton}
-                onClick={openFilePicker}
-                disabled={panelDisabled}
-              >
-                <CloudUploadIcon />
-                {intl.formatMessage({ id: browseFilesButtonMessageId })}
-              </button>
-            </div>
-
-            <div className={css.rightPanel}>
-              <h3 className={css.gridTitle}>
-                {intl.formatMessage(
-                  { id: 'ImageUpload.previewTitle' },
-                  { count: files.length, maxFiles: UPLOAD_CONSTRAINTS.MAX_FILES }
-                )}
-              </h3>
-              <div className={css.slotGrid}>
-                {files.map((_, index) => {
-                  const url = previewUrls[index];
-                  return (
-                    <div key={`${url}-${index}`} className={`${css.slot} ${css.slotFilled}`}>
-                      <img src={url} alt="" className={css.slotImage} />
-                      <button
-                        type="button"
-                        className={css.adjustSlotBtn}
-                        onClick={e => {
-                          e.stopPropagation();
-                          openRefineCrop(index);
-                        }}
-                        disabled={isAnalyzing || !!activeCropSession}
-                        aria-label={intl.formatMessage({ id: 'ImageUpload.adjustCropAriaLabel' })}
-                      >
-                        <CropAdjustIcon />
-                      </button>
-                      <button
-                        type="button"
-                        className={css.removeSlotBtn}
-                        onClick={e => {
-                          e.stopPropagation();
-                          removeImage(index);
-                        }}
-                        disabled={isAnalyzing}
-                        aria-label={intl.formatMessage(
-                          { id: 'ImageUpload.removeImageAriaLabel' },
-                          { index: index + 1 }
-                        )}
-                      >
-                        <svg
-                          className={css.removeIcon}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                      <div className={css.slotStatus}>
-                        <div className={css.statusBar}>
-                          <div className={`${css.statusBarFill} ${css.statusBarComplete}`} />
-                        </div>
-                        <div className={css.statusLabel}>
-                          {intl.formatMessage({ id: 'ImageUpload.statusComplete' })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {validationInProgress && (
-                <div className={css.gridBelowStatus}>
-                  <div className={css.gridBelowSpinner} />
-                  <span>{intl.formatMessage({ id: 'ImageUpload.validatingImages' })}</span>
-                </div>
-              )}
-              {showAddMoreBelowGrid && (
-                <button
-                  type="button"
-                  className={css.addMoreBelowGrid}
-                  onClick={openFilePicker}
-                  disabled={panelDisabled}
-                >
-                  {intl.formatMessage({ id: 'ImageUpload.addMorePhotos' })}
-                </button>
-              )}
-            </div>
-          </>
-        )}
+        </div>
       </div>
 
-      <button
-        type="button"
-        className={`${css.footerCta} ${isEmpty ? css.footerCtaMuted : ''}`}
-        onClick={e => {
-          e.stopPropagation();
-          handleAnalyze();
-        }}
-        disabled={
-          isAnalyzing || validationInProgress || files.length === 0 || activeCropSession
-        }
-      >
-        {isAnalyzing ? (
-          <>
-            <div className={css.spinner} />
-            {intl.formatMessage({ id: 'ImageUpload.analyzingButton' })}
-          </>
-        ) : (
-          <>
-            <LightningIcon />
-            {intl.formatMessage({ id: 'ImageUpload.analyzeButton' })}
-          </>
-        )}
-      </button>
-
+      {/* Errors */}
       {errors.length > 0 && (
         <div className={css.errors}>
           {errors.map((error, i) => (
@@ -663,6 +610,37 @@ const ImageUpload = ({ onImagesSelected, onAnalyze, isAnalyzing }) => {
           ))}
         </div>
       )}
+
+      {/* Footer bar */}
+      <div className={css.footerBar}>
+        {onBack ? (
+          <button type="button" className={css.backBtn} onClick={onBack}>
+            <BackArrowIcon />
+            {intl.formatMessage({ id: 'ImageUpload.backButton' })}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className={css.ctaBtn}
+          onClick={e => {
+            e.stopPropagation();
+            handleAnalyze();
+          }}
+          disabled={isAnalyzing || validationInProgress || files.length === 0 || !!activeCropSession}
+        >
+          {isAnalyzing ? (
+            <>
+              <div className={css.spinner} />
+              {intl.formatMessage({ id: 'ImageUpload.analyzingButton' })}
+            </>
+          ) : (
+            <>
+              <LightningIcon />
+              {intl.formatMessage({ id: 'ImageUpload.analyzeButton' })}
+            </>
+          )}
+        </button>
+      </div>
 
       {activeCropSession ? (
         <ImageCropModal
