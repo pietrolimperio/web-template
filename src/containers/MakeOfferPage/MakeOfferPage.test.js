@@ -263,7 +263,7 @@ describe('Duck', () => {
       };
 
       const action = {
-        type: 'app/MakeOfferPage/SHOW_LISTING__SUCCESS',
+        type: 'app/MakeOfferPage/SHOW_LISTING_SUCCESS',
         payload: { listing: { id: 'listing-id' } },
       };
 
@@ -307,7 +307,6 @@ describe('Duck', () => {
 
       expect(reducer(previousState, action)).toEqual({
         ...previousState,
-        transaction: 'transaction-id',
         showTransactionInProgress: true,
         showTransactionError: null,
       });
@@ -438,7 +437,7 @@ describe('Duck', () => {
         ).toBe(true);
         expect(actions.some(action => action.type === 'app/marketplaceData/ADD_MARKETPLACE_ENTITIES')).toBe(true);
         expect(
-          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING__SUCCESS')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING_SUCCESS')
         ).toBe(true);
       });
     });
@@ -540,7 +539,7 @@ describe('Duck', () => {
         ).toBe(true);
         expect(actions.some(action => action.type === 'app/marketplaceData/ADD_MARKETPLACE_ENTITIES')).toBe(true);
         expect(
-          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING__SUCCESS')
+          actions.some(action => action.type === 'app/MakeOfferPage/SHOW_LISTING_SUCCESS')
         ).toBe(true);
       });
     });
