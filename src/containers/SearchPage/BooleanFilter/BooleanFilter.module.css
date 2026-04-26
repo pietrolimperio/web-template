@@ -1,0 +1,51 @@
+.root {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+.popupSize {
+  min-width: 240px;
+}
+
+.field {
+  margin: 0;
+}
+
+.toggleChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 0 18px;
+  border: 1px solid var(--colorGrey100);
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorWhite);
+  color: inherit;
+  font-weight: var(--fontWeightSemiBold);
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all var(--transitionStyleButton);
+  align-self: flex-start;
+}
+
+.toggleChip:hover,
+.toggleChip:focus {
+  outline: none;
+  border-color: var(--colorGrey300);
+  box-shadow: var(--boxShadowFilterButton);
+}
+
+.toggleChipSelected {
+  border-color: var(--marketplaceColor);
+  background-color: var(--colorWhite);
+  color: var(--marketplaceColor);
+}
+
+.toggleChipSelected:hover,
+.toggleChipSelected:focus {
+  border-color: var(--marketplaceColorDark);
+  color: var(--marketplaceColorDark);
+}

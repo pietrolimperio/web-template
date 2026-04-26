@@ -52,6 +52,25 @@ export const getDefaultConfiguration = () => {
     listing: {
       listingFields: [
         {
+          key: 'handByHandAvailable',
+          scope: 'public',
+          schemaType: 'boolean',
+          filterConfig: {
+            indexForSearch: true,
+            label: 'Consegna a mano',
+            group: 'primary',
+            toggleOnly: true,
+            orderAfter: 'price',
+          },
+          showConfig: {
+            label: 'Consegna a mano',
+            isDetail: true,
+          },
+          saveConfig: {
+            label: 'Consegna a mano',
+          },
+        },
+        {
           key: 'bikeType',
           scope: 'public',
           listingTypeConfig: {

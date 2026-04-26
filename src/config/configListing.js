@@ -68,6 +68,25 @@ export const minimumBookingDays = 3;
  *   - requiredMessage (optional):    Message for those fields, which are mandatory.
  */
 export const listingFields = [
+  {
+    key: 'handByHandAvailable',
+    scope: 'public',
+    schemaType: 'boolean',
+    filterConfig: {
+      indexForSearch: true,
+      label: 'Consegna a mano',
+      group: 'primary',
+      toggleOnly: true,
+      orderAfter: 'price',
+    },
+    showConfig: {
+      label: 'Consegna a mano',
+      isDetail: true,
+    },
+    saveConfig: {
+      label: 'Consegna a mano',
+    },
+  },
   // {
   //   "scope": "public",
   //   "label": "Gears",

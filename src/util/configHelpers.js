@@ -546,7 +546,7 @@ const validFilterConfig = (config, schemaType) => {
   if (isUndefined) {
     return [true, {}];
   }
-  // Validate: indexForSearch, label, filterType, searchMode, group
+  // Validate: indexForSearch, label, filterType, searchMode, group, custom UI hints
   const [isValidIndexForSearch, indexForSearch] = validBoolean(
     'indexForSearch',
     config.indexForSearch,
@@ -557,9 +557,20 @@ const validFilterConfig = (config, schemaType) => {
   const [isValidSearchMode, searchMode] = validSearchMode(config.searchMode, schemaType);
   const groupOptions = ['primary', 'secondary'];
   const [isValidGroup, group] = validEnumString('group', config.group, groupOptions, 'primary');
+  const [isValidToggleOnly, toggleOnly] = validBoolean('toggleOnly', config.toggleOnly, false);
+  const [isValidOrderAfter, orderAfter] =
+    typeof config.orderAfter === 'undefined' || typeof config.orderAfter === 'string'
+      ? [true, typeof config.orderAfter === 'string' ? { orderAfter: config.orderAfter } : {}]
+      : [false, {}];
 
   const isValid =
-    isValidIndexForSearch && isValidLabel && isValidFilterType && isValidSearchMode && isValidGroup;
+    isValidIndexForSearch &&
+    isValidLabel &&
+    isValidFilterType &&
+    isValidSearchMode &&
+    isValidGroup &&
+    isValidToggleOnly &&
+    isValidOrderAfter;
   const validValue = {
     filterConfig: {
       ...indexForSearch,
@@ -567,6 +578,8 @@ const validFilterConfig = (config, schemaType) => {
       ...filterType,
       ...searchMode,
       ...group,
+      ...toggleOnly,
+      ...orderAfter,
     },
   };
   return [isValid, validValue];
@@ -1152,15 +1165,14 @@ const mergeListingConfig = (hostedConfig, defaultConfigs, categoriesInUse) => {
   const { listingTypes: defaultListingTypes, listingFields: defaultListingFields, ...rest } =
     defaultConfigs.listing || {};
 
-  // When debugging, include default configs by passing 'true' here.
-  // Otherwise, use listing types and fields from hosted assets.
+  // Listing types still come from hosted assets by default.
+  // Listing fields are always merged with local defaults so custom
+  // repo-defined fields can coexist with Console-managed fields.
   const shouldMerge = mergeDefaultTypesAndFieldsForDebugging(false);
   const listingTypes = shouldMerge
     ? union(hostedListingTypes, defaultListingTypes, 'listingType')
     : hostedListingTypes;
-  const listingFields = shouldMerge
-    ? union(hostedListingFields, defaultListingFields, 'key')
-    : hostedListingFields;
+  const listingFields = union(hostedListingFields, defaultListingFields, 'key');
 
   const listingTypesInUse = listingTypes.map(lt => `${lt.listingType}`);
 
