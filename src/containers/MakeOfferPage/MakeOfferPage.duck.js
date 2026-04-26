@@ -73,7 +73,7 @@ export default function makeOfferPageReducer(state = initialState, action = {}) 
     case MAKE_OFFER_SUCCESS:
       return { ...state, makeOfferInProgress: false, transaction: payload };
     case MAKE_OFFER_ERROR:
-      console.error(payload); // eslint-disable-line no-console
+      log.error(payload, 'make-offer-error', { payload });
       return { ...state, makeOfferInProgress: false, makeOfferError: payload };
 
     case SHOW_LISTING_REQUEST:
