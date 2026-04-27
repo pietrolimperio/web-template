@@ -8,7 +8,7 @@ import { TermsOfServicePageComponent } from './TermsOfServicePage';
 const { waitFor } = testingLibrary;
 
 describe('TermsOfServicePage', () => {
-  it('renders the Fallback page on error', async () => {
+  it('renders the redesigned Terms and Conditions page', async () => {
     const errorMessage = 'TermsOfServicePage failed';
     let e = new Error(errorMessage);
     e.type = 'error';
@@ -19,8 +19,9 @@ describe('TermsOfServicePage', () => {
     );
 
     await waitFor(() => {
-      expect(getByText('Terms of Service')).toBeInTheDocument();
-      expect(getByText('An error occurred')).toBeInTheDocument();
+      expect(getByText('Terms & Conditions')).toBeInTheDocument();
+      expect(getByText('Table of Contents')).toBeInTheDocument();
+      expect(getByText('Trust & Safety is Our Priority')).toBeInTheDocument();
     });
   });
 });
