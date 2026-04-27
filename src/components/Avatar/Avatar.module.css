@@ -87,6 +87,7 @@
 .initialsLarge {
   composes: h3 from global;
   padding: 0;
+  margin-top: 12px;
 }
 
 .bannedUserIcon {

@@ -263,15 +263,15 @@ const AuthenticatedDrawerContent = ({
   const user = ensureCurrentUser(currentUser);
   const displayName = user.attributes.profile.firstName;
 
-  const currentPageClass = page => {
+  const isActivePage = page => {
     const isAccountSettingsPage =
       page === 'AccountSettingsPage' && ACCOUNT_SETTINGS_PAGES.includes(currentPage);
     const isInboxPage = currentPage?.indexOf('InboxPage') === 0 && page?.indexOf('InboxPage') === 0;
-    return currentPage === page || isAccountSettingsPage || isInboxPage
-      ? css.navItemActive
-      : css.navItem;
+    return currentPage === page || isAccountSettingsPage || isInboxPage;
   };
 
+  const navItemClass = page => (isActivePage(page) ? css.navItemActive : css.navItem);
+  const navIconClass = page => (isActivePage(page) ? css.navIconActive : css.navIcon);
   const hasNotifications = notificationCount > 0;
 
   const extraLinks = customLinks.map((linkConfig, i) => (
@@ -284,101 +284,120 @@ const AuthenticatedDrawerContent = ({
 
   return (
     <div className={css.root}>
-      {/* Header */}
-      <div className={css.userHeader}>
-        <div className={css.userAvatarWrapper}>
-          <AvatarLarge className={css.avatar} user={currentUser} />
-          <div className={css.verifiedBadge}>
-            <IconVerified className={css.verifiedIcon} />
-          </div>
-        </div>
-        <div className={css.userInfo}>
-          <span className={css.userName}>
-            <FormattedMessage id="TopbarMobileMenu.greeting" values={{ displayName }} />
-          </span>
-        </div>
+      <div className={css.authHeader}>
+        <img src={logoImage} alt="Leaz" className={css.brandLogo} />
+      </div>
+
+      <div className={css.authBody}>
+        <nav className={css.sectionNav}>
+          <p className={css.sectionLabel}>
+            <FormattedMessage id="TopbarMobileMenu.sectionActivity" />
+          </p>
+          <NamedLink
+            name="InboxPage"
+            params={{ tab: inboxTab }}
+            className={navItemClass(`InboxPage:${inboxTab}`)}
+          >
+            <IconInventory className={navIconClass(`InboxPage:${inboxTab}`)} />
+            <span className={css.navLabel}>
+              <FormattedMessage id="TopbarMobileMenu.inboxLink" />
+            </span>
+            {hasNotifications ? (
+              <NotificationBadge className={css.notificationBadge} count={notificationCount} />
+            ) : null}
+          </NamedLink>
+
+          {showCreateListingsLink ? (
+            <NamedLink name="ManageListingsPage" className={navItemClass('ManageListingsPage')}>
+              <IconShoppingBasket className={navIconClass('ManageListingsPage')} />
+              <span className={css.navLabel}>
+                <FormattedMessage id="TopbarMobileMenu.yourListingsLink" />
+              </span>
+            </NamedLink>
+          ) : null}
+
+          <NamedLink name="SearchPage" className={css.navItem}>
+            <IconFavorite className={css.navIcon} />
+            <span className={css.navLabel}>
+              <FormattedMessage id="TopbarMobileMenu.favoriteItemsLink" />
+            </span>
+          </NamedLink>
+        </nav>
+
         {showCreateListingsLink ? (
-          <NamedLink className={css.headerCtaButton} name="AIListingCreationPage">
+          <NamedLink className={css.publishButton} name="AIListingCreationPage">
+            <IconPersonAdd className={css.publishIcon} />
             <FormattedMessage id="TopbarMobileMenu.newListingLink" />
           </NamedLink>
         ) : null}
-      </div>
 
-      {/* Navigation */}
-      <nav className={css.navigation}>
-        <NamedLink
-          name="InboxPage"
-          params={{ tab: inboxTab }}
-          className={currentPageClass(`InboxPage:${inboxTab}`)}
-        >
-          <IconInventory
-            className={
-              currentPageClass(`InboxPage:${inboxTab}`) === css.navItemActive
-                ? css.navIconActive
-                : css.navIcon
-            }
-          />
-          <span className={css.navLabel}>
-            <FormattedMessage id="TopbarMobileMenu.inboxLink" />
-          </span>
-          {hasNotifications ? (
-            <NotificationBadge className={css.notificationBadge} count={notificationCount} />
-          ) : null}
-        </NamedLink>
-
-        {showCreateListingsLink ? (
-          <NamedLink name="ManageListingsPage" className={currentPageClass('ManageListingsPage')}>
-            <IconShoppingBasket
-              className={
-                currentPageClass('ManageListingsPage') === css.navItemActive
-                  ? css.navIconActive
-                  : css.navIcon
-              }
-            />
+        <nav className={css.sectionNav}>
+          <p className={css.sectionLabel}>
+            <FormattedMessage id="TopbarMobileMenu.sectionBrowse" />
+          </p>
+          <NamedLink name="SearchPage" className={navItemClass('SearchPage')}>
+            <IconGridView className={navIconClass('SearchPage')} />
             <span className={css.navLabel}>
-              <FormattedMessage id="TopbarMobileMenu.yourListingsLink" />
+              <FormattedMessage id="TopbarMobileMenu.browseCategories" />
             </span>
           </NamedLink>
+          <NamedLink
+            name="CMSPage"
+            params={{ pageId: 'faq' }}
+            className={navItemClass('CMSPage:faq')}
+          >
+            <IconInfo className={navIconClass('CMSPage:faq')} />
+            <span className={css.navLabel}>
+              <FormattedMessage id="TopbarMobileMenu.howItWorks" />
+            </span>
+          </NamedLink>
+        </nav>
+
+        <nav className={css.sectionNav}>
+          <p className={css.sectionLabel}>
+            <FormattedMessage id="TopbarMobileMenu.sectionAccount" />
+          </p>
+          <NamedLink name="AccountSettingsPage" className={navItemClass('AccountSettingsPage')}>
+            <IconSettings className={navIconClass('AccountSettingsPage')} />
+            <span className={css.navLabel}>
+              <FormattedMessage id="TopbarMobileMenu.accountSettingsLink" />
+            </span>
+          </NamedLink>
+          <InlineTextButton rootClassName={css.logoutNavItem} onClick={onLogout}>
+            <IconLogout className={css.logoutNavIcon} />
+            <span className={css.navLabel}>
+              <FormattedMessage id="TopbarMobileMenu.logoutLink" />
+            </span>
+          </InlineTextButton>
+        </nav>
+
+        {extraLinks.length > 0 ? (
+          <nav className={css.sectionNav}>
+            <p className={css.sectionLabel}>
+              <FormattedMessage id="TopbarMobileMenu.sectionMore" />
+            </p>
+            <div className={css.customLinksWrapper}>{extraLinks}</div>
+          </nav>
         ) : null}
+      </div>
 
-        <NamedLink name="ProfileSettingsPage" className={currentPageClass('ProfileSettingsPage')}>
-          <IconFavorite
-            className={
-              currentPageClass('ProfileSettingsPage') === css.navItemActive
-                ? css.navIconActive
-                : css.navIcon
-            }
-          />
-          <span className={css.navLabel}>
-            <FormattedMessage id="TopbarMobileMenu.profileSettingsLink" />
-          </span>
-        </NamedLink>
-
-        <div className={css.navDivider} />
-
-        <NamedLink name="AccountSettingsPage" className={currentPageClass('AccountSettingsPage')}>
-          <IconSettings
-            className={
-              currentPageClass('AccountSettingsPage') === css.navItemActive
-                ? css.navIconActive
-                : css.navIcon
-            }
-          />
-          <span className={css.navLabel}>
-            <FormattedMessage id="TopbarMobileMenu.accountSettingsLink" />
-          </span>
-        </NamedLink>
-
-        {extraLinks.length > 0 && <div className={css.navDivider} />}
-        <div className={css.customLinksWrapper}>{extraLinks}</div>
-      </nav>
-
-      {/* Footer: locale + logout */}
-      <div className={css.logoutSection}>
-        <InlineTextButton rootClassName={css.logoutButton} onClick={onLogout}>
-          <IconLogout className={css.logoutIcon} />
-          <FormattedMessage id="TopbarMobileMenu.logoutLink" />
-        </InlineTextButton>
+      <div className={css.userFooter}>
+        <div className={css.userCard}>
+          <div className={css.userAvatarWrapper}>
+            <AvatarLarge className={css.avatar} user={currentUser} />
+            <div className={css.verifiedBadge}>
+              <IconVerified className={css.verifiedIcon} />
+            </div>
+          </div>
+          <div className={css.userInfo}>
+            <span className={css.userName}>
+              <FormattedMessage id="TopbarMobileMenu.greeting" values={{ displayName }} />
+            </span>
+            <span className={css.userSubtitle}>
+              <FormattedMessage id="TopbarMobileMenu.memberLabel" />
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
