@@ -709,6 +709,7 @@
 
   "FaqPage.schemaTitle": "FAQ | Leaz",
   "FaqPage.schemaDescription": "Answers about renting, listings, payments, and your Leaz account.",
+  "FaqPage.kicker": "Help Center",
   "FaqPage.heroTitle": "How can we help?",
   "FaqPage.searchPlaceholder": "Search for an answer…",
   "FaqPage.searchButton": "Search",

@@ -6,19 +6,9 @@ import classNames from 'classnames';
 
 import { useIntl, FormattedMessage } from '../../util/reactIntl';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
-import {
-  fetchFaqContent,
-  sanitizeFaqAccentColor,
-  sanitizeFaqIconUrl,
-} from '../../util/faqApi';
+import { fetchFaqContent, sanitizeFaqAccentColor, sanitizeFaqIconUrl } from '../../util/faqApi';
 import { searchFaqItems, tokenizeSearchQuery, highlightSearchMatches } from '../../util/faqSearch';
-import {
-  Page,
-  LayoutComposer,
-  NamedLink,
-  IconSearch,
-  IconArrowHead,
-} from '../../components';
+import { Page, LayoutComposer, NamedLink, IconSearch, IconArrowHead } from '../../components';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import FooterContainer from '../FooterContainer/FooterContainer';
 
@@ -218,8 +208,13 @@ function FaqCategoryCardIcon({ iconUrl, imgClassName, faqIconClassName }) {
   return <i className={classNames('fa-solid fa-question', faqIconClassName)} aria-hidden />;
 }
 
-/** Allineato a `customMediaQueries.css`: --viewportMedium è min-width 768px */
-const MOBILE_MAX_WIDTH_QUERY = '(max-width: 767px)';
+function categoryDomId(categoryId) {
+  return `faq-category-${String(categoryId || 'topic')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')}`;
+}
 
 const FaqPageComponent = props => {
   const { scrollingDisabled } = props;
@@ -264,27 +259,20 @@ const FaqPageComponent = props => {
     return map;
   }, [categoryRows]);
 
-  const activeVisualKey = useMemo(
-    () => visualKeyForRow(activeCategory, categoryRows),
-    [activeCategory, categoryRows]
-  );
-
   /** Full corpus: all FAQs from API when loaded, otherwise static i18n set (same as `items`). */
   const displayedItems = useMemo(() => {
     if (normalizedQuery) {
       return searchFaqItems(items, query);
     }
-    return items.filter(item => item.category === activeCategory);
-  }, [items, normalizedQuery, activeCategory, query]);
+    return items;
+  }, [items, normalizedQuery, query]);
 
-  const activeCategoryRow = categoryRows.find(c => c.id === activeCategory);
-  const activeSectionAccent = sanitizeFaqAccentColor(activeCategoryRow?.color);
-
-  const tagForBadge = normalizedQuery
-    ? null
-    : activeCategoryRow?.tag && activeCategoryRow.tag.trim() !== ''
-      ? activeCategoryRow.tag
-      : null;
+  const itemsByCategory = useMemo(() => {
+    return categoryRows.map(category => ({
+      category,
+      items: items.filter(item => item.category === category.id),
+    }));
+  }, [categoryRows, items]);
 
   useEffect(() => {
     if (displayedItems.length === 0 || openId === '') {
@@ -312,8 +300,8 @@ const FaqPageComponent = props => {
     setActiveCategory(categoryId);
     setQuery('');
     setOpenId('');
-    if (typeof window !== 'undefined' && window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches) {
-      const el = faqSectionHeaderRef.current;
+    if (typeof window !== 'undefined') {
+      const el = document.getElementById(categoryDomId(categoryId)) || faqSectionHeaderRef.current;
       if (el) {
         requestAnimationFrame(() => {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -358,9 +346,13 @@ const FaqPageComponent = props => {
               <Main as="main" className={css.main}>
                 <div className={css.inner}>
                   <section className={css.hero} aria-labelledby="faq-hero-title">
+                    <span className={css.kicker}>
+                      <FormattedMessage id="FaqPage.kicker" defaultMessage="Help Center" />
+                    </span>
                     <h1 id="faq-hero-title" className={css.heroTitle}>
                       <FormattedMessage id="FaqPage.heroTitle" />
                     </h1>
+                    <p className={css.heroSubtitle}>{pageDescription}</p>
                     <form className={css.searchForm} onSubmit={onSearchSubmit}>
                       <div className={css.searchShell}>
                         <div className={css.searchFieldRow}>
@@ -398,168 +390,261 @@ const FaqPageComponent = props => {
                     </form>
                   </section>
 
-                  <section
-                    className={css.categories}
-                    aria-label={intl.formatMessage({ id: 'FaqPage.categoriesAriaLabel' })}
-                  >
-                    {categoryRows.map((cat, rowIndex) => {
-                      const visualKey = resolveFaqCategoryVisualKey(cat.id, rowIndex);
-                      const accent = sanitizeFaqAccentColor(cat.color);
-                      const themeClass = accent
-                        ? css.categoryThemeCustom
-                        : THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          className={classNames(css.categoryCard, themeClass, {
-                            [css.categoryCardActive]:
-                              !normalizedQuery && activeCategory === cat.id,
-                          })}
-                          style={accent ? { '--faq-theme': accent } : undefined}
-                          aria-pressed={!normalizedQuery && activeCategory === cat.id}
-                          onClick={() => selectCategory(cat.id)}
-                        >
-                          <div className={css.categoryIcon}>
-                            <FaqCategoryCardIcon
-                              iconUrl={cat.iconUrl}
-                              imgClassName={css.categoryIconImg}
-                              faqIconClassName={css.categoryIconFaq}
-                            />
-                          </div>
-                          <p className={css.categoryTitle}>{cat.title}</p>
-                          <p className={css.categoryBody}>{cat.description}</p>
-                        </button>
-                      );
-                    })}
-                  </section>
-
-                  <section className={css.faqSection} aria-labelledby="faq-popular-title">
-                    <div ref={faqSectionHeaderRef} className={css.faqSectionHeader}>
-                      <h2 id="faq-popular-title" className={css.faqSectionTitle}>
-                        <FormattedMessage id="FaqPage.popularTitle" />
-                      </h2>
-                      <span
-                        className={classNames(
-                          css.tag,
-                          normalizedQuery
-                            ? css.tagSearch
-                            : activeSectionAccent
-                              ? css.tagCustom
-                              : TAG_CLASS_BY_CATEGORY[activeVisualKey] || css.tagAccount
-                        )}
-                        style={
-                          !normalizedQuery && activeSectionAccent
-                            ? { '--faq-tag-accent': activeSectionAccent }
-                            : undefined
-                        }
-                      >
-                        {normalizedQuery ? (
-                          <FormattedMessage id="FaqPage.tagSearch" />
-                        ) : tagForBadge ? (
-                          tagForBadge
-                        ) : (
-                          <FormattedMessage
-                            id={TAG_MESSAGE_ID[activeVisualKey] || 'FaqPage.tagRent'}
-                          />
-                        )}
-                      </span>
-                    </div>
-                    <div
-                      className={classNames(css.faqList, {
-                        [css.faqListSearch]: normalizedQuery,
-                      })}
+                  <div className={css.contentGrid}>
+                    <aside
+                      className={css.sidebar}
+                      aria-label={intl.formatMessage({ id: 'FaqPage.categoriesAriaLabel' })}
                     >
-                      {displayedItems.map(item => {
-                        const isOpen = openId === item.id;
-                        const questionNodes = normalizedQuery
-                          ? highlightSearchMatches(item.question, searchTokens, css.searchHighlight)
-                          : item.question;
-                        const answerNodes = normalizedQuery
-                          ? highlightSearchMatches(item.answer, searchTokens, css.searchHighlight)
-                          : item.answer;
-                        const itemVisualKey = visualKeyForRow(item.category, categoryRows);
-                        const itemCategoryRow = categoryRows.find(r => r.id === item.category);
-                        const itemPillAccent = sanitizeFaqAccentColor(itemCategoryRow?.color);
-
-                        const toggleBlock = (
-                          <>
-                            <button
-                              type="button"
-                              id={`faq-q-${item.id}`}
-                              className={classNames(css.faqToggle, {
-                                [css.faqToggleOpen]: isOpen,
-                              })}
-                              aria-expanded={isOpen}
-                              aria-controls={`faq-a-${item.id}`}
-                              onClick={() => setOpenId(isOpen ? '' : item.id)}
-                            >
-                              <span>{questionNodes}</span>
-                              <span
-                                className={classNames(css.chevron, { [css.chevronUp]: isOpen })}
-                                aria-hidden
-                              >
-                                <IconArrowHead direction="down" size="small" />
-                              </span>
-                            </button>
-                            {isOpen ? (
-                              <p id={`faq-a-${item.id}`} className={css.faqAnswer} role="region">
-                                {answerNodes}
-                              </p>
-                            ) : null}
-                          </>
-                        );
-
-                        if (normalizedQuery) {
+                      <nav className={css.topicNav}>
+                        {categoryRows.map((cat, rowIndex) => {
+                          const visualKey = resolveFaqCategoryVisualKey(cat.id, rowIndex);
+                          const accent = sanitizeFaqAccentColor(cat.color);
+                          const themeClass = accent
+                            ? css.categoryThemeCustom
+                            : THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount;
                           return (
-                            <div key={item.id} className={classNames(css.faqItem, css.faqItemSearch)}>
-                              <span
-                                className={classNames(
-                                  css.tag,
-                                  itemPillAccent
-                                    ? css.tagCustom
-                                    : TAG_CLASS_BY_CATEGORY[itemVisualKey] || css.tagAccount,
-                                  css.faqItemCategoryPill
-                                )}
-                                style={
-                                  itemPillAccent
-                                    ? { '--faq-tag-accent': itemPillAccent }
-                                    : undefined
-                                }
-                              >
-                                {categoryTitleById[item.category] || item.category}
+                            <button
+                              key={cat.id}
+                              type="button"
+                              className={classNames(css.topicLink, themeClass, {
+                                [css.topicLinkActive]:
+                                  !normalizedQuery && activeCategory === cat.id,
+                              })}
+                              style={accent ? { '--faq-theme': accent } : undefined}
+                              aria-pressed={!normalizedQuery && activeCategory === cat.id}
+                              onClick={() => selectCategory(cat.id)}
+                            >
+                              <span className={css.topicIcon}>
+                                <FaqCategoryCardIcon
+                                  iconUrl={cat.iconUrl}
+                                  imgClassName={css.categoryIconImg}
+                                  faqIconClassName={css.categoryIconFaq}
+                                />
                               </span>
-                              <div className={css.faqItemSurface}>{toggleBlock}</div>
-                            </div>
+                              <span className={css.topicText}>{cat.title}</span>
+                            </button>
                           );
-                        }
+                        })}
+                      </nav>
 
-                        return (
-                          <div key={item.id} className={css.faqItem}>
-                            {toggleBlock}
+                      <div className={css.supportCard}>
+                        <div className={css.supportIcon} aria-hidden>
+                          <i className="fa-solid fa-headset" />
+                        </div>
+                        <h2 className={css.supportTitle}>
+                          <FormattedMessage id="FaqPage.ctaTitle" />
+                        </h2>
+                        <p className={css.supportBody}>
+                          <FormattedMessage id="FaqPage.ctaSubtitle" />
+                        </p>
+                        <NamedLink
+                          name="CMSPage"
+                          params={{ pageId: 'help' }}
+                          className={css.supportButton}
+                        >
+                          <FormattedMessage id="FaqPage.ctaPrimary" />
+                        </NamedLink>
+                      </div>
+                    </aside>
+
+                    <div className={css.faqColumn}>
+                      {normalizedQuery ? (
+                        <section className={css.faqSection} aria-labelledby="faq-search-title">
+                          <div ref={faqSectionHeaderRef} className={css.faqSectionHeader}>
+                            <div className={css.sectionIcon} aria-hidden>
+                              <IconSearch />
+                            </div>
+                            <h2 id="faq-search-title" className={css.faqSectionTitle}>
+                              <FormattedMessage id="FaqPage.popularTitle" />
+                            </h2>
+                            <span className={classNames(css.tag, css.tagSearch)}>
+                              <FormattedMessage id="FaqPage.tagSearch" />
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </section>
+                          <div className={classNames(css.faqList, css.faqListSearch)}>
+                            {displayedItems.map(item => {
+                              const isOpen = openId === item.id;
+                              const questionNodes = highlightSearchMatches(
+                                item.question,
+                                searchTokens,
+                                css.searchHighlight
+                              );
+                              const answerNodes = highlightSearchMatches(
+                                item.answer,
+                                searchTokens,
+                                css.searchHighlight
+                              );
+                              const itemVisualKey = visualKeyForRow(item.category, categoryRows);
+                              const itemCategoryRow = categoryRows.find(
+                                r => r.id === item.category
+                              );
+                              const itemPillAccent = sanitizeFaqAccentColor(itemCategoryRow?.color);
 
-                  <section className={css.cta} aria-labelledby="faq-cta-title">
-                    <div className={css.ctaDeco1} aria-hidden />
-                    <div className={css.ctaDeco2} aria-hidden />
-                    <div className={css.ctaText}>
-                      <h2 id="faq-cta-title" className={css.ctaTitle}>
-                        <FormattedMessage id="FaqPage.ctaTitle" />
-                      </h2>
-                      <p className={css.ctaSubtitle}>
-                        <FormattedMessage id="FaqPage.ctaSubtitle" />
-                      </p>
+                              return (
+                                <div
+                                  key={item.id}
+                                  className={classNames(css.faqItem, css.faqItemSearch)}
+                                >
+                                  <span
+                                    className={classNames(
+                                      css.tag,
+                                      itemPillAccent
+                                        ? css.tagCustom
+                                        : TAG_CLASS_BY_CATEGORY[itemVisualKey] || css.tagAccount,
+                                      css.faqItemCategoryPill
+                                    )}
+                                    style={
+                                      itemPillAccent
+                                        ? { '--faq-tag-accent': itemPillAccent }
+                                        : undefined
+                                    }
+                                  >
+                                    {categoryTitleById[item.category] || item.category}
+                                  </span>
+                                  <div className={css.faqItemSurface}>
+                                    <button
+                                      type="button"
+                                      id={`faq-q-${item.id}`}
+                                      className={classNames(css.faqToggle, {
+                                        [css.faqToggleOpen]: isOpen,
+                                      })}
+                                      aria-expanded={isOpen}
+                                      aria-controls={`faq-a-${item.id}`}
+                                      onClick={() => setOpenId(isOpen ? '' : item.id)}
+                                    >
+                                      <span>{questionNodes}</span>
+                                      <span
+                                        className={classNames(css.chevron, {
+                                          [css.chevronUp]: isOpen,
+                                        })}
+                                        aria-hidden
+                                      >
+                                        <IconArrowHead direction="down" size="small" />
+                                      </span>
+                                    </button>
+                                    {isOpen ? (
+                                      <p
+                                        id={`faq-a-${item.id}`}
+                                        className={css.faqAnswer}
+                                        role="region"
+                                      >
+                                        {answerNodes}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ) : (
+                        itemsByCategory.map(({ category, items: categoryItems }, rowIndex) => {
+                          if (!categoryItems.length) {
+                            return null;
+                          }
+                          const visualKey = resolveFaqCategoryVisualKey(category.id, rowIndex);
+                          const accent = sanitizeFaqAccentColor(category.color);
+                          const sectionStyle = accent ? { '--faq-theme': accent } : undefined;
+                          return (
+                            <section
+                              key={category.id}
+                              id={categoryDomId(category.id)}
+                              className={classNames(
+                                css.faqSection,
+                                accent
+                                  ? css.categoryThemeCustom
+                                  : THEME_CLASS_BY_CATEGORY[visualKey] || css.categoryThemeAccount
+                              )}
+                              style={sectionStyle}
+                              aria-labelledby={`${categoryDomId(category.id)}-title`}
+                            >
+                              <div
+                                ref={activeCategory === category.id ? faqSectionHeaderRef : null}
+                                className={css.faqSectionHeader}
+                              >
+                                <div className={css.sectionIcon} aria-hidden>
+                                  <FaqCategoryCardIcon
+                                    iconUrl={category.iconUrl}
+                                    imgClassName={css.categoryIconImg}
+                                    faqIconClassName={css.categoryIconFaq}
+                                  />
+                                </div>
+                                <div className={css.sectionHeadingText}>
+                                  <h2
+                                    id={`${categoryDomId(category.id)}-title`}
+                                    className={css.faqSectionTitle}
+                                  >
+                                    {category.title}
+                                  </h2>
+                                  {category.description ? (
+                                    <p className={css.sectionDescription}>{category.description}</p>
+                                  ) : null}
+                                </div>
+                                <span
+                                  className={classNames(
+                                    css.tag,
+                                    accent
+                                      ? css.tagCustom
+                                      : TAG_CLASS_BY_CATEGORY[visualKey] || css.tagAccount
+                                  )}
+                                  style={accent ? { '--faq-tag-accent': accent } : undefined}
+                                >
+                                  {category.tag && category.tag.trim() !== '' ? (
+                                    category.tag
+                                  ) : (
+                                    <FormattedMessage
+                                      id={TAG_MESSAGE_ID[visualKey] || 'FaqPage.tagRent'}
+                                    />
+                                  )}
+                                </span>
+                              </div>
+                              <div className={css.faqList}>
+                                {categoryItems.map(item => {
+                                  const isOpen = openId === item.id;
+                                  return (
+                                    <div key={item.id} className={css.faqItem}>
+                                      <button
+                                        type="button"
+                                        id={`faq-q-${item.id}`}
+                                        className={classNames(css.faqToggle, {
+                                          [css.faqToggleOpen]: isOpen,
+                                        })}
+                                        aria-expanded={isOpen}
+                                        aria-controls={`faq-a-${item.id}`}
+                                        onClick={() => {
+                                          setActiveCategory(item.category);
+                                          setOpenId(isOpen ? '' : item.id);
+                                        }}
+                                      >
+                                        <span>{item.question}</span>
+                                        <span
+                                          className={classNames(css.chevron, {
+                                            [css.chevronUp]: isOpen,
+                                          })}
+                                          aria-hidden
+                                        >
+                                          <IconArrowHead direction="down" size="small" />
+                                        </span>
+                                      </button>
+                                      {isOpen ? (
+                                        <p
+                                          id={`faq-a-${item.id}`}
+                                          className={css.faqAnswer}
+                                          role="region"
+                                        >
+                                          {item.answer}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          );
+                        })
+                      )}
                     </div>
-                    <div className={css.ctaActions}>
-                      <NamedLink name="CMSPage" params={{ pageId: 'help' }} className={css.ctaPrimary}>
-                        <FormattedMessage id="FaqPage.ctaPrimary" />
-                      </NamedLink>
-                    </div>
-                  </section>
+                  </div>
                 </div>
               </Main>
               <Footer>
