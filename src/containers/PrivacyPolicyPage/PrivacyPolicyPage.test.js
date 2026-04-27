@@ -5,22 +5,15 @@ import { renderWithProviders as render, testingLibrary } from '../../util/testHe
 
 import { PrivacyPolicyPageComponent } from './PrivacyPolicyPage';
 
-const { waitFor } = testingLibrary;
+const { screen } = testingLibrary;
 
 describe('PrivacyPolicyPage', () => {
-  it('renders the Fallback page on error', async () => {
-    const errorMessage = 'PrivacyPolicyPage failed';
-    let e = new Error(errorMessage);
-    e.type = 'error';
-    e.name = 'Test';
+  it('renders the local privacy policy content', () => {
+    render(<PrivacyPolicyPageComponent scrollingDisabled={false} />);
 
-    const { getByText } = render(
-      <PrivacyPolicyPageComponent pageAssetsData={null} inProgress={false} error={e} />
-    );
-
-    await waitFor(() => {
-      expect(getByText('Privacy Policy')).toBeInTheDocument();
-      expect(getByText('An error occurred')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(screen.getByText('Last updated: October 24, 2024')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '2. Information We Collect' })).toBeInTheDocument();
+    expect(screen.getByText('Request Account Deletion')).toBeInTheDocument();
   });
 });

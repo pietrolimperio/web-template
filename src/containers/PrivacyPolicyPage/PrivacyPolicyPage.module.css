@@ -1,0 +1,346 @@
+.page {
+  background: var(--colorSurface);
+}
+
+.contentRoot {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 72px 16px 88px;
+  color: var(--colorOnSurface);
+}
+
+.sidebar {
+  display: none;
+}
+
+.sidebarInner {
+  position: sticky;
+  top: 112px;
+}
+
+.sidebarTitle {
+  margin: 0 0 24px;
+  color: var(--marketplaceColor);
+  font-family: var(--fontFamilyDisplay);
+  font-size: 24px;
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 1.3;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.navLink {
+  padding: 4px 0 4px 16px;
+  border-left: 2px solid transparent;
+  color: var(--colorGrey600);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.navLink:hover {
+  border-left-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+}
+
+.navLink:first-child {
+  border-left-color: var(--marketplaceColor);
+  color: var(--marketplaceColor);
+}
+
+.helpBox {
+  margin-top: 80px;
+  padding: 24px;
+  background: var(--colorSurfaceContainerLow);
+  border-radius: 12px;
+}
+
+.helpBox p {
+  margin: 0 0 16px;
+  color: var(--colorGrey600);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+}
+
+.helpButton,
+.actionRow a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: var(--borderRadiusFull);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+}
+
+.helpButton {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.kicker {
+  display: inline-flex;
+  margin-bottom: 16px;
+  padding: 4px 16px;
+  background: var(--colorSurfaceContainerHighest);
+  border-radius: var(--borderRadiusFull);
+  color: var(--marketplaceColor);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+}
+
+.hero h1 {
+  margin: 0;
+  color: var(--colorOnSurface);
+  font-family: var(--fontFamilyDisplay);
+  font-size: 40px;
+  font-weight: var(--fontWeightBold);
+  line-height: 1.1;
+}
+
+.hero p {
+  margin: 16px 0 0;
+  color: var(--colorGrey600);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.heroRule {
+  display: block;
+  width: 96px;
+  height: 4px;
+  margin-top: 8px;
+  background: var(--marketplaceColor);
+  border-radius: var(--borderRadiusFull);
+}
+
+.section,
+.panel,
+.panelMuted {
+  scroll-margin-top: 112px;
+  padding: 24px;
+}
+
+.panel,
+.panelMuted {
+  border-radius: 12px;
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--colorWhite);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.panelMuted {
+  background: var(--colorSurfaceContainerLowest);
+}
+
+.section h2,
+.panel h2,
+.panelMuted h2 {
+  margin: 0 0 16px;
+  color: var(--colorOnSurface);
+  font-family: var(--fontFamilyDisplay);
+  font-size: 24px;
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 1.3;
+}
+
+.section p,
+.panel p,
+.panelMuted p {
+  margin: 0 0 16px;
+  color: var(--colorGrey600);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.section p:last-child,
+.panel p:last-child,
+.panelMuted p:last-child {
+  margin-bottom: 0;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.dataCard {
+  padding: 16px;
+  background: var(--colorSurfaceContainerLowest);
+  border-radius: 8px;
+}
+
+.dataCard h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: var(--marketplaceColor);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+}
+
+.dataCard p {
+  margin: 0;
+  color: var(--colorGrey600);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  color: var(--marketplaceColor);
+  font-size: 16px;
+  font-weight: var(--fontWeightBold);
+  line-height: 1;
+}
+
+.note {
+  font-style: italic;
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkList li {
+  display: flex;
+  gap: 16px;
+  color: var(--colorGrey600);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.disclosureList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.disclosure {
+  padding-bottom: 12px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--colorOutlineVariant) 35%, transparent);
+}
+
+.disclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  color: var(--colorOnSurface);
+  font-size: 14px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 1.4;
+  list-style: none;
+}
+
+.disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure summary::after {
+  content: '+';
+  color: var(--colorGrey600);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.disclosure[open] summary::after {
+  content: '-';
+}
+
+.disclosure p {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.actionRow a {
+  padding: 10px 24px;
+  box-shadow: inset 0 0 0 1px var(--marketplaceColor);
+  color: var(--marketplaceColor);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.actionRow a:hover {
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
+}
+
+@media (min-width: 768px) {
+  .contentRoot {
+    padding-right: 48px;
+    padding-left: 48px;
+  }
+
+  .hero h1 {
+    font-size: 56px;
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .contentRoot {
+    grid-template-columns: 3fr 9fr;
+    gap: 48px;
+  }
+
+  .sidebar {
+    display: block;
+  }
+}
