@@ -2,6 +2,8 @@ import React from 'react';
 import { Field } from 'react-final-form';
 import classNames from 'classnames';
 
+import { FormattedMessage } from '../../../util/reactIntl';
+
 import {
   CATEGORY_MULTI_FILTER_PARAM,
   buildCategorySelectionToken,
@@ -41,7 +43,15 @@ const getDescendantTokens = option =>
   }, []);
 
 const TreeOption = props => {
-  const { option, selectedValues, onToggle, availableTokenSet, ancestors = [] } = props;
+  const {
+    option,
+    selectedValues,
+    onToggle,
+    onSelectAll,
+    onResetSubcategories,
+    availableTokenSet,
+    ancestors = [],
+  } = props;
   const token = buildCategorySelectionToken(option.levelKey, option.option);
   const isSelected = selectedValues.includes(token);
   const availabilityKnown = !!availableTokenSet;
@@ -76,18 +86,67 @@ const TreeOption = props => {
 
       {option.suboptions?.length && shouldShowChildren ? (
         <div className={css.suboptionsPanel} aria-label={optionName}>
-          <div className={css.suboptionsHeader}>{option.label}</div>
+          <div className={css.suboptionsHeader}>
+            <span className={css.suboptionsHeaderLabel}>{option.label}</span>
+            <div className={css.suboptionsActions}>
+              <button
+                type="button"
+                className={css.suboptionActionPill}
+                onClick={() => onResetSubcategories && onResetSubcategories(option)}
+              >
+                <FormattedMessage id="CategoryMultiSelectFilter.reset" />
+              </button>
+              <button
+                type="button"
+                className={css.suboptionActionPill}
+                onClick={() => onSelectAll && onSelectAll(option)}
+              >
+                <FormattedMessage id="CategoryMultiSelectFilter.selectAll" />
+              </button>
+            </div>
+          </div>
           <ul className={css.suboptions}>
-            {option.suboptions.map(suboption => (
-              <TreeOption
-                key={buildCategorySelectionToken(suboption.levelKey, suboption.option)}
-                option={suboption}
-                selectedValues={selectedValues}
-                onToggle={onToggle}
-                availableTokenSet={availableTokenSet}
-                ancestors={[...ancestors, option.label]}
-              />
-            ))}
+            {option.suboptions.map(suboption => {
+              const subToken = buildCategorySelectionToken(suboption.levelKey, suboption.option);
+              const isSubSelected = selectedValues.includes(subToken);
+              const isSubAvailable = !availableTokenSet || availableTokenSet.has(subToken);
+              const isSubDisabled = !isSubSelected && !isSubAvailable;
+              return (
+                <li key={subToken} className={css.suboptionRow}>
+                  <button
+                    type="button"
+                    className={classNames(css.suboptionRowBtn, {
+                      [css.suboptionRowBtnSelected]: isSubSelected,
+                      [css.suboptionRowBtnDisabled]: isSubDisabled,
+                    })}
+                    disabled={isSubDisabled}
+                    aria-pressed={isSubSelected}
+                    onClick={() => onToggle(suboption, subToken, !isSubSelected)}
+                  >
+                    <span className={css.suboptionCheckbox}>
+                      {isSubSelected ? (
+                        <svg
+                          width="10"
+                          height="8"
+                          viewBox="0 0 10 8"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M1 4L3.5 6.5L9 1"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : null}
+                    </span>
+                    <span className={css.suboptionLabel}>{suboption.label}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
@@ -115,6 +174,19 @@ const FieldCategoryTreeMulti = props => {
           onChange(nextValues);
         };
 
+        const handleSelectAll = parentOption => {
+          const subTokens = getDescendantTokens(parentOption).filter(
+            token => !availableTokenSet || availableTokenSet.has(token)
+          );
+          const next = Array.from(new Set([...selectedValues, ...subTokens]));
+          onChange(next);
+        };
+
+        const handleResetSubcategories = parentOption => {
+          const subTokens = new Set(getDescendantTokens(parentOption));
+          onChange(selectedValues.filter(v => !subTokens.has(v)));
+        };
+
         return (
           <div className={classes}>
             <ul className={css.optionList}>
@@ -124,6 +196,8 @@ const FieldCategoryTreeMulti = props => {
                   option={option}
                   selectedValues={selectedValues}
                   onToggle={handleToggle}
+                  onSelectAll={handleSelectAll}
+                  onResetSubcategories={handleResetSubcategories}
                   availableTokenSet={availableTokenSet}
                 />
               ))}

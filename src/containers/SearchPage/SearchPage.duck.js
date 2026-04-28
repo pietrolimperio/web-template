@@ -140,8 +140,7 @@ export const searchListingsError = e => ({
 export const searchListings = (searchParams, config) => (dispatch, getState, sdk) => {
   dispatch(searchListingsRequest(searchParams));
 
-  const idsMatch = (left, right) =>
-    left != null && right != null && `${left}` === `${right}`;
+  const idsMatch = (left, right) => left != null && right != null && `${left}` === `${right}`;
 
   // SearchPage can enforce listing query to only those listings with valid listingType
   // NOTE: this only works if you have set 'enum' type search schema to listing's public data fields
@@ -177,12 +176,7 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
     return foundCategory && subcategories.length > 0
       ? {
           [levelKey]: levelValue,
-          ...constructCategoryPropertiesForAPI(
-            categoryLevelKeys,
-            subcategories,
-            level + 1,
-            params
-          ),
+          ...constructCategoryPropertiesForAPI(categoryLevelKeys, subcategories, level + 1, params),
         }
       : foundCategory
       ? { [levelKey]: levelValue }
@@ -200,8 +194,7 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
   const prepareCategoryParams = (paramName, params) => {
     const categoryConfig = config.search.defaultFilters?.find(f => f.schemaType === 'category');
     const categories = config.categoryConfiguration.categories;
-    const categoryLevelKeys =
-      categoryConfig?.categoryLevelKeys ?? categoryConfig?.nestedParams;
+    const categoryLevelKeys = categoryConfig?.categoryLevelKeys ?? categoryConfig?.nestedParams;
     const categoryParamNames =
       categoryLevelKeys?.map(k => constructQueryParamName(k, 'public')) || [];
     const isCategoryParam = categoryParamNames.some(name => paramName === name);
@@ -405,24 +398,22 @@ export const searchListings = (searchParams, config) => (dispatch, getState, sdk
     perPage: isCategoryMultiFilterActive ? CATEGORY_MULTI_FETCH_PAGE_SIZE : perPage,
   };
 
-  const queryPromise = sdk.listings
-    .query(params)
-    .then(firstResponse => {
-      if (!isCategoryMultiFilterActive) {
-        return firstResponse;
-      }
+  const queryPromise = sdk.listings.query(params).then(firstResponse => {
+    if (!isCategoryMultiFilterActive) {
+      return firstResponse;
+    }
 
-      const totalPages = firstResponse?.data?.meta?.totalPages || 1;
-      if (totalPages <= 1) {
-        return combineSearchResponses([firstResponse]);
-      }
+    const totalPages = firstResponse?.data?.meta?.totalPages || 1;
+    if (totalPages <= 1) {
+      return combineSearchResponses([firstResponse]);
+    }
 
-      const remainingPagePromises = Array.from({ length: totalPages - 1 }, (_, index) =>
-        sdk.listings.query({ ...params, page: index + 2 })
-      );
+    const remainingPagePromises = Array.from({ length: totalPages - 1 }, (_, index) =>
+      sdk.listings.query({ ...params, page: index + 2 })
+    );
 
-      return Promise.all([firstResponse, ...remainingPagePromises]).then(combineSearchResponses);
-    });
+    return Promise.all([firstResponse, ...remainingPagePromises]).then(combineSearchResponses);
+  });
 
   return queryPromise
     .then(response => {
@@ -466,7 +457,9 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
     latlngBounds: ['bounds'],
   });
 
-  const { page = 1, address, origin, ...rest } = queryParams;
+  // locationRadius is a UI-only param used to track the selected radius chip; strip it so it
+  // is never sent to the Sharetribe API (bounds already encodes the geographic filter).
+  const { page = 1, address, origin, locationRadius: _locationRadius, ...rest } = queryParams;
   const originMaybe = isOriginInUse(config) && origin ? { origin } : {};
 
   const listingTypeVariantMaybe = listingTypePathParam

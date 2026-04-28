@@ -167,6 +167,23 @@ export const circlePolyline = (latlng, radius) => {
 };
 
 /**
+ * Compute a LatLngBounds rectangle that encloses a circle of the given radius
+ * around the center point.
+ *
+ * @param {LatLng} center - center of the circle
+ * @param {Number} radiusKm - radius in kilometres
+ * @return {LatLngBounds} - bounding box (NE, SW)
+ */
+export const boundsFromCenterAndRadius = (center, radiusKm) => {
+  const dLat = radiusKm / 111.32;
+  const dLng = radiusKm / (111.32 * Math.cos(center.lat * DEG_TO_RAD));
+  return new LatLngBounds(
+    new LatLng(center.lat + dLat, center.lng + dLng),
+    new LatLng(center.lat - dLat, center.lng - dLng)
+  );
+};
+
+/**
  * Cut some precision from bounds coordinates to tackle subtle map movements
  * when map is moved manually
  *
@@ -247,7 +264,12 @@ export const geocodeAddress = async (addressString, countryCode) => {
   }
 
   // Check if Mapbox SDK is available
-  if (typeof window === 'undefined' || !window.mapboxgl || !window.mapboxSdk || !window.mapboxgl.accessToken) {
+  if (
+    typeof window === 'undefined' ||
+    !window.mapboxgl ||
+    !window.mapboxSdk ||
+    !window.mapboxgl.accessToken
+  ) {
     console.warn('Mapbox SDK not available for geocoding');
     return null;
   }

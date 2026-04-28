@@ -62,6 +62,7 @@ import {
 } from './SearchPage.shared';
 
 import FilterComponent from './FilterComponent';
+import HandByHandLocationFilter from './HandByHandLocationFilter/HandByHandLocationFilter';
 import MainPanelHeader from './MainPanelHeader/MainPanelHeader';
 import SearchFiltersMobile from './SearchFiltersMobile/SearchFiltersMobile';
 import SortBy from './SortBy/SortBy';
@@ -95,6 +96,9 @@ export class SearchPageComponent extends Component {
 
     // SortBy
     this.handleSortBy = this.handleSortBy.bind(this);
+
+    // Hand-delivery location filter
+    this.handleHandByHandToggle = this.handleHandByHandToggle.bind(this);
   }
 
   // Invoked when a modal is opened from a child component,
@@ -121,8 +125,13 @@ export class SearchPageComponent extends Component {
     // Reset state
     this.setState({ currentQueryParams: {} });
 
-    // Reset routing params
-    const queryParams = omit(urlQueryParams, filterQueryParamNames);
+    // Reset routing params (also clear location filter params not tracked by filterQueryParamNames)
+    const queryParams = omit(urlQueryParams, [
+      ...filterQueryParamNames,
+      'bounds',
+      'origin',
+      'locationRadius',
+    ]);
 
     const { routeName, pathParams } = getSearchPageResourceLocatorStringParams(
       routeConfiguration,
@@ -215,6 +224,23 @@ export class SearchPageComponent extends Component {
       location
     );
 
+    history.push(
+      createResourceLocatorString(routeName, routeConfiguration, pathParams, queryParams)
+    );
+  }
+
+  handleHandByHandToggle(updatedParams) {
+    const { history, routeConfiguration, location } = this.props;
+    const urlQueryParams = validUrlQueryParamsFromProps(this.props);
+    const { routeName, pathParams } = getSearchPageResourceLocatorStringParams(
+      routeConfiguration,
+      location
+    );
+    const isTogglingOff = updatedParams['pub_handByHandAvailable'] == null;
+    const queryParams = isTogglingOff
+      ? omit(urlQueryParams, ['pub_handByHandAvailable', 'bounds', 'origin', 'locationRadius'])
+      : { ...urlQueryParams, pub_handByHandAvailable: true };
+    this.setState({ currentQueryParams: {} });
     history.push(
       createResourceLocatorString(routeName, routeConfiguration, pathParams, queryParams)
     );
@@ -338,7 +364,10 @@ export class SearchPageComponent extends Component {
           )
         )
       : undefined;
-    const localTotalPages = Math.max(1, Math.ceil(filteredListings.length / LOCAL_RESULTS_PER_PAGE));
+    const localTotalPages = Math.max(
+      1,
+      Math.ceil(filteredListings.length / LOCAL_RESULTS_PER_PAGE)
+    );
     const localPage = Math.min(
       Math.max(Number.isNaN(currentPageFromURL) ? 1 : currentPageFromURL, 1),
       localTotalPages
@@ -369,14 +398,13 @@ export class SearchPageComponent extends Component {
     ).length;
 
     const hasPaginationInfo = !!pagination && pagination.totalItems != null;
-    const totalItems =
-      isCategoryMultiFilterActive
-        ? filteredListings.length
-        : searchParamsAreInSync && hasPaginationInfo
-        ? pagination.totalItems
-        : pagination?.paginationUnsupported
-        ? listings.length
-        : 0;
+    const totalItems = isCategoryMultiFilterActive
+      ? filteredListings.length
+      : searchParamsAreInSync && hasPaginationInfo
+      ? pagination.totalItems
+      : pagination?.paginationUnsupported
+      ? listings.length
+      : 0;
     const listingsAreLoaded =
       !searchInProgress &&
       searchParamsAreInSync &&
@@ -416,9 +444,11 @@ export class SearchPageComponent extends Component {
     const [checkInDate, checkOutDate] = searchParamsInURL?.dates
       ? `${searchParamsInURL.dates}`.split(',')
       : [];
-    const dateRangeLabel =
-      checkInDate && checkOutDate ? `${checkInDate} - ${checkOutDate}` : null;
-    const mobileSearchRecap = [searchParamsInURL?.keywords || searchParamsInURL?.address, dateRangeLabel]
+    const dateRangeLabel = checkInDate && checkOutDate ? `${checkInDate} - ${checkOutDate}` : null;
+    const mobileSearchRecap = [
+      searchParamsInURL?.keywords || searchParamsInURL?.address,
+      dateRangeLabel,
+    ]
       .filter(Boolean)
       .join(' · ');
     const handleResponsiveSearchSubmit = values => {
@@ -481,6 +511,14 @@ export class SearchPageComponent extends Component {
         <div className={css.layoutWrapperContainer}>
           <aside className={css.layoutWrapperFilterColumn} data-testid="filterColumnAside">
             <div className={css.filterColumnContent}>
+              <div className={css.filterPanelHeader}>
+                <span className={css.filterPanelTitle}>
+                  <FormattedMessage id="SearchPage.filtersTitle" />
+                </span>
+                <button className={css.filterPanelResetAll} onClick={e => this.handleResetAll(e)}>
+                  <FormattedMessage id="SearchPage.resetAll" />
+                </button>
+              </div>
               {availableFilters.map(filterConfig => {
                 const key = `SearchFiltersDesktop.${filterConfig.scope || 'built-in'}.${
                   filterConfig.key
@@ -496,7 +534,11 @@ export class SearchPageComponent extends Component {
                     marketplaceCurrency={marketplaceCurrency}
                     urlQueryParams={validQueryParams}
                     initialValues={initialValues(this.props, this.state.currentQueryParams)}
-                    getHandleChangedValueFn={this.getHandleChangedValueFn}
+                    getHandleChangedValueFn={
+                      filterConfig.key === 'handByHandAvailable'
+                        ? _useHistoryPush => this.handleHandByHandToggle
+                        : this.getHandleChangedValueFn
+                    }
                     intl={intl}
                     liveEdit
                     showAsPopup={false}
@@ -504,9 +546,14 @@ export class SearchPageComponent extends Component {
                   />
                 );
               })}
-              <button className={css.resetAllButton} onClick={e => this.handleResetAll(e)}>
-                <FormattedMessage id={'SearchFiltersMobile.resetAll'} />
-              </button>
+              <HandByHandLocationFilter
+                urlQueryParams={validQueryParams}
+                searchParamsInURL={searchParamsInURL}
+                history={history}
+                routeConfiguration={routeConfiguration}
+                location={location}
+                intl={intl}
+              />
             </div>
           </aside>
 
@@ -547,6 +594,15 @@ export class SearchPageComponent extends Component {
                 noResultsInfo={noResultsInfo}
                 location={location}
               >
+                <HandByHandLocationFilter
+                  urlQueryParams={validQueryParams}
+                  searchParamsInURL={searchParamsInURL}
+                  history={history}
+                  routeConfiguration={routeConfiguration}
+                  location={location}
+                  intl={intl}
+                  isMobile
+                />
                 {availableFilters.map(filterConfig => {
                   const key = `SearchFiltersMobile.${filterConfig.scope || 'built-in'}.${
                     filterConfig.key
@@ -562,7 +618,11 @@ export class SearchPageComponent extends Component {
                       marketplaceCurrency={marketplaceCurrency}
                       urlQueryParams={validQueryParams}
                       initialValues={initialValues(this.props, this.state.currentQueryParams)}
-                      getHandleChangedValueFn={this.getHandleChangedValueFn}
+                      getHandleChangedValueFn={
+                        filterConfig.key === 'handByHandAvailable'
+                          ? _useHistoryPush => this.handleHandByHandToggle
+                          : this.getHandleChangedValueFn
+                      }
                       intl={intl}
                       liveEdit
                       showAsPopup={false}
@@ -598,7 +658,13 @@ export class SearchPageComponent extends Component {
                 <SearchResultsPanel
                   className={css.searchListingsPanel}
                   listings={paginatedListings}
-                  pagination={isCategoryMultiFilterActive ? localPagination : listingsAreLoaded ? pagination : null}
+                  pagination={
+                    isCategoryMultiFilterActive
+                      ? localPagination
+                      : listingsAreLoaded
+                      ? pagination
+                      : null
+                  }
                   search={parse(location.search)}
                   isMapVariant={false}
                   listingTypeParam={listingTypePathParam}

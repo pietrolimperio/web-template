@@ -81,6 +81,9 @@ const BooleanFilter = props => {
           aria-label={label}
           aria-pressed={isToggleSelected}
         >
+          <span
+            className={classNames(css.toggleDot, { [css.toggleDotSelected]: isToggleSelected })}
+          />
           {label}
         </button>
       </div>

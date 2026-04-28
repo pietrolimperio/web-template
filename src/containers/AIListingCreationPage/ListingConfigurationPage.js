@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import { types as sdkTypes } from '../../util/sdkLoader';
 import { getDefaultTimeZoneOnBrowser } from '../../util/dates';
@@ -9,6 +9,7 @@ import LocationAutocompleteInputImpl from '../../components/LocationAutocomplete
 import AvailabilityCalendar from './AvailabilityCalendar';
 import classNames from 'classnames';
 import devLog from '../../util/devLog';
+import { geocodeAddress } from '../../util/maps';
 import css from './ListingConfigurationPage.module.css';
 
 const { LatLng } = sdkTypes;
@@ -87,7 +88,8 @@ const ListingConfigurationPage = ({
   const [addressFieldsChanged, setAddressFieldsChanged] = useState(false); // Track if user changed any field
   const [addressFromAutocomplete, setAddressFromAutocomplete] = useState(false); // Track if address came from autocomplete
   const [invalidFields, setInvalidFields] = useState([]); // Track which fields are invalid
-  
+  const geocodeTimerRef = useRef(null);
+
   // Get current locale from localStorage (default: it-IT)
   const currentLocale =
     typeof window !== 'undefined' && typeof localStorage !== 'undefined'
@@ -190,8 +192,7 @@ const ListingConfigurationPage = ({
     } else {
       devLog('❌ currentUser, attributes, or profile not available');
       if (!currentUser) devLog('  - currentUser is null/undefined');
-      if (currentUser && !currentUser.attributes)
-        devLog('  - currentUser.attributes is missing');
+      if (currentUser && !currentUser.attributes) devLog('  - currentUser.attributes is missing');
       if (currentUser && currentUser.attributes && !currentUser.attributes.profile)
         devLog('  - currentUser.attributes.profile is missing');
     }
@@ -229,14 +230,14 @@ const ListingConfigurationPage = ({
         },
       ];
     }
-    
+
     // Sort exceptions by start date (first date in the exception)
     const sortedExceptions = updatedExceptions.sort((a, b) => {
       const dateA = a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
       const dateB = b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
       return dateA - dateB;
     });
-    
+
     setExceptions(sortedExceptions);
     setShowExceptionCalendar(false);
   };
@@ -363,13 +364,30 @@ const ListingConfigurationPage = ({
   };
 
   const handleManualAddressChange = (field, value) => {
-    setManualAddress({ ...manualAddress, [field]: value });
-    // Mark that user has changed a field
+    const newAddress = { ...manualAddress, [field]: value };
+    setManualAddress(newAddress);
     setAddressFieldsChanged(true);
-    // Remove field from invalid list when user starts typing
     if (invalidFields.includes(field) && value.trim()) {
       setInvalidFields(invalidFields.filter(f => f !== field));
     }
+
+    // Re-geocode after the user pauses typing so geolocation stays in sync with the address.
+    if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current);
+    geocodeTimerRef.current = setTimeout(async () => {
+      const addressLine = `${newAddress.street || ''}${
+        newAddress.streetNumber ? ' ' + newAddress.streetNumber : ''
+      }`.trim();
+      const fullAddress = [addressLine, newAddress.city, newAddress.postalCode, newAddress.country]
+        .filter(Boolean)
+        .join(', ');
+      if (!fullAddress) return;
+      try {
+        const geocoded = await geocodeAddress(fullAddress, newAddress.country || null);
+        setGeolocation(geocoded ? new LatLng(geocoded.lat, geocoded.lng) : null);
+      } catch (_err) {
+        setGeolocation(null);
+      }
+    }, 800);
   };
 
   // Tab Navigation
@@ -409,7 +427,7 @@ const ListingConfigurationPage = ({
   };
 
   // Submit Handler
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate price before submitting
     if (defaultPrice <= 0) {
       alert(
@@ -534,7 +552,7 @@ const ListingConfigurationPage = ({
       state = manualAddress.region?.trim() || '';
       postalCode = manualAddress.postalCode?.trim() || '';
       country = manualAddress.country?.trim() || '';
-      
+
       // Include geolocation if available and fields haven't been changed
       if (geolocation && !addressFieldsChanged) {
         finalGeolocation = {
@@ -545,15 +563,16 @@ const ListingConfigurationPage = ({
     } else if (locationAutocompleteValue.selectedPlace) {
       // From autocomplete
       const place = locationAutocompleteValue.selectedPlace;
-      addressLine1 = place.street && place.streetNumber 
-        ? `${place.street} ${place.streetNumber}`.trim()
-        : place.street || place.address || '';
+      addressLine1 =
+        place.street && place.streetNumber
+          ? `${place.street} ${place.streetNumber}`.trim()
+          : place.street || place.address || '';
       addressLine2 = null;
       city = place.city || '';
       state = place.state || '';
       postalCode = place.postalCode || '';
       country = place.country || '';
-      
+
       // Include geolocation from autocomplete if available
       if (place.origin) {
         finalGeolocation = {
@@ -563,9 +582,23 @@ const ListingConfigurationPage = ({
       }
     }
 
-    const fullAddress = [addressLine1, city, postalCode, country]
-      .filter(Boolean)
-      .join(', ');
+    const fullAddress = [addressLine1, city, postalCode, country].filter(Boolean).join(', ');
+
+    // If geolocation is still missing, try to geocode the address now so the listing is
+    // discoverable via the geographic bounds filter on the search page.
+    if (!finalGeolocation && fullAddress) {
+      try {
+        const geocoded = await geocodeAddress(fullAddress, country || null);
+        if (geocoded) {
+          finalGeolocation = { lat: geocoded.lat, lng: geocoded.lng };
+          devLog('✅ Geocoded at submit time:', finalGeolocation);
+        } else {
+          devLog('⚠️  Geocoding returned null at submit time');
+        }
+      } catch (err) {
+        devLog('⚠️  Geocoding failed at submit time:', err);
+      }
+    }
 
     const locationData = {
       address: fullAddress,
@@ -654,144 +687,144 @@ const ListingConfigurationPage = ({
           />
         </div>
 
-      {/* Exceptions */}
-      <div className={css.exceptionsSection}>
-        <div className={css.exceptionsHeader}>
-          <button
-            type="button"
-            className={css.infoIcon}
-            style={{
-              background: 'transparent',
-              border: `2px solid ${marketplaceColor}`,
-              color: marketplaceColor,
-            }}
-          >
-            i
-            <div className={css.tooltip}>
-              <p className={css.tooltipMessage}>
+        {/* Exceptions */}
+        <div className={css.exceptionsSection}>
+          <div className={css.exceptionsHeader}>
+            <button
+              type="button"
+              className={css.infoIcon}
+              style={{
+                background: 'transparent',
+                border: `2px solid ${marketplaceColor}`,
+                color: marketplaceColor,
+              }}
+            >
+              i
+              <div className={css.tooltip}>
+                <p className={css.tooltipMessage}>
+                  <FormattedMessage
+                    id="ListingConfiguration.exceptionInfoTooltip"
+                    defaultMessage="You can add availability exceptions even later"
+                  />
+                </p>
+              </div>
+            </button>
+            <span className={css.exceptionsQuestion}>
+              <FormattedMessage
+                id="ListingConfiguration.exceptionsQuestion"
+                defaultMessage="Sai già quando non sarà disponibile?"
+              />
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingException(null);
+                setNewVariant({ ...newVariant, dates: [] });
+                setShowExceptionCalendar(!showExceptionCalendar);
+              }}
+              className={css.addExceptionLink}
+              style={{ color: marketplaceColor }}
+            >
+              <FormattedMessage
+                id="ListingConfiguration.addException"
+                defaultMessage="+ Add availability exception"
+              />
+            </button>
+          </div>
+
+          {showExceptionCalendar && (
+            <div className={css.exceptionCalendar}>
+              <p className={css.exceptionInstructions}>
                 <FormattedMessage
-                  id="ListingConfiguration.exceptionInfoTooltip"
-                  defaultMessage="You can add availability exceptions even later"
+                  id="ListingConfiguration.exceptionInstructions"
+                  defaultMessage="Select a single day or a range of days when your item will NOT be available"
                 />
               </p>
-            </div>
-          </button>
-          <span className={css.exceptionsQuestion}>
-            <FormattedMessage
-              id="ListingConfiguration.exceptionsQuestion"
-              defaultMessage="Sai già quando non sarà disponibile?"
-            />
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setEditingException(null);
-              setNewVariant({ ...newVariant, dates: [] });
-              setShowExceptionCalendar(!showExceptionCalendar);
-            }}
-            className={css.addExceptionLink}
-            style={{ color: marketplaceColor }}
-          >
-            <FormattedMessage
-              id="ListingConfiguration.addException"
-              defaultMessage="+ Add availability exception"
-            />
-          </button>
-        </div>
-
-        {showExceptionCalendar && (
-          <div className={css.exceptionCalendar}>
-            <p className={css.exceptionInstructions}>
-              <FormattedMessage
-                id="ListingConfiguration.exceptionInstructions"
-                defaultMessage="Select a single day or a range of days when your item will NOT be available"
+              <AvailabilityCalendar
+                selectedDates={newVariant.dates}
+                onDatesChange={dates => setNewVariant({ ...newVariant, dates })}
+                selectMode="exception"
+                marketplaceColor={marketplaceColor}
+                availableFrom={availableFrom}
+                availableUntil={availableUntil}
+                disabledDates={exceptions
+                  .filter(exc => !editingException || exc.id !== editingException.id)
+                  .flatMap(exc => exc.dates)}
               />
-            </p>
-            <AvailabilityCalendar
-              selectedDates={newVariant.dates}
-              onDatesChange={dates => setNewVariant({ ...newVariant, dates })}
-              selectMode="exception"
-              marketplaceColor={marketplaceColor}
-              availableFrom={availableFrom}
-              availableUntil={availableUntil}
-              disabledDates={exceptions
-                .filter(exc => !editingException || exc.id !== editingException.id)
-                .flatMap(exc => exc.dates)}
-            />
-            <div className={css.exceptionActions}>
-              <button
-                type="button"
-                onClick={() => {
-                  handleAddException(newVariant.dates);
-                  setNewVariant({ ...newVariant, dates: [] });
-                }}
-                className={css.saveExceptionButton}
-                style={{ background: marketplaceColor }}
-                disabled={newVariant.dates.length === 0}
-              >
-                <FormattedMessage
-                  id="ListingConfiguration.saveException"
-                  defaultMessage="Save Exception"
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowExceptionCalendar(false);
-                  setEditingException(null);
-                  setNewVariant({ ...newVariant, dates: [] });
-                }}
-                className={css.cancelButton}
-              >
-                <FormattedMessage id="ListingConfiguration.cancel" defaultMessage="Cancel" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {exceptions.length > 0 && (
-          <div className={css.exceptionsList}>
-            {exceptions.map(exc => (
-              <div
-                key={exc.id}
-                className={css.exceptionCard}
-                onClick={() => handleEditException(exc)}
-                style={{ borderColor: marketplaceColor }}
-              >
-                <span className={css.exceptionDates}>{formatExceptionDates(exc.dates)}</span>
+              <div className={css.exceptionActions}>
                 <button
                   type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleRemoveException(exc.id);
+                  onClick={() => {
+                    handleAddException(newVariant.dates);
+                    setNewVariant({ ...newVariant, dates: [] });
                   }}
-                  className={css.removeButton}
-                  style={{ 
-                    position: 'absolute',
-                    top: '4px',
-                    right: '4px',
-                    background: 'var(--marketplaceColor)',
-                    color: 'white',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
+                  className={css.saveExceptionButton}
+                  style={{ background: marketplaceColor }}
+                  disabled={newVariant.dates.length === 0}
                 >
-                  ×
+                  <FormattedMessage
+                    id="ListingConfiguration.saveException"
+                    defaultMessage="Save Exception"
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExceptionCalendar(false);
+                    setEditingException(null);
+                    setNewVariant({ ...newVariant, dates: [] });
+                  }}
+                  className={css.cancelButton}
+                >
+                  <FormattedMessage id="ListingConfiguration.cancel" defaultMessage="Cancel" />
                 </button>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+            </div>
+          )}
+
+          {exceptions.length > 0 && (
+            <div className={css.exceptionsList}>
+              {exceptions.map(exc => (
+                <div
+                  key={exc.id}
+                  className={css.exceptionCard}
+                  onClick={() => handleEditException(exc)}
+                  style={{ borderColor: marketplaceColor }}
+                >
+                  <span className={css.exceptionDates}>{formatExceptionDates(exc.dates)}</span>
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleRemoveException(exc.id);
+                    }}
+                    className={css.removeButton}
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      background: 'var(--marketplaceColor)',
+                      color: 'white',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     );
   };
 
@@ -958,7 +991,11 @@ const ListingConfigurationPage = ({
                     }
                   );
                 }
-              } else if (variant.type === 'seasonality' && variant.dates && variant.dates.length > 0) {
+              } else if (
+                variant.type === 'seasonality' &&
+                variant.dates &&
+                variant.dates.length > 0
+              ) {
                 variantLabel = formatVariantDates(variant.dates);
               }
 
@@ -982,7 +1019,7 @@ const ListingConfigurationPage = ({
                       handleRemoveVariant(variant.id);
                     }}
                     className={css.removeButton}
-                    style={{ 
+                    style={{
                       position: 'absolute',
                       top: '4px',
                       right: '4px',
@@ -1209,7 +1246,9 @@ const ListingConfigurationPage = ({
                     availableFrom={(() => {
                       // Calculate availableFrom from selectedDates in availability tab
                       if (selectedDates && selectedDates.length > 0) {
-                        const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                        const sortedDates = [...selectedDates].sort(
+                          (a, b) => a.getTime() - b.getTime()
+                        );
                         return sortedDates[0].toISOString();
                       }
                       return null;
@@ -1217,7 +1256,9 @@ const ListingConfigurationPage = ({
                     availableUntil={(() => {
                       // Calculate availableUntil from selectedDates in availability tab
                       if (selectedDates && selectedDates.length > 0) {
-                        const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                        const sortedDates = [...selectedDates].sort(
+                          (a, b) => a.getTime() - b.getTime()
+                        );
                         return sortedDates[sortedDates.length - 1].toISOString();
                       }
                       return null;
@@ -1492,7 +1533,7 @@ const ListingConfigurationPage = ({
                   />
                 </div>
               </div>
-              
+
               {/* Apartment/Address line 2 (optional) */}
               <div className={css.fieldGroup}>
                 <label className={css.fieldLabel}>
@@ -1512,7 +1553,7 @@ const ListingConfigurationPage = ({
                   })}
                 />
               </div>
-              
+
               {/* Cascading dropdowns: Country -> State/Province -> City */}
               <AddressCascadingDropdowns
                 locale={currentLocale}
@@ -1536,7 +1577,7 @@ const ListingConfigurationPage = ({
                   handleManualAddressChange('city', cityName);
                 }}
               />
-              
+
               {/* Postal Code */}
               <div className={css.fieldGroup}>
                 <label className={css.fieldLabel}>

@@ -22,15 +22,13 @@ import devLog from '../../util/devLog';
 const deleteImageFromListing = (currentImages, imageUuid, listingId, config, sdk, dispatch) => {
   // Helper function to extract image ID (similar to EditListingPage.duck.js)
   const getImageId = img => img.imageId || img.id;
-  
+
   // Remove the image to delete from the images array
-  const imageIds = currentImages
-    .map(getImageId)
-    .filter(id => {
-      // Compare UUIDs - handle both UUID objects and string UUIDs
-      const idUuid = typeof id === 'object' ? id.uuid : id;
-      return idUuid !== imageUuid;
-    });
+  const imageIds = currentImages.map(getImageId).filter(id => {
+    // Compare UUIDs - handle both UUID objects and string UUIDs
+    const idUuid = typeof id === 'object' ? id.uuid : id;
+    return idUuid !== imageUuid;
+  });
 
   const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
   const queryParams = {
@@ -41,16 +39,17 @@ const deleteImageFromListing = (currentImages, imageUuid, listingId, config, sdk
   };
 
   // Update listing with new images array
-  return sdk.ownListings.update(
-    { id: listingId, images: imageIds },
-    queryParams
-  ).then(response => {
+  return sdk.ownListings.update({ id: listingId, images: imageIds }, queryParams).then(response => {
     // Refresh the listing in the store
     return dispatch(requestShowListing({ id: listingId }, config));
   });
 };
 import { requirePayoutDetails, isPriceVariationsEnabled } from '../../util/configHelpers';
-import { INQUIRY_PROCESS_NAME, isBookingProcess, resolveLatestProcessName } from '../../transactions/transaction';
+import {
+  INQUIRY_PROCESS_NAME,
+  isBookingProcess,
+  resolveLatestProcessName,
+} from '../../transactions/transaction';
 import { types as sdkTypes, createImageVariantConfig, createInstance } from '../../util/sdkLoader';
 import { getDefaultTimeZoneOnBrowser } from '../../util/dates';
 
@@ -94,10 +93,17 @@ import {
   fetchAvailabilityForCalendar,
   fetchAvailabilityExceptionsForModal,
 } from '../ListingPage/ListingPage.duck';
-import { getStripeConnectAccountLink, createStripeAccount, fetchStripeAccount } from '../../ducks/stripeConnectAccount.duck';
+import {
+  getStripeConnectAccountLink,
+  createStripeAccount,
+  fetchStripeAccount,
+} from '../../ducks/stripeConnectAccount.duck';
 import { sendVerificationEmail, fetchCurrentUser } from '../../ducks/user.duck';
 import EmailReminder from '../../components/ModalMissingInformation/EmailReminder';
-import productApiInstance, { createProductSnapshot, imageEntitiesToFiles } from '../../util/productApi';
+import productApiInstance, {
+  createProductSnapshot,
+  imageEntitiesToFiles,
+} from '../../util/productApi';
 import { DEFAULT_LOCALE } from '../../config/localeConfig';
 import {
   loadGuestListingData,
@@ -220,15 +226,15 @@ export const PreviewListingPageComponent = props => {
 
   const { id, returnURLType } = params;
   const listingId = id ? new UUID(id) : null;
-  
+
   // Check if this is a guest preview page
   const isGuestPreview = history?.location?.pathname === '/l/guest-preview-listing';
-  const isGuest = isGuestPreview || (!currentUser?.id);
-  
+  const isGuest = isGuestPreview || !currentUser?.id;
+
   // Load guest listing data if guest preview
   const [guestListingData, setGuestListingData] = useState(null);
   const [guestImages, setGuestImages] = useState([]);
-  
+
   useEffect(() => {
     if (isGuestPreview) {
       const saved = loadGuestListingData();
@@ -244,11 +250,11 @@ export const PreviewListingPageComponent = props => {
       }
     }
   }, [isGuestPreview, history]);
-  
+
   // Create virtual listing from guest data
   const guestListing = useMemo(() => {
     if (!isGuestPreview || !guestListingData) return null;
-    
+
     // Create a virtual listing object that matches the expected structure
     return {
       id: { uuid: 'guest-draft' },
@@ -277,25 +283,25 @@ export const PreviewListingPageComponent = props => {
       })),
     };
   }, [isGuestPreview, guestListingData, guestImages]);
-  
+
   // For guest preview, always use guest listing (even if null during loading)
   // For regular listings, use ensureOwnListing
   const currentListing = isGuestPreview
-    ? (guestListing || {
+    ? guestListing || {
         id: { uuid: 'guest-draft-loading' },
         type: 'ownListing',
         attributes: { publicData: {}, state: LISTING_STATE_DRAFT },
         images: [],
-      })
+      }
     : ensureOwnListing(getListing(listingId));
-  
+
   // Check if URL contains /draft parameter
   const isDraftPath = history?.location?.pathname?.includes('/draft') || false;
   const { state: currentListingState } = currentListing.attributes || {};
-  
+
   // Check if listing exists and is in draft state
   const isDraft = currentListingState === LISTING_STATE_DRAFT;
-  
+
   // Use draft path parameter or listing state to determine if it's a draft
   // Guest preview is always in draft mode
   const isDraftMode = isGuestPreview || isDraftPath || isDraft;
@@ -306,8 +312,13 @@ export const PreviewListingPageComponent = props => {
   const [modalOpen, setModalOpen] = useState({ payout: false, verification: false });
   const showPayoutModal = modalOpen.payout;
   const showVerificationModal = modalOpen.verification;
-  const setShowPayoutModal = v => setModalOpen(prev => ({ ...prev, payout: typeof v === 'function' ? v(prev.payout) : v }));
-  const setShowVerificationModal = v => setModalOpen(prev => ({ ...prev, verification: typeof v === 'function' ? v(prev.verification) : v }));
+  const setShowPayoutModal = v =>
+    setModalOpen(prev => ({ ...prev, payout: typeof v === 'function' ? v(prev.payout) : v }));
+  const setShowVerificationModal = v =>
+    setModalOpen(prev => ({
+      ...prev,
+      verification: typeof v === 'function' ? v(prev.verification) : v,
+    }));
   // Pre-select country based on locale (e.g., 'IT' for 'it-IT')
   const [selectedCountry, setSelectedCountry] = useState(() => getCountryForLocale(intl.locale));
   const [isCreatingStripeAccount, setIsCreatingStripeAccount] = useState(false);
@@ -321,7 +332,7 @@ export const PreviewListingPageComponent = props => {
   const [fieldValues, setFieldValues] = useState({});
   const [regeneratingField, setRegeneratingField] = useState(null);
   const [updatingListing, setUpdatingListing] = useState(false);
-  
+
   // Drag and drop state for key features
   const [hoveredFeatureIndex, setHoveredFeatureIndex] = useState(null);
   const [showAddFeatureInput, setShowAddFeatureInput] = useState(false);
@@ -330,7 +341,7 @@ export const PreviewListingPageComponent = props => {
   // Geocoded location state for addresses without geolocation
   const [geocodedLocation, setGeocodedLocation] = useState(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
-  
+
   // Track if we've already tried to fetch user location for this listing
   const [hasTriedFetchingUserLocation, setHasTriedFetchingUserLocation] = useState(false);
   const [isFetchingUserForLocation, setIsFetchingUserForLocation] = useState(false);
@@ -352,16 +363,20 @@ export const PreviewListingPageComponent = props => {
   const [drawerOpening, setDrawerOpening] = useState(null); // same values: drive open transition with class after first paint
 
   // Image deletion confirmation dialog state
-  const [imageDeleteDialog, setImageDeleteDialog] = useState({ show: false, id: null, index: null });
+  const [imageDeleteDialog, setImageDeleteDialog] = useState({
+    show: false,
+    id: null,
+    index: null,
+  });
   const showDeleteImageDialog = imageDeleteDialog.show;
   const imageToDelete = imageDeleteDialog.id;
   const imageToDeleteIndex = imageDeleteDialog.index;
-  
+
   // Notification banner state
   const [notificationTitle, setNotificationTitle] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [notificationType, setNotificationType] = useState('error');
-  
+
   // Original snapshot for change verification (only in draft mode)
   const [originalSnapshot, setOriginalSnapshot] = useState(null);
   const [originalListing, setOriginalListing] = useState(null); // Store complete original listing for restoration
@@ -371,7 +386,7 @@ export const PreviewListingPageComponent = props => {
   const [hasSensitiveFieldsChanged, setHasSensitiveFieldsChanged] = useState(false);
   const [showDeleteDraftDialog, setShowDeleteDraftDialog] = useState(false);
   const [hiddenImageIds, setHiddenImageIds] = useState(new Set()); // Track hidden images (UUIDs as strings)
-  
+
   // Location modal state
   const [locationAutocompleteValue, setLocationAutocompleteValue] = useState({
     search: '',
@@ -391,7 +406,8 @@ export const PreviewListingPageComponent = props => {
   const [invalidFields, setInvalidFields] = useState([]);
   const [modalLocationVisible, setModalLocationVisible] = useState(true);
   const [modalHandByHandAvailable, setModalHandByHandAvailable] = useState(false);
-  
+  const modalGeocodeTimerRef = useRef(null);
+
   // Cascading dropdowns state for address
   const [selectedCountryData, setSelectedCountryData] = useState(null);
   const [selectedStateData, setSelectedStateData] = useState(null);
@@ -421,14 +437,16 @@ export const PreviewListingPageComponent = props => {
   );
 
   // Confirm booking required: OFF = instant-booking, ON = default-booking (visible only for company users)
-  const transactionProcessAlias = currentListing?.attributes?.publicData?.transactionProcessAlias || '';
+  const transactionProcessAlias =
+    currentListing?.attributes?.publicData?.transactionProcessAlias || '';
   const initialConfirmBooking = transactionProcessAlias.startsWith('default-booking');
   const [confirmBookingRequired, setConfirmBookingRequired] = useState(initialConfirmBooking);
 
   // Update location visibility state when listing data changes (locationVisible always true)
   useEffect(() => {
     if (currentListing.attributes?.publicData) {
-      const newHandByHandAvailable = currentListing.attributes.publicData.handByHandAvailable || false;
+      const newHandByHandAvailable =
+        currentListing.attributes.publicData.handByHandAvailable || false;
 
       setLocationVisible(true);
       setHandByHandAvailable(newHandByHandAvailable);
@@ -465,7 +483,8 @@ export const PreviewListingPageComponent = props => {
 
   // Fetch availability from timeslots for calendar display (works for guests and owners, skip for guest preview)
   useEffect(() => {
-    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityForCalendar) return;
+    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityForCalendar)
+      return;
 
     const paddingOptions = {
       unavailabilityPaddingStart: config?.listing?.unavailabilityPaddingStart ?? 0,
@@ -481,11 +500,19 @@ export const PreviewListingPageComponent = props => {
         setAvailableDates([]);
         setDisabledDates([]);
       });
-  }, [currentListing.id, listingFetched, isGuestPreview, onFetchAvailabilityForCalendar, config?.listing?.unavailabilityPaddingStart, config?.listing?.unavailabilityPaddingEnd]);
+  }, [
+    currentListing.id,
+    listingFetched,
+    isGuestPreview,
+    onFetchAvailabilityForCalendar,
+    config?.listing?.unavailabilityPaddingStart,
+    config?.listing?.unavailabilityPaddingEnd,
+  ]);
 
   // Fetch availability exceptions for the edit modal (owner only - needed for add/remove exceptions UI)
   useEffect(() => {
-    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityExceptions) return;
+    if (!currentListing.id || !listingFetched || isGuestPreview || !onFetchAvailabilityExceptions)
+      return;
 
     onFetchAvailabilityExceptions(currentListing).then(setAvailabilityExceptions);
   }, [currentListing.id, listingFetched, isGuestPreview, onFetchAvailabilityExceptions]);
@@ -494,16 +521,17 @@ export const PreviewListingPageComponent = props => {
   const lastInitializedListingIdRef = useRef(null);
   // Prevent re-calling onUpdateListing for snapshot (avoids infinite loop when dispatch triggers re-render)
   const hasAttemptedSnapshotSaveRef = useRef(false);
-  
+
   // Initialize field values when listing is loaded
   useEffect(() => {
-    const listingIdUuid = currentListing.id?.uuid || (typeof currentListing.id === 'string' ? currentListing.id : null);
-    
+    const listingIdUuid =
+      currentListing.id?.uuid || (typeof currentListing.id === 'string' ? currentListing.id : null);
+
     // Only initialize if this is a new listing (ID changed)
     if (listingIdUuid && listingIdUuid !== lastInitializedListingIdRef.current) {
       lastInitializedListingIdRef.current = listingIdUuid;
       hasAttemptedSnapshotSaveRef.current = false;
-      
+
       const newFieldValues = {
         title: currentListing.attributes?.title || '',
         description: currentListing.attributes?.description || '',
@@ -511,21 +539,21 @@ export const PreviewListingPageComponent = props => {
         brand: currentListing.attributes?.publicData?.brand || '',
         condition: currentListing.attributes?.publicData?.condition || 'Used',
       };
-      
+
       setFieldValues(newFieldValues);
-      
+
       // Load or create original snapshot when listing is loaded in draft mode
       // Skip for guest preview (no real listing ID to update)
       if (isDraftMode && !originalSnapshot && !isGuestPreview && listingId) {
         const privateData = currentListing.attributes?.privateData || {};
         const savedOriginalSnapshot = privateData.originalSnapshot;
         const sensitiveFieldsModified = privateData.sensitiveFieldsModified || false;
-        
+
         if (savedOriginalSnapshot) {
           // Load original snapshot from privateData
           setOriginalSnapshot(savedOriginalSnapshot);
           setHasSensitiveFieldsChanged(sensitiveFieldsModified);
-          
+
           // Reconstruct originalListing from snapshot
           const publicData = currentListing.attributes?.publicData || {};
           const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
@@ -549,7 +577,7 @@ export const PreviewListingPageComponent = props => {
           hasAttemptedSnapshotSaveRef.current = true;
           const snapshot = createProductSnapshot(currentListing);
           setOriginalSnapshot(snapshot);
-          
+
           // Save complete listing for restoration
           setOriginalListing({
             title: currentListing.attributes?.title || '',
@@ -562,27 +590,31 @@ export const PreviewListingPageComponent = props => {
             })(),
             images: currentListing.images || [],
           });
-          
+
           // Save original snapshot to privateData (only for real listings, not guest preview)
-          onUpdateListing('details', {
-            id: listingId,
-            privateData: {
-              ...privateData,
-              originalSnapshot: snapshot,
-              sensitiveFieldsModified: false,
+          onUpdateListing(
+            'details',
+            {
+              id: listingId,
+              privateData: {
+                ...privateData,
+                originalSnapshot: snapshot,
+                sensitiveFieldsModified: false,
+              },
             },
-          }, config).catch(error => {
+            config
+          ).catch(error => {
             console.error('Failed to save original snapshot:', error);
           });
         }
-        
+
         // Reset hidden images when loading a new listing
         setHiddenImageIds(new Set());
       } else if (isDraftMode && !originalSnapshot && isGuestPreview) {
         // For guest preview, just create the snapshot locally without saving to API
         const snapshot = createProductSnapshot(currentListing);
         setOriginalSnapshot(snapshot);
-        
+
         // Save complete listing for restoration
         setOriginalListing({
           title: currentListing.attributes?.title || '',
@@ -595,7 +627,7 @@ export const PreviewListingPageComponent = props => {
           })(),
           images: currentListing.images || [],
         });
-        
+
         // Reset hidden images when loading a new listing
         setHiddenImageIds(new Set());
       }
@@ -621,13 +653,12 @@ export const PreviewListingPageComponent = props => {
   // This ensures we have the full stripeAccountData (not just the ID reference)
   const stripeAccountDataFromProps = stripeAccount?.attributes?.stripeAccountData;
   const needsStripeDataFetch = currentUserLoaded && !stripeAccountDataFromProps;
-  
+
   useEffect(() => {
     if (needsStripeDataFetch) {
-      onFetchStripeAccount()
-        .catch(() => {
-          // This is expected if user has no Stripe account yet
-        });
+      onFetchStripeAccount().catch(() => {
+        // This is expected if user has no Stripe account yet
+      });
     }
   }, [needsStripeDataFetch, onFetchStripeAccount]);
 
@@ -637,11 +668,13 @@ export const PreviewListingPageComponent = props => {
     const geolocation = location?.geolocation || null;
     const addressObj = location?.address || {};
     // Handle address as object or string
-    const addressString = typeof addressObj === 'string' 
-      ? addressObj 
-      : addressObj.street && addressObj.streetNumber
-      ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city || ''} ${addressObj.postalCode || ''}`.trim()
-      : addressObj.city || addressObj.address || '';
+    const addressString =
+      typeof addressObj === 'string'
+        ? addressObj
+        : addressObj.street && addressObj.streetNumber
+        ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city ||
+            ''} ${addressObj.postalCode || ''}`.trim()
+        : addressObj.city || addressObj.address || '';
 
     // Reset geocoded location if geolocation is available
     if (geolocation) {
@@ -654,7 +687,7 @@ export const PreviewListingPageComponent = props => {
     if (!geolocation && addressString) {
       setIsGeocoding(true);
       const countryCode = getCountryForLocale(intl.locale);
-      
+
       geocodeAddress(addressString, countryCode)
         .then(coords => {
           if (coords) {
@@ -692,33 +725,41 @@ export const PreviewListingPageComponent = props => {
     }
 
     const location = currentListing.attributes?.publicData?.location;
-    const hasLocation = location && (
-      location.address || 
-      location.geolocation ||
-      (typeof location.address === 'object' && (location.address.address || location.address.city))
-    );
+    const hasLocation =
+      location &&
+      (location.address ||
+        location.geolocation ||
+        (typeof location.address === 'object' &&
+          (location.address.address || location.address.city)));
 
     // If no location and user is authenticated, fetch user data to check for location
     // Only try once per listing
     if (!hasLocation && currentUserLoaded && onFetchCurrentUser && !hasTriedFetchingUserLocation) {
       setHasTriedFetchingUserLocation(true);
       setIsFetchingUserForLocation(true);
-      
+
       // Fetch user with profile included
-      onFetchCurrentUser({ 
+      onFetchCurrentUser({
         enforce: true,
-        callParams: { 
-          include: ['effectivePermissionSet', 'profileImage', 'stripeAccount', 'profile'] 
+        callParams: {
+          include: ['effectivePermissionSet', 'profileImage', 'stripeAccount', 'profile'],
         },
         updateHasListings: false,
         updateNotifications: false,
-      })
-        .catch(error => {
-          console.error('Failed to fetch current user for location prefill:', error);
-          setIsFetchingUserForLocation(false);
-        });
+      }).catch(error => {
+        console.error('Failed to fetch current user for location prefill:', error);
+        setIsFetchingUserForLocation(false);
+      });
     }
-  }, [listingFetched, currentListing?.id, currentListing?.attributes?.publicData?.location, currentUserLoaded, isGuestPreview, onFetchCurrentUser, hasTriedFetchingUserLocation]);
+  }, [
+    listingFetched,
+    currentListing?.id,
+    currentListing?.attributes?.publicData?.location,
+    currentUserLoaded,
+    isGuestPreview,
+    onFetchCurrentUser,
+    hasTriedFetchingUserLocation,
+  ]);
 
   // Handle location update after user is fetched
   useEffect(() => {
@@ -728,11 +769,12 @@ export const PreviewListingPageComponent = props => {
     }
 
     const location = currentListing.attributes?.publicData?.location;
-    const hasLocation = location && (
-      location.address || 
-      location.geolocation ||
-      (typeof location.address === 'object' && (location.address.address || location.address.city))
-    );
+    const hasLocation =
+      location &&
+      (location.address ||
+        location.geolocation ||
+        (typeof location.address === 'object' &&
+          (location.address.address || location.address.city)));
 
     if (hasLocation) {
       setIsFetchingUserForLocation(false);
@@ -741,7 +783,7 @@ export const PreviewListingPageComponent = props => {
 
     // Check if currentUser has been updated with profile data
     const userAddress = currentUser?.attributes?.profile?.privateData?.address;
-    
+
     if (userAddress && (userAddress.addressLine1 || userAddress.city || userAddress.postalCode)) {
       // Only attempt once per listing to avoid infinite loop (dispatch triggers re-render)
       if (hasAttemptedLocationUpdateRef.current) {
@@ -757,7 +799,7 @@ export const PreviewListingPageComponent = props => {
         userAddress.postalCode,
         userAddress.country,
       ].filter(Boolean);
-      
+
       const locationData = {
         address: addressParts.join(', '),
         ...(userAddress.addressLine1 && { addressLine1: userAddress.addressLine1 }),
@@ -794,27 +836,38 @@ export const PreviewListingPageComponent = props => {
     } else {
       setIsFetchingUserForLocation(false);
     }
-  }, [isFetchingUserForLocation, currentUser, currentListing, isGuestPreview, listingFetched, onUpdateListing, config]);
+  }, [
+    isFetchingUserForLocation,
+    currentUser,
+    currentListing,
+    isGuestPreview,
+    listingFetched,
+    onUpdateListing,
+    config,
+  ]);
 
   // Handler functions for editing
-  const handleEditField = useCallback(fieldName => {
-    // Disable editing for guest users
-    if (isGuestPreview) {
-      return;
-    }
+  const handleEditField = useCallback(
+    fieldName => {
+      // Disable editing for guest users
+      if (isGuestPreview) {
+        return;
+      }
 
-    // Evita la modifica di alcuni campi su annunci pubblicati (non draft)
-    if (
-      !isDraftMode &&
-      (fieldName === 'title' ||
-        fieldName === 'description' ||
-        fieldName === 'condition' ||
-        fieldName === 'brand')
-    ) {
-      return;
-    }
-    setEditingField(fieldName);
-  }, [isGuestPreview, isDraftMode]);
+      // Evita la modifica di alcuni campi su annunci pubblicati (non draft)
+      if (
+        !isDraftMode &&
+        (fieldName === 'title' ||
+          fieldName === 'description' ||
+          fieldName === 'condition' ||
+          fieldName === 'brand')
+      ) {
+        return;
+      }
+      setEditingField(fieldName);
+    },
+    [isGuestPreview, isDraftMode]
+  );
 
   // Verify changes before publishing (only in draft mode)
   const verifyChangesBeforePublish = async () => {
@@ -852,7 +905,10 @@ export const PreviewListingPageComponent = props => {
           imageFiles = await imageEntitiesToFiles(visibleImages);
         }
       } catch (imageError) {
-        console.warn('⚠️ Failed to convert images to files, continuing without images:', imageError);
+        console.warn(
+          '⚠️ Failed to convert images to files, continuing without images:',
+          imageError
+        );
         // Continue without images - backward compatible
         imageFiles = null;
       }
@@ -870,19 +926,31 @@ export const PreviewListingPageComponent = props => {
         // Build error message with confidence scores
         const lowConfidences = [];
         if (result.categoryConfidence < result.thresholds.category) {
-          lowConfidences.push(`categoria (${result.categoryConfidence}% < ${result.thresholds.category}%)`);
+          lowConfidences.push(
+            `categoria (${result.categoryConfidence}% < ${result.thresholds.category}%)`
+          );
         }
         if (result.subcategoryConfidence < result.thresholds.subcategory) {
-          lowConfidences.push(`sottocategoria (${result.subcategoryConfidence}% < ${result.thresholds.subcategory}%)`);
+          lowConfidences.push(
+            `sottocategoria (${result.subcategoryConfidence}% < ${result.thresholds.subcategory}%)`
+          );
         }
-        if (result.thirdCategoryConfidence !== undefined && result.thirdCategoryConfidence < (result.thresholds.thirdCategory || 70)) {
-          lowConfidences.push(`terza categoria (${result.thirdCategoryConfidence}% < ${result.thresholds.thirdCategory || 70}%)`);
+        if (
+          result.thirdCategoryConfidence !== undefined &&
+          result.thirdCategoryConfidence < (result.thresholds.thirdCategory || 70)
+        ) {
+          lowConfidences.push(
+            `terza categoria (${result.thirdCategoryConfidence}% < ${result.thresholds
+              .thirdCategory || 70}%)`
+          );
         }
 
         const errorMessage = intl.formatMessage(
           { id: 'PreviewListingPage.verificationError' },
           {
-            defaultMessage: `Le modifiche non sono coerenti con la categoria originale. Confidence bassa per: ${lowConfidences.join(', ')}. Si consiglia di modificare il contenuto per renderlo più coerente o di eliminare questo annuncio e crearne uno nuovo con immagini e categoria più appropriate.`,
+            defaultMessage: `Le modifiche non sono coerenti con la categoria originale. Confidence bassa per: ${lowConfidences.join(
+              ', '
+            )}. Si consiglia di modificare il contenuto per renderlo più coerente o di eliminare questo annuncio e crearne uno nuovo con immagini e categoria più appropriate.`,
             lowConfidences: lowConfidences.join(', '),
           }
         );
@@ -905,7 +973,8 @@ export const PreviewListingPageComponent = props => {
       const errorMessage = intl.formatMessage(
         { id: 'PreviewListingPage.verificationErrorNetwork' },
         {
-          defaultMessage: 'Impossibile verificare le modifiche. Si è verificato un errore di connessione. Riprova più tardi o elimina questo annuncio e crearne uno nuovo.',
+          defaultMessage:
+            'Impossibile verificare le modifiche. Si è verificato un errore di connessione. Riprova più tardi o elimina questo annuncio e crearne uno nuovo.',
         }
       );
 
@@ -970,30 +1039,34 @@ export const PreviewListingPageComponent = props => {
         let normalizedValue = value;
         if (fieldName === 'condition') {
           const conditionMap = {
-            'new': 'New',
+            new: 'New',
             'like new': 'Like New',
             'like-new': 'Like New',
-            'likenew': 'Like New',
-            'used': 'Used',
-            'refurbished': 'Refurbished',
-            'refurb': 'Refurbished',
+            likenew: 'Like New',
+            used: 'Used',
+            refurbished: 'Refurbished',
+            refurb: 'Refurbished',
           };
-          const lowerValue = String(value).trim().toLowerCase();
+          const lowerValue = String(value)
+            .trim()
+            .toLowerCase();
           normalizedValue = conditionMap[lowerValue] || String(value).trim();
         } else if (fieldName === 'brand') {
           // Normalize brand: always include it in publicData, even if "N/A"
           const normalizedBrand = String(value).trim();
           if (normalizedBrand === '') {
             normalizedValue = 'N/A';
-          } else if (normalizedBrand.toLowerCase() === 'n/a' || 
-                     normalizedBrand.toLowerCase() === 'na' ||
-                     normalizedBrand.toLowerCase() === 'n.a.') {
+          } else if (
+            normalizedBrand.toLowerCase() === 'n/a' ||
+            normalizedBrand.toLowerCase() === 'na' ||
+            normalizedBrand.toLowerCase() === 'n.a.'
+          ) {
             normalizedValue = 'N/A';
           } else {
             normalizedValue = normalizedBrand;
           }
         }
-        
+
         // Update publicData for brand and condition (always include brand, even if "N/A")
         updateData.id = listingId;
         updateData.publicData = {
@@ -1008,12 +1081,12 @@ export const PreviewListingPageComponent = props => {
       }
 
       await onUpdateListing('details', updateData, config);
-      
+
       // Clear verification error on successful save
       setVerificationError(null);
       setNotificationTitle(null);
       setNotificationMessage(null);
-      
+
       setEditingField(null);
     } catch (error) {
       console.error('Failed to update listing:', error);
@@ -1025,30 +1098,36 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleCancelEdit = useCallback(fieldName => {
-    // Restore original value
-    if (fieldName === 'title') {
-      setFieldValues(prev => ({ ...prev, title: currentListing.attributes?.title || '' }));
-    } else if (fieldName === 'description') {
-      setFieldValues(prev => ({ ...prev, description: currentListing.attributes?.description || '' }));
-    } else if (fieldName === 'price') {
-      setFieldValues(prev => ({
-        ...prev,
-        price: currentListing.attributes?.price?.amount / 100 || 0,
-      }));
-    } else if (fieldName === 'brand') {
-      setFieldValues(prev => ({
-        ...prev,
-        brand: currentListing.attributes?.publicData?.brand || '',
-      }));
-    } else if (fieldName === 'condition') {
-      setFieldValues(prev => ({
-        ...prev,
-        condition: currentListing.attributes?.publicData?.condition || 'Used',
-      }));
-    }
-    setEditingField(null);
-  }, [currentListing]);
+  const handleCancelEdit = useCallback(
+    fieldName => {
+      // Restore original value
+      if (fieldName === 'title') {
+        setFieldValues(prev => ({ ...prev, title: currentListing.attributes?.title || '' }));
+      } else if (fieldName === 'description') {
+        setFieldValues(prev => ({
+          ...prev,
+          description: currentListing.attributes?.description || '',
+        }));
+      } else if (fieldName === 'price') {
+        setFieldValues(prev => ({
+          ...prev,
+          price: currentListing.attributes?.price?.amount / 100 || 0,
+        }));
+      } else if (fieldName === 'brand') {
+        setFieldValues(prev => ({
+          ...prev,
+          brand: currentListing.attributes?.publicData?.brand || '',
+        }));
+      } else if (fieldName === 'condition') {
+        setFieldValues(prev => ({
+          ...prev,
+          condition: currentListing.attributes?.publicData?.condition || 'Used',
+        }));
+      }
+      setEditingField(null);
+    },
+    [currentListing]
+  );
 
   const handleChangeField = useCallback((fieldName, value) => {
     setFieldValues(prev => ({ ...prev, [fieldName]: value }));
@@ -1056,7 +1135,15 @@ export const PreviewListingPageComponent = props => {
 
   // Check if a sensitive/editable field has actually changed from its original value (for save button enable/disable)
   const hasSensitiveFieldChanged = fieldName => {
-    const conditionMap = { 'new': 'New', 'like new': 'Like New', 'like-new': 'Like New', 'likenew': 'Like New', 'used': 'Used', 'refurbished': 'Refurbished', 'refurb': 'Refurbished' };
+    const conditionMap = {
+      new: 'New',
+      'like new': 'Like New',
+      'like-new': 'Like New',
+      likenew: 'Like New',
+      used: 'Used',
+      refurbished: 'Refurbished',
+      refurb: 'Refurbished',
+    };
     const current = (fieldValues[fieldName] ?? '').toString().trim();
     let original = '';
     if (fieldName === 'title') {
@@ -1077,10 +1164,12 @@ export const PreviewListingPageComponent = props => {
   };
 
   // Helper to get key features field name
-  const getKeyFeaturesFieldName = (publicData) => {
-    return publicData.keyFeatures ? 'keyFeatures' :
-           publicData.key_features ? 'key_features' :
-           'keyFeatures'; // default
+  const getKeyFeaturesFieldName = publicData => {
+    return publicData.keyFeatures
+      ? 'keyFeatures'
+      : publicData.key_features
+      ? 'key_features'
+      : 'keyFeatures'; // default
   };
 
   // Reset listing to original state
@@ -1093,15 +1182,15 @@ export const PreviewListingPageComponent = props => {
     try {
       // Step 1: Refetch listing to get current state
       await onFetchListing({ id: listingId }, config);
-      
+
       // Step 2: Get original image UUIDs from the snapshot
       const originalImageUuids = originalSnapshot?.images || [];
       // Normalize original UUIDs to strings for comparison
       const originalImageUuidsStr = originalImageUuids.map(uuid => String(uuid));
-      
+
       // Step 3: Get current images after refetch
       const allCurrentImages = getAllImages();
-      
+
       // Step 4: Find images that need to be deleted (not in original snapshot)
       const imagesToDeleteUuids = [];
       allCurrentImages.forEach(img => {
@@ -1112,7 +1201,7 @@ export const PreviewListingPageComponent = props => {
           imagesToDeleteUuids.push(imgUuidStr);
         }
       });
-      
+
       // Step 5: Update hiddenImageIds in one operation:
       // - Remove original images from hidden (show them)
       // - Add new images to hidden (hide them before deletion)
@@ -1132,7 +1221,7 @@ export const PreviewListingPageComponent = props => {
         imagesToDeleteUuids.forEach(uuid => newSet.add(uuid));
         return newSet;
       });
-      
+
       // Step 7: Delete the hidden images (non-original ones)
       let imagesDeleted = 0;
       for (const hiddenUuid of imagesToDeleteUuids) {
@@ -1141,7 +1230,7 @@ export const PreviewListingPageComponent = props => {
           const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
           return String(imgUuid) === hiddenUuid;
         });
-        
+
         if (imageToDelete) {
           const imageIdToDelete = imageToDelete.imageId || imageToDelete.id;
           try {
@@ -1152,14 +1241,14 @@ export const PreviewListingPageComponent = props => {
           }
         }
       }
-      
+
       // Step 8: Clear hiddenImageIds since we're restoring to original state
       setHiddenImageIds(new Set());
 
       // Step 9: Update listing with original values
       const publicData = currentListing.attributes?.publicData || {};
       const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
-      
+
       // Prepare update data to restore original values
       const updateData = {
         id: listingId,
@@ -1175,43 +1264,49 @@ export const PreviewListingPageComponent = props => {
       // Update privateData to reset sensitiveFieldsModified flag
       const privateData = currentListing.attributes?.privateData || {};
       const originalSnapshotFromPrivate = privateData.originalSnapshot;
-      
-      await onUpdateListing('details', {
-        ...updateData,
-        privateData: {
-          ...privateData,
-          sensitiveFieldsModified: false,
-          // Keep original snapshot in privateData
-          originalSnapshot: originalSnapshotFromPrivate,
+
+      await onUpdateListing(
+        'details',
+        {
+          ...updateData,
+          privateData: {
+            ...privateData,
+            sensitiveFieldsModified: false,
+            // Keep original snapshot in privateData
+            originalSnapshot: originalSnapshotFromPrivate,
+          },
         },
-      }, config);
-      
+        config
+      );
+
       // Step 10: Final refetch to see restored values
       await onFetchListing({ id: listingId }, config);
-      
+
       // Reset tracking state
       setHasSensitiveFieldsChanged(false);
       setVerificationError(null);
       setNotificationTitle(null);
       setNotificationMessage(null);
-      
+
       // Update original snapshot and listing after successful reset
       // Use the original snapshot from privateData if available
-      const updatedSnapshot = originalSnapshotFromPrivate || createProductSnapshot({
-        attributes: {
-          ...currentListing.attributes,
-          title: originalListing.title,
-          description: originalListing.description,
-          publicData: {
-            ...currentListing.attributes?.publicData,
-            brand: originalListing.brand,
-            [keyFeaturesFieldName]: originalListing.keyFeatures,
+      const updatedSnapshot =
+        originalSnapshotFromPrivate ||
+        createProductSnapshot({
+          attributes: {
+            ...currentListing.attributes,
+            title: originalListing.title,
+            description: originalListing.description,
+            publicData: {
+              ...currentListing.attributes?.publicData,
+              brand: originalListing.brand,
+              [keyFeaturesFieldName]: originalListing.keyFeatures,
+            },
           },
-        },
-        images: originalListing.images,
-      });
+          images: originalListing.images,
+        });
       setOriginalSnapshot(updatedSnapshot);
-      
+
       // Update originalListing to reflect current state after restoration
       setOriginalListing({
         title: originalListing.title,
@@ -1220,7 +1315,7 @@ export const PreviewListingPageComponent = props => {
         keyFeatures: originalListing.keyFeatures,
         images: originalListing.images,
       });
-      
+
       // Update field values to match restored listing
       setFieldValues({
         title: originalListing.title,
@@ -1250,25 +1345,29 @@ export const PreviewListingPageComponent = props => {
   };
 
   // Helper function to save sensitiveFieldsModified flag to privateData
-  const saveSensitiveFieldsModified = async (modified) => {
+  const saveSensitiveFieldsModified = async modified => {
     if (!isDraftMode) return;
-    
+
     try {
       const privateData = currentListing.attributes?.privateData || {};
-      await onUpdateListing('details', {
-        id: listingId,
-        privateData: {
-          ...privateData,
-          sensitiveFieldsModified: modified,
+      await onUpdateListing(
+        'details',
+        {
+          id: listingId,
+          privateData: {
+            ...privateData,
+            sensitiveFieldsModified: modified,
+          },
         },
-      }, config);
+        config
+      );
     } catch (error) {
       console.error('Failed to save sensitiveFieldsModified flag:', error);
     }
   };
 
   // Handler for removing a key feature
-  const handleRemoveKeyFeature = async (indexToRemove) => {
+  const handleRemoveKeyFeature = async indexToRemove => {
     // Non consentire modifiche dei dettagli se l'annuncio è pubblicato
     if (!isDraftMode) {
       return;
@@ -1276,15 +1375,15 @@ export const PreviewListingPageComponent = props => {
     const publicData = currentListing.attributes?.publicData || {};
     const keyFeaturesFieldName = getKeyFeaturesFieldName(publicData);
     const currentKeyFeatures = publicData[keyFeaturesFieldName] || [];
-    const updatedKeyFeatures = Array.isArray(currentKeyFeatures) 
+    const updatedKeyFeatures = Array.isArray(currentKeyFeatures)
       ? currentKeyFeatures.filter((_, index) => index !== indexToRemove)
       : [];
-    
+
     // Track that sensitive fields have changed
     setHasSensitiveFieldsChanged(true);
     // Save flag to privateData
     await saveSensitiveFieldsModified(true);
-    
+
     setUpdatingListing(true);
     try {
       const updateData = {
@@ -1295,7 +1394,7 @@ export const PreviewListingPageComponent = props => {
         },
       };
       await onUpdateListing('details', updateData, config);
-      
+
       // Clear verification error on successful save
       setVerificationError(null);
       setNotificationTitle(null);
@@ -1319,14 +1418,17 @@ export const PreviewListingPageComponent = props => {
       return;
     }
     if (!newFeature.trim()) return;
-    
-    const updatedFeatures = [...(Array.isArray(currentFeatures) ? currentFeatures : []), newFeature.trim()];
-    
+
+    const updatedFeatures = [
+      ...(Array.isArray(currentFeatures) ? currentFeatures : []),
+      newFeature.trim(),
+    ];
+
     // Track that sensitive fields have changed
     setHasSensitiveFieldsChanged(true);
     // Save flag to privateData
     await saveSensitiveFieldsModified(true);
-    
+
     setUpdatingListing(true);
     try {
       const updateData = {
@@ -1337,7 +1439,7 @@ export const PreviewListingPageComponent = props => {
         },
       };
       await onUpdateListing('details', updateData, config);
-      
+
       // Clear verification error on successful save
       setVerificationError(null);
       setNotificationTitle(null);
@@ -1352,13 +1454,16 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleImageClick = useCallback(index => {
-    const visibleImages = getVisibleImages(currentListing.images || []);
-    if (index >= 0 && index < visibleImages.length) {
-      setSelectedImageIndex(index);
-      setShowImageModal(true);
-    }
-  }, [currentListing]);
+  const handleImageClick = useCallback(
+    index => {
+      const visibleImages = getVisibleImages(currentListing.images || []);
+      if (index >= 0 && index < visibleImages.length) {
+        setSelectedImageIndex(index);
+        setShowImageModal(true);
+      }
+    },
+    [currentListing]
+  );
 
   const handleCloseImageModal = useCallback(() => {
     setShowImageModal(false);
@@ -1387,10 +1492,10 @@ export const PreviewListingPageComponent = props => {
     }
   }, [currentListing]);
 
-  const handleHandByHandToggle = async (e) => {
+  const handleHandByHandToggle = async e => {
     e?.preventDefault();
     e?.stopPropagation();
-    
+
     if (!listingId) {
       console.error('Listing ID is missing');
       return;
@@ -1420,7 +1525,7 @@ export const PreviewListingPageComponent = props => {
     }
   };
 
-  const handleConfirmBookingToggle = async (e) => {
+  const handleConfirmBookingToggle = async e => {
     e?.preventDefault();
     e?.stopPropagation();
 
@@ -1434,7 +1539,9 @@ export const PreviewListingPageComponent = props => {
 
     setConfirmBookingRequired(newValue);
 
-    const newTransactionProcessAlias = newValue ? 'default-booking/release-1' : 'instant-booking/release-1';
+    const newTransactionProcessAlias = newValue
+      ? 'default-booking/release-1'
+      : 'instant-booking/release-1';
 
     try {
       await onUpdateListing(
@@ -1459,7 +1566,7 @@ export const PreviewListingPageComponent = props => {
     if (isGuestPreview) {
       return;
     }
-    
+
     // Niente upload immagini se l'annuncio non è in bozza
     if (!isDraftMode) {
       return;
@@ -1508,12 +1615,12 @@ export const PreviewListingPageComponent = props => {
     if (isGuestPreview) {
       return;
     }
-    
+
     // No image replacement for published listing
     if (!isDraftMode) {
       return;
     }
-    
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -1531,11 +1638,11 @@ export const PreviewListingPageComponent = props => {
 
     setUploadingImage(true);
     setDeletingImageId(imageId);
-    
+
     try {
       // Extract UUID from imageId
       const imgUuid = imageId.uuid || (typeof imageId === 'string' ? imageId : imageId.toString());
-      
+
       if (!imgUuid) {
         console.error('❌ Cannot replace image: UUID is missing');
         throw new Error('Image UUID is missing');
@@ -1586,16 +1693,19 @@ export const PreviewListingPageComponent = props => {
 
   // Helper to get visible images (filter out hidden ones and thumbnail-only image)
   const thumbnailImageId = currentListing?.attributes?.publicData?.thumbnailImageId;
-  const getVisibleImages = useCallback((images) => {
-    if (!images || !Array.isArray(images)) return [];
-    return images.filter(img => {
-      const imgId = img.imageId || img.id;
-      const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
-      if (hiddenImageIds.has(imgUuid)) return false;
-      if (thumbnailImageId && imgUuid === thumbnailImageId) return false;
-      return true;
-    });
-  }, [hiddenImageIds, thumbnailImageId]);
+  const getVisibleImages = useCallback(
+    images => {
+      if (!images || !Array.isArray(images)) return [];
+      return images.filter(img => {
+        const imgId = img.imageId || img.id;
+        const imgUuid = typeof imgId === 'object' ? imgId.uuid : imgId;
+        if (hiddenImageIds.has(imgUuid)) return false;
+        if (thumbnailImageId && imgUuid === thumbnailImageId) return false;
+        return true;
+      });
+    },
+    [hiddenImageIds, thumbnailImageId]
+  );
 
   // Helper to get all images including hidden ones (for restoration)
   const getAllImages = () => {
@@ -1621,27 +1731,29 @@ export const PreviewListingPageComponent = props => {
 
     setImageDeleteDialog({ show: false, id: null, index: null });
     setDeletingImageId(imageToDelete);
-    
-    try { 
+
+    try {
       // imageToDelete is the image ID object (UUID), extract UUID directly
-      const imgUuid = imageToDelete.uuid || (typeof imageToDelete === 'string' ? imageToDelete : imageToDelete.toString());
-      
+      const imgUuid =
+        imageToDelete.uuid ||
+        (typeof imageToDelete === 'string' ? imageToDelete : imageToDelete.toString());
+
       if (!imgUuid) {
         console.error('❌ Cannot delete image: UUID is missing');
         throw new Error('Image UUID is missing');
       }
-      
+
       // Check if image is in original snapshot
       const originalImageUuids = originalSnapshot?.images || [];
       const isOriginalImage = originalImageUuids.includes(imgUuid);
-      
+
       if (isOriginalImage) {
         // Image is in original snapshot: hide it instead of deleting
         setHiddenImageIds(prev => {
           const newSet = new Set([...prev, imgUuid]);
           return newSet;
         });
-        
+
         // Track that sensitive fields (images) have changed
         setHasSensitiveFieldsChanged(true);
         // Save flag to privateData
@@ -1649,11 +1761,11 @@ export const PreviewListingPageComponent = props => {
       } else {
         // Image was added later: delete it permanently
         const allImages = getAllImages();
-        
+
         // imageToDelete is already the image ID (can be object or string)
         // Pass it directly to onDeleteImage which will extract the UUID
         await onDeleteImage(listingId, imageToDelete, allImages, config);
-        
+
         // Reload listing to get updated image list
         await onFetchListing({ id: listingId }, config);
       }
@@ -1744,8 +1856,9 @@ export const PreviewListingPageComponent = props => {
   // 4. stripeAccountData exists (account is actually linked and has data)
   const stripeAccountData = stripeAccount ? getStripeAccountData(stripeAccount) : null;
   const hasValidStripeAccountData = !!stripeAccountData;
-  const stripeConnected = currentUserLoaded && !!stripeAccount && !!stripeAccount.id && hasValidStripeAccountData;
-  
+  const stripeConnected =
+    currentUserLoaded && !!stripeAccount && !!stripeAccount.id && hasValidStripeAccountData;
+
   const stripeRequirementsMissing =
     stripeAccount &&
     stripeAccountData &&
@@ -1754,20 +1867,24 @@ export const PreviewListingPageComponent = props => {
 
   // For guest preview, listing always exists (it's virtual)
   const listingNotFound = listingFetched && !isGuestPreview && !currentListing.id;
-  
+
   // Redirect to correct URL based on listing state
   // Skip this redirect for guest preview (no real listing ID)
   useEffect(() => {
     if (isGuestPreview) {
       return; // Don't redirect guest preview pages
     }
-    
+
     if (listingFetched && currentListing.id && history?.location?.pathname && id) {
       const currentPath = history.location.pathname;
       const expectedPath = isDraft ? `/l/edit/${id}/draft` : `/l/edit/${id}`;
-      
+
       // If URL doesn't match the expected path, redirect
-      if (currentPath !== expectedPath && !currentPath.includes('/success') && !currentPath.includes('/failure')) {
+      if (
+        currentPath !== expectedPath &&
+        !currentPath.includes('/success') &&
+        !currentPath.includes('/failure')
+      ) {
         history.replace(expectedPath);
       }
     }
@@ -1794,48 +1911,52 @@ export const PreviewListingPageComponent = props => {
   const returnedFromStripe = returnURLType === STRIPE_ONBOARDING_RETURN_URL_SUCCESS;
 
   // Helper function to handle successful publish
-  const handleSuccessfulPublish = useCallback((publishedListingResponse) => {
-    if (!publishedListingResponse) {
-      setHasPublished(false);
-      setIsPublishing(false);
-      return;
-    }
+  const handleSuccessfulPublish = useCallback(
+    publishedListingResponse => {
+      if (!publishedListingResponse) {
+        setHasPublished(false);
+        setIsPublishing(false);
+        return;
+      }
 
-    setHasPublished(true);
-    setIsPublishing(false);
-    // Extract title from published listing or use current title
-    // SDK response structure: response.data.data contains the listing
-    const publishedListing = publishedListingResponse?.data?.data;
-    
-    if (!publishedListing) {
-      setHasPublished(false);
+      setHasPublished(true);
       setIsPublishing(false);
-      return;
-    }
+      // Extract title from published listing or use current title
+      // SDK response structure: response.data.data contains the listing
+      const publishedListing = publishedListingResponse?.data?.data;
 
-    // Verify listing is actually published (not draft)
-    const listingState = publishedListing?.attributes?.state;
-    if (listingState === LISTING_STATE_DRAFT) {
-      setHasPublished(false);
-      setIsPublishing(false);
-      return;
-    }
+      if (!publishedListing) {
+        setHasPublished(false);
+        setIsPublishing(false);
+        return;
+      }
 
-    const title = publishedListing?.attributes?.title || currentListing?.attributes?.title || 'listing';
-    const publishedListingId = publishedListing?.id || listingId;
-    
-    // Use the published listing ID (should be the same, but just in case)
-    const listingIdUuid = publishedListingId?.uuid || listingId.uuid;
-    
-    // Redirect to product page
-    const listingPath = createResourceLocatorString(
-      'ProductPage',
-      routeConfiguration,
-      { id: listingIdUuid, slug: createSlug(title) },
-      {}
-    );
-    history.push(listingPath);
-  }, [currentListing, listingId, routeConfiguration, history]);
+      // Verify listing is actually published (not draft)
+      const listingState = publishedListing?.attributes?.state;
+      if (listingState === LISTING_STATE_DRAFT) {
+        setHasPublished(false);
+        setIsPublishing(false);
+        return;
+      }
+
+      const title =
+        publishedListing?.attributes?.title || currentListing?.attributes?.title || 'listing';
+      const publishedListingId = publishedListing?.id || listingId;
+
+      // Use the published listing ID (should be the same, but just in case)
+      const listingIdUuid = publishedListingId?.uuid || listingId.uuid;
+
+      // Redirect to product page
+      const listingPath = createResourceLocatorString(
+        'ProductPage',
+        routeConfiguration,
+        { id: listingIdUuid, slug: createSlug(title) },
+        {}
+      );
+      history.push(listingPath);
+    },
+    [currentListing, listingId, routeConfiguration, history]
+  );
 
   const handleDeleteDraft = useCallback(async () => {
     // For guest preview, just clear localStorage
@@ -1852,7 +1973,14 @@ export const PreviewListingPageComponent = props => {
 
     // Show confirmation dialog instead of window.confirm
     setShowDeleteDraftDialog(true);
-  }, [isDraftMode, listingId, isGuestPreview, clearGuestListingData, clearGuestListingPendingPublish, history]);
+  }, [
+    isDraftMode,
+    listingId,
+    isGuestPreview,
+    clearGuestListingData,
+    clearGuestListingPendingPublish,
+    history,
+  ]);
 
   const handleConfirmDeleteDraft = useCallback(async () => {
     if (!isDraftMode || !listingId) {
@@ -1876,7 +2004,7 @@ export const PreviewListingPageComponent = props => {
       setNotificationMessage(
         intl.formatMessage(
           { id: 'PreviewListingPage.deleteDraftError' },
-          { defaultMessage: 'Impossibile eliminare l\'annuncio. Riprova più tardi.' }
+          { defaultMessage: "Impossibile eliminare l'annuncio. Riprova più tardi." }
         )
       );
       setNotificationType('error');
@@ -1909,12 +2037,7 @@ export const PreviewListingPageComponent = props => {
     // If guest user (not authenticated), redirect to login with flag to create draft after authentication
     if (!currentUserLoaded || !currentUser?.id) {
       setGuestListingPendingPublish();
-      const loginPath = createResourceLocatorString(
-        'LoginPage',
-        routeConfiguration,
-        {},
-        {}
-      );
+      const loginPath = createResourceLocatorString('LoginPage', routeConfiguration, {}, {});
       history.push({
         pathname: loginPath,
         state: { from: '/l/guest-preview-listing' },
@@ -2077,7 +2200,7 @@ export const PreviewListingPageComponent = props => {
     if (returnedFromStripe && !isCheckingStripeStatus) {
       setIsCreatingStripeAccount(false);
       setIsCheckingStripeStatus(true);
-      
+
       // Reload Stripe account data to get updated information
       onFetchStripeAccount()
         .then(() => {
@@ -2091,7 +2214,11 @@ export const PreviewListingPageComponent = props => {
 
   // Close verification modal when email is verified
   useEffect(() => {
-    if (currentUserLoaded && ensuredCurrentUser.attributes?.emailVerified && showVerificationModal) {
+    if (
+      currentUserLoaded &&
+      ensuredCurrentUser.attributes?.emailVerified &&
+      showVerificationModal
+    ) {
       setShowVerificationModal(false);
     }
   }, [currentUserLoaded, ensuredCurrentUser.attributes?.emailVerified, showVerificationModal]);
@@ -2099,7 +2226,7 @@ export const PreviewListingPageComponent = props => {
   // Separate effect to handle auto-publish after account data is loaded
   // Use a ref to track if we've already attempted to publish to prevent loops
   const publishAttemptedRef = useRef(false);
-  
+
   useEffect(() => {
     // Only auto-publish if we returned from Stripe AND account is complete
     // Make sure we're not in the middle of creating an account and haven't already published
@@ -2140,7 +2267,11 @@ export const PreviewListingPageComponent = props => {
   }, [intl.locale]);
 
   // Helper to get Stripe account link after account is created/exists
-  const getStripeAccountLinkAndRedirect = (accountId, isNewAccount = false, needsVerification = false) => {
+  const getStripeAccountLinkAndRedirect = (
+    accountId,
+    isNewAccount = false,
+    needsVerification = false
+  ) => {
     const rootURL = config.marketplaceRootURL;
     const draftPath = isDraftMode ? '/draft' : '';
     const successURL = `${rootURL}/l/edit/${listingId.uuid}${draftPath}/${STRIPE_ONBOARDING_RETURN_URL_SUCCESS}`;
@@ -2179,7 +2310,7 @@ export const PreviewListingPageComponent = props => {
       const needsVerification = stripeRequirementsMissing;
       // Extract UUID string from UUID object
       const accountIdString = stripeAccount.id?.uuid || stripeAccount.id;
-      
+
       getStripeAccountLinkAndRedirect(accountIdString, false, needsVerification);
     } else {
       // No account - need to create one first
@@ -2192,12 +2323,18 @@ export const PreviewListingPageComponent = props => {
 
       // Create business profile URL (user's profile page)
       const pathToProfilePage = ensuredCurrentUser?.id?.uuid
-        ? createResourceLocatorString('ProfilePage', routeConfiguration, { id: ensuredCurrentUser.id.uuid }, {})
+        ? createResourceLocatorString(
+            'ProfilePage',
+            routeConfiguration,
+            { id: ensuredCurrentUser.id.uuid },
+            {}
+          )
         : '/';
       const rootUrl = config.marketplaceRootURL?.replace(/\/$/, '') || '';
-      const businessProfileURL = rootUrl && !rootUrl.includes('localhost')
-        ? `${rootUrl}${pathToProfilePage}?mode=storefront`
-        : `https://test-marketplace.com${pathToProfilePage}?mode=storefront`;
+      const businessProfileURL =
+        rootUrl && !rootUrl.includes('localhost')
+          ? `${rootUrl}${pathToProfilePage}?mode=storefront`
+          : `https://test-marketplace.com${pathToProfilePage}?mode=storefront`;
 
       const createParams = {
         country: selectedCountry,
@@ -2206,7 +2343,7 @@ export const PreviewListingPageComponent = props => {
         businessProfileURL,
         stripePublishableKey: config.stripe?.publishableKey,
       };
-      
+
       onCreateStripeAccount(createParams)
         .then(newStripeAccount => {
           // Account created, now get the onboarding link and redirect immediately
@@ -2232,23 +2369,25 @@ export const PreviewListingPageComponent = props => {
       const defaultPrice = currentListing.attributes.price.amount;
       setModalDefaultPrice(defaultPrice);
       const priceVariants = currentListing.attributes.publicData?.priceVariants || [];
-      setModalPriceVariants(priceVariants.map(v => {
-        // Determine type from variant data if not present
-        let variantType = v.type;
-        if (!variantType) {
-          // Infer type from fields
-          if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
-            variantType = 'period';
-          } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
-            variantType = 'duration';
+      setModalPriceVariants(
+        priceVariants.map(v => {
+          // Determine type from variant data if not present
+          let variantType = v.type;
+          if (!variantType) {
+            // Infer type from fields
+            if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
+              variantType = 'period';
+            } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
+              variantType = 'duration';
+            }
           }
-        }
-        return {
-          ...v,
-          type: variantType || 'duration', // Default to duration if cannot determine
-          id: v.id || Date.now().toString() + Math.random(),
-        };
-      }));
+          return {
+            ...v,
+            type: variantType || 'duration', // Default to duration if cannot determine
+            id: v.id || Date.now().toString() + Math.random(),
+          };
+        })
+      );
       setShowAddPriceVariant(false);
       setEditingPriceVariant(null);
       setNewPriceVariant({
@@ -2261,13 +2400,17 @@ export const PreviewListingPageComponent = props => {
       });
       previousPercentageDiscountRef.current = 50;
     }
-  }, [showPriceModal, currentListing.attributes?.price, currentListing.attributes?.publicData?.priceVariants]);
+  }, [
+    showPriceModal,
+    currentListing.attributes?.price,
+    currentListing.attributes?.publicData?.priceVariants,
+  ]);
 
   // Handle click outside availability modal/drawer to close it (cancels unsaved changes)
   useEffect(() => {
     if (!showAvailabilityModal) return;
 
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
       const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
       if (!modalContainer && backdrop) {
@@ -2289,7 +2432,7 @@ export const PreviewListingPageComponent = props => {
   useEffect(() => {
     if (!showPriceModal) return;
 
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
       const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
       if (!modalContainer && backdrop) {
@@ -2311,7 +2454,7 @@ export const PreviewListingPageComponent = props => {
   useEffect(() => {
     if (!showLocationModal) return;
 
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       const modalContainer = event.target.closest(`.${css.availabilityModalContainer}`);
       const backdrop = event.target.closest(`.${css.editPanelDrawerScrollLayer}`);
       if (!modalContainer && backdrop) {
@@ -2383,14 +2526,14 @@ export const PreviewListingPageComponent = props => {
         },
       ];
     }
-    
+
     // Sort exceptions by start date (first date in the exception)
     const sortedExceptions = updatedExceptions.sort((a, b) => {
       const dateA = a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
       const dateB = b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
       return dateA - dateB;
     });
-    
+
     setModalExceptions(sortedExceptions);
     setShowExceptionCalendar(false);
     setNewVariant({ dates: [] });
@@ -2409,12 +2552,22 @@ export const PreviewListingPageComponent = props => {
   // Format exception dates for display (e.g., "10 Dic - 13 Dic")
   const formatExceptionDates = dates => {
     if (!dates || dates.length === 0) return '';
-    
+
     const formatDate = date => {
       const day = date.getDate();
       const monthNames = [
-        'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-        'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+        'Gen',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mag',
+        'Giu',
+        'Lug',
+        'Ago',
+        'Set',
+        'Ott',
+        'Nov',
+        'Dic',
       ];
       const month = monthNames[date.getMonth()];
       return `${day} ${month}`;
@@ -2437,90 +2590,114 @@ export const PreviewListingPageComponent = props => {
   const handleAddPriceVariant = () => {
     // Clear previous error
     setPriceVariantError(null);
-    
+
     // Validate based on variant type
     if (priceVariantType === 'length') {
       // For duration-based variants, validate percentageDiscount
-      if (!newPriceVariant.percentageDiscount || newPriceVariant.percentageDiscount <= 0 || newPriceVariant.percentageDiscount > 100) {
-        setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.enterValidPercentage',
-          defaultMessage: 'Please enter a valid percentage discount (1-100)',
-        }));
+      if (
+        !newPriceVariant.percentageDiscount ||
+        newPriceVariant.percentageDiscount <= 0 ||
+        newPriceVariant.percentageDiscount > 100
+      ) {
+        setPriceVariantError(
+          intl.formatMessage({
+            id: 'PreviewListingPage.enterValidPercentage',
+            defaultMessage: 'Please enter a valid percentage discount (1-100)',
+          })
+        );
         return;
       }
       if (!newPriceVariant.minLength) {
-        setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.enterMinLength',
-          defaultMessage: 'Please enter minimum length',
-        }));
+        setPriceVariantError(
+          intl.formatMessage({
+            id: 'PreviewListingPage.enterMinLength',
+            defaultMessage: 'Please enter minimum length',
+          })
+        );
         return;
       }
-      
+
       // Check for conflicts with existing duration variants
       const existingDurationVariants = modalPriceVariants.filter(
-        v => (v.type === 'duration' || v.minDuration || v.minLength) && 
-             (!editingPriceVariant || v.id !== editingPriceVariant.id)
+        v =>
+          (v.type === 'duration' || v.minDuration || v.minLength) &&
+          (!editingPriceVariant || v.id !== editingPriceVariant.id)
       );
-      
+
       for (const existingVariant of existingDurationVariants) {
         const existingMinLength = existingVariant.minDuration || existingVariant.minLength;
         const existingPercentageDiscount = existingVariant.percentageDiscount;
         const newMinLength = newPriceVariant.minLength;
         const newPercentageDiscount = newPriceVariant.percentageDiscount;
-        
+
         // Check for same minimum duration
         if (existingMinLength === newMinLength) {
-          setPriceVariantError(intl.formatMessage({
-            id: 'PreviewListingPage.duplicateMinDuration',
-            defaultMessage: 'A price variant with this minimum duration already exists',
-          }));
+          setPriceVariantError(
+            intl.formatMessage({
+              id: 'PreviewListingPage.duplicateMinDuration',
+              defaultMessage: 'A price variant with this minimum duration already exists',
+            })
+          );
           return;
         }
-        
+
         // Check for same percentage discount
         if (existingPercentageDiscount === newPercentageDiscount) {
-          setPriceVariantError(intl.formatMessage({
-            id: 'PreviewListingPage.duplicatePercentageDiscount',
-            defaultMessage: 'A price variant with this percentage discount already exists',
-          }));
+          setPriceVariantError(
+            intl.formatMessage({
+              id: 'PreviewListingPage.duplicatePercentageDiscount',
+              defaultMessage: 'A price variant with this percentage discount already exists',
+            })
+          );
           return;
         }
-        
+
         // Check for conflict: if new variant has lower minLength but higher percentageDiscount,
         // it would make the existing variant useless (or vice versa)
         // Example: existing (10 days, 50%) conflicts with new (6 days, 60%)
         if (
-          (existingMinLength > newMinLength && existingPercentageDiscount < newPercentageDiscount) ||
+          (existingMinLength > newMinLength &&
+            existingPercentageDiscount < newPercentageDiscount) ||
           (existingMinLength < newMinLength && existingPercentageDiscount > newPercentageDiscount)
         ) {
-          setPriceVariantError(intl.formatMessage({
-            id: 'PreviewListingPage.conflictingVariant',
-            defaultMessage: 'This variant conflicts with an existing one. A variant with lower minimum duration cannot have a higher discount than variants with higher minimum duration.',
-          }));
+          setPriceVariantError(
+            intl.formatMessage({
+              id: 'PreviewListingPage.conflictingVariant',
+              defaultMessage:
+                'This variant conflicts with an existing one. A variant with lower minimum duration cannot have a higher discount than variants with higher minimum duration.',
+            })
+          );
           return;
         }
       }
     } else if (priceVariantType === 'seasonality') {
       // For period-based variants, validate price
       if (!newPriceVariant.price || newPriceVariant.price <= 0) {
-        setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.enterValidPrice',
-          defaultMessage: 'Please enter a valid price',
-        }));
+        setPriceVariantError(
+          intl.formatMessage({
+            id: 'PreviewListingPage.enterValidPrice',
+            defaultMessage: 'Please enter a valid price',
+          })
+        );
         return;
       }
       if (newPriceVariant.dates.length === 0) {
-        setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.selectDates',
-          defaultMessage: 'Please select dates for seasonal pricing',
-        }));
+        setPriceVariantError(
+          intl.formatMessage({
+            id: 'PreviewListingPage.selectDates',
+            defaultMessage: 'Please select dates for seasonal pricing',
+          })
+        );
         return;
       }
-      
+
       // Check for overlapping dates in period-type variants
       const existingPeriodDates = modalPriceVariants
-        .filter(v => (v.type === 'period' || v.dates || v.period) && 
-                     (!editingPriceVariant || v.id !== editingPriceVariant.id))
+        .filter(
+          v =>
+            (v.type === 'period' || v.dates || v.period) &&
+            (!editingPriceVariant || v.id !== editingPriceVariant.id)
+        )
         .flatMap(v => {
           // If dates array exists (from modal), use it
           if (v.dates && Array.isArray(v.dates) && v.dates.length > 0) {
@@ -2541,26 +2718,33 @@ export const PreviewListingPageComponent = props => {
           }
           return [];
         });
-      
+
       // Check if any of the new dates overlap
       const hasOverlap = newPriceVariant.dates.some(d => {
         const date = d instanceof Date ? d : new Date(d);
         const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
         return existingPeriodDates.includes(dateKey);
       });
-      
+
       if (hasOverlap) {
-        setPriceVariantError(intl.formatMessage({
-          id: 'PreviewListingPage.overlappingDates',
-          defaultMessage: 'Some dates overlap with an existing price variant',
-        }));
+        setPriceVariantError(
+          intl.formatMessage({
+            id: 'PreviewListingPage.overlappingDates',
+            defaultMessage: 'Some dates overlap with an existing price variant',
+          })
+        );
         return;
       }
     }
 
     // Map UI type to API type: 'length' -> 'duration', 'seasonality' -> 'period'
-    const apiType = priceVariantType === 'length' ? 'duration' : priceVariantType === 'seasonality' ? 'period' : priceVariantType;
-    
+    const apiType =
+      priceVariantType === 'length'
+        ? 'duration'
+        : priceVariantType === 'seasonality'
+        ? 'period'
+        : priceVariantType;
+
     const variant = {
       id: editingPriceVariant?.id || Date.now().toString() + Math.random(),
       type: apiType, // Always use API type format
@@ -2599,7 +2783,12 @@ export const PreviewListingPageComponent = props => {
   const handleEditPriceVariant = variant => {
     setEditingPriceVariant(variant);
     // Map API type to UI type: 'duration' -> 'length', 'period' -> 'seasonality'
-    const uiType = variant.type === 'duration' ? 'length' : variant.type === 'period' ? 'seasonality' : variant.type || 'length';
+    const uiType =
+      variant.type === 'duration'
+        ? 'length'
+        : variant.type === 'period'
+        ? 'seasonality'
+        : variant.type || 'length';
     setPriceVariantType(uiType);
     const percentageDiscount = variant.percentageDiscount || 50;
     setNewPriceVariant({
@@ -2620,7 +2809,7 @@ export const PreviewListingPageComponent = props => {
   };
 
   // Helper function to format price for modal
-  const formatPriceForModal = (priceAmount) => {
+  const formatPriceForModal = priceAmount => {
     const currency = listing.attributes.price?.currency || 'EUR';
     const currencyConfig = currencyFormatting(currency, { enforceSupportedCurrencies: false });
     return intl.formatNumber(priceAmount, currencyConfig);
@@ -2634,23 +2823,25 @@ export const PreviewListingPageComponent = props => {
       const defaultPrice = currentListing.attributes.price.amount;
       setModalDefaultPrice(defaultPrice);
       const priceVariants = currentListing.attributes.publicData?.priceVariants || [];
-      setModalPriceVariants(priceVariants.map(v => {
-        // Determine type from variant data if not present
-        let variantType = v.type;
-        if (!variantType) {
-          // Infer type from fields
-          if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
-            variantType = 'period';
-          } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
-            variantType = 'duration';
+      setModalPriceVariants(
+        priceVariants.map(v => {
+          // Determine type from variant data if not present
+          let variantType = v.type;
+          if (!variantType) {
+            // Infer type from fields
+            if (v.period || (v.dates && Array.isArray(v.dates) && v.dates.length > 0)) {
+              variantType = 'period';
+            } else if (v.minLength || v.minDuration || v.maxLength || v.maxDuration || v.duration) {
+              variantType = 'duration';
+            }
           }
-        }
-        return {
-          ...v,
-          type: variantType || 'duration', // Default to duration if cannot determine
-          id: v.id || Date.now().toString() + Math.random(),
-        };
-      }));
+          return {
+            ...v,
+            type: variantType || 'duration', // Default to duration if cannot determine
+            id: v.id || Date.now().toString() + Math.random(),
+          };
+        })
+      );
     }
     setShowAddPriceVariant(false);
     setEditingPriceVariant(null);
@@ -2728,17 +2919,17 @@ export const PreviewListingPageComponent = props => {
               variantType = 'duration'; // Default
             }
           }
-          
+
           const variant = {
             name: v.name || `variant_${Date.now()}.${Math.random()}`,
             type: variantType, // Always include type
           };
-          
+
           // Handle duration-based variants (with percentageDiscount)
           if (variantType === 'duration') {
             const minDuration = v.minDuration || v.minLength;
             const maxDuration = v.maxDuration || v.maxLength;
-            
+
             if (minDuration) {
               variant.minLength = minDuration;
             }
@@ -2750,8 +2941,9 @@ export const PreviewListingPageComponent = props => {
             }
           } else {
             // Handle period-based variants (with priceInSubunits)
-            variant.priceInSubunits = v.priceInSubunits || (v.price ? Math.round(v.price * 100) : 0);
-            
+            variant.priceInSubunits =
+              v.priceInSubunits || (v.price ? Math.round(v.price * 100) : 0);
+
             // Add period for seasonality/period-based variants
             if (v.period) {
               variant.period = v.period;
@@ -2759,27 +2951,30 @@ export const PreviewListingPageComponent = props => {
               variant.period = v.dates
                 .map(d => {
                   const date = d instanceof Date ? d : new Date(d);
-                  return date.toISOString().split('T')[0].replace(/-/g, '');
+                  return date
+                    .toISOString()
+                    .split('T')[0]
+                    .replace(/-/g, '');
                 })
                 .join(',');
             }
           }
-          
+
           // Remove undefined/null values (but keep type even if it's the only field)
           Object.keys(variant).forEach(key => {
             if (variant[key] === undefined || variant[key] === null) {
               delete variant[key];
             }
           });
-          
+
           // Ensure type is always present
           if (!variant.type) {
             variant.type = variantType;
           }
-          
+
           return variant;
         });
-      
+
       // Update default price and variants together
       await onUpdateListing(
         'details',
@@ -2822,18 +3017,18 @@ export const PreviewListingPageComponent = props => {
       const location = currentListing.attributes?.publicData?.location || {};
       const geolocation = location.geolocation || null;
       let address = location.address || {};
-      
+
       // Handle address as string or object
       if (typeof address === 'string') {
         // If address is a string, try to parse it or set empty object
         address = {};
       }
-      
+
       // Ensure address is an object
       if (!address || typeof address !== 'object') {
         address = {};
       }
-      
+
       // Also check if address fields are stored directly in location object
       // (some implementations save address fields directly in location instead of location.address)
       const streetFromLocation = location.street || location.addressLine1 || '';
@@ -2841,7 +3036,7 @@ export const PreviewListingPageComponent = props => {
       const regionFromLocation = location.region || location.state || '';
       const postalCodeFromLocation = location.postalCode || location.postal_code || '';
       const countryFromLocation = location.country || '';
-      
+
       // Parse addressLine1 if it contains both street and number
       let parsedStreet = '';
       let parsedStreetNumber = '';
@@ -2856,12 +3051,12 @@ export const PreviewListingPageComponent = props => {
           parsedStreet = addressLine1Value;
         }
       }
-      
+
       // Extract initial values for cascading dropdowns
       const initialCountryValue = address.country || countryFromLocation || '';
       const initialStateValue = address.region || address.state || regionFromLocation || '';
       const initialCityValue = address.city || cityFromLocation || '';
-      
+
       setModalGeolocation(geolocation);
       setManualAddress({
         street: address.street || parsedStreet || address.addressLine1 || streetFromLocation || '',
@@ -2872,13 +3067,15 @@ export const PreviewListingPageComponent = props => {
         postalCode: address.postalCode || address.postal_code || postalCodeFromLocation || '',
         country: initialCountryValue,
       });
-      
+
       // Reset cascading dropdown state - they will be initialized by the component
       // based on initialCountry, initialState, initialCity props
       setSelectedCountryData(initialCountryValue ? { name: initialCountryValue } : null);
-      setSelectedStateData(initialStateValue ? { name: initialStateValue, state_code: initialStateValue } : null);
+      setSelectedStateData(
+        initialStateValue ? { name: initialStateValue, state_code: initialStateValue } : null
+      );
       setSelectedCityData(initialCityValue ? { name: initialCityValue } : null);
-      
+
       setModalLocationVisible(locationVisible);
       setModalHandByHandAvailable(handByHandAvailable);
       setInvalidFields([]);
@@ -2886,10 +3083,14 @@ export const PreviewListingPageComponent = props => {
       const hasAddress =
         parsedStreet || parsedStreetNumber || initialCityValue || initialCountryValue;
       if (hasAddress) {
-        const street = address.street || parsedStreet || address.addressLine1 || streetFromLocation || '';
-        const streetNum =
-          address.streetNumber || parsedStreetNumber || location.streetNumber || '';
-        const searchStr = [street, streetNum].filter(Boolean).join(' ').trim() || initialCityValue;
+        const street =
+          address.street || parsedStreet || address.addressLine1 || streetFromLocation || '';
+        const streetNum = address.streetNumber || parsedStreetNumber || location.streetNumber || '';
+        const searchStr =
+          [street, streetNum]
+            .filter(Boolean)
+            .join(' ')
+            .trim() || initialCityValue;
         setLocationAutocompleteValue({
           search: searchStr,
           predictions: [],
@@ -2913,7 +3114,40 @@ export const PreviewListingPageComponent = props => {
         });
       }
     }
-  }, [showLocationModal, currentListing.attributes?.publicData?.location, locationVisible, handByHandAvailable]);
+  }, [
+    showLocationModal,
+    currentListing.attributes?.publicData?.location,
+    locationVisible,
+    handByHandAvailable,
+  ]);
+
+  // Debounced geocoding for the location modal — call with the full new address object
+  const triggerModalGeocode = addr => {
+    if (modalGeocodeTimerRef.current) clearTimeout(modalGeocodeTimerRef.current);
+    modalGeocodeTimerRef.current = setTimeout(async () => {
+      const street = addr.street || '';
+      const num = addr.streetNumber || '';
+      const addressLine = `${street}${num ? ' ' + num : ''}`.trim();
+      const full = [addressLine, addr.city, addr.postalCode, addr.country]
+        .filter(Boolean)
+        .join(', ');
+      if (!full) return;
+      try {
+        const geocoded = await geocodeAddress(full, addr.country || null);
+        if (geocoded) setModalGeolocation({ lat: geocoded.lat, lng: geocoded.lng });
+      } catch (_) {}
+    }, 800);
+  };
+
+  // Update a single manual-address field and re-geocode after the user pauses typing
+  const handleModalAddressFieldChange = (field, value, currentAddress) => {
+    const newAddress = { ...currentAddress, [field]: value };
+    setManualAddress(newAddress);
+    if (invalidFields.includes(field) && value.trim()) {
+      setInvalidFields(prev => prev.filter(f => f !== field));
+    }
+    triggerModalGeocode(newAddress);
+  };
 
   // Handle save location from modal
   const handleSaveLocation = async () => {
@@ -2930,7 +3164,7 @@ export const PreviewListingPageComponent = props => {
         if (!selectedStateData?.name) invalid.push('region');
         if (!manualAddress.postalCode.trim()) invalid.push('postalCode');
         if (!selectedCountryData?.name) invalid.push('country');
-        
+
         if (invalid.length > 0) {
           setInvalidFields(invalid);
           setUpdatingListing(false);
@@ -2939,33 +3173,57 @@ export const PreviewListingPageComponent = props => {
       }
 
       // Build address object with data from cascading dropdowns
-      const addressFromDropdowns = hasAddressSelected ? {
-        ...manualAddress,
-        city: selectedCityData?.name || manualAddress.city,
-        region: selectedStateData?.state_code || selectedStateData?.name || manualAddress.region,
-        country: selectedCountryData?.name || manualAddress.country,
-      } : currentListing.attributes?.publicData?.location?.address || {};
+      const addressFromDropdowns = hasAddressSelected
+        ? {
+            ...manualAddress,
+            city: selectedCityData?.name || manualAddress.city,
+            region:
+              selectedStateData?.state_code || selectedStateData?.name || manualAddress.region,
+            country: selectedCountryData?.name || manualAddress.country,
+          }
+        : currentListing.attributes?.publicData?.location?.address || {};
 
-      // Build location object
+      // Build location object — geolocation must be a root-level listing attribute,
+      // not nested inside publicData.location (Sharetribe bounds filter reads listing.attributes.geolocation)
       const locationData = {
-        geolocation: modalGeolocation,
         address: addressFromDropdowns,
       };
 
-      // Update location and options (locationVisible always true)
-      await onUpdateListing(
-        'location',
-        {
-          id: listingId,
-          publicData: {
-            ...currentListing.attributes?.publicData,
-            location: locationData,
-            locationVisible: true,
-            handByHandAvailable: modalHandByHandAvailable,
-          },
+      // If debounced geocoding hasn't resolved yet, try once more at save time
+      let finalGeolocation = modalGeolocation;
+      if (!finalGeolocation && hasAddressSelected) {
+        const street = addressFromDropdowns.street || '';
+        const num = addressFromDropdowns.streetNumber || '';
+        const addressLine = `${street}${num ? ' ' + num : ''}`.trim();
+        const full = [
+          addressLine,
+          addressFromDropdowns.city,
+          addressFromDropdowns.postalCode,
+          addressFromDropdowns.country,
+        ]
+          .filter(Boolean)
+          .join(', ');
+        if (full) {
+          try {
+            const geocoded = await geocodeAddress(full, addressFromDropdowns.country || null);
+            if (geocoded) finalGeolocation = { lat: geocoded.lat, lng: geocoded.lng };
+          } catch (_) {}
+        }
+      }
+
+      const locationUpdateData = {
+        id: listingId,
+        publicData: {
+          ...currentListing.attributes?.publicData,
+          location: locationData,
+          locationVisible: true,
+          handByHandAvailable: modalHandByHandAvailable,
         },
-        config
-      );
+        ...(finalGeolocation && { geolocation: finalGeolocation }),
+      };
+
+      // Update location and options (locationVisible always true)
+      await onUpdateListing('location', locationUpdateData, config);
 
       // Update local state
       setLocationVisible(true);
@@ -3061,11 +3319,7 @@ export const PreviewListingPageComponent = props => {
         };
       }
 
-      await onUpdateListing(
-        'details',
-        updateData,
-        config
-      );
+      await onUpdateListing('details', updateData, config);
 
       // Handle availability exceptions separately
       const sdk = createInstance({
@@ -3076,7 +3330,7 @@ export const PreviewListingPageComponent = props => {
       const listingIdForSDK = currentListing.id;
 
       // Helper to normalize IDs for comparison
-      const normalizeId = (id) => {
+      const normalizeId = id => {
         if (!id) return null;
         if (typeof id === 'object' && id.uuid) return id.uuid;
         if (typeof id === 'object' && id.id) return id.id;
@@ -3099,7 +3353,7 @@ export const PreviewListingPageComponent = props => {
         try {
           const idToDelete = normalizeId(exceptionId);
           if (!idToDelete) continue;
-          
+
           // SDK expects { id: ... } format - can be UUID object or string
           await sdk.availabilityExceptions.delete({ id: idToDelete });
         } catch (deleteError) {
@@ -3129,9 +3383,9 @@ export const PreviewListingPageComponent = props => {
               console.warn('Skipping exception with no dates:', exc);
               continue;
             }
-            
+
             let start, end;
-            
+
             if (dates.length === 1) {
               start = new Date(dates[0]);
               start.setHours(0, 0, 0, 0);
@@ -3150,7 +3404,6 @@ export const PreviewListingPageComponent = props => {
               end: end.toISOString(),
               seats: 0,
             });
-            
           } catch (createError) {
             console.error('Failed to create exception:', exc, createError);
             // Show error to user
@@ -3169,7 +3422,7 @@ export const PreviewListingPageComponent = props => {
 
       // Refresh listing to update calendar
       await onFetchListing({ id: listingId }, config);
-      
+
       // Reload availability exceptions to reflect changes
       const sdkForReload = createInstance({
         clientId: config.sdk?.clientId || process.env.REACT_APP_SHARETRIBE_SDK_CLIENT_ID,
@@ -3179,13 +3432,13 @@ export const PreviewListingPageComponent = props => {
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
       oneYearFromNow.setHours(23, 59, 59, 999);
-      
+
       const exceptionsResponse = await sdkForReload.availabilityExceptions.query({
         listingId: currentListing.id,
         start: today,
         end: oneYearFromNow,
       });
-      
+
       const updatedExceptions = exceptionsResponse.data.data || [];
       setAvailabilityExceptions(updatedExceptions);
 
@@ -3204,9 +3457,7 @@ export const PreviewListingPageComponent = props => {
             const dateObj = new Date(currentDate);
             dateObj.setHours(0, 0, 0, 0);
             // Check if date is not already in the array
-            const exists = exceptionDateObjects.some(d => 
-              d.getTime() === dateObj.getTime()
-            );
+            const exists = exceptionDateObjects.some(d => d.getTime() === dateObj.getTime());
             if (!exists) {
               exceptionDateObjects.push(dateObj);
             }
@@ -3218,11 +3469,11 @@ export const PreviewListingPageComponent = props => {
 
       // Calculate available dates (respecting availableFrom/availableUntil if set, minus exceptions) as Date objects
       const available = [];
-      
+
       // Determine the date range based on availableFrom/availableUntil or default to today + 1 year
       let rangeStart = today;
       let rangeEnd = oneYearFromNow;
-      
+
       // Get updated listing data (after refresh)
       const updatedListing = getListing(listingId);
       if (updatedListing?.attributes?.publicData?.availableFrom) {
@@ -3233,7 +3484,7 @@ export const PreviewListingPageComponent = props => {
           rangeStart = fromDate;
         }
       }
-      
+
       if (updatedListing?.attributes?.publicData?.availableUntil) {
         const untilDate = new Date(updatedListing.attributes.publicData.availableUntil);
         untilDate.setHours(23, 59, 59, 999);
@@ -3242,22 +3493,20 @@ export const PreviewListingPageComponent = props => {
           rangeEnd = untilDate;
         }
       }
-      
+
       const currentDateForAvailable = new Date(rangeStart);
       while (currentDateForAvailable <= rangeEnd) {
         const dateObj = new Date(currentDateForAvailable);
         dateObj.setHours(0, 0, 0, 0);
         // Check if date is not in disabled dates
-        const isDisabled = exceptionDateObjects.some(d => 
-          d.getTime() === dateObj.getTime()
-        );
+        const isDisabled = exceptionDateObjects.some(d => d.getTime() === dateObj.getTime());
         if (!isDisabled) {
           available.push(dateObj);
         }
         currentDateForAvailable.setDate(currentDateForAvailable.getDate() + 1);
       }
       setAvailableDates(available);
-      
+
       setShowAvailabilityModal(false);
     } catch (error) {
       console.error('Failed to update availability:', error);
@@ -3289,7 +3538,12 @@ export const PreviewListingPageComponent = props => {
           <div className={css.root}>
             <div className={css.container}>
               <div className={css.loadingSkeleton} aria-busy="true" aria-live="polite">
-                <SkeletonTheme baseColor="#e0e0e0" highlightColor="#f0f0f0" duration={1.4} enableAnimation>
+                <SkeletonTheme
+                  baseColor="#e0e0e0"
+                  highlightColor="#f0f0f0"
+                  duration={1.4}
+                  enableAnimation
+                >
                   <Skeleton className={css.loadingSkeletonImage} height={280} />
                   <div className={css.loadingSkeletonContent}>
                     <Skeleton width="60%" height={32} style={{ marginBottom: 16 }} />
@@ -3322,13 +3576,18 @@ export const PreviewListingPageComponent = props => {
   const listingTitleStr = fieldValues.title || listing.attributes?.title || '';
   const listingConfig = config.listing || {};
   const publicDataHero = listing.attributes?.publicData || {};
-  const { unitType = 'day', listingType, transactionProcessAlias: listingPubProcessAlias = '' } =
-    publicDataHero;
+  const {
+    unitType = 'day',
+    listingType,
+    transactionProcessAlias: listingPubProcessAlias = '',
+  } = publicDataHero;
   const previewPriceProcessName = listingPubProcessAlias
     ? resolveLatestProcessName(listingPubProcessAlias.split('/')[0])
     : 'booking';
   const isBooking = isBookingProcess(previewPriceProcessName);
-  const foundListingTypeConfig = listingConfig.listingTypes?.find(c => c.listingType === listingType);
+  const foundListingTypeConfig = listingConfig.listingTypes?.find(
+    c => c.listingType === listingType
+  );
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicDataHero, foundListingTypeConfig);
   const cardPriceVariants = publicDataHero?.priceVariants || [];
   const hasMultiplePriceVariants = isPriceVariationsInUse && cardPriceVariants.length > 1;
@@ -3344,7 +3603,9 @@ export const PreviewListingPageComponent = props => {
       .filter(v => v.type === 'duration' && v.percentageDiscount != null)
       .reduce((max, v) => Math.max(max, v.percentageDiscount), 0);
     const discountedSubunits =
-      maxDiscount > 0 ? Math.round(lowestFixedSubunits * (1 - maxDiscount / 100)) : lowestFixedSubunits;
+      maxDiscount > 0
+        ? Math.round(lowestFixedSubunits * (1 - maxDiscount / 100))
+        : lowestFixedSubunits;
     priceForDisplay = new Money(discountedSubunits, priceAttr.currency);
   }
   const { formattedPrice } = priceData(priceForDisplay, config.currency, intl);
@@ -3382,11 +3643,7 @@ export const PreviewListingPageComponent = props => {
   // Show loading page while checking Stripe status or publishing
   if (isCheckingStripeStatus || isPublishing) {
     return (
-      <LoadingPage
-        topbar={<TopbarContainer />}
-        scrollingDisabled={scrollingDisabled}
-        intl={intl}
-      />
+      <LoadingPage topbar={<TopbarContainer />} scrollingDisabled={scrollingDisabled} intl={intl} />
     );
   }
 
@@ -3467,22 +3724,18 @@ export const PreviewListingPageComponent = props => {
         duration={5000}
         onClose={handleNotificationClose}
       />
-      
+
       {/* Loading Overlay during verification */}
-      {isVerifying && (
-        <LoadingOverlay
-          titleId="PreviewListingPage.verifyingTitle"
-        />
-      )}
-      
+      {isVerifying && <LoadingOverlay titleId="PreviewListingPage.verifyingTitle" />}
+
       {/* Loading Overlay during reset */}
-      {updatingListing && (
-        <LoadingOverlay
-          titleId="PreviewListingPage.resettingTitle"
-        />
-      )}
-      
-      <LayoutSingleColumn className={productCss.pageRoot} topbar={<TopbarContainer />} footer={null}>
+      {updatingListing && <LoadingOverlay titleId="PreviewListingPage.resettingTitle" />}
+
+      <LayoutSingleColumn
+        className={productCss.pageRoot}
+        topbar={<TopbarContainer />}
+        footer={null}
+      >
         <PreviewListingPageProductLayout {...previewLayoutProps} />
 
         {/* Stripe Payout Modal */}
@@ -3517,7 +3770,9 @@ export const PreviewListingPageComponent = props => {
                   </option>
                   {config.stripe?.supportedCountries?.map(country => (
                     <option key={country.code} value={country.code}>
-                      {intl.formatMessage({ id: `StripeConnectAccountForm.countryNames.${country.code}` })}
+                      {intl.formatMessage({
+                        id: `StripeConnectAccountForm.countryNames.${country.code}`,
+                      })}
                     </option>
                   ))}
                 </select>
@@ -3569,7 +3824,9 @@ export const PreviewListingPageComponent = props => {
           onClose={handleClosePriceDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
           scrollLayerClassName={css.editPanelDrawerScrollLayer}
-          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'price' && drawerClosing !== 'price' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'price' ? css.editPanelDrawerClosing : ''}`}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${
+            drawerOpening === 'price' && drawerClosing !== 'price' ? css.editPanelDrawerOpen : ''
+          } ${drawerClosing === 'price' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -3591,11 +3848,16 @@ export const PreviewListingPageComponent = props => {
             {/* Default Price Input */}
             <div className={css.priceInputWrapper}>
               <label className={css.priceLabel}>
-                <FormattedMessage id="ListingConfiguration.priceLabel" defaultMessage="Daily Price" />
+                <FormattedMessage
+                  id="ListingConfiguration.priceLabel"
+                  defaultMessage="Daily Price"
+                />
               </label>
               <div className={css.priceInputGroup}>
                 <span className={css.currencySymbol}>
-                  {listing.attributes.price?.currency === 'EUR' ? '€' : listing.attributes.price?.currency || '€'}
+                  {listing.attributes.price?.currency === 'EUR'
+                    ? '€'
+                    : listing.attributes.price?.currency || '€'}
                 </span>
                 <input
                   type="number"
@@ -3676,30 +3938,60 @@ export const PreviewListingPageComponent = props => {
                         {(() => {
                           // Use the same formatPriceVariantLabel logic
                           // Determine variant type - prioritize explicit type, then infer from fields
-                          const variantType = variant.type || 
-                            (variant.period || (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) ? 'period' : null) ||
-                            (variant.minLength || variant.minDuration || variant.maxLength || variant.maxDuration || variant.duration ? 'duration' : null) ||
+                          const variantType =
+                            variant.type ||
+                            (variant.period ||
+                            (variant.dates &&
+                              Array.isArray(variant.dates) &&
+                              variant.dates.length > 0)
+                              ? 'period'
+                              : null) ||
+                            (variant.minLength ||
+                            variant.minDuration ||
+                            variant.maxLength ||
+                            variant.maxDuration ||
+                            variant.duration
+                              ? 'duration'
+                              : null) ||
                             'duration'; // Default fallback
-                          
+
                           // Handle period-based variants FIRST (more specific than duration)
                           // Check for dates array first (from PreviewListingPage modal)
-                          if (variant.dates && Array.isArray(variant.dates) && variant.dates.length > 0) {
+                          if (
+                            variant.dates &&
+                            Array.isArray(variant.dates) &&
+                            variant.dates.length > 0
+                          ) {
                             const start = new Date(variant.dates[0]);
                             const end = new Date(variant.dates[variant.dates.length - 1]);
                             const formatDate = date => {
                               const day = date.getDate();
                               const monthNames = [
-                                'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-                                'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                                'Gen',
+                                'Feb',
+                                'Mar',
+                                'Apr',
+                                'Mag',
+                                'Giu',
+                                'Lug',
+                                'Ago',
+                                'Set',
+                                'Ott',
+                                'Nov',
+                                'Dic',
                               ];
                               const month = monthNames[date.getMonth()];
                               return `${day} ${month}`;
                             };
                             return `${formatDate(start)} - ${formatDate(end)}`;
                           }
-                          
+
                           // Check for period string (from ListingConfigurationPage or API)
-                          if (variant.period && typeof variant.period === 'string' && variant.period.trim()) {
+                          if (
+                            variant.period &&
+                            typeof variant.period === 'string' &&
+                            variant.period.trim()
+                          ) {
                             const formatPeriodDate = dateStr => {
                               // Handle format YYYYMMDD
                               if (dateStr.length === 8) {
@@ -3709,8 +4001,18 @@ export const PreviewListingPageComponent = props => {
                                 const date = new Date(year, month, day);
                                 const dayNum = date.getDate();
                                 const monthNames = [
-                                  'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-                                  'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                                  'Gen',
+                                  'Feb',
+                                  'Mar',
+                                  'Apr',
+                                  'Mag',
+                                  'Giu',
+                                  'Lug',
+                                  'Ago',
+                                  'Set',
+                                  'Ott',
+                                  'Nov',
+                                  'Dic',
                                 ];
                                 const monthName = monthNames[date.getMonth()];
                                 return `${dayNum} ${monthName}`;
@@ -3721,8 +4023,18 @@ export const PreviewListingPageComponent = props => {
                                 if (!isNaN(date.getTime())) {
                                   const dayNum = date.getDate();
                                   const monthNames = [
-                                    'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-                                    'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'
+                                    'Gen',
+                                    'Feb',
+                                    'Mar',
+                                    'Apr',
+                                    'Mag',
+                                    'Giu',
+                                    'Lug',
+                                    'Ago',
+                                    'Set',
+                                    'Ott',
+                                    'Nov',
+                                    'Dic',
                                   ];
                                   const monthName = monthNames[date.getMonth()];
                                   return `${dayNum} ${monthName}`;
@@ -3732,12 +4044,12 @@ export const PreviewListingPageComponent = props => {
                               }
                               return dateStr;
                             };
-                            
+
                             // Parse period string
                             const periodStr = variant.period.trim();
                             const periods = periodStr.split(',');
                             const firstPeriod = periods[0].trim();
-                            
+
                             if (firstPeriod.includes('-')) {
                               // Format 1: start-end range (e.g., "20251012-20251212")
                               const [startStr, endStr] = firstPeriod.split('-').map(s => s.trim());
@@ -3750,7 +4062,12 @@ export const PreviewListingPageComponent = props => {
                               // Format 2: multiple dates separated by commas
                               const startStr = periods[0].trim();
                               const endStr = periods[periods.length - 1].trim();
-                              if (startStr && endStr && startStr.length === 8 && endStr.length === 8) {
+                              if (
+                                startStr &&
+                                endStr &&
+                                startStr.length === 8 &&
+                                endStr.length === 8
+                              ) {
                                 const start = formatPeriodDate(startStr);
                                 const end = formatPeriodDate(endStr);
                                 return `${start} - ${end}`;
@@ -3760,12 +4077,18 @@ export const PreviewListingPageComponent = props => {
                               return formatPeriodDate(firstPeriod);
                             }
                           }
-                          
+
                           // Handle duration-based variants (type: 'length' or 'duration', or has duration field)
-                          if (variantType === 'length' || variantType === 'duration' || variant.duration || variant.minLength || variant.minDuration) {
+                          if (
+                            variantType === 'length' ||
+                            variantType === 'duration' ||
+                            variant.duration ||
+                            variant.minLength ||
+                            variant.minDuration
+                          ) {
                             const minDuration = variant.minDuration || variant.minLength;
                             const maxDuration = variant.maxDuration || variant.maxLength;
-                            
+
                             if (minDuration && maxDuration) {
                               return intl.formatMessage(
                                 { id: 'PreviewListingPage.fromToDays' },
@@ -3785,7 +4108,7 @@ export const PreviewListingPageComponent = props => {
                               );
                             }
                           }
-                          
+
                           if (variantType === 'period') {
                             return typeof variant.period === 'string' ? variant.period : '';
                           }
@@ -3877,34 +4200,34 @@ export const PreviewListingPageComponent = props => {
                               const clickY = e.clientY - rect.top;
                               const inputWidth = rect.width;
                               const inputHeight = rect.height;
-                              
+
                               // Spinner buttons are typically on the right side of the input
                               // Check if click is in the right 30px of the input (where spinner buttons are)
                               if (clickX > inputWidth - 30 && clickX < inputWidth) {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                
+
                                 const currentValue = newPriceVariant.percentageDiscount || 50;
                                 const step = 5;
-                                
+
                                 // Determine if it's up or down button based on Y position
                                 // Upper half = up button, lower half = down button
                                 const isUpButton = clickY < inputHeight / 2;
-                                
+
                                 let newValue;
                                 if (isUpButton) {
                                   newValue = Math.min(100, currentValue + step);
                                 } else {
                                   newValue = Math.max(1, currentValue - step);
                                 }
-                                
+
                                 previousPercentageDiscountRef.current = newValue;
                                 setPriceVariantError(null);
                                 setNewPriceVariant({
                                   ...newPriceVariant,
                                   percentageDiscount: newValue,
                                 });
-                                
+
                                 // Prevent the default browser behavior
                                 return false;
                               }
@@ -3914,7 +4237,10 @@ export const PreviewListingPageComponent = props => {
                               setPriceVariantError(null); // Clear error on change
                               if (value === '' || value === null || value === undefined) {
                                 previousPercentageDiscountRef.current = null;
-                                setNewPriceVariant({ ...newPriceVariant, percentageDiscount: null });
+                                setNewPriceVariant({
+                                  ...newPriceVariant,
+                                  percentageDiscount: null,
+                                });
                               } else {
                                 const numValue = parseFloat(value);
                                 if (!isNaN(numValue) && numValue > 0 && numValue <= 100) {
@@ -3925,7 +4251,10 @@ export const PreviewListingPageComponent = props => {
                                   });
                                 } else {
                                   previousPercentageDiscountRef.current = null;
-                                  setNewPriceVariant({ ...newPriceVariant, percentageDiscount: null });
+                                  setNewPriceVariant({
+                                    ...newPriceVariant,
+                                    percentageDiscount: null,
+                                  });
                                 }
                               }
                             }}
@@ -3979,7 +4308,8 @@ export const PreviewListingPageComponent = props => {
                               values={{
                                 standardPrice: formatPriceForModal(modalDefaultPrice / 100),
                                 discountedPrice: formatPriceForModal(
-                                  (modalDefaultPrice / 100) * (1 - newPriceVariant.percentageDiscount / 100)
+                                  (modalDefaultPrice / 100) *
+                                    (1 - newPriceVariant.percentageDiscount / 100)
                                 ),
                               }}
                             />
@@ -4053,7 +4383,9 @@ export const PreviewListingPageComponent = props => {
                         </label>
                         <div className={css.priceInputGroup}>
                           <span className={css.currencySymbol}>
-                            {listing.attributes.price?.currency === 'EUR' ? '€' : listing.attributes.price?.currency || '€'}
+                            {listing.attributes.price?.currency === 'EUR'
+                              ? '€'
+                              : listing.attributes.price?.currency || '€'}
                           </span>
                           <input
                             type="number"
@@ -4106,11 +4438,15 @@ export const PreviewListingPageComponent = props => {
                           ...disabledDates,
                           // Include dates from other period-type price variants (exclude editing one)
                           ...modalPriceVariants
-                            .filter(v => (v.type === 'period' || v.dates || v.period) && (!editingPriceVariant || v.id !== editingPriceVariant.id))
+                            .filter(
+                              v =>
+                                (v.type === 'period' || v.dates || v.period) &&
+                                (!editingPriceVariant || v.id !== editingPriceVariant.id)
+                            )
                             .flatMap(v => {
                               // If dates array exists (from modal), use it
                               if (v.dates && Array.isArray(v.dates) && v.dates.length > 0) {
-                                return v.dates.map(d => d instanceof Date ? d : new Date(d));
+                                return v.dates.map(d => (d instanceof Date ? d : new Date(d)));
                               }
                               // If period string exists (from API), parse it
                               if (v.period && typeof v.period === 'string') {
@@ -4123,7 +4459,7 @@ export const PreviewListingPageComponent = props => {
                                 });
                               }
                               return [];
-                            })
+                            }),
                         ]}
                         availableFrom={currentListing.attributes?.publicData?.availableFrom}
                         availableUntil={currentListing.attributes?.publicData?.availableUntil}
@@ -4132,9 +4468,7 @@ export const PreviewListingPageComponent = props => {
                   )}
 
                   {priceVariantError && (
-                    <div className={css.priceVariantError}>
-                      {priceVariantError}
-                    </div>
+                    <div className={css.priceVariantError}>{priceVariantError}</div>
                   )}
 
                   <div className={css.exceptionActions}>
@@ -4144,8 +4478,12 @@ export const PreviewListingPageComponent = props => {
                       className={css.saveExceptionButton}
                       style={{ background: config.branding?.marketplaceColor || '#4A90E2' }}
                       disabled={
-                        (priceVariantType === 'length' && (!newPriceVariant.percentageDiscount || !newPriceVariant.minLength)) ||
-                        (priceVariantType === 'seasonality' && (!newPriceVariant.price || newPriceVariant.price <= 0 || newPriceVariant.dates.length === 0))
+                        (priceVariantType === 'length' &&
+                          (!newPriceVariant.percentageDiscount || !newPriceVariant.minLength)) ||
+                        (priceVariantType === 'seasonality' &&
+                          (!newPriceVariant.price ||
+                            newPriceVariant.price <= 0 ||
+                            newPriceVariant.dates.length === 0))
                       }
                     >
                       <FormattedMessage id="ListingConfiguration.save" defaultMessage="Save" />
@@ -4193,7 +4531,11 @@ export const PreviewListingPageComponent = props => {
           onClose={handleCloseAvailabilityDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
           scrollLayerClassName={css.editPanelDrawerScrollLayer}
-          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'availability' && drawerClosing !== 'availability' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'availability' ? css.editPanelDrawerClosing : ''}`}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${
+            drawerOpening === 'availability' && drawerClosing !== 'availability'
+              ? css.editPanelDrawerOpen
+              : ''
+          } ${drawerClosing === 'availability' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -4325,8 +4667,10 @@ export const PreviewListingPageComponent = props => {
                     .slice()
                     .sort((a, b) => {
                       // Sort by first date in the exception
-                      const dateA = a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
-                      const dateB = b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
+                      const dateA =
+                        a.dates && a.dates.length > 0 ? new Date(a.dates[0]) : new Date(0);
+                      const dateB =
+                        b.dates && b.dates.length > 0 ? new Date(b.dates[0]) : new Date(0);
                       return dateA - dateB;
                     })
                     .map(exc => (
@@ -4338,7 +4682,9 @@ export const PreviewListingPageComponent = props => {
                           borderColor: config.branding?.marketplaceColor || '#4A90E2',
                         }}
                       >
-                        <span className={css.exceptionDates}>{formatExceptionDates(exc.dates)}</span>
+                        <span className={css.exceptionDates}>
+                          {formatExceptionDates(exc.dates)}
+                        </span>
                         <button
                           type="button"
                           onClick={e => {
@@ -4374,7 +4720,11 @@ export const PreviewListingPageComponent = props => {
           onClose={handleCloseLocationDrawer}
           onManageDisableScrolling={onManageDisableScrolling}
           scrollLayerClassName={css.editPanelDrawerScrollLayer}
-          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${drawerOpening === 'location' && drawerClosing !== 'location' ? css.editPanelDrawerOpen : ''} ${drawerClosing === 'location' ? css.editPanelDrawerClosing : ''}`}
+          containerClassName={`${css.availabilityModalContainer} ${css.editPanelDrawerContainer} ${
+            drawerOpening === 'location' && drawerClosing !== 'location'
+              ? css.editPanelDrawerOpen
+              : ''
+          } ${drawerClosing === 'location' ? css.editPanelDrawerClosing : ''}`}
           usePortal
         >
           <div className={css.availabilityModalContent}>
@@ -4450,9 +4800,7 @@ export const PreviewListingPageComponent = props => {
                             country: place.country || '',
                           };
                           setManualAddress(newAddress);
-                          setSelectedCountryData(
-                            place.country ? { name: place.country } : null
-                          );
+                          setSelectedCountryData(place.country ? { name: place.country } : null);
                           setSelectedStateData(
                             place.state ? { name: place.state, state_code: place.state } : null
                           );
@@ -4483,13 +4831,9 @@ export const PreviewListingPageComponent = props => {
                       type="text"
                       autoComplete="off"
                       value={manualAddress.streetNumber}
-                      onChange={e => {
-                        const newAddress = { ...manualAddress, streetNumber: e.target.value };
-                        setManualAddress(newAddress);
-                        if (invalidFields.includes('streetNumber') && e.target.value.trim()) {
-                          setInvalidFields(invalidFields.filter(f => f !== 'streetNumber'));
-                        }
-                      }}
+                      onChange={e =>
+                        handleModalAddressFieldChange('streetNumber', e.target.value, manualAddress)
+                      }
                       className={`${css.input} ${
                         invalidFields.includes('streetNumber') ? css.inputInvalid : ''
                       }`}
@@ -4537,31 +4881,50 @@ export const PreviewListingPageComponent = props => {
                       setSelectedCountryData(country ? { ...country, name: translatedName } : null);
                       setSelectedStateData(null);
                       setSelectedCityData(null);
-                      setManualAddress(prev => ({ ...prev, country: translatedName, region: '', city: '' }));
+                      const newAddr = {
+                        ...manualAddress,
+                        country: translatedName,
+                        region: '',
+                        city: '',
+                      };
+                      setManualAddress(newAddr);
                       if (invalidFields.includes('country') && translatedName) {
                         setInvalidFields(invalidFields.filter(f => f !== 'country'));
                       }
+                      triggerModalGeocode(newAddr);
                     }}
                     onStateChange={(state, stateName, stateCode) => {
-                      setSelectedStateData(state ? { ...state, name: stateName, state_code: stateCode } : null);
+                      setSelectedStateData(
+                        state ? { ...state, name: stateName, state_code: stateCode } : null
+                      );
                       setSelectedCityData(null);
-                      setManualAddress(prev => ({ ...prev, region: stateCode || stateName, city: '' }));
+                      const newAddr = {
+                        ...manualAddress,
+                        region: stateCode || stateName,
+                        city: '',
+                      };
+                      setManualAddress(newAddr);
                       if (invalidFields.includes('region') && stateName) {
                         setInvalidFields(invalidFields.filter(f => f !== 'region'));
                       }
+                      triggerModalGeocode(newAddr);
                     }}
                     onCityChange={(city, cityName) => {
                       setSelectedCityData(city ? { ...city, name: cityName } : null);
-                      setManualAddress(prev => ({ ...prev, city: cityName }));
+                      const newAddr = { ...manualAddress, city: cityName };
+                      setManualAddress(newAddr);
                       if (invalidFields.includes('city') && cityName) {
                         setInvalidFields(invalidFields.filter(f => f !== 'city'));
                       }
+                      triggerModalGeocode(newAddr);
                     }}
-                    onPostalCodeChange={(postalCode) => {
-                      setManualAddress(prev => ({ ...prev, postalCode }));
+                    onPostalCodeChange={postalCode => {
+                      const newAddr = { ...manualAddress, postalCode };
+                      setManualAddress(newAddr);
                       if (invalidFields.includes('postalCode') && postalCode.trim()) {
                         setInvalidFields(invalidFields.filter(f => f !== 'postalCode'));
                       }
+                      triggerModalGeocode(newAddr);
                     }}
                     className={css.cascadingDropdownsContainer}
                     labelClassName={css.fieldLabel}
@@ -4570,19 +4933,15 @@ export const PreviewListingPageComponent = props => {
                   />
                 </div>
               )}
-
             </div>
 
             {/* Modal Actions */}
             <div className={css.drawerActions}>
-              <SecondaryButton
-                onClick={handleCloseLocationDrawer}
-                disabled={updatingListing}
-              >
+              <SecondaryButton onClick={handleCloseLocationDrawer} disabled={updatingListing}>
                 <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Cancel" />
               </SecondaryButton>
-              <PrimaryButton 
-                onClick={handleSaveLocation} 
+              <PrimaryButton
+                onClick={handleSaveLocation}
                 inProgress={updatingListing}
                 disabled={
                   updatingListing ||
@@ -4605,9 +4964,20 @@ export const PreviewListingPageComponent = props => {
 
         {/* Image Lightbox Modal with Prev/Next Navigation */}
         {showImageModal && visibleImages && visibleImages.length > 0 && (
-          <div className={css.imageModalOverlay} onClick={handleCloseImageModal} role="dialog" aria-modal="true" aria-label={intl.formatMessage({ id: 'PreviewListingPage.imageModal' })}>
+          <div
+            className={css.imageModalOverlay}
+            onClick={handleCloseImageModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={intl.formatMessage({ id: 'PreviewListingPage.imageModal' })}
+          >
             <div className={css.imageModalContent} onClick={e => e.stopPropagation()}>
-              <button type="button" className={css.imageModalClose} onClick={handleCloseImageModal} aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}>
+              <button
+                type="button"
+                className={css.imageModalClose}
+                onClick={handleCloseImageModal}
+                aria-label={intl.formatMessage({ id: 'Modal.closeModal' })}
+              >
                 ×
               </button>
 
@@ -4620,7 +4990,10 @@ export const PreviewListingPageComponent = props => {
 
               {/* Current Image */}
               {(() => {
-                const mainImage = visibleImages[selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex];
+                const mainImage =
+                  visibleImages[
+                    selectedImageIndex >= visibleImages.length ? 0 : selectedImageIndex
+                  ];
                 if (!mainImage) return null;
                 const variants = mainImage?.attributes?.variants || {};
                 // Prioritize scaled-* variants to preserve original aspect ratio (no cropping)
@@ -4691,47 +5064,53 @@ export const PreviewListingPageComponent = props => {
           </div>
         </Modal>
 
-      {/* Delete Draft Confirmation Dialog */}
-      {showDeleteDraftDialog && (
-        <div className={css.dialogOverlay}>
-          <div className={css.dialogBox}>
-            <h3 className={css.dialogTitle}>
-              <FormattedMessage
-                id="PreviewListingPage.deleteDraftDialogTitle"
-                defaultMessage="Elimina annuncio"
-              />
-            </h3>
-            <p className={css.dialogMessage}>
-              <FormattedMessage
-                id="PreviewListingPage.deleteDraftConfirm"
-                defaultMessage="Sei sicuro di voler eliminare questo annuncio in bozza? Questa azione non può essere annullata."
-              />
-            </p>
-            <div className={css.dialogButtons}>
-              <button
-                type="button"
-                onClick={handleCancelDeleteDraft}
-                className={css.dialogSecondaryButton}
-                disabled={deleteDraftInProgress}
-              >
-                <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Annulla" />
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeleteDraft}
-                className={css.dialogPrimaryButton}
-                disabled={deleteDraftInProgress}
-              >
-                {deleteDraftInProgress ? (
-                  <FormattedMessage id="PreviewListingPage.deleting" defaultMessage="Eliminazione..." />
-                ) : (
-                  <FormattedMessage id="PreviewListingPage.deleteButton" defaultMessage="Elimina" />
-                )}
-              </button>
+        {/* Delete Draft Confirmation Dialog */}
+        {showDeleteDraftDialog && (
+          <div className={css.dialogOverlay}>
+            <div className={css.dialogBox}>
+              <h3 className={css.dialogTitle}>
+                <FormattedMessage
+                  id="PreviewListingPage.deleteDraftDialogTitle"
+                  defaultMessage="Elimina annuncio"
+                />
+              </h3>
+              <p className={css.dialogMessage}>
+                <FormattedMessage
+                  id="PreviewListingPage.deleteDraftConfirm"
+                  defaultMessage="Sei sicuro di voler eliminare questo annuncio in bozza? Questa azione non può essere annullata."
+                />
+              </p>
+              <div className={css.dialogButtons}>
+                <button
+                  type="button"
+                  onClick={handleCancelDeleteDraft}
+                  className={css.dialogSecondaryButton}
+                  disabled={deleteDraftInProgress}
+                >
+                  <FormattedMessage id="PreviewListingPage.cancelButton" defaultMessage="Annulla" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteDraft}
+                  className={css.dialogPrimaryButton}
+                  disabled={deleteDraftInProgress}
+                >
+                  {deleteDraftInProgress ? (
+                    <FormattedMessage
+                      id="PreviewListingPage.deleting"
+                      defaultMessage="Eliminazione..."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="PreviewListingPage.deleteButton"
+                      defaultMessage="Elimina"
+                    />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </LayoutSingleColumn>
     </Page>
   );
@@ -4779,11 +5158,7 @@ const createSlug = title => {
 };
 
 const mapStateToProps = state => {
-  const { 
-    currentUser,
-    sendVerificationEmailInProgress,
-    sendVerificationEmailError,
-  } = state.user;
+  const { currentUser, sendVerificationEmailInProgress, sendVerificationEmailError } = state.user;
   const { publishListingError, publishInProgress } = state.EditListingPage;
   const {
     getAccountLinkInProgress,
@@ -4817,8 +5192,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => ({
   onFetchListing: (params, config) => dispatch(requestShowListing(params, config)),
-  onUpdateListing: (tab, data, config) =>
-    dispatch(requestUpdateListing(tab, data, config)),
+  onUpdateListing: (tab, data, config) => dispatch(requestUpdateListing(tab, data, config)),
   onManageDisableScrolling: (componentId, disableScrolling) =>
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
   onPublishListingDraft: (listingId, config) =>
@@ -4831,8 +5205,7 @@ const mapDispatchToProps = dispatch => ({
   onFetchCurrentUser: options => dispatch(fetchCurrentUser(options)),
   onFetchAvailabilityForCalendar: (listing, options) =>
     dispatch(fetchAvailabilityForCalendar(listing, options)),
-  onFetchAvailabilityExceptions: listing =>
-    dispatch(fetchAvailabilityExceptionsForModal(listing)),
+  onFetchAvailabilityExceptions: listing => dispatch(fetchAvailabilityExceptionsForModal(listing)),
   onUploadImage: (listingId, imageFile, config) =>
     dispatch((dispatch, getState, sdk) => {
       const imageVariantInfo = getImageVariantInfo(config?.layout?.listingImage || {});
@@ -4864,7 +5237,7 @@ const mapDispatchToProps = dispatch => ({
   onDeleteImage: (listingId, imageId, currentImages, config) =>
     dispatch((dispatch, getState, sdk) => {
       const imageUuid = typeof imageId === 'object' ? imageId.uuid : imageId;
-      
+
       // Use the current images array passed from the component
       // This works for both drafts and published listings
       if (!currentImages || currentImages.length === 0) {
@@ -4877,7 +5250,10 @@ const mapDispatchToProps = dispatch => ({
 
 const PreviewListingPage = compose(
   withRouter,
-  connect(mapStateToProps, mapDispatchToProps),
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  ),
   injectIntl
 )(PreviewListingPageComponent);
 

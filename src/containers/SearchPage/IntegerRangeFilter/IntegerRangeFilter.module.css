@@ -106,8 +106,21 @@
 
 .sliderWrapper {
   display: flex;
-  padding: 17px 0 25px 0;
+  padding: 17px 0 10px 0;
   @media (--viewportMedium) {
-    padding: 3px 0 13px 0;
+    padding: 3px 0 8px 0;
   }
+}
+
+.sidebarPriceLabels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0 8px;
+}
+
+.sidebarPriceMin,
+.sidebarPriceMax {
+  font-size: 12px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorGrey500);
 }

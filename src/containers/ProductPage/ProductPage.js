@@ -138,7 +138,8 @@ const MOCK_REVIEWS = [
     id: { uuid: 'mock-review-1' },
     attributes: {
       rating: 5,
-      content: 'Prodotto in condizioni perfette, esattamente come descritto. Il proprietario è stato molto disponibile e puntuale nella consegna. Consigliatissimo!',
+      content:
+        'Prodotto in condizioni perfette, esattamente come descritto. Il proprietario è stato molto disponibile e puntuale nella consegna. Consigliatissimo!',
       createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     },
     author: {
@@ -155,7 +156,8 @@ const MOCK_REVIEWS = [
     id: { uuid: 'mock-review-2' },
     attributes: {
       rating: 4,
-      content: 'Ottima esperienza di noleggio. Il prodotto funzionava benissimo. Unica nota: la riconsegna potrebbe essere più flessibile.',
+      content:
+        'Ottima esperienza di noleggio. Il prodotto funzionava benissimo. Unica nota: la riconsegna potrebbe essere più flessibile.',
       createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
     },
     author: {
@@ -172,7 +174,8 @@ const MOCK_REVIEWS = [
     id: { uuid: 'mock-review-3' },
     attributes: {
       rating: 5,
-      content: 'Fantastico! Ho noleggiato per un weekend e tutto è andato alla grande. Tornerò sicuramente.',
+      content:
+        'Fantastico! Ho noleggiato per un weekend e tutto è andato alla grande. Tornerò sicuramente.',
       createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
     },
     author: {
@@ -281,7 +284,7 @@ const heroTitleTrailingAccentWordCount = (listingIdUuid, rawTitle, wordCount) =>
 
 // Price variant card component (display only, not clickable)
 const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
-  const formatPriceVariantLabel = (variant) => {
+  const formatPriceVariantLabel = variant => {
     const variantType = variant.type || (variant.period || variant.dates ? 'period' : 'duration');
 
     // Handle period-based variants
@@ -290,34 +293,81 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
       const end = new Date(variant.dates[variant.dates.length - 1]);
       const formatDate = date => {
         const day = date.getDate();
-        const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+        const monthNames = [
+          'Gen',
+          'Feb',
+          'Mar',
+          'Apr',
+          'Mag',
+          'Giu',
+          'Lug',
+          'Ago',
+          'Set',
+          'Ott',
+          'Nov',
+          'Dic',
+        ];
         const month = monthNames[date.getMonth()];
         return `${day} ${month}`;
       };
       return `${formatDate(start)} - ${formatDate(end)}`;
     }
 
-    if (variantType === 'period' && variant.period && typeof variant.period === 'string' && variant.period.trim()) {
+    if (
+      variantType === 'period' &&
+      variant.period &&
+      typeof variant.period === 'string' &&
+      variant.period.trim()
+    ) {
       const formatPeriodDate = dateStr => {
         if (dateStr.length === 8 && /^\d+$/.test(dateStr)) {
           const year = parseInt(dateStr.substring(0, 4), 10);
           const month = parseInt(dateStr.substring(4, 6), 10) - 1;
           const day = parseInt(dateStr.substring(6, 8), 10);
           const date = new Date(year, month, day);
-          const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+          const monthNames = [
+            'Gen',
+            'Feb',
+            'Mar',
+            'Apr',
+            'Mag',
+            'Giu',
+            'Lug',
+            'Ago',
+            'Set',
+            'Ott',
+            'Nov',
+            'Dic',
+          ];
           return `${date.getDate()} ${monthNames[date.getMonth()]}`;
         }
 
         const parsedDate = new Date(dateStr);
         if (!isNaN(parsedDate.getTime())) {
-          const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+          const monthNames = [
+            'Gen',
+            'Feb',
+            'Mar',
+            'Apr',
+            'Mag',
+            'Giu',
+            'Lug',
+            'Ago',
+            'Set',
+            'Ott',
+            'Nov',
+            'Dic',
+          ];
           return `${parsedDate.getDate()} ${monthNames[parsedDate.getMonth()]}`;
         }
 
         return dateStr;
       };
 
-      const periodValues = variant.period.split(',').map(value => value.trim()).filter(Boolean);
+      const periodValues = variant.period
+        .split(',')
+        .map(value => value.trim())
+        .filter(Boolean);
       const firstPeriod = periodValues[0];
 
       if (firstPeriod && firstPeriod.includes('-')) {
@@ -337,11 +387,11 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
 
       return formatPeriodDate(firstPeriod);
     }
-    
+
     // Handle duration-based variants
     const minDuration = variant.minDuration || variant.minLength;
     const maxDuration = variant.maxDuration || variant.maxLength;
-    
+
     if (minDuration && maxDuration) {
       return intl.formatMessage(
         { id: 'ProductPage.fromToDays', defaultMessage: 'da {min} a {max} giorni' },
@@ -353,7 +403,7 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
         { days: minDuration }
       );
     }
-    
+
     if (variantType === 'period') {
       return '';
     }
@@ -367,10 +417,7 @@ const PriceVariantCard = ({ variant, currency, intl, marketplaceColor }) => {
       : formatMoney(intl, new Money(variant.priceInSubunits, currency));
 
   return (
-    <div
-      className={css.priceVariantCard}
-      style={{ borderColor: marketplaceColor }}
-    >
+    <div className={css.priceVariantCard} style={{ borderColor: marketplaceColor }}>
       <div className={css.priceVariantPrice}>{priceDisplay}</div>
       <div className={css.priceVariantLabel}>{formatPriceVariantLabel(variant)}</div>
     </div>
@@ -417,7 +464,9 @@ const BookingForm = props => {
   const shippingEnabled = publicData?.shippingEnabled !== false;
   const pickupEnabled = !!publicData?.pickupEnabled;
   const hasDeliveryMethodChoice =
-    (handByHandAvailable && shippingEnabled) || (handByHandAvailable && pickupEnabled) || (shippingEnabled && pickupEnabled);
+    (handByHandAvailable && shippingEnabled) ||
+    (handByHandAvailable && pickupEnabled) ||
+    (shippingEnabled && pickupEnabled);
   const defaultDeliveryMethod = shippingEnabled
     ? 'shipping'
     : handByHandAvailable
@@ -458,7 +507,12 @@ const BookingForm = props => {
         setDisabledDates([]);
       })
       .finally(() => setIsLoadingAvailability(false));
-  }, [listing?.id, onFetchAvailabilityForCalendar, config?.listing?.unavailabilityPaddingStart, config?.listing?.unavailabilityPaddingEnd]);
+  }, [
+    listing?.id,
+    onFetchAvailabilityForCalendar,
+    config?.listing?.unavailabilityPaddingStart,
+    config?.listing?.unavailabilityPaddingEnd,
+  ]);
 
   const fetchLineItemsForDatesAndDelivery = (startDate, endDate, dm, coupon = couponCode) => {
     const method = dm ?? deliveryMethod;
@@ -495,10 +549,18 @@ const BookingForm = props => {
     try {
       const listingIdStr = listing?.id?.uuid ?? listing?.id ?? null;
       if (!listingIdStr) {
-        setCouponError(intl.formatMessage({ id: 'ProductPage.couponError', defaultMessage: 'Errore durante la validazione del coupon' }));
+        setCouponError(
+          intl.formatMessage({
+            id: 'ProductPage.couponError',
+            defaultMessage: 'Errore durante la validazione del coupon',
+          })
+        );
         return;
       }
-      const locale = (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) || intl.locale || 'it';
+      const locale =
+        (typeof localStorage !== 'undefined' && localStorage.getItem('marketplace_locale')) ||
+        intl.locale ||
+        'it';
       const localeBase = locale.split('-')[0] || 'it';
 
       const orderTotal = lineItems ? getOrderTotalInMinorUnits(lineItems) : undefined;
@@ -535,7 +597,8 @@ const BookingForm = props => {
         if (result.reasonCode === 'DISCOUNT_ALREADY_ACTIVE') {
           message = intl.formatMessage({
             id: 'ProductPage.couponReasonDiscountAlreadyActive',
-            defaultMessage: 'Questo coupon non può essere usato quando è già attivo uno sconto su questo listing.',
+            defaultMessage:
+              'Questo coupon non può essere usato quando è già attivo uno sconto su questo listing.',
           });
         } else if (result.reasonCode === 'MIN_ORDER_NOT_MET' && result.minOrderValue != null) {
           const amountFormatted = formatMoney(intl, new Money(result.minOrderValue, currency));
@@ -549,12 +612,21 @@ const BookingForm = props => {
         } else {
           message =
             result.reason ||
-            intl.formatMessage({ id: 'ProductPage.couponInvalid', defaultMessage: 'Codice coupon non valido' });
+            intl.formatMessage({
+              id: 'ProductPage.couponInvalid',
+              defaultMessage: 'Codice coupon non valido',
+            });
         }
         setCouponError(message);
       }
     } catch (e) {
-      setCouponError(e.message || intl.formatMessage({ id: 'ProductPage.couponError', defaultMessage: 'Errore durante la validazione del coupon' }));
+      setCouponError(
+        e.message ||
+          intl.formatMessage({
+            id: 'ProductPage.couponError',
+            defaultMessage: 'Errore durante la validazione del coupon',
+          })
+      );
     } finally {
       setCouponValidating(false);
     }
@@ -586,7 +658,7 @@ const BookingForm = props => {
     return unitType === 'night' ? diffDays : diffDays + 1;
   };
 
-  const handleCalendarDatesChange = (dates) => {
+  const handleCalendarDatesChange = dates => {
     setCalendarSelectedDates(dates || []);
 
     if (dates && dates.length >= 2) {
@@ -594,7 +666,7 @@ const BookingForm = props => {
     }
   };
 
-  const handleDeliveryMethodChange = (value) => {
+  const handleDeliveryMethodChange = value => {
     setDeliveryMethod(value);
     if (calendarSelectedDates.length >= 2) {
       fetchLineItemsForDatesAndDelivery(
@@ -607,7 +679,10 @@ const BookingForm = props => {
 
   const hasValidDates = calendarSelectedDates.length >= 2;
   const bookingUnits = hasValidDates
-    ? getBookingUnitsForDates(calendarSelectedDates[0], calendarSelectedDates[calendarSelectedDates.length - 1])
+    ? getBookingUnitsForDates(
+        calendarSelectedDates[0],
+        calendarSelectedDates[calendarSelectedDates.length - 1]
+      )
     : 0;
   const appliesToUnitType = unitType === 'day' || unitType === 'night';
   const commissionMinFromError = fetchLineItemsError?.minimumBookingUnits;
@@ -617,8 +692,7 @@ const BookingForm = props => {
       : 0;
   const hasMinimumDuration =
     !appliesToUnitType || effectiveMinimum === 0 || bookingUnits >= effectiveMinimum;
-  const canShowFullBookingUI =
-    hasValidDates && hasMinimumDuration && !fetchLineItemsError;
+  const canShowFullBookingUI = hasValidDates && hasMinimumDuration && !fetchLineItemsError;
   // Use exclusive end date (day after last selected) so LineItemBookingPeriod shows the correct last day
   const breakdownData = hasValidDates
     ? (() => {
@@ -674,7 +748,7 @@ const BookingForm = props => {
 
     const startDate = calendarSelectedDates[0];
     const endDate = calendarSelectedDates[calendarSelectedDates.length - 1];
-    
+
     // Add one day to end date for API (exclusive end)
     const endDateForAPI = new Date(endDate);
     endDateForAPI.setDate(endDateForAPI.getDate() + 1);
@@ -699,7 +773,12 @@ const BookingForm = props => {
       <div className={css.calendarSection}>
         {isLoadingAvailability ? (
           <div className={css.calendarSkeleton} aria-busy="true" aria-live="polite">
-            <SkeletonTheme baseColor="#e0e0e0" highlightColor="#f0f0f0" duration={1.4} enableAnimation>
+            <SkeletonTheme
+              baseColor="#e0e0e0"
+              highlightColor="#f0f0f0"
+              duration={1.4}
+              enableAnimation
+            >
               <div className={css.calendarSkeletonNav}>
                 <Skeleton circle width={40} height={40} />
                 <Skeleton circle width={40} height={40} />
@@ -764,7 +843,9 @@ const BookingForm = props => {
             {shippingEnabled && (
               <button
                 type="button"
-                className={`${css.deliveryChip} ${deliveryMethod === 'shipping' ? css.deliveryChipSelected : ''}`}
+                className={`${css.deliveryChip} ${
+                  deliveryMethod === 'shipping' ? css.deliveryChipSelected : ''
+                }`}
                 onClick={() => handleDeliveryMethodChange('shipping')}
                 style={
                   deliveryMethod === 'shipping'
@@ -782,7 +863,9 @@ const BookingForm = props => {
             {handByHandAvailable && (
               <button
                 type="button"
-                className={`${css.deliveryChip} ${deliveryMethod === 'hand-by-hand' ? css.deliveryChipSelected : ''}`}
+                className={`${css.deliveryChip} ${
+                  deliveryMethod === 'hand-by-hand' ? css.deliveryChipSelected : ''
+                }`}
                 onClick={() => handleDeliveryMethodChange('hand-by-hand')}
                 style={
                   deliveryMethod === 'hand-by-hand'
@@ -800,7 +883,9 @@ const BookingForm = props => {
             {pickupEnabled && (
               <button
                 type="button"
-                className={`${css.deliveryChip} ${deliveryMethod === 'pickup' ? css.deliveryChipSelected : ''}`}
+                className={`${css.deliveryChip} ${
+                  deliveryMethod === 'pickup' ? css.deliveryChipSelected : ''
+                }`}
                 onClick={() => handleDeliveryMethodChange('pickup')}
                 style={
                   deliveryMethod === 'pickup'
@@ -823,7 +908,10 @@ const BookingForm = props => {
       {canShowFullBookingUI && (showEstimatedBreakdown || showBreakdownSkeleton) && (
         <div className={css.breakdownSection}>
           <H6 as="h3" className={css.breakdownTitle}>
-            <FormattedMessage id="ProductPage.priceBreakdownTitle" defaultMessage="Riepilogo prezzo" />
+            <FormattedMessage
+              id="ProductPage.priceBreakdownTitle"
+              defaultMessage="Riepilogo prezzo"
+            />
           </H6>
           <hr className={css.breakdownDivider} />
           {showBreakdownSkeleton ? (
@@ -874,7 +962,9 @@ const BookingForm = props => {
                         setCouponApplied(false);
                         setCouponError(null);
                       }}
-                      placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
+                      placeholder={intl.formatMessage({
+                        id: 'BookingDatesForm.couponCodePlaceholder',
+                      })}
                       autoComplete="off"
                     />
                     <button
@@ -888,7 +978,10 @@ const BookingForm = props => {
                       }}
                     >
                       {couponValidating ? (
-                        <FormattedMessage id="ProductPage.couponValidating" defaultMessage="Verifica..." />
+                        <FormattedMessage
+                          id="ProductPage.couponValidating"
+                          defaultMessage="Verifica..."
+                        />
                       ) : couponApplied ? (
                         <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
                       ) : (
@@ -913,46 +1006,54 @@ const BookingForm = props => {
             />
           )}
           {/* Coupon code when skeleton is shown (when real breakdown is shown, coupon is inside OrderBreakdown after booking period) */}
-          {canShowFullBookingUI && (showEstimatedBreakdown || showBreakdownSkeleton) && showBreakdownSkeleton && (
-            <div className={css.couponSection}>
-              <label htmlFor="productPage-couponCode-skeleton" className={css.couponLabel}>
-                <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
-              </label>
-              <div className={css.couponRow}>
-                <input
-                  id="productPage-couponCode-skeleton"
-                  type="text"
-                  className={css.couponInput}
-                  value={couponCode}
-                  onChange={e => {
-                    setCouponCode(e.target.value);
-                    setCouponApplied(false);
-                  }}
-                  placeholder={intl.formatMessage({ id: 'BookingDatesForm.couponCodePlaceholder' })}
-                  autoComplete="off"
-                />
-                <button
-                  type="button"
-                  className={css.couponApplyButton}
-                  onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
-                  disabled={fetchLineItemsInProgress || couponValidating}
-                  style={{
-                    backgroundColor: marketplaceColor,
-                    color: 'white',
-                  }}
-                >
-                  {couponValidating ? (
-                    <FormattedMessage id="ProductPage.couponValidating" defaultMessage="Verifica..." />
-                  ) : couponApplied ? (
-                    <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
-                  ) : (
-                    <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
-                  )}
-                </button>
+          {canShowFullBookingUI &&
+            (showEstimatedBreakdown || showBreakdownSkeleton) &&
+            showBreakdownSkeleton && (
+              <div className={css.couponSection}>
+                <label htmlFor="productPage-couponCode-skeleton" className={css.couponLabel}>
+                  <FormattedMessage id="BookingDatesForm.couponCodeLabel" />
+                </label>
+                <div className={css.couponRow}>
+                  <input
+                    id="productPage-couponCode-skeleton"
+                    type="text"
+                    className={css.couponInput}
+                    value={couponCode}
+                    onChange={e => {
+                      setCouponCode(e.target.value);
+                      setCouponApplied(false);
+                      setCouponError(null);
+                    }}
+                    placeholder={intl.formatMessage({
+                      id: 'BookingDatesForm.couponCodePlaceholder',
+                    })}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    className={css.couponApplyButton}
+                    onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
+                    disabled={fetchLineItemsInProgress || couponValidating}
+                    style={{
+                      backgroundColor: marketplaceColor,
+                      color: 'white',
+                    }}
+                  >
+                    {couponValidating ? (
+                      <FormattedMessage
+                        id="ProductPage.couponValidating"
+                        defaultMessage="Verifica..."
+                      />
+                    ) : couponApplied ? (
+                      <FormattedMessage id="ProductPage.couponRemove" defaultMessage="Remove" />
+                    ) : (
+                      <FormattedMessage id="ProductPage.couponApply" defaultMessage="Apply" />
+                    )}
+                  </button>
+                </div>
+                {couponError && <p className={css.couponError}>{couponError}</p>}
               </div>
-              {couponError && <p className={css.couponError}>{couponError}</p>}
-            </div>
-          )}
+            )}
         </div>
       )}
 
@@ -975,13 +1076,13 @@ const BookingForm = props => {
           />
         )}
       </p>
-            {/* Price Variant Cards (display only, excluding default) */}
-            {priceVariants.length > 0 && (
+      {/* Price Variant Cards (display only, excluding default) */}
+      {priceVariants.length > 0 && (
         <div className={css.priceVariantsSection}>
           <h3 className={css.sectionTitle}>
-            <FormattedMessage 
-              id="ProductPage.discountForRental" 
-              defaultMessage="Sconto per tutta la durata del noleggio" 
+            <FormattedMessage
+              id="ProductPage.discountForRental"
+              defaultMessage="Sconto per tutta la durata del noleggio"
             />
           </h3>
           <div className={css.priceVariantsGrid}>
@@ -1108,17 +1209,19 @@ export const ProductPageComponent = props => {
     // Extract address from publicData.location
     const location = listingPublicData?.location || {};
     const addressObj = location.address || {};
-    const addressString = typeof addressObj === 'string' 
-      ? addressObj 
-      : addressObj.street && addressObj.streetNumber
-      ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city || ''} ${addressObj.postalCode || ''}`.trim()
-      : addressObj.city || addressObj.address || '';
+    const addressString =
+      typeof addressObj === 'string'
+        ? addressObj
+        : addressObj.street && addressObj.streetNumber
+        ? `${addressObj.street} ${addressObj.streetNumber}, ${addressObj.city ||
+            ''} ${addressObj.postalCode || ''}`.trim()
+        : addressObj.city || addressObj.address || '';
 
     // If no geolocation but address exists, try to geocode it
     if (!listingGeolocation && addressString) {
       setIsGeocoding(true);
       const countryCode = getCountryForLocale(intl.locale);
-      
+
       geocodeAddress(addressString, countryCode)
         .then(coords => {
           if (coords) {
@@ -1138,7 +1241,12 @@ export const ProductPageComponent = props => {
       setGeocodedLocation(null);
       setIsGeocoding(false);
     }
-  }, [listingGeolocation, listingPublicData?.location, listingPublicData?.locationVisible, intl.locale]);
+  }, [
+    listingGeolocation,
+    listingPublicData?.location,
+    listingPublicData?.locationVisible,
+    intl.locale,
+  ]);
 
   const listingSlug = rawParams.slug || createSlug(currentListing.attributes?.title || '');
   const params = { slug: listingSlug, ...rawParams };
@@ -1228,7 +1336,9 @@ export const ProductPageComponent = props => {
   ) : null;
 
   const authorDisplayName = userDisplayNameAsString(ensuredAuthor, '');
-  const foundListingTypeConfig = listingConfig.listingTypes?.find(c => c.listingType === listingType);
+  const foundListingTypeConfig = listingConfig.listingTypes?.find(
+    c => c.listingType === listingType
+  );
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, foundListingTypeConfig);
   const cardPriceVariants = publicData?.priceVariants || [];
   const hasMultiplePriceVariants = isPriceVariationsInUse && cardPriceVariants.length > 1;
@@ -1243,7 +1353,9 @@ export const ProductPageComponent = props => {
       .filter(v => v.type === 'duration' && v.percentageDiscount != null)
       .reduce((max, v) => Math.max(max, v.percentageDiscount), 0);
     const discountedSubunits =
-      maxDiscount > 0 ? Math.round(lowestFixedSubunits * (1 - maxDiscount / 100)) : lowestFixedSubunits;
+      maxDiscount > 0
+        ? Math.round(lowestFixedSubunits * (1 - maxDiscount / 100))
+        : lowestFixedSubunits;
     priceForDisplay = new Money(discountedSubunits, price.currency);
   }
   const { formattedPrice } = priceData(priceForDisplay, config.currency, intl);
@@ -1267,13 +1379,14 @@ export const ProductPageComponent = props => {
 
   // Calculate author reviews average and total
   const authorReviewsCount = authorReviews.length;
-  const authorAverageRating = authorReviewsCount > 0
-    ? Math.round(
-        (authorReviews.reduce((sum, review) => sum + (review.attributes?.rating || 0), 0) /
-          authorReviewsCount) *
-          10
-      ) / 10
-    : 0;
+  const authorAverageRating =
+    authorReviewsCount > 0
+      ? Math.round(
+          (authorReviews.reduce((sum, review) => sum + (review.attributes?.rating || 0), 0) /
+            authorReviewsCount) *
+            10
+        ) / 10
+      : 0;
   const authorAverageRatingRounded = authorAverageRating > 0 ? Math.round(authorAverageRating) : 0;
 
   const commonParams = { params, history, routes: routeConfiguration };
@@ -1372,19 +1485,17 @@ export const ProductPageComponent = props => {
         {/* ===== SPLIT HERO SECTION ===== */}
         <section
           className={classNames(css.heroSection, {
-            [css.heroSectionHasFixedActionBar]:
-              mounted && currentListing.id && isOwnListing,
+            [css.heroSectionHasFixedActionBar]: mounted && currentListing.id && isOwnListing,
           })}
         >
           {/* Left: Portrait Image Container */}
           <div className={css.heroImageContainer}>
-            <div className={css.heroPortraitFrame} onClick={() => images.length > 0 && setImageModalOpen(true)}>
+            <div
+              className={css.heroPortraitFrame}
+              onClick={() => images.length > 0 && setImageModalOpen(true)}
+            >
               {images.length > 0 ? (
-                <img
-                  src={mainImageUrl}
-                  alt={title}
-                  className={css.heroImage}
-                />
+                <img src={mainImageUrl} alt={title} className={css.heroImage} />
               ) : (
                 <ResponsiveImage
                   className={css.heroImageFallback}
@@ -1402,7 +1513,7 @@ export const ProductPageComponent = props => {
                     className={classNames(css.heroImageNav, css.heroNavPrev)}
                     onClick={e => {
                       e.stopPropagation();
-                      setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
+                      setSelectedImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
                     }}
                   >
                     <IconArrowHead direction="left" size="big" />
@@ -1412,7 +1523,7 @@ export const ProductPageComponent = props => {
                     className={classNames(css.heroImageNav, css.heroNavNext)}
                     onClick={e => {
                       e.stopPropagation();
-                      setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
+                      setSelectedImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
                     }}
                   >
                     <IconArrowHead direction="right" size="big" />
@@ -1500,7 +1611,7 @@ export const ProductPageComponent = props => {
                 const trailing = words.slice(-n).join(' ');
                 return (
                   <>
-                    {leading}{' '}<span className={css.heroTitleAccent}>{trailing}</span>
+                    {leading} <span className={css.heroTitleAccent}>{trailing}</span>
                   </>
                 );
               })()}
@@ -1509,7 +1620,7 @@ export const ProductPageComponent = props => {
             {/* Price + author (stessa riga: prezzo a sinistra, venditore a destra) */}
             <div className={css.heroAuthorSection}>
               {price ? (
-                               <div className={css.heroAuthorRowPrice}>
+                <div className={css.heroAuthorRowPrice}>
                   {listingCardStylePrice(css.heroAuthorPrice, css.heroAuthorPriceUnit)}
                 </div>
               ) : null}
@@ -1554,9 +1665,11 @@ export const ProductPageComponent = props => {
               if (!conditionRaw && !brandRaw) return null;
 
               const toCamelCase = str =>
-                str.replace(/(?:^\w|[A-Z]|\b\w)/g, (ch, i) =>
-                  i === 0 ? ch.toLowerCase() : ch.toUpperCase()
-                ).replace(/[\s\-_]+/g, '');
+                str
+                  .replace(/(?:^\w|[A-Z]|\b\w)/g, (ch, i) =>
+                    i === 0 ? ch.toLowerCase() : ch.toUpperCase()
+                  )
+                  .replace(/[\s\-_]+/g, '');
               const conditionKey = conditionRaw ? toCamelCase(conditionRaw) : '';
               const conditionMessageId = `ProductPage.condition.${conditionKey}`;
               const conditionLabel = conditionRaw
@@ -1581,7 +1694,10 @@ export const ProductPageComponent = props => {
                       <div className={css.heroFeatureCardIcon}>✓</div>
                       <div className={css.heroFeatureCardContent}>
                         <p className={css.heroFeatureCardLabel}>
-                          <FormattedMessage id="ProductPage.conditionLabel" defaultMessage="Condizione" />
+                          <FormattedMessage
+                            id="ProductPage.conditionLabel"
+                            defaultMessage="Condizione"
+                          />
                         </p>
                         <h3 className={css.heroFeatureCardTitle}>{conditionLabel}</h3>
                       </div>
@@ -1681,7 +1797,10 @@ export const ProductPageComponent = props => {
                       window.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
                     }}
                   >
-                    <FormattedMessage id="ProductPage.requestToBook" defaultMessage="Richiedi prenotazione" />
+                    <FormattedMessage
+                      id="ProductPage.requestToBook"
+                      defaultMessage="Richiedi prenotazione"
+                    />
                   </button>
                 )}
               </>
@@ -1724,16 +1843,21 @@ export const ProductPageComponent = props => {
                 onClick={() => {
                   const el = document.getElementById('owner-card');
                   if (el) {
-                    const topbarEl = document.querySelector('[class*="Topbar_container"]') ||
-                                   document.querySelector('[class*="TopbarDesktop"]') ||
-                                   document.querySelector('nav');
+                    const topbarEl =
+                      document.querySelector('[class*="Topbar_container"]') ||
+                      document.querySelector('[class*="TopbarDesktop"]') ||
+                      document.querySelector('nav');
                     const navbarHeight = topbarEl ? topbarEl.offsetHeight : 64;
-                    const offset = el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                    const offset =
+                      el.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
                     window.scrollTo({ top: offset, behavior: 'smooth' });
                   }
                 }}
               >
-                <FormattedMessage id="ProductPage.viewOwnerCard" defaultMessage="Scheda proprietario" />
+                <FormattedMessage
+                  id="ProductPage.viewOwnerCard"
+                  defaultMessage="Scheda proprietario"
+                />
               </button>
             </div>
           </div>
@@ -1841,20 +1965,22 @@ export const ProductPageComponent = props => {
               {(() => {
                 const keyFeatures = publicData.keyFeatures || publicData.key_features || [];
                 const keyFeaturesArray = Array.isArray(keyFeatures) ? keyFeatures : [];
-                return keyFeaturesArray.length > 0 && (
-                  <div className={css.detailsSection}>
-                    <h3 className={css.sectionTitle}>
-                      <FormattedMessage id="ProductPage.details" defaultMessage="Dettagli" />
-                    </h3>
-                    <ul className={css.keyFeaturesList}>
-                      {keyFeaturesArray.map((feature, index) => (
-                        <li key={index} className={css.keyFeatureItem}>
-                          <span className={css.keyFeatureBullet}></span>
-                          <span>{String(feature)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                return (
+                  keyFeaturesArray.length > 0 && (
+                    <div className={css.detailsSection}>
+                      <h3 className={css.sectionTitle}>
+                        <FormattedMessage id="ProductPage.details" defaultMessage="Dettagli" />
+                      </h3>
+                      <ul className={css.keyFeaturesList}>
+                        {keyFeaturesArray.map((feature, index) => (
+                          <li key={index} className={css.keyFeatureItem}>
+                            <span className={css.keyFeatureBullet}></span>
+                            <span>{String(feature)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
                 );
               })()}
 
@@ -1945,7 +2071,10 @@ export const ProductPageComponent = props => {
 
               {isClosed && (
                 <div className={css.closedListing}>
-                  <FormattedMessage id="ProductPage.closedListing" defaultMessage="Questo annuncio è chiuso" />
+                  <FormattedMessage
+                    id="ProductPage.closedListing"
+                    defaultMessage="Questo annuncio è chiuso"
+                  />
                 </div>
               )}
             </div>
@@ -1957,7 +2086,10 @@ export const ProductPageComponent = props => {
           <div className={css.relatedInner}>
             <div className={css.relatedTitleRow}>
               <h2 className={css.relatedTitle}>
-                <FormattedMessage id="ProductPage.relatedProducts" defaultMessage="Prodotti simili" />
+                <FormattedMessage
+                  id="ProductPage.relatedProducts"
+                  defaultMessage="Prodotti simili"
+                />
               </h2>
               <div className={css.testDriveBadge}>
                 <span className={css.testDriveDot} />
@@ -1996,7 +2128,10 @@ export const ProductPageComponent = props => {
                       {product.price}
                       <span className={productListingCardCss.priceUnit}>
                         <span className={productListingCardCss.unitSuffixCompact}>
-                          <FormattedMessage id="ListingCard.perUnitCompact" values={{ unitType: 'day' }} />
+                          <FormattedMessage
+                            id="ListingCard.perUnitCompact"
+                            values={{ unitType: 'day' }}
+                          />
                         </span>
                         <span className={productListingCardCss.unitSuffixFull}>
                           <FormattedMessage id="ProductPage.perDay" defaultMessage="/ giorno" />
@@ -2061,12 +2196,14 @@ export const ProductPageComponent = props => {
               <button
                 type="button"
                 className={classNames(css.modalNavButton, css.modalNavPrev)}
-                onClick={() => setSelectedImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                onClick={() =>
+                  setSelectedImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))
+                }
               >
                 <IconArrowHead direction="left" size="big" />
               </button>
             )}
-            
+
             {mainImageUrl && (
               <img
                 src={mainImageUrl}
@@ -2075,18 +2212,20 @@ export const ProductPageComponent = props => {
                 loading="lazy"
               />
             )}
-            
+
             {/* Next Arrow */}
             {images.length > 1 && (
               <button
                 type="button"
                 className={classNames(css.modalNavButton, css.modalNavNext)}
-                onClick={() => setSelectedImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                onClick={() =>
+                  setSelectedImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))
+                }
               >
                 <IconArrowHead direction="right" size="big" />
               </button>
             )}
-            
+
             {/* Image counter in modal */}
             {images.length > 1 && (
               <div className={css.modalImageCounter}>
@@ -2110,7 +2249,7 @@ const EnhancedProductPage = props => {
   const showListingError = props.showListingError;
   const isVariant = props.params?.variant != null;
   const currentUser = props.currentUser;
-  
+
   if (isForbiddenError(showListingError) && !isVariant && !currentUser) {
     return (
       <NamedRedirect
@@ -2173,15 +2312,11 @@ const mapStateToProps = state => {
     inquiryModalOpenForListingId,
     autoDiscounts,
   } = state.ListingPage;
-  const {
-    authorReviews = [],
-    queryAuthorReviewsError = null,
-  } = state.ProductPage || { authorReviews: [], queryAuthorReviewsError: null };
-  const {
-    currentUser,
-    sendVerificationEmailInProgress,
-    sendVerificationEmailError,
-  } = state.user;
+  const { authorReviews = [], queryAuthorReviewsError = null } = state.ProductPage || {
+    authorReviews: [],
+    queryAuthorReviewsError: null,
+  };
+  const { currentUser, sendVerificationEmailInProgress, sendVerificationEmailError } = state.user;
 
   const getListing = id => {
     const ref = { id, type: 'listing' };

@@ -32,8 +32,10 @@ const getImageVariantInfo = listingImageConfig => {
 
 // ================ Action types ================ //
 
-export const CREATE_LISTING_DRAFT_REQUEST = 'app/AIListingCreationPage/CREATE_LISTING_DRAFT_REQUEST';
-export const CREATE_LISTING_DRAFT_SUCCESS = 'app/AIListingCreationPage/CREATE_LISTING_DRAFT_SUCCESS';
+export const CREATE_LISTING_DRAFT_REQUEST =
+  'app/AIListingCreationPage/CREATE_LISTING_DRAFT_REQUEST';
+export const CREATE_LISTING_DRAFT_SUCCESS =
+  'app/AIListingCreationPage/CREATE_LISTING_DRAFT_SUCCESS';
 export const CREATE_LISTING_DRAFT_ERROR = 'app/AIListingCreationPage/CREATE_LISTING_DRAFT_ERROR';
 
 export const PUBLISH_LISTING_REQUEST = 'app/AIListingCreationPage/PUBLISH_LISTING_REQUEST';
@@ -200,6 +202,7 @@ export const createListingDraft = listingData => (dispatch, getState, sdk) => {
     publicData,
     privateData,
     availabilityPlan,
+    geolocation,
     ...rest
   } = listingData;
 
@@ -219,6 +222,12 @@ export const createListingDraft = listingData => (dispatch, getState, sdk) => {
   // Add availability plan if provided
   if (availabilityPlan) {
     createParams.availabilityPlan = availabilityPlan;
+  }
+
+  // Add geolocation — required for the geographic bounds search filter to work.
+  // The Sharetribe API reads listing.attributes.geolocation, not publicData.location.geolocation.
+  if (geolocation) {
+    createParams.geolocation = geolocation;
   }
 
   return sdk.ownListings
@@ -275,35 +284,34 @@ export const updateListing = (listingId, updateData, config) => (dispatch, getSt
           };
 
           // Upload image with correct query params (second parameter!)
-          return sdk.images
-            .upload({ image: imageFile }, queryParams)
-            .then(response => {
-              const imageId = response.data.data.id;
-              return sdk.ownListings.addImage(
-                { id: listingId, imageId },
-                { expand: true, include: ['images'] }
-              );
-            });
+          return sdk.images.upload({ image: imageFile }, queryParams).then(response => {
+            const imageId = response.data.data.id;
+            return sdk.ownListings.addImage(
+              { id: listingId, imageId },
+              { expand: true, include: ['images'] }
+            );
+          });
         });
       }, Promise.resolve())
     : Promise.resolve();
 
   // Handle availability exceptions (create each one individually)
-  const updateExceptionsPromise = availabilityExceptions && availabilityExceptions.length > 0
-    ? Promise.all(
-        availabilityExceptions.map(exception =>
-          sdk.availabilityExceptions.create(
-            {
-              listingId,
-              start: exception.start,
-              end: exception.end,
-              seats: exception.seats,
-            },
-            { expand: true }
+  const updateExceptionsPromise =
+    availabilityExceptions && availabilityExceptions.length > 0
+      ? Promise.all(
+          availabilityExceptions.map(exception =>
+            sdk.availabilityExceptions.create(
+              {
+                listingId,
+                start: exception.start,
+                end: exception.end,
+                seats: exception.seats,
+              },
+              { expand: true }
+            )
           )
         )
-      )
-    : Promise.resolve();
+      : Promise.resolve();
 
   // Handle other updates
   const updateListingPromise =

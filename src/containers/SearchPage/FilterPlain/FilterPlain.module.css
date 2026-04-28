@@ -2,15 +2,9 @@
 
 .root {
   position: relative;
-  padding-top: 24px;
-  padding-bottom: 17px;
+  padding-top: 20px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--colorGrey100);
-
-  @media (--viewportMedium) {
-    padding-top: 16px;
-    padding-bottom: 0;
-    border-bottom: 0;
-  }
 }
 
 .filterHeader {
@@ -26,11 +20,14 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  background: transparent;
 }
 
 .labelButtonContent {
-  display: inline-block;
+  display: inline-flex;
   width: 100%;
+  align-items: center;
+  justify-content: space-between;
 
   &:hover {
     color: var(--marketplaceColor);
@@ -44,25 +41,21 @@
 
 .labelWrapper {
   display: inline-block;
-  max-width: calc(100% - 16px);
+  max-width: calc(100% - 24px);
 }
 
 .label,
 .labelSelected {
-  composes: marketplaceSmallFontStyles from global;
-  font-weight: var(--fontWeightBold);
-
-  /* Baseline adjustment for label text */
+  font-size: 11px;
+  font-weight: var(--fontWeightSemiBold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   margin-top: 0;
-  margin-bottom: 12px;
-
-  @media (--viewportMedium) {
-    margin-bottom: 8px;
-  }
+  margin-bottom: 4px;
 }
 
 .label {
-  color: var(--colorGrey700);
+  color: var(--colorGrey500);
 }
 
 .labelSelected {
@@ -71,7 +64,17 @@
 }
 
 .openSign {
-  float: right;
+  display: inline-flex;
+  align-items: center;
+  color: var(--colorGrey400);
+  transform: rotate(180deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+
+.openSignOpen {
+  transform: rotate(0deg);
 }
 
 .clearButton {
@@ -79,32 +82,34 @@
   margin: 0;
   display: block;
   font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey600);
-  padding: 2px 0 4px 12px;
+  color: var(--colorGrey500);
+  padding: 2px 0 4px 0;
 
   /* Override button styles */
   outline: none;
   text-align: left;
   border: none;
   cursor: pointer;
+  background: transparent;
 
   &:focus,
   &:hover {
-    color: var(--colorBlack);
+    color: var(--marketplaceColor);
   }
 
   @media (--viewportMedium) {
-    padding: 4px 0 4px 12px;
-    margin-top: 8px;
+    padding: 4px 0 8px 0;
+    margin-top: 4px;
   }
 }
 
 .plain {
   width: 100%;
   display: none;
+  padding-top: 12px;
 
   @media (--viewportMedium) {
-    padding-bottom: 16px;
+    padding-bottom: 4px;
   }
 }
 

@@ -49,3 +49,18 @@
   border-color: var(--marketplaceColorDark);
   color: var(--marketplaceColorDark);
 }
+
+.toggleDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--colorGrey300);
+  margin-right: 7px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.toggleDotSelected {
+  background-color: var(--marketplaceColor);
+}

@@ -110,6 +110,37 @@
   padding-top: 0;
 }
 
+.filterPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--colorGrey100);
+}
+
+.filterPanelTitle {
+  font-size: 16px;
+  font-weight: var(--fontWeightBold);
+  color: var(--colorGrey900);
+}
+
+.filterPanelResetAll {
+  font-size: 13px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--colorGrey400);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    color: var(--marketplaceColor);
+    outline: none;
+  }
+}
+
 .resetAllButton {
   composes: h5 from global;
   font-weight: var(--fontWeightSemiBold);

@@ -3,7 +3,6 @@ import classNames from 'classnames';
 
 import { FormattedMessage, injectIntl, intlShape } from '../../../util/reactIntl';
 
-import IconPlus from '../IconPlus/IconPlus';
 import FilterForm from '../FilterForm/FilterForm';
 
 import css from './FilterPlain.module.css';
@@ -93,8 +92,22 @@ class FilterPlainComponent extends Component {
                   ) : null}
                 </span>
               </span>
-              <span className={css.openSign}>
-                <IconPlus isOpen={this.state.isOpen} isSelected={isSelected} />
+              <span className={classNames(css.openSign, { [css.openSignOpen]: this.state.isOpen })}>
+                <svg
+                  width="12"
+                  height="8"
+                  viewBox="0 0 12 8"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M1 7L6 2L11 7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </span>
             </span>
           </button>
