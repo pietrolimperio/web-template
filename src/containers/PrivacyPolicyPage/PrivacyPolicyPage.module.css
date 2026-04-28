@@ -133,6 +133,15 @@
   line-height: 1.6;
 }
 
+.hero .unavailableNotice {
+  max-width: 720px;
+  margin-top: 12px;
+  color: var(--colorGrey600);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.45;
+}
+
 .heroRule {
   display: block;
   width: 96px;
@@ -319,8 +328,22 @@
   color: var(--colorWhite);
 }
 
+.loading {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 32px 16px 0;
+  color: var(--colorGrey600);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 @media (min-width: 768px) {
   .contentRoot {
+    padding-right: 48px;
+    padding-left: 48px;
+  }
+
+  .loading {
     padding-right: 48px;
     padding-left: 48px;
   }
