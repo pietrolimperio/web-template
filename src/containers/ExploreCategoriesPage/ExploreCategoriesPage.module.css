@@ -1,0 +1,516 @@
+@import '../../styles/customMediaQueries.css';
+
+.layout {
+  min-height: 100vh;
+  grid-template-rows: auto 1fr auto;
+}
+
+.topbar {
+  composes: marketplaceLayoutTopbar from global;
+  position: sticky;
+  top: 0;
+  z-index: var(--zIndexTopbar);
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 64px 20px 88px;
+  background: var(--colorSurfaceContainerLowest);
+  color: var(--colorOnSurface);
+}
+
+.heroSection {
+  max-width: 900px;
+  margin: 0 auto 72px;
+  text-align: center;
+}
+
+.heroKicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-bottom: 16px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--marketplaceColor) 9%, transparent);
+  color: var(--marketplaceColor);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: var(--fontFamilyDisplay);
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: 0;
+  color: var(--colorOnSurface);
+  text-wrap: balance;
+}
+
+.heroTitleAccent {
+  color: var(--marketplaceColor);
+}
+
+.heroSubheadline {
+  max-width: 720px;
+  margin: 22px auto 0;
+  color: var(--matterColorMuted);
+  font-size: 18px;
+  line-height: 1.62;
+}
+
+.bentoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+.categoryCard {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--colorWhite);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 1px rgba(26, 28, 28, 0.06);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.categoryCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(255, 87, 34, 0.11), inset 0 0 0 1px rgba(255, 87, 34, 0.12);
+  text-decoration: none;
+}
+
+.cardDiy {
+  flex-direction: column;
+}
+
+.cardKids,
+.cardKitchen,
+.cardEvents {
+  min-height: 360px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px;
+}
+
+.cardGarden,
+.cardElectronics {
+  flex-direction: column;
+}
+
+.cardSport {
+  min-height: 360px;
+  flex-direction: column;
+  gap: 28px;
+  align-items: stretch;
+  padding: 32px;
+}
+
+.cardEvents {
+  background: var(--marketplaceColor);
+  color: var(--colorWhite);
+  box-shadow: 0 18px 40px rgba(176, 47, 0, 0.18);
+}
+
+.cardEvents:hover {
+  box-shadow: 0 20px 44px rgba(176, 47, 0, 0.24);
+}
+
+.cardCopy {
+  padding: 32px;
+}
+
+.cardDiy .cardCopy {
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cardHeading h2 {
+  margin: 0;
+  font-family: var(--fontFamilyDisplay);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.cardIcon,
+.eventIcon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--marketplaceColor);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.eventIcon {
+  stroke: currentColor;
+}
+
+.cardBody,
+.cardBodyItalic,
+.eventsBody,
+.cardBodySmall {
+  margin: 0 0 24px;
+  color: var(--matterColorMuted);
+  font-size: 16px;
+  line-height: 1.62;
+}
+
+.cardBodyItalic {
+  font-style: italic;
+}
+
+.cardBodySmall {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.eventsBody {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.itemList {
+  display: grid;
+  gap: 12px;
+}
+
+.itemRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--matterColorMuted);
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.itemRow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--marketplaceColor) 42%, transparent);
+}
+
+.cardEvents .itemRow {
+  color: var(--colorWhite);
+}
+
+.cardEvents .itemRow::before {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--matterColorMuted);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.2;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--colorOutlineVariant) 65%, transparent);
+}
+
+.exploreLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  color: var(--marketplaceColor);
+  font-size: 14px;
+  font-weight: 900;
+  transition: transform 0.2s ease;
+}
+
+.exploreLink::after {
+  content: '->';
+}
+
+.categoryCard:hover .exploreLink {
+  transform: translateX(8px);
+}
+
+.diyImage,
+.kidsImage,
+.gardenImage,
+.sportImage,
+.electronicsImage,
+.communityImage {
+  background-position: center;
+  background-size: cover;
+}
+
+.diyImage {
+  min-height: 300px;
+}
+
+.kidsImage {
+  height: 140px;
+  margin-top: 20px;
+  border-radius: 16px;
+}
+
+.gardenImage {
+  height: 210px;
+}
+
+.sportImage {
+  width: 100%;
+  min-height: 260px;
+  border-radius: 18px;
+  box-shadow: 0 18px 32px rgba(26, 28, 28, 0.12);
+}
+
+.electronicsImage {
+  height: 180px;
+}
+
+.cardKids .itemRow,
+.cardKitchen .itemRow {
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--colorSurfaceContainerLow);
+  color: var(--colorOnSurface);
+  text-align: center;
+}
+
+.cardKids .itemRow::before,
+.cardKitchen .itemRow::before {
+  display: none;
+}
+
+.cardKitchen .itemRow {
+  justify-content: space-between;
+  text-align: left;
+}
+
+.cardKitchen .itemRow::after {
+  content: '>';
+  color: color-mix(in srgb, var(--marketplaceColor) 42%, transparent);
+}
+
+.eventRocket {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  border-radius: 999px;
+  background: var(--colorWhite);
+  color: var(--marketplaceColor);
+  box-shadow: inset 0 2px 10px rgba(176, 47, 0, 0.16);
+}
+
+.rocketIcon {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.communityCallout {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: stretch;
+  margin-top: 80px;
+  padding: 32px;
+  border-radius: 20px;
+  background: #dae2ff;
+  color: #0d1a38;
+  box-shadow: inset 0 0 0 1px rgba(82, 94, 127, 0.16);
+}
+
+.communityCopy h2 {
+  margin: 0 0 14px;
+  font-family: var(--fontFamilyDisplay);
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.14;
+  letter-spacing: 0;
+}
+
+.communityCopy p {
+  max-width: 680px;
+  margin: 0 0 24px;
+  color: #3a4666;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.communityButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #0d1a38;
+  color: var(--colorWhite);
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.communityButton:hover {
+  transform: scale(1.04);
+  color: var(--colorWhite);
+  text-decoration: none;
+  box-shadow: 0 14px 30px rgba(13, 26, 56, 0.18);
+}
+
+.communityImage {
+  min-height: 210px;
+  border: 4px solid var(--colorWhite);
+  border-radius: 18px;
+  box-shadow: 0 18px 36px rgba(13, 26, 56, 0.14);
+  transform: rotate(2deg);
+  transition: transform 0.35s ease;
+}
+
+.communityCallout:hover .communityImage {
+  transform: rotate(0deg);
+}
+
+@media (--viewportMedium) {
+  .main {
+    padding: 80px 36px 104px;
+  }
+
+  .heroTitle {
+    font-size: 48px;
+  }
+
+  .bentoGrid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .cardDiy {
+    grid-column: span 8;
+    flex-direction: row;
+  }
+
+  .cardDiy .cardCopy,
+  .diyImage {
+    width: 50%;
+  }
+
+  .cardKids,
+  .cardGarden,
+  .cardKitchen,
+  .cardElectronics,
+  .cardEvents {
+    grid-column: span 4;
+  }
+
+  .cardSport {
+    grid-column: span 8;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sportCopy {
+    flex: 1 1 0%;
+  }
+
+  .sportImage {
+    width: 260px;
+    min-height: 260px;
+    flex: 0 0 260px;
+  }
+
+  .communityCallout {
+    flex-direction: row;
+    align-items: center;
+    padding: 48px;
+  }
+
+  .communityCopy {
+    flex: 1 1 0%;
+  }
+
+  .communityImage {
+    width: 34%;
+    min-height: 230px;
+    flex: 0 0 34%;
+  }
+}
+
+@media (--viewportLarge) {
+  .main {
+    padding-right: 48px;
+    padding-left: 48px;
+  }
+}
+
+@media (max-width: 599px) {
+  .main {
+    padding-top: 52px;
+  }
+
+  .heroTitle {
+    font-size: 38px;
+  }
+
+  .heroSubheadline {
+    font-size: 16px;
+  }
+
+  .cardCopy,
+  .cardKids,
+  .cardKitchen,
+  .cardEvents,
+  .cardSport {
+    padding: 24px;
+  }
+
+  .communityCallout {
+    margin-top: 56px;
+    padding: 24px;
+  }
+
+  .communityCopy h2 {
+    font-size: 28px;
+  }
+}

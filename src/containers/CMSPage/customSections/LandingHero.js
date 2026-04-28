@@ -7,6 +7,7 @@ import { useRouteConfiguration } from '../../../context/routeConfigurationContex
 import { FormattedMessage } from '../../../util/reactIntl';
 import { createResourceLocatorString } from '../../../util/routes';
 import { stringifyDateToISO8601 } from '../../../util/dates';
+import { buildCategorySelectionToken, CATEGORY_MULTI_FILTER_PARAM } from '../../../util/search';
 import { NamedLink, Form, PrimaryButton } from '../../../components';
 
 import FilterCategories from '../../PageBuilder/Primitives/SearchCTA/FilterCategories/FilterCategories';
@@ -48,6 +49,11 @@ const LandingHero = () => {
         if (key === 'dateRange') {
           const { dates } = formatDateValue(value, 'dates');
           queryParams.dates = dates;
+        } else if (key === 'pub_categoryId') {
+          queryParams[CATEGORY_MULTI_FILTER_PARAM] = buildCategorySelectionToken(
+            'categoryId',
+            value
+          );
         } else {
           queryParams[key] = value;
         }
@@ -93,7 +99,8 @@ const LandingHero = () => {
                       return;
                     }
                     const hasKeyword = values?.keywords && values.keywords.trim().length > 0;
-                    const hasCategorySelected = values?.pub_categoryId != null && values.pub_categoryId !== '';
+                    const hasCategorySelected =
+                      values?.pub_categoryId != null && values.pub_categoryId !== '';
                     const hasDate = values?.dateRange?.startDate && values?.dateRange?.endDate;
                     if (!hasKeyword && !hasCategorySelected && !hasDate) {
                       setShowCategories(false);
@@ -102,35 +109,45 @@ const LandingHero = () => {
                 };
 
                 return (
-                <div ref={formRef} onFocusCapture={handleFormFocus} onBlurCapture={handleFormBlur}>
-                <Form role="search" onSubmit={handleSubmit} className={classNames(css.searchForm, { [css.searchFormExpanded]: showCategories && hasCategories })}>
-                  {showCategories && hasCategories && (
-                    <div className={classNames(css.searchField, css.categoryField)}>
-                      <FilterCategories
-                        categories={categoryConfig.categories}
-                        alignLeft
-                        defaultShowAll
-                      />
-                    </div>
-                  )}
-
-                  <div className={classNames(css.searchField, css.keywordField)}>
-                    <FilterKeyword />
-                  </div>
-
-                  <div className={css.searchField}>
-                    <FilterDateRange config={config} alignLeft={false} />
-                  </div>
-
-                  <PrimaryButton
-                    disabled={submitDisabled}
-                    className={css.submitButton}
-                    type="submit"
+                  <div
+                    ref={formRef}
+                    onFocusCapture={handleFormFocus}
+                    onBlurCapture={handleFormBlur}
                   >
-                    <FormattedMessage id="PageBuilder.SearchCTA.buttonLabel" />
-                  </PrimaryButton>
-                </Form>
-                </div>
+                    <Form
+                      role="search"
+                      onSubmit={handleSubmit}
+                      className={classNames(css.searchForm, {
+                        [css.searchFormExpanded]: showCategories && hasCategories,
+                      })}
+                    >
+                      {showCategories && hasCategories && (
+                        <div className={classNames(css.searchField, css.categoryField)}>
+                          <FilterCategories
+                            categories={categoryConfig.categories}
+                            alignLeft
+                            defaultShowAll
+                          />
+                        </div>
+                      )}
+
+                      <div className={classNames(css.searchField, css.keywordField)}>
+                        <FilterKeyword />
+                      </div>
+
+                      <div className={css.searchField}>
+                        <FilterDateRange config={config} alignLeft={false} />
+                      </div>
+
+                      <PrimaryButton
+                        disabled={submitDisabled}
+                        className={css.submitButton}
+                        type="submit"
+                      >
+                        <FormattedMessage id="PageBuilder.SearchCTA.buttonLabel" />
+                      </PrimaryButton>
+                    </Form>
+                  </div>
                 );
               }}
             />

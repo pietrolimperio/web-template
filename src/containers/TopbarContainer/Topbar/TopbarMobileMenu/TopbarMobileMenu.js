@@ -201,7 +201,7 @@ const GuestDrawerContent = ({ customLinks, currentPage }) => {
           </span>
         </NamedLink>
 
-        <NamedLink name="SearchPage" className={css.navItem}>
+        <NamedLink name="ExploreCategoriesPage" className={css.navItem}>
           <IconGridView className={css.navIcon} />
           <span className={css.navLabel}>
             <FormattedMessage id="TopbarMobileMenu.browseCategories" />
@@ -335,8 +335,8 @@ const AuthenticatedDrawerContent = ({
           <p className={css.sectionLabel}>
             <FormattedMessage id="TopbarMobileMenu.sectionBrowse" />
           </p>
-          <NamedLink name="SearchPage" className={navItemClass('SearchPage')}>
-            <IconGridView className={navIconClass('SearchPage')} />
+          <NamedLink name="ExploreCategoriesPage" className={navItemClass('ExploreCategoriesPage')}>
+            <IconGridView className={navIconClass('ExploreCategoriesPage')} />
             <span className={css.navLabel}>
               <FormattedMessage id="TopbarMobileMenu.browseCategories" />
             </span>

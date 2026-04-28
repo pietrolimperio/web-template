@@ -1,6 +1,10 @@
 import React from 'react';
 import { useConfiguration } from '../../../context/configurationContext';
-import { getCategoryDisplayName, getShortLocaleForCategoryDisplay } from '../../../util/fieldHelpers';
+import {
+  getCategoryDisplayName,
+  getShortLocaleForCategoryDisplay,
+} from '../../../util/fieldHelpers';
+import { buildCategorySelectionToken, CATEGORY_MULTI_FILTER_PARAM } from '../../../util/search';
 import { FormattedMessage } from '../../../util/reactIntl';
 import { NamedLink } from '../../../components';
 
@@ -29,19 +33,17 @@ const CategoriesStrip = ({ sectionId, className }) => {
         <ul className={css.list} role="list">
           {categories.map(cat => {
             const displayName = getCategoryDisplayName(cat, shortLocale) || cat.name;
-            const searchQuery = `?pub_categoryId=${encodeURIComponent(cat.id)}`;
+            const categoryToken = buildCategorySelectionToken('categoryId', cat.id);
+            const searchQuery = `?${CATEGORY_MULTI_FILTER_PARAM}=${encodeURIComponent(
+              categoryToken
+            )}`;
 
             return (
               <li key={cat.id} className={css.item}>
                 <NamedLink name="SearchPage" to={{ search: searchQuery }} className={css.link}>
                   <span className={css.imageWrap}>
                     {cat.imageUrl ? (
-                      <img
-                        src={cat.imageUrl}
-                        alt=""
-                        className={css.image}
-                        loading="lazy"
-                      />
+                      <img src={cat.imageUrl} alt="" className={css.image} loading="lazy" />
                     ) : (
                       <span className={css.placeholder} aria-hidden="true" />
                     )}

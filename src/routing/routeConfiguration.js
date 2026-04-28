@@ -19,6 +19,7 @@ const CMSPage = loadable(() => import(/* webpackChunkName: "CMSPage" */ '../cont
 const ContactDetailsPage = loadable(() => import(/* webpackChunkName: "ContactDetailsPage" */ '../containers/ContactDetailsPage/ContactDetailsPage'));
 const EditListingPage = loadable(() => import(/* webpackChunkName: "EditListingPage" */ '../containers/EditListingPage/EditListingPage'));
 const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailVerificationPage" */ '../containers/EmailVerificationPage/EmailVerificationPage'));
+const ExploreCategoriesPage = loadable(() => import(/* webpackChunkName: "ExploreCategoriesPage" */ '../containers/ExploreCategoriesPage/ExploreCategoriesPage'));
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const MakeOfferPage = loadable(() => import(/* webpackChunkName: "MakeOfferPage" */ '../containers/MakeOfferPage/MakeOfferPage'));
 const LandingPageComponent = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
@@ -95,6 +96,12 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       name: 'CMSPage',
       component: CMSPage,
       loadData: pageDataLoadingAPI.CMSPage.loadData,
+    },
+    {
+      path: '/categories',
+      name: 'ExploreCategoriesPage',
+      ...authForPrivateMarketplace,
+      component: ExploreCategoriesPage,
     },
     // NOTE: when the private marketplace feature is enabled, the '/s' route is disallowed by the robots.txt resource.
     // If you add new routes that start with '/s*' (e.g. /support), you should add them to the robotsPrivateMarketplace.txt file.

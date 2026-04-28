@@ -4,6 +4,7 @@ import {
   getCategoryDisplayName,
   getShortLocaleForCategoryDisplay,
 } from '../../../util/fieldHelpers';
+import { buildCategorySelectionToken, CATEGORY_MULTI_FILTER_PARAM } from '../../../util/search';
 import { FormattedMessage } from '../../../util/reactIntl';
 import { NamedLink } from '../../../components';
 import { useReveal } from '../hooks/useReveal';
@@ -52,7 +53,7 @@ const CategoriesSection = () => {
             <FormattedMessage id="NewLandingPage.categoriesTitle" />
           </h2>
         </div>
-        <NamedLink name="SearchPage" className={css.seeAll}>
+        <NamedLink name="ExploreCategoriesPage" className={css.seeAll}>
           <FormattedMessage id="NewLandingPage.categoriesViewAll" /> →
         </NamedLink>
       </Reveal>
@@ -60,16 +61,15 @@ const CategoriesSection = () => {
       <div className={css.grid}>
         {visibleCategories.map((cat, i) => {
           const displayName = getCategoryDisplayName(cat, shortLocale) || cat.name;
-          const searchQuery = `?pub_categoryId=${encodeURIComponent(cat.id)}`;
+          const categoryToken = buildCategorySelectionToken('categoryId', cat.id);
+          const searchQuery = `?${CATEGORY_MULTI_FILTER_PARAM}=${encodeURIComponent(
+            categoryToken
+          )}`;
           const stripeClass = STRIPE_CLASSES[i % STRIPE_CLASSES.length];
 
           return (
             <Reveal key={cat.id} delay={i * 0.06}>
-              <NamedLink
-                name="SearchPage"
-                to={{ search: searchQuery }}
-                className={css.card}
-              >
+              <NamedLink name="SearchPage" to={{ search: searchQuery }} className={css.card}>
                 <div className={css.catVisual}>
                   {cat.imageUrl ? (
                     <img src={cat.imageUrl} alt="" className={css.catImage} loading="lazy" />

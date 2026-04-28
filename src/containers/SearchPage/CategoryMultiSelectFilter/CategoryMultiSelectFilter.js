@@ -205,7 +205,7 @@ const CategoryMultiSelectFilter = props => {
       isSelected={hasInitialValues}
       id={`${id}.plain`}
       liveEdit
-      initiallyOpen={false}
+      initiallyOpen={hasInitialValues}
       onSubmit={handleSubmit}
       initialValues={namedInitialValues}
       {...rest}

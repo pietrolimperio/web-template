@@ -1480,11 +1480,7 @@ export const ProductPageComponent = props => {
                   {parts.map((part, i) => (
                     <React.Fragment key={i}>
                       {i > 0 && <span>/</span>}
-                      <NamedLink
-                        className={css.heroBreadcrumbLink}
-                        name="SearchPage"
-                        to={{ search: '' }}
-                      >
+                      <NamedLink className={css.heroBreadcrumbLink} name="ExploreCategoriesPage">
                         {part}
                       </NamedLink>
                     </React.Fragment>
