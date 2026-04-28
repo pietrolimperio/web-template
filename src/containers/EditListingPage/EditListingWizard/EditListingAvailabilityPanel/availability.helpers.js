@@ -65,7 +65,6 @@ const fetchExceptionData = (
   // Don't fetch timeSlots for past months or too far in the future
   if (isInRange(date, TODAY, endOfRangeDate)) {
     // Use "today", if the first day of given month is in the past
-    // TODO
     const start = isDateSameOrAfter(TODAY, date) ? TODAY : date;
 
     // Use endOfRangeDate, if the first day of the next date range is too far in the future

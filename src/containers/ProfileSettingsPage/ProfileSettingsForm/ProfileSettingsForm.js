@@ -77,7 +77,6 @@ const DisplayNameMaybe = props => {
 
 /**
  * ProfileSettingsForm
- * TODO: change to functional component
  *
  * @component
  * @param {Object} props

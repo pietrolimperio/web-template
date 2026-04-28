@@ -10,7 +10,6 @@ import css from './FilterPlain.module.css';
 
 /**
  * FilterPlain component
- * TODO: change to functional component
  *
  * @component
  * @param {Object} props

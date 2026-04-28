@@ -43,8 +43,6 @@ const DetailsSideCard = props => {
     showListingImage,
     intl,
   } = props;
-  // TODO: consider if a order breakdown is needed?
-
   const { price, publicData } = listing?.attributes || {};
   const unitType = publicData.unitType || 'unknown';
 

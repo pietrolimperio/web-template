@@ -16,7 +16,6 @@ const RESET_TIMEOUT = 800;
 
 /**
  * The change-password form.
- * TODO: change to functional component
  *
  * @component
  * @param {Object} props

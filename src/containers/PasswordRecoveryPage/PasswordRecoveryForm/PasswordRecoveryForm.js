@@ -14,7 +14,6 @@ import css from './PasswordRecoveryForm.module.css';
 
 /**
  * The password recovery form.
- * TODO: change to functional component
  *
  * @param {Object} props
  * @param {string} [props.rootClassName] - Custom class that overrides the default class for the root element

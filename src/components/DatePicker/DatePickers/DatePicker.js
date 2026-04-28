@@ -379,7 +379,6 @@ const DatePicker = props => {
       return;
     }
 
-    // TODO Do we need month transition?
     const monthChanged =
       date.getMonth() !== currentDate.getMonth() || year !== currentDate.getFullYear();
     if (monthChanged && onMonthChange) {

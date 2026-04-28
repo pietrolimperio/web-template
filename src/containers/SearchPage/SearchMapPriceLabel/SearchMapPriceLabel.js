@@ -11,7 +11,6 @@ import css from './SearchMapPriceLabel.module.css';
 
 /**
  * SearchMapPriceLabel component
- * TODO: change to functional component
  *
  * @component
  * @param {Object} props

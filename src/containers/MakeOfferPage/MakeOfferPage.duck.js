@@ -226,8 +226,8 @@ export const showTransaction = (transactionId, config) => (dispatch, getState, s
       const listingFields = config?.listing?.listingFields;
       const sanitizeConfig = { listingFields };
 
-      dispatch(addMarketplaceEntities(response, sanitizeConfig)); // TODO
-      dispatch(showTransactionSuccess(response)); // TODO
+      dispatch(addMarketplaceEntities(response, sanitizeConfig));
+      dispatch(showTransactionSuccess(response));
       return response;
     })
     .catch(e => {
