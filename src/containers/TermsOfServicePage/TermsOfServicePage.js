@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import loadable from '@loadable/component';
 
-import { bool, string } from 'prop-types';
+import { bool, object, string } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 
+import { useIntl } from '../../util/reactIntl';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
+import { fetchPageAsset } from '../../util/pageAssetsApi';
 
 import { LayoutSingleColumn, Page } from '../../components';
 import { H1 } from '../PageBuilder/Primitives/Heading';
@@ -24,35 +26,223 @@ const SectionBuilder = loadable(
   }
 );
 
-const lastUpdated = 'October 24, 2024';
+const pageKey = 'terms-and-conditions';
 
-const navItems = [
-  { id: 'acceptance', label: '1. Acceptance of Terms' },
-  { id: 'services', label: '2. Description of Services' },
-  { id: 'accounts', label: '3. User Accounts & Security' },
-  { id: 'sharing', label: '4. Peer-to-Peer Sharing Rules' },
-  { id: 'fees', label: '5. Fees and Payments' },
-  { id: 'liability', label: '6. Limitation of Liability' },
-  { id: 'termination', label: '7. Termination' },
-  { id: 'contact', label: '8. Contact Information' },
-];
+const getCurrentMarketplaceLocale = intlLocale => {
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    return localStorage.getItem('marketplace_locale') || intlLocale;
+  }
+  return intlLocale;
+};
 
-const accountRules = [
-  'You are responsible for maintaining the confidentiality of your account credentials.',
-  'You must immediately notify Leaz of any unauthorized use of your account.',
-  'Users must be at least 18 years old to create an account.',
-];
+const fallbackPageAsset = {
+  pageKey,
+  locale: 'en',
+  title: 'Terms & Conditions',
+  lastUpdated: 'October 24, 2024',
+  navigation: [
+    { sectionId: 'introduction', label: 'Introduction' },
+    { sectionId: 'platform-role', label: 'Platform Role' },
+    { sectionId: 'user-accounts', label: 'User Accounts' },
+    { sectionId: 'listings-and-rentals', label: 'Listings and Rentals' },
+    { sectionId: 'payments-and-fees', label: 'Payments and Fees' },
+    { sectionId: 'user-responsibilities', label: 'User Responsibilities' },
+    { sectionId: 'prohibited-conduct', label: 'Prohibited Conduct' },
+    { sectionId: 'liability-and-disputes', label: 'Liability and Disputes' },
+    { sectionId: 'changes-to-these-terms', label: 'Changes to These Terms' },
+    { sectionId: 'contact', label: 'Contact' },
+  ],
+  sections: [
+    {
+      id: 'introduction',
+      title: 'Introduction',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'These Terms & Conditions govern your access to and use of Leaz, a peer-to-peer marketplace for renting everyday items.',
+        },
+        {
+          type: 'paragraph',
+          text:
+            'By creating an account, publishing a listing, sending a rental request, or otherwise using the platform, you agree to follow these terms and any policies referenced by Leaz.',
+        },
+      ],
+    },
+    {
+      id: 'platform-role',
+      title: 'Platform Role',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'Leaz provides technology that helps users list, discover, request, and coordinate rentals. Leaz is not the owner, provider, renter, borrower, insurer, or carrier of the items listed by users.',
+        },
+        {
+          type: 'note',
+          text:
+            'When a rental is accepted, the rental agreement is formed directly between the users involved in that transaction.',
+        },
+      ],
+    },
+    {
+      id: 'user-accounts',
+      title: 'User Accounts',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'You must provide accurate and current information when registering and keep your account details up to date.',
+        },
+        {
+          type: 'bullets',
+          items: [
+            { text: 'Keep your login credentials confidential.' },
+            { text: 'Notify Leaz if you suspect unauthorized access to your account.' },
+            {
+              text:
+                'Use the platform only if you are legally able to enter into binding agreements.',
+            },
+            { text: 'Do not create duplicate, misleading, or fraudulent accounts.' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'listings-and-rentals',
+      title: 'Listings and Rentals',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'Users who publish listings are responsible for describing their items accurately, keeping availability current, and ensuring that rented items are safe, lawful, and suitable for the intended use.',
+        },
+        {
+          type: 'paragraph',
+          text:
+            'Users who rent items are responsible for reviewing listing details, respecting agreed pickup and return times, and returning items in the agreed condition.',
+        },
+        {
+          type: 'disclosures',
+          items: [
+            {
+              title: 'Listing accuracy',
+              text:
+                'Photos, descriptions, condition details, rental price, deposits, restrictions, and availability must be truthful and updated when circumstances change.',
+            },
+            {
+              title: 'Rental handover',
+              text:
+                'Users should document item condition at pickup and return, communicate through Leaz when possible, and promptly report problems.',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'payments-and-fees',
+      title: 'Payments and Fees',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'Payments may be processed by third-party payment providers. Leaz may charge service fees, commissions, or other charges that are displayed before a transaction is completed.',
+        },
+        {
+          type: 'note',
+          text:
+            'Do not bypass Leaz payment or messaging flows when a transaction started on the platform. Off-platform arrangements may reduce available support and protections.',
+        },
+      ],
+    },
+    {
+      id: 'user-responsibilities',
+      title: 'User Responsibilities',
+      blocks: [
+        {
+          type: 'bullets',
+          items: [
+            { text: 'Use Leaz honestly and in compliance with applicable law.' },
+            { text: 'Communicate promptly and respectfully with other users.' },
+            { text: 'Comply with rental terms agreed in the listing or conversation.' },
+            { text: "Handle other users' property with care." },
+            { text: 'Pay amounts due and resolve reported damage or missing items in good faith.' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'prohibited-conduct',
+      title: 'Prohibited Conduct',
+      blocks: [
+        {
+          type: 'bullets',
+          items: [
+            { text: 'Publishing illegal, unsafe, counterfeit, stolen, or prohibited items.' },
+            { text: 'Providing false identity, payment, listing, or transaction information.' },
+            { text: 'Harassing, threatening, discriminating against, or abusing other users.' },
+            { text: 'Circumventing platform fees, security checks, or payment flows.' },
+            { text: 'Interfering with the security, availability, or integrity of Leaz systems.' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'liability-and-disputes',
+      title: 'Liability and Disputes',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'To the maximum extent permitted by law, Leaz is not liable for indirect, incidental, special, consequential, or punitive damages arising from your use of the platform.',
+        },
+        {
+          type: 'paragraph',
+          text:
+            'Users are primarily responsible for resolving disputes related to item condition, pickup, return, damage, deposits, or transaction expectations. Leaz may provide support tools but does not become a party to the rental agreement.',
+        },
+        {
+          type: 'note',
+          text:
+            'Nothing in these terms limits rights that cannot be excluded under applicable consumer or platform laws.',
+        },
+      ],
+    },
+    {
+      id: 'changes-to-these-terms',
+      title: 'Changes to These Terms',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'Leaz may update these terms from time to time. When changes are material, we will take reasonable steps to notify users or highlight the updated version on the platform.',
+        },
+        {
+          type: 'paragraph',
+          text:
+            'Continued use of Leaz after updated terms become effective means you accept the revised terms.',
+        },
+      ],
+    },
+    {
+      id: 'contact',
+      title: 'Contact',
+      blocks: [
+        {
+          type: 'paragraph',
+          text:
+            'If you have questions about these Terms & Conditions, contact the Leaz support team.',
+        },
+        {
+          type: 'actions',
+          items: [{ label: 'Contact Support', href: 'mailto:support@leaz.eu' }],
+        },
+      ],
+    },
+  ],
+};
 
-const responsibilityCards = [
-  {
-    title: 'Lender Responsibility',
-    text: 'Maintain insurance, ensure safety standards, and provide accurate availability.',
-  },
-  {
-    title: 'Borrower Responsibility',
-    text: 'Timely return, honest communication, and coverage of any damage incurred.',
-  },
-];
+const numberedLabel = (index, label) => `${index + 1}. ${label}`;
 
 const Icon = props => {
   const { name } = props;
@@ -65,6 +255,72 @@ const Icon = props => {
 
 Icon.propTypes = {
   name: string.isRequired,
+};
+
+const getActionHref = item =>
+  item.href ||
+  `mailto:support@leaz.eu?subject=${encodeURIComponent(item.label || 'Terms request')}`;
+
+const Block = props => {
+  const { block } = props;
+
+  switch (block.type) {
+    case 'paragraph':
+      return block.text ? <p>{block.text}</p> : null;
+    case 'cards':
+      return block.items?.length ? (
+        <div className={css.responsibilityGrid}>
+          {block.items.map((item, index) => (
+            <div key={`${item.title}-${index}`} className={css.responsibilityCard}>
+              {item.title ? <h3>{item.title}</h3> : null}
+              {item.text ? <p>{item.text}</p> : null}
+            </div>
+          ))}
+        </div>
+      ) : null;
+    case 'note':
+      return block.text ? <p className={css.note}>{block.text}</p> : null;
+    case 'bullets':
+      return block.items?.length ? (
+        <ul className={css.bulletList}>
+          {block.items.map((item, index) => (
+            <li key={`${item.text || item.label}-${index}`}>{item.text || item.label}</li>
+          ))}
+        </ul>
+      ) : null;
+    case 'disclosures':
+      return block.items?.length ? (
+        <div className={css.disclosureList}>
+          {block.items.map((item, index) => (
+            <details key={`${item.title}-${index}`} className={css.disclosure}>
+              <summary>{item.title}</summary>
+              {item.text ? <p>{item.text}</p> : null}
+            </details>
+          ))}
+        </div>
+      ) : null;
+    case 'actions':
+      return block.items?.length ? (
+        <div className={css.actionRow}>
+          {block.items.map((item, index) => (
+            <a
+              key={`${item.label}-${index}`}
+              className={index === 0 ? css.primaryAction : css.secondaryAction}
+              href={getActionHref(item)}
+            >
+              {index === 0 ? <Icon name="mail" /> : null}
+              {item.label}
+            </a>
+          ))}
+        </div>
+      ) : null;
+    default:
+      return null;
+  }
+};
+
+Block.propTypes = {
+  block: object.isRequired,
 };
 
 // This "content-only" component can be used in modals etc.
@@ -100,17 +356,30 @@ const TermsOfServiceContent = props => {
   );
 };
 
-const TermsOfServiceDocument = () => {
+const TermsOfServiceDocument = props => {
+  const { asset, isFallback } = props;
+  const navigation =
+    asset.navigation?.length > 0
+      ? asset.navigation
+      : asset.sections.map(section => ({ sectionId: section.id, label: section.title }));
+
   return (
     <div className={css.page}>
       <section className={css.hero}>
         <div className={css.heroInner}>
           <p className={css.eyebrow}>Legal Document</p>
-          <h1>Terms & Conditions</h1>
-          <p>
-            Last updated: {lastUpdated}. Please read these terms carefully before using the Leaz
-            platform.
-          </p>
+          <h1>{asset.title}</h1>
+          {asset.lastUpdated ? (
+            <p>
+              Last updated: {asset.lastUpdated}. Please read these terms carefully before using the
+              Leaz platform.
+            </p>
+          ) : null}
+          {isFallback ? (
+            <p className={css.unavailableNotice}>
+              We could not load the localized terms right now, so this fallback version is shown.
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -119,9 +388,9 @@ const TermsOfServiceDocument = () => {
           <div className={css.sidebarInner}>
             <h2 className={css.sidebarTitle}>Table of Contents</h2>
             <nav className={css.nav}>
-              {navItems.map(item => (
-                <a key={item.id} className={css.navLink} href={`#${item.id}`}>
-                  {item.label}
+              {navigation.map((item, index) => (
+                <a key={item.sectionId} className={css.navLink} href={`#${item.sectionId}`}>
+                  {numberedLabel(index, item.label)}
                 </a>
               ))}
             </nav>
@@ -129,146 +398,88 @@ const TermsOfServiceDocument = () => {
         </aside>
 
         <article className={css.article}>
-          <section className={css.section} id="acceptance">
-            <h2>1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using the Leaz platform, you agree to be bound by these Terms and
-              Conditions and our Privacy Policy. If you do not agree to all of these terms, do not
-              use the Service.
-            </p>
-            <p>
-              We reserve the right to modify these terms at any time. We will provide notice of
-              significant changes by posting the new terms on the platform and updating the "Last
-              updated" date.
-            </p>
-          </section>
+          {asset.sections.map((section, index) => {
+            const isContactSection = index === asset.sections.length - 1;
+            const hasOnlyNote = section.blocks.length === 1 && section.blocks[0]?.type === 'note';
+            const sectionClassName = isContactSection
+              ? css.contactPanel
+              : hasOnlyNote
+              ? css.quotePanel
+              : css.section;
 
-          <section className={css.section} id="services">
-            <h2>2. Description of Services</h2>
-            <p>
-              Leaz provides a peer-to-peer marketplace platform that allows users to list, discover,
-              and rent items from other individuals. Leaz does not own, create, sell, resell,
-              provide, control, manage, offer, deliver, or supply any listings or host services.
-            </p>
-            <p>
-              Users are solely responsible for their listings and the items they share. When users
-              make or accept a booking, they are entering into a contract directly with each other.
-            </p>
-          </section>
-
-          <section className={css.section} id="accounts">
-            <h2>3. User Accounts & Security</h2>
-            <p>
-              To access certain features of the platform, you must register for an account. You must
-              provide accurate, current, and complete information during the registration process.
-            </p>
-            <ul className={css.bulletList}>
-              {accountRules.map(rule => (
-                <li key={rule}>{rule}</li>
-              ))}
-            </ul>
-          </section>
-
-          <div className={css.trustCallout}>
-            <div className={css.calloutIcon}>
-              <Icon name="shield" />
-            </div>
-            <div>
-              <h2>Trust & Safety is Our Priority</h2>
-              <p>
-                We verify our community members to ensure a sustainable and safe sharing
-                environment. Always communicate through our secure messaging system.
-              </p>
-            </div>
-          </div>
-
-          <section className={css.section} id="sharing">
-            <h2>4. Peer-to-Peer Sharing Rules</h2>
-            <p>
-              Lenders represent and warrant that any item they list is accurately described and in
-              safe, working condition. Borrowers agree to treat the items with care and return them
-              in the same condition as received.
-            </p>
-            <div className={css.responsibilityGrid}>
-              {responsibilityCards.map(card => (
-                <div key={card.title} className={css.responsibilityCard}>
-                  <h3>{card.title}</h3>
-                  <p>{card.text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className={css.section} id="fees">
-            <h2>5. Fees and Payments</h2>
-            <p>
-              Leaz charges a service fee for each transaction to maintain the platform and provide
-              support. Fees are clearly displayed before any transaction is finalized.
-            </p>
-            <p>
-              Payments are processed through secure third-party providers. Leaz does not store full
-              credit card details on its servers.
-            </p>
-          </section>
-
-          <section className={css.quotePanel} id="liability">
-            <h2>6. Limitation of Liability</h2>
-            <p>
-              To the maximum extent permitted by law, Leaz shall not be liable for any indirect,
-              incidental, special, consequential, or punitive damages, or any loss of profits or
-              revenues, whether incurred directly or indirectly, or any split of data, use,
-              goodwill, or other intangible losses, resulting from your access to or use of or
-              inability to access or use the services.
-            </p>
-          </section>
-
-          <section className={css.section} id="termination">
-            <h2>7. Termination</h2>
-            <p>
-              We may suspend or terminate access to the platform if a user breaches these terms,
-              creates risk for the community, or uses Leaz in a way that harms other users or the
-              marketplace.
-            </p>
-            <p>
-              You may stop using the Service at any time. Existing rental obligations, payment
-              obligations, and dispute-resolution duties remain active until they are fully settled.
-            </p>
-          </section>
-
-          <section className={css.contactPanel} id="contact">
-            <h2>Questions about these Terms?</h2>
-            <p>
-              Our support team is here to help clarify any part of our agreement. We aim to respond
-              within 24 hours.
-            </p>
-            <div className={css.actionRow}>
-              <a className={css.primaryAction} href="mailto:support@leaz.eu">
-                <Icon name="mail" />
-                Contact Support
-              </a>
-              <a className={css.secondaryAction} href="/p/faq">
-                View Help Center
-              </a>
-            </div>
-          </section>
+            return (
+              <section key={section.id} className={sectionClassName} id={section.id}>
+                <h2>{numberedLabel(index, section.title)}</h2>
+                {section.blocks.map((block, blockIndex) => (
+                  <Block key={`${section.id}-${block.type}-${blockIndex}`} block={block} />
+                ))}
+              </section>
+            );
+          })}
         </article>
       </div>
     </div>
   );
 };
 
+TermsOfServiceDocument.propTypes = {
+  asset: object.isRequired,
+  isFallback: bool,
+};
+
+const useTermsOfServiceAsset = () => {
+  const intl = useIntl();
+  const [state, setState] = useState({
+    asset: fallbackPageAsset,
+    loading: true,
+    status: 'loading',
+  });
+
+  const locale = getCurrentMarketplaceLocale(intl?.locale);
+
+  useEffect(() => {
+    let cancelled = false;
+    setState(prev => ({ ...prev, loading: true, status: 'loading' }));
+
+    fetchPageAsset(pageKey, locale).then(result => {
+      if (cancelled) {
+        return;
+      }
+      if (result.data) {
+        setState({ asset: result.data, loading: false, status: 'ok' });
+      } else {
+        setState({
+          asset: fallbackPageAsset,
+          loading: false,
+          status: result.status || 'error',
+        });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
+  return state;
+};
+
 // Presentational component for TermsOfServicePage
 const TermsOfServicePageComponent = props => {
   const { scrollingDisabled } = props;
-  const title = 'Terms & Conditions | Leaz';
+  const { asset, loading, status } = useTermsOfServiceAsset();
+  const title = `${asset.title || fallbackPageAsset.title} | Leaz`;
   const description =
     'Terms and Conditions for Leaz, the peer-to-peer marketplace for renting everyday items.';
-  const schema = {
-    '@context': 'http://schema.org',
-    '@type': 'WebPage',
-    description,
-    name: title,
-  };
+  const schema = useMemo(
+    () => ({
+      '@context': 'http://schema.org',
+      '@type': 'WebPage',
+      description,
+      name: title,
+    }),
+    [description, title]
+  );
 
   return (
     <Page
@@ -278,7 +489,8 @@ const TermsOfServicePageComponent = props => {
       scrollingDisabled={scrollingDisabled}
     >
       <LayoutSingleColumn topbar={<TopbarContainer />} footer={<FooterContainer />}>
-        <TermsOfServiceDocument />
+        {loading ? <div className={css.loading}>Loading terms and conditions...</div> : null}
+        <TermsOfServiceDocument asset={asset} isFallback={status !== 'ok'} />
       </LayoutSingleColumn>
     </Page>
   );
@@ -304,6 +516,7 @@ const TermsOfServicePage = compose(connect(mapStateToProps))(TermsOfServicePageC
 
 const TOS_ASSET_NAME = ASSET_NAME;
 export {
+  fallbackPageAsset,
   TOS_ASSET_NAME,
   TermsOfServicePageComponent,
   TermsOfServiceContent,

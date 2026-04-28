@@ -15,7 +15,10 @@ describe('pageAssetsApi', () => {
           blocks: [
             { type: 'paragraph', text: 'Plain text only.' },
             { type: 'bullets', items: ['First item', { text: 'Second item' }] },
-            { type: 'actions', items: [{ label: 'Request Account Deletion' }] },
+            {
+              type: 'actions',
+              items: [{ label: 'Request Account Deletion', href: 'mailto:privacy@leaz.eu' }],
+            },
           ],
         },
       ],
@@ -42,7 +45,14 @@ describe('pageAssetsApi', () => {
             },
             {
               type: 'actions',
-              items: [{ title: '', text: '', label: 'Request Account Deletion' }],
+              items: [
+                {
+                  title: '',
+                  text: '',
+                  label: 'Request Account Deletion',
+                  href: 'mailto:privacy@leaz.eu',
+                },
+              ],
             },
           ],
         },

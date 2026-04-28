@@ -14,14 +14,14 @@ describe('TermsOfServicePage', () => {
     e.type = 'error';
     e.name = 'Test';
 
-    const { getByText } = render(
+    const { getAllByText, getByText } = render(
       <TermsOfServicePageComponent pageAssetsData={null} inProgress={false} error={e} />
     );
 
     await waitFor(() => {
       expect(getByText('Terms & Conditions')).toBeInTheDocument();
       expect(getByText('Table of Contents')).toBeInTheDocument();
-      expect(getByText('Trust & Safety is Our Priority')).toBeInTheDocument();
+      expect(getAllByText('2. Platform Role').length).toBeGreaterThan(0);
     });
   });
 });

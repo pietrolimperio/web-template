@@ -28,9 +28,10 @@ const normalizeItems = items => {
             title: textValue(item?.title),
             text: textValue(item?.text),
             label: textValue(item?.label),
+            href: textValue(item?.href ?? item?.url),
           }
     )
-    .filter(item => item.title || item.text || item.label);
+    .filter(item => item.title || item.text || item.label || item.href);
 };
 
 export const normalizePageAssetResponse = data => {
