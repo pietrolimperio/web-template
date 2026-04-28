@@ -1,12 +1,13 @@
-import React, { useMemo } from 'react';
-import { arrayOf, bool, string } from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { arrayOf, bool, object, string } from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 
 import { useConfiguration } from '../../context/configurationContext';
-import { FormattedMessage, useIntl } from '../../util/reactIntl';
+import { useIntl } from '../../util/reactIntl';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 import { LayoutComposer, NamedLink, Page } from '../../components';
+import { fetchPageAsset } from '../../util/pageAssetsApi';
 import { buildCategorySelectionToken, CATEGORY_MULTI_FILTER_PARAM } from '../../util/search';
 import TopbarContainer from '../TopbarContainer/TopbarContainer';
 import FooterContainer from '../FooterContainer/FooterContainer';
@@ -20,78 +21,184 @@ import popCommunityImage from '../../assets/explore-categories/pop-community.png
 
 import css from './ExploreCategoriesPage.module.css';
 
-const CATEGORY_CARDS = [
+const PAGE_KEY = 'explore-categories';
+
+const CARD_CLASS_BY_KEY = {
+  diy: css.cardDiy,
+  kids: css.cardKids,
+  garden: css.cardGarden,
+  sport: css.cardSport,
+  kitchen: css.cardKitchen,
+  electronics: css.cardElectronics,
+  events: css.cardEvents,
+};
+
+const LOCAL_IMAGE_BY_KEY = {
+  diy: popDiyImage,
+  kids: popKidsImage,
+  garden: popGardenImage,
+  sport: popSportImage,
+  electronics: popElectronicsImage,
+  community: popCommunityImage,
+};
+
+const FALLBACK_CARDS = [
   {
     key: 'diy',
     categoryIndex: 0,
-    className: css.cardDiy,
     icon: 'build',
     titleId: 'ExploreCategoriesPage.diyTitle',
-    bodyId: 'ExploreCategoriesPage.diyBody',
-    image: popDiyImage,
-    items: ['diyItem1', 'diyItem2', 'diyItem3'],
+    textId: 'ExploreCategoriesPage.diyBody',
+    imageKey: 'diy',
+    itemIds: ['diyItem1', 'diyItem2', 'diyItem3'],
   },
   {
     key: 'kids',
     categoryIndex: 1,
-    className: css.cardKids,
     icon: 'kids',
     titleId: 'ExploreCategoriesPage.kidsTitle',
-    bodyId: 'ExploreCategoriesPage.kidsBody',
-    image: popKidsImage,
-    items: ['kidsItem1', 'kidsItem2', 'kidsItem3'],
+    textId: 'ExploreCategoriesPage.kidsBody',
+    imageKey: 'kids',
+    itemIds: ['kidsItem1', 'kidsItem2', 'kidsItem3'],
   },
   {
     key: 'garden',
     categoryIndex: 2,
-    className: css.cardGarden,
     icon: 'garden',
     titleId: 'ExploreCategoriesPage.gardenTitle',
-    image: popGardenImage,
-    items: ['gardenItem1', 'gardenItem2', 'gardenItem3'],
+    imageKey: 'garden',
+    itemIds: ['gardenItem1', 'gardenItem2', 'gardenItem3'],
   },
   {
     key: 'sport',
     categoryIndex: 3,
-    className: css.cardSport,
     icon: 'sport',
     titleId: 'ExploreCategoriesPage.sportTitle',
-    bodyId: 'ExploreCategoriesPage.sportBody',
-    image: popSportImage,
-    items: ['sportItem1', 'sportItem2', 'sportItem3', 'sportItem4'],
+    textId: 'ExploreCategoriesPage.sportBody',
+    imageKey: 'sport',
+    itemIds: ['sportItem1', 'sportItem2', 'sportItem3', 'sportItem4'],
   },
   {
     key: 'kitchen',
     categoryIndex: 4,
-    className: css.cardKitchen,
     icon: 'kitchen',
     titleId: 'ExploreCategoriesPage.kitchenTitle',
-    bodyId: 'ExploreCategoriesPage.kitchenBody',
-    items: ['kitchenItem1', 'kitchenItem2', 'kitchenItem3'],
+    textId: 'ExploreCategoriesPage.kitchenBody',
+    itemIds: ['kitchenItem1', 'kitchenItem2', 'kitchenItem3'],
   },
   {
     key: 'electronics',
     categoryIndex: 5,
-    className: css.cardElectronics,
     icon: 'electronics',
     titleId: 'ExploreCategoriesPage.electronicsTitle',
-    bodyId: 'ExploreCategoriesPage.electronicsBody',
-    image: popElectronicsImage,
+    textId: 'ExploreCategoriesPage.electronicsBody',
+    imageKey: 'electronics',
   },
   {
     key: 'events',
     categoryIndex: 6,
-    className: css.cardEvents,
     icon: 'events',
     titleId: 'ExploreCategoriesPage.eventsTitle',
-    bodyId: 'ExploreCategoriesPage.eventsBody',
-    items: ['eventsItem1', 'eventsItem2', 'eventsItem3'],
+    textId: 'ExploreCategoriesPage.eventsBody',
+    itemIds: ['eventsItem1', 'eventsItem2', 'eventsItem3'],
   },
 ];
 
-const categorySearch = category => {
+const getMessage = (intl, id) => intl.formatMessage({ id });
+
+const getFallbackAsset = intl => ({
+  pageKey: PAGE_KEY,
+  locale: intl.locale,
+  title: getMessage(intl, 'ExploreCategoriesPage.schemaTitle'),
+  sections: [
+    {
+      id: 'hero',
+      title: getMessage(intl, 'ExploreCategoriesPage.schemaTitle'),
+      blocks: [
+        {
+          type: 'hero',
+          kicker: getMessage(intl, 'ExploreCategoriesPage.heroKicker'),
+          title: intl.locale?.startsWith('it')
+            ? 'Tutto ciò che vuoi, per il tempo che ti serve.'
+            : 'Everything you want, for the time you need.',
+          text: getMessage(intl, 'ExploreCategoriesPage.popHeroSubheadline'),
+        },
+      ],
+    },
+    {
+      id: 'category-groups',
+      title: 'Categories',
+      blocks: [
+        {
+          type: 'category-grid',
+          items: FALLBACK_CARDS.map(card => ({
+            key: card.key,
+            categoryIndex: card.categoryIndex,
+            title: getMessage(intl, card.titleId),
+            text: card.textId ? getMessage(intl, card.textId) : '',
+            icon: card.icon,
+            imageKey: card.imageKey,
+            items: (card.itemIds || []).map(itemId =>
+              getMessage(intl, `ExploreCategoriesPage.${card.key}.${itemId}`)
+            ),
+          })),
+        },
+      ],
+    },
+    {
+      id: 'community',
+      title: getMessage(intl, 'ExploreCategoriesPage.communityTitle'),
+      blocks: [
+        {
+          type: 'callout',
+          title: getMessage(intl, 'ExploreCategoriesPage.communityTitle'),
+          text: getMessage(intl, 'ExploreCategoriesPage.communityBody'),
+          imageKey: 'community',
+          actionLabel: getMessage(intl, 'ExploreCategoriesPage.communityButton'),
+          actionRoute: 'AIListingCreationPage',
+        },
+      ],
+    },
+  ],
+  status: 'fallback',
+});
+
+const getBlock = (asset, type) =>
+  (asset?.sections || [])
+    .flatMap(section => section.blocks || [])
+    .find(block => block.type === type);
+
+const categorySearch = (category, item) => {
+  if (item?.href) {
+    return item.href;
+  }
   const token = buildCategorySelectionToken('categoryId', category?.id);
-  return token ? `?${CATEGORY_MULTI_FILTER_PARAM}=${encodeURIComponent(token)}` : '';
+  return token ? `/s?${CATEGORY_MULTI_FILTER_PARAM}=${encodeURIComponent(token)}` : '/s';
+};
+
+const imageForItem = item => item?.imageUrl || LOCAL_IMAGE_BY_KEY[item?.imageKey || item?.key];
+
+const toSearchLinkProps = href => {
+  if (href && href.startsWith('/s?')) {
+    return { name: 'SearchPage', to: { search: href.slice(2) } };
+  }
+  return { name: 'SearchPage' };
+};
+
+const CalloutAction = ({ block }) => {
+  if (!block.actionLabel) return null;
+  if (block.actionHref) {
+    return (
+      <a href={block.actionHref} className={css.communityButton}>
+        {block.actionLabel}
+      </a>
+    );
+  }
+  return (
+    <NamedLink name={block.actionRoute || 'AIListingCreationPage'} className={css.communityButton}>
+      {block.actionLabel}
+    </NamedLink>
+  );
 };
 
 const IconGlyph = ({ name, className }) => {
@@ -157,38 +264,179 @@ const IconGlyph = ({ name, className }) => {
   }
 };
 
-const CategoryItems = ({ cardKey, items, variant }) => {
+const CategoryItems = ({ items, variant }) => {
   if (!items?.length) return null;
 
   return (
     <div className={variant === 'chips' ? css.chipList : css.itemList}>
       {items.map(item => (
         <span key={item} className={variant === 'chips' ? css.chip : css.itemRow}>
-          <FormattedMessage id={`ExploreCategoriesPage.${cardKey}.${item}`} />
+          {item}
         </span>
       ))}
     </div>
   );
 };
 
+const CategoryCard = ({ item, category }) => {
+  const key = item.key || '';
+  const image = imageForItem(item);
+  const linkProps = toSearchLinkProps(categorySearch(category, item));
+  const isDiy = key === 'diy';
+  const isKids = key === 'kids';
+  const isSport = key === 'sport';
+  const isEvents = key === 'events';
+  const isKitchen = key === 'kitchen';
+  const isElectronics = key === 'electronics';
+  const icon = item.icon || key;
+  const className = `${css.categoryCard} ${CARD_CLASS_BY_KEY[key] || css.cardGarden}`;
+
+  return (
+    <NamedLink {...linkProps} className={className}>
+      {isDiy ? (
+        <>
+          <div className={css.cardCopy}>
+            <div>
+              <div className={css.cardHeading}>
+                <IconGlyph name={icon} className={css.cardIcon} />
+                <h2>{item.title}</h2>
+              </div>
+              {item.text ? <p className={css.cardBodyItalic}>{item.text}</p> : null}
+              <CategoryItems items={item.items} />
+            </div>
+            {item.actionLabel ? <span className={css.exploreLink}>{item.actionLabel}</span> : null}
+          </div>
+          {image ? (
+            <div className={css.diyImage} style={{ backgroundImage: `url(${image})` }} />
+          ) : null}
+        </>
+      ) : isKids ? (
+        <>
+          <div>
+            <div className={css.cardHeading}>
+              <IconGlyph name={icon} className={css.cardIcon} />
+              <h2>{item.title}</h2>
+            </div>
+            {item.text ? <p className={css.cardBody}>{item.text}</p> : null}
+            <CategoryItems items={item.items} variant="tiles" />
+          </div>
+          {image ? (
+            <div className={css.kidsImage} style={{ backgroundImage: `url(${image})` }} />
+          ) : null}
+        </>
+      ) : isSport ? (
+        <>
+          <div className={css.sportCopy}>
+            <div className={css.cardHeading}>
+              <IconGlyph name={icon} className={css.cardIcon} />
+              <h2>{item.title}</h2>
+            </div>
+            {item.text ? <p className={css.cardBody}>{item.text}</p> : null}
+            <CategoryItems items={item.items} variant="chips" />
+          </div>
+          {image ? (
+            <div className={css.sportImage} style={{ backgroundImage: `url(${image})` }} />
+          ) : null}
+        </>
+      ) : isKitchen ? (
+        <>
+          <div className={css.cardHeading}>
+            <IconGlyph name={icon} className={css.cardIcon} />
+            <h2>{item.title}</h2>
+          </div>
+          {item.text ? <p className={css.cardBodyItalic}>{item.text}</p> : null}
+          <CategoryItems items={item.items} variant="stack" />
+        </>
+      ) : isElectronics ? (
+        <>
+          {image ? (
+            <div className={css.electronicsImage} style={{ backgroundImage: `url(${image})` }} />
+          ) : null}
+          <div className={css.cardCopy}>
+            <div className={css.cardHeading}>
+              <IconGlyph name={icon} className={css.cardIcon} />
+              <h2>{item.title}</h2>
+            </div>
+            {item.text ? <p className={css.cardBodySmall}>{item.text}</p> : null}
+          </div>
+        </>
+      ) : isEvents ? (
+        <>
+          <div>
+            <div className={css.cardHeading}>
+              <IconGlyph name={icon} className={css.eventIcon} />
+              <h2>{item.title}</h2>
+            </div>
+            {item.text ? <p className={css.eventsBody}>{item.text}</p> : null}
+            <CategoryItems items={item.items} />
+          </div>
+          <span className={css.eventRocket} aria-hidden="true">
+            <IconGlyph name="events" className={css.rocketIcon} />
+          </span>
+        </>
+      ) : (
+        <>
+          {image ? (
+            <div className={css.gardenImage} style={{ backgroundImage: `url(${image})` }} />
+          ) : null}
+          <div className={css.cardCopy}>
+            <div className={css.cardHeading}>
+              <IconGlyph name={icon} className={css.cardIcon} />
+              <h2>{item.title}</h2>
+            </div>
+            {item.text ? <p className={css.cardBody}>{item.text}</p> : null}
+            <CategoryItems items={item.items} />
+          </div>
+        </>
+      )}
+    </NamedLink>
+  );
+};
+
+const useExploreCategoriesAsset = intl => {
+  const fallbackAsset = useMemo(() => getFallbackAsset(intl), [intl]);
+  const [state, setState] = useState({ asset: fallbackAsset, loading: false, status: 'fallback' });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState(prev => ({ ...prev, loading: true }));
+    fetchPageAsset(PAGE_KEY, intl.locale).then(result => {
+      if (cancelled) return;
+      setState({
+        asset: result.data || fallbackAsset,
+        loading: false,
+        status: result.status === 'ok' && result.data ? 'ok' : result.status,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fallbackAsset, intl.locale]);
+
+  return state;
+};
+
 const ExploreCategoriesPageComponent = props => {
   const { scrollingDisabled } = props;
   const config = useConfiguration();
   const intl = useIntl();
+  const { asset } = useExploreCategoriesAsset(intl);
 
   const categories = config?.categoryConfiguration?.categories ?? [];
+  const heroBlock = getBlock(asset, 'hero') || {};
+  const categoryGridBlock = getBlock(asset, 'category-grid') || {};
+  const calloutBlock = getBlock(asset, 'callout') || {};
+  const cards = (categoryGridBlock.items || []).map((item, index) => ({
+    ...item,
+    category: Number.isInteger(item.categoryIndex)
+      ? categories[item.categoryIndex]
+      : categories[index],
+  }));
 
-  const cards = useMemo(
-    () =>
-      CATEGORY_CARDS.map(card => ({
-        ...card,
-        category: categories[card.categoryIndex],
-      })),
-    [categories]
-  );
-
-  const pageTitle = intl.formatMessage({ id: 'ExploreCategoriesPage.schemaTitle' });
-  const pageDescription = intl.formatMessage({ id: 'ExploreCategoriesPage.schemaDescription' });
+  const pageTitle = asset?.title || intl.formatMessage({ id: 'ExploreCategoriesPage.schemaTitle' });
+  const pageDescription =
+    heroBlock.text || intl.formatMessage({ id: 'ExploreCategoriesPage.schemaDescription' });
+  const calloutImage = calloutBlock.imageUrl || LOCAL_IMAGE_BY_KEY[calloutBlock.imageKey];
 
   const layoutAreas = `
     topbar
@@ -218,198 +466,38 @@ const ExploreCategoriesPageComponent = props => {
               </Topbar>
               <Main as="main" className={css.main}>
                 <section className={css.heroSection}>
-                  <span className={css.heroKicker}>
-                    <FormattedMessage id="ExploreCategoriesPage.heroKicker" />
-                  </span>
-                  <h1 className={css.heroTitle}>
-                    <FormattedMessage
-                      id="ExploreCategoriesPage.popHeroTitle"
-                      values={{
-                        accent: chunks => <span className={css.heroTitleAccent}>{chunks}</span>,
-                      }}
-                    />
-                  </h1>
-                  <p className={css.heroSubheadline}>
-                    <FormattedMessage id="ExploreCategoriesPage.popHeroSubheadline" />
-                  </p>
+                  {heroBlock.kicker ? (
+                    <span className={css.heroKicker}>{heroBlock.kicker}</span>
+                  ) : null}
+                  <h1 className={css.heroTitle}>{heroBlock.title || pageTitle}</h1>
+                  {heroBlock.text ? <p className={css.heroSubheadline}>{heroBlock.text}</p> : null}
                 </section>
 
                 <div className={css.bentoGrid}>
-                  {cards.map(card => {
-                    const search = categorySearch(card.category);
-                    const linkProps = search ? { to: { search } } : {};
-                    const isDiy = card.key === 'diy';
-                    const isKids = card.key === 'kids';
-                    const isSport = card.key === 'sport';
-                    const isEvents = card.key === 'events';
-                    const isKitchen = card.key === 'kitchen';
-                    const isElectronics = card.key === 'electronics';
-
-                    return (
-                      <NamedLink
-                        key={card.key}
-                        name="SearchPage"
-                        {...linkProps}
-                        className={`${css.categoryCard} ${card.className}`}
-                      >
-                        {isDiy ? (
-                          <>
-                            <div className={css.cardCopy}>
-                              <div>
-                                <div className={css.cardHeading}>
-                                  <IconGlyph name={card.icon} className={css.cardIcon} />
-                                  <h2>
-                                    <FormattedMessage id={card.titleId} />
-                                  </h2>
-                                </div>
-                                <p className={css.cardBodyItalic}>
-                                  <FormattedMessage id={card.bodyId} />
-                                </p>
-                                <CategoryItems cardKey={card.key} items={card.items} />
-                              </div>
-                              <span className={css.exploreLink}>
-                                <FormattedMessage id="ExploreCategoriesPage.exploreAll" />
-                              </span>
-                            </div>
-                            <div
-                              className={css.diyImage}
-                              style={{ backgroundImage: `url(${card.image})` }}
-                            />
-                          </>
-                        ) : isKids ? (
-                          <>
-                            <div>
-                              <div className={css.cardHeading}>
-                                <IconGlyph name={card.icon} className={css.cardIcon} />
-                                <h2>
-                                  <FormattedMessage id={card.titleId} />
-                                </h2>
-                              </div>
-                              <p className={css.cardBody}>
-                                <FormattedMessage id={card.bodyId} />
-                              </p>
-                              <CategoryItems
-                                cardKey={card.key}
-                                items={card.items}
-                                variant="tiles"
-                              />
-                            </div>
-                            <div
-                              className={css.kidsImage}
-                              style={{ backgroundImage: `url(${card.image})` }}
-                            />
-                          </>
-                        ) : isSport ? (
-                          <>
-                            <div className={css.sportCopy}>
-                              <div className={css.cardHeading}>
-                                <IconGlyph name={card.icon} className={css.cardIcon} />
-                                <h2>
-                                  <FormattedMessage id={card.titleId} />
-                                </h2>
-                              </div>
-                              <p className={css.cardBody}>
-                                <FormattedMessage id={card.bodyId} />
-                              </p>
-                              <CategoryItems
-                                cardKey={card.key}
-                                items={card.items}
-                                variant="chips"
-                              />
-                            </div>
-                            <div
-                              className={css.sportImage}
-                              style={{ backgroundImage: `url(${card.image})` }}
-                            />
-                          </>
-                        ) : isKitchen ? (
-                          <>
-                            <div className={css.cardHeading}>
-                              <IconGlyph name={card.icon} className={css.cardIcon} />
-                              <h2>
-                                <FormattedMessage id={card.titleId} />
-                              </h2>
-                            </div>
-                            <p className={css.cardBodyItalic}>
-                              <FormattedMessage id={card.bodyId} />
-                            </p>
-                            <CategoryItems cardKey={card.key} items={card.items} variant="stack" />
-                          </>
-                        ) : isElectronics ? (
-                          <>
-                            <div
-                              className={css.electronicsImage}
-                              style={{ backgroundImage: `url(${card.image})` }}
-                            />
-                            <div className={css.cardCopy}>
-                              <div className={css.cardHeading}>
-                                <IconGlyph name={card.icon} className={css.cardIcon} />
-                                <h2>
-                                  <FormattedMessage id={card.titleId} />
-                                </h2>
-                              </div>
-                              <p className={css.cardBodySmall}>
-                                <FormattedMessage id={card.bodyId} />
-                              </p>
-                            </div>
-                          </>
-                        ) : isEvents ? (
-                          <>
-                            <div>
-                              <div className={css.cardHeading}>
-                                <IconGlyph name={card.icon} className={css.eventIcon} />
-                                <h2>
-                                  <FormattedMessage id={card.titleId} />
-                                </h2>
-                              </div>
-                              <p className={css.eventsBody}>
-                                <FormattedMessage id={card.bodyId} />
-                              </p>
-                              <CategoryItems cardKey={card.key} items={card.items} />
-                            </div>
-                            <span className={css.eventRocket} aria-hidden="true">
-                              <IconGlyph name="events" className={css.rocketIcon} />
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              className={css.gardenImage}
-                              style={{ backgroundImage: `url(${card.image})` }}
-                            />
-                            <div className={css.cardCopy}>
-                              <div className={css.cardHeading}>
-                                <IconGlyph name={card.icon} className={css.cardIcon} />
-                                <h2>
-                                  <FormattedMessage id={card.titleId} />
-                                </h2>
-                              </div>
-                              <CategoryItems cardKey={card.key} items={card.items} />
-                            </div>
-                          </>
-                        )}
-                      </NamedLink>
-                    );
-                  })}
+                  {cards.map((item, index) => (
+                    <CategoryCard
+                      key={item.key || item.title || index}
+                      item={item}
+                      category={item.category}
+                    />
+                  ))}
                 </div>
 
-                <section className={css.communityCallout}>
-                  <div className={css.communityCopy}>
-                    <h2>
-                      <FormattedMessage id="ExploreCategoriesPage.communityTitle" />
-                    </h2>
-                    <p>
-                      <FormattedMessage id="ExploreCategoriesPage.communityBody" />
-                    </p>
-                    <NamedLink name="AIListingCreationPage" className={css.communityButton}>
-                      <FormattedMessage id="ExploreCategoriesPage.communityButton" />
-                    </NamedLink>
-                  </div>
-                  <div
-                    className={css.communityImage}
-                    style={{ backgroundImage: `url(${popCommunityImage})` }}
-                  />
-                </section>
+                {calloutBlock.title || calloutBlock.text ? (
+                  <section className={css.communityCallout}>
+                    <div className={css.communityCopy}>
+                      {calloutBlock.title ? <h2>{calloutBlock.title}</h2> : null}
+                      {calloutBlock.text ? <p>{calloutBlock.text}</p> : null}
+                      <CalloutAction block={calloutBlock} />
+                    </div>
+                    {calloutImage ? (
+                      <div
+                        className={css.communityImage}
+                        style={{ backgroundImage: `url(${calloutImage})` }}
+                      />
+                    ) : null}
+                  </section>
+                ) : null}
               </Main>
               <Footer>
                 <FooterContainer />
@@ -441,9 +529,21 @@ CategoryItems.defaultProps = {
 };
 
 CategoryItems.propTypes = {
-  cardKey: string.isRequired,
   items: arrayOf(string),
   variant: string,
+};
+
+CategoryCard.propTypes = {
+  item: object.isRequired,
+  category: object,
+};
+
+CategoryCard.defaultProps = {
+  category: null,
+};
+
+CalloutAction.propTypes = {
+  block: object.isRequired,
 };
 
 const mapStateToProps = state => ({
@@ -451,5 +551,7 @@ const mapStateToProps = state => ({
 });
 
 const ExploreCategoriesPage = compose(connect(mapStateToProps))(ExploreCategoriesPageComponent);
+
+export { ExploreCategoriesPageComponent };
 
 export default ExploreCategoriesPage;

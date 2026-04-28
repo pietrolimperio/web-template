@@ -21,17 +21,45 @@ const normalizeItems = items => {
     return [];
   }
   return items
-    .map(item =>
-      typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean'
-        ? { title: '', text: textValue(item), label: '' }
-        : {
-            title: textValue(item?.title),
-            text: textValue(item?.text),
-            label: textValue(item?.label),
-            href: textValue(item?.href ?? item?.url),
-          }
-    )
-    .filter(item => item.title || item.text || item.label || item.href);
+    .map(item => {
+      if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+        return { title: '', text: textValue(item), label: '' };
+      }
+      const normalized = {
+        key: textValue(item?.key ?? item?.id),
+        title: textValue(item?.title),
+        text: textValue(item?.text),
+        label: textValue(item?.label),
+        href: textValue(item?.href ?? item?.url),
+        imageUrl: textValue(item?.imageUrl),
+        imageKey: textValue(item?.imageKey),
+        icon: textValue(item?.icon),
+        accent: textValue(item?.accent),
+        variant: textValue(item?.variant),
+        actionLabel: textValue(item?.actionLabel),
+        actionHref: textValue(item?.actionHref),
+        actionRoute: textValue(item?.actionRoute),
+      };
+      if (item?.categoryIndex != null && Number.isInteger(Number(item.categoryIndex))) {
+        normalized.categoryIndex = Number(item.categoryIndex);
+      }
+      if (Array.isArray(item?.items)) {
+        normalized.items = item.items.map(child => textValue(child)).filter(Boolean);
+      }
+      return normalized;
+    })
+    .filter(
+      item =>
+        item.key ||
+        item.title ||
+        item.text ||
+        item.label ||
+        item.href ||
+        item.imageUrl ||
+        item.imageKey ||
+        item.icon ||
+        item.items?.length
+    );
 };
 
 export const normalizePageAssetResponse = data => {
@@ -50,11 +78,39 @@ export const normalizePageAssetResponse = data => {
             ? section.blocks
                 .map(block => {
                   const type = textValue(block?.type);
+                  const title = textValue(block?.title);
+                  const kicker = textValue(block?.kicker);
                   const text = textValue(block?.text);
+                  const imageUrl = textValue(block?.imageUrl);
+                  const imageKey = textValue(block?.imageKey);
+                  const actionLabel = textValue(block?.actionLabel);
+                  const actionHref = textValue(block?.actionHref);
+                  const actionRoute = textValue(block?.actionRoute);
                   const items = normalizeItems(block?.items);
-                  return { type, text, items };
+                  return {
+                    type,
+                    title,
+                    kicker,
+                    text,
+                    imageUrl,
+                    imageKey,
+                    actionLabel,
+                    actionHref,
+                    actionRoute,
+                    items,
+                  };
                 })
-                .filter(block => block.type && (block.text || block.items.length > 0))
+                .filter(
+                  block =>
+                    block.type &&
+                    (block.title ||
+                      block.kicker ||
+                      block.text ||
+                      block.imageUrl ||
+                      block.imageKey ||
+                      block.actionLabel ||
+                      block.items.length > 0)
+                )
             : [];
 
           return { id, title: sectionTitle, blocks };
